@@ -84,4 +84,14 @@ class Activity extends \yii\db\ActiveRecord
     {
         return $this->hasMany(Subactivity::className(), ['activity_id' => 'id']);
     }
+
+    /**
+     * Gets query for [[PpmpSubactivities]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPpas()
+    {
+        return $this->hasMany(Ppa::className(), ['activity_id' => 'id']);
+    }
 }

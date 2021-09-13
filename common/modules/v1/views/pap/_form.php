@@ -159,6 +159,8 @@ DisableButtonAsset::register($this);
 
     <?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?>
 
+    <?= $form->field($model, 'short_code')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'title')->textarea(['rows' => 6]) ?>
 
     <?= $form->field($model, 'description')->textarea(['rows' => 6]) ?>

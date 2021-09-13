@@ -19,7 +19,7 @@ class PapSearch extends Pap
     {
         return [
             [['id', 'cost_structure_id', 'organizational_outcome_id', 'program_id', 'sub_program_id', 'identifier_id'], 'integer'],
-            [['code', 'title', 'description', 'codeTitle'], 'safe'],
+            [['code', 'short_code', 'title', 'description', 'codeTitle'], 'safe'],
         ];
     }
 
@@ -60,6 +60,7 @@ class PapSearch extends Pap
                     'asc' => ['concat(ppmp_cost_structure.code,"",ppmp_organizational_outcome.code,"",ppmp_program.code,"",ppmp_sub_program.code,"",ppmp_identifier.code,"",ppmp_pap.code,"000")' => SORT_ASC],
                     'desc' => ['concat(ppmp_cost_structure.code,"",ppmp_organizational_outcome.code,"",ppmp_program.code,"",ppmp_sub_program.code,"",ppmp_identifier.code,"",ppmp_pap.code,"000")' => SORT_DESC],
                 ],
+                'short_code',
                 'title',
                 'description',
             ]

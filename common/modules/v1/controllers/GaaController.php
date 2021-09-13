@@ -235,6 +235,14 @@ class GaaController extends Controller
         {
             $postData = Yii::$app->request->post();
             $ids = json_decode($postData['ids']);
+            if(!empty($ids))
+            {
+                foreach($ids as $id)
+                {
+                    $pap = AppropriationPap::findOne($id);
+                    AppropriationItem::findOne(['appropriation_id' => $pap->appropriation_id, 'pap_id' => $pap->pap_id, 'fund_source_id' => $pap->fund_source_id])->delete();
+                }
+            }
             AppropriationPap::deleteAll(['id' => $ids]);
         }
 
@@ -253,12 +261,13 @@ class GaaController extends Controller
             if(!empty($postData))
             {
                 $models = json_decode($postData['models'],true);
-                DefaultPap::deleteAll();
+                DefaultPap::deleteAll(['type' => 'GAA']);
                 if(!empty($models))
                 {
                     foreach($models as $model)
                     {
                         $newModel = new DefaultPap();
+                        $newModel->type = 'GAA';
                         $newModel->pap_id = $model['pap_id'];
                         $newModel->fund_source_id = $model['fund_source_id'];
                         $newModel->arrangement = $model['arrangement'];
@@ -373,6 +382,14 @@ class GaaController extends Controller
         {
             $postData = Yii::$app->request->post();
             $ids = json_decode($postData['ids']);
+            if(!empty($ids))
+            {
+                foreach($ids as $id)
+                {
+                    $obj = AppropriationObj::findOne($id);
+                    AppropriationItem::findOne(['appropriation_id' => $obj->appropriation_id, 'obj_id' => $obj->obj_id])->delete();
+                }
+            }
             AppropriationObj::deleteAll(['id' => $ids]);
         }
 
@@ -391,12 +408,13 @@ class GaaController extends Controller
             if(!empty($postData))
             {
                 $models = json_decode($postData['models'],true);
-                Defaultobj::deleteAll();
+                Defaultobj::deleteAll(['type' => 'GAA']);
                 if(!empty($models))
                 {
                     foreach($models as $model)
                     {
                         $newModel = new DefaultObj();
+                        $newModel->type = 'GAA';
                         $newModel->obj_id = $model['obj_id'];
                         $newModel->arrangement = $model['arrangement'];
                         $newModel->save();

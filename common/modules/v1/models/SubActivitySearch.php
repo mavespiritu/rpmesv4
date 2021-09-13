@@ -18,7 +18,7 @@ class SubActivitySearch extends SubActivity
     public function rules()
     {
         return [
-            [['id', 'pap_id', 'activity_id'], 'integer'],
+            [['id', 'activity_id'], 'integer'],
             [['code', 'title', 'description', 'activityTitle'], 'safe'],
         ];
     }
@@ -97,7 +97,6 @@ class SubActivitySearch extends SubActivity
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'pap_id' => $this->pap_id,
             'activity_id' => $this->activity_id,
         ]);
 

@@ -124,11 +124,23 @@ class Appropriation extends \yii\db\ActiveRecord
         return $this->updater ? $this->updater->FIRST_M.' '.$this->updater->LAST_M : '';
     }
 
+    public function getTitle()
+    {
+        return $this->type.' '.$this->year;
+    }
+
+    public function getTotal()
+    {
+        $total = AppropriationItem::find()->select('sum(amount) as amount')->where(['appropriation_id' => $this->id])->one();
+        
+        return $total['amount'];
+    }
+
     public function afterSave($insert, $changedAttributes){
         if($insert){
             if($this->copy == '')
             {
-                $paps = DefaultPap::find()->all();
+                $paps = DefaultPap::find()->where(['type' => $this->type])->all();
                 if($paps)
                 {
                     foreach($paps as $pap)
@@ -142,7 +154,7 @@ class Appropriation extends \yii\db\ActiveRecord
                     }
                 }
 
-                $objs = DefaultObj::find()->all();
+                $objs = DefaultObj::find()->where(['type' => $this->type])->all();
                 if($objs)
                 {
                     foreach($objs as $obj)

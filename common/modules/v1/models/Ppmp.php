@@ -116,4 +116,50 @@ class Ppmp extends \yii\db\ActiveRecord
     {
         return $this->updater ? $this->updater->FIRST_M.' '.$this->updater->LAST_M : '';
     }
+
+    public function getTitle()
+    {
+        return 'PPMP-'.$this->office->abbreviation.'-'.strtoupper($this->stage).'-'.$this->year;
+    }
+
+    public function getReference()
+    {
+        if($this->stage == 'Indicative')
+        {
+            return Appropriation::findOne(['type' => 'GAA', 'year' => $this->year -1]);
+        }
+        else if($this->stage == 'Adjusted')
+        {
+            return Appropriation::findOne(['type' => 'NEP', 'year' => $this->year]);
+        }
+        else if($this->stage == 'Final')
+        {
+            return Appropriation::findOne(['type' => 'GAA', 'year' => $this->year]);
+        }
+    }
+
+    public function getTotal()
+    {
+        $quantity = ItemBreakdown::find()
+                   ->select([
+                       'ppmp_item_id',
+                       'sum(quantity) as total'
+                   ])
+                    ->groupBy(['ppmp_item_id'])
+                    ->createCommand()
+                    ->getRawSql();
+
+        $total = PpmpItem::find()
+                ->select([
+                    'sum(quantity.total * cost) as total'
+                ])
+                ->leftJoin(['quantity' => '('.$quantity.')'], 'quantity.ppmp_item_id = ppmp_ppmp_item.id')
+                ->andWhere([
+                    'ppmp_id' => $this->id,
+                ])
+                ->asArray()
+                ->one();
+        
+        return $total['total'];
+    }
 }

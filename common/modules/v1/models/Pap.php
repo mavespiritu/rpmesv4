@@ -38,7 +38,7 @@ class Pap extends \yii\db\ActiveRecord
             [['cost_structure_id', 'organizational_outcome_id', 'program_id', 'sub_program_id', 'identifier_id', 'code', 'title'], 'required'],
             [['cost_structure_id', 'organizational_outcome_id', 'program_id', 'sub_program_id', 'identifier_id'], 'integer'],
             [['title', 'description'], 'string'],
-            [['code'], 'string', 'max' => 10],
+            [['code', 'short_code'], 'string', 'max' => 10],
             [['identifier_id'], 'exist', 'skipOnError' => true, 'targetClass' => Identifier::className(), 'targetAttribute' => ['identifier_id' => 'id']],
         ];
     }
@@ -55,6 +55,7 @@ class Pap extends \yii\db\ActiveRecord
             'program_id' => 'Program',
             'sub_program_id' => 'Sub Program',
             'identifier_id' => 'Identifier',
+            'short_code' => 'Short Code',
             'code' => 'Code',
             'codeTitle' => 'Code',
             'title' => 'Title',

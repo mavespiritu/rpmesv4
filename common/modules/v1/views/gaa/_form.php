@@ -18,7 +18,7 @@ DisableButtonAsset::register($this);
         'enableAjaxValidation' => true,
     ]); ?>
 
-    <?= $form->field($model, 'year')->textInput(['type' => 'number' , 'min' => date("Y"), 'autocomplete' => 'off']) ?>
+    <?= $form->field($model, 'year')->textInput(['type' => 'number' , 'min' => date("Y") - 1, 'autocomplete' => 'off']) ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'name' => 'Submit', 'value' => 'Submit', 'data' => ['disabled-text' => 'Please Wait']]) ?>

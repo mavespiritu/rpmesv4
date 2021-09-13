@@ -19,6 +19,7 @@ use Yii;
 class AppropriationItem extends \yii\db\ActiveRecord
 {
     public $idx;
+    public $activity_id;
     /**
      * {@inheritdoc}
      */
@@ -33,6 +34,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['activity_id', 'fund_source_id'], 'required', 'on' => 'loadItems'],
             [['amount'], 'required'],
             [['appropriation_id', 'obj_id', 'pap_id', 'fund_source_id'], 'integer'],
             [['amount'], 'number'],
@@ -52,7 +54,9 @@ class AppropriationItem extends \yii\db\ActiveRecord
             'id' => 'ID',
             'appropriation_id' => 'Appropriation ID',
             'obj_id' => 'Object ID',
-            'pap_id' => 'Program ID',
+            'pap_id' => 'Program',
+            'activity_id' => 'Activity',
+            'fund_source_id' => 'Fund Source',
             'amount' => 'Amount',
         ];
     }

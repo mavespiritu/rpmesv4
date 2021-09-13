@@ -24,7 +24,7 @@ DisableButtonAsset::register($this);
 
     <?= $form->field($model, 'copy')->widget(Select2::classname(), [
         'data' => $neps,
-        'options' => ['placeholder' => 'Select NEP','multiple' => false, 'class'=>'copy-select'],
+        'options' => ['placeholder' => 'Select GAA','multiple' => false, 'class'=>'copy-select'],
         'pluginOptions' => [
             'allowClear' =>  true,
         ],

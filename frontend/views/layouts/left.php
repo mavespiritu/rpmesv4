@@ -43,8 +43,9 @@
                                 'icon' => 'file-code-o', 
                                 'url' => '#', 
                                 'items' => [
-                                    ['label' => 'Level 1', 'icon' => 'file-code-o', 'url' => ['/v1/activity'],],
-                                    ['label' => 'Level 2', 'icon' => 'file-code-o', 'url' => ['/v1/sub-activity'],],                                ]
+                                    ['label' => 'Level 1', 'icon' => 'file-code-o', 'url' => ['/v1/pap'],],
+                                    ['label' => 'Level 2', 'icon' => 'file-code-o', 'url' => ['/v1/activity'],],
+                                    ['label' => 'Level 3', 'icon' => 'file-code-o', 'url' => ['/v1/sub-activity'],],                                ]
                             ],
                             ['label' => 'Fund Clusters', 'icon' => 'file-code-o', 'url' => ['/v1/fund-cluster'],],
                             ['label' => 'Fund Sources', 'icon' => 'file-code-o', 'url' => ['/v1/fund-source'],],
@@ -58,7 +59,6 @@
                                     ['label' => 'Programs', 'icon' => 'file-code-o', 'url' => ['/v1/program'],],
                                     ['label' => 'Sub-Programs', 'icon' => 'file-code-o', 'url' => ['/v1/sub-program'],],
                                     ['label' => 'Identifiers', 'icon' => 'file-code-o', 'url' => ['/v1/identifier'],],
-                                    ['label' => 'PAPs', 'icon' => 'file-code-o', 'url' => ['/v1/pap'],],
                                     
                                 ]
                             ],

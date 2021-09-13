@@ -16,20 +16,31 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="ppmp-index">
 
     <p>
-    	<?= Html::button('<i class="fa fa-plus"></i> Create', ['value' => Url::to(['/v1/ppmp/create']), 'class' => 'btn btn-app', 'id' => 'create-button']) ?>
-    	<?= Html::button('<i class="fa fa-copy"></i> Copy', ['value' => Url::to(['/v1/ppmp/copy']), 'class' => 'btn btn-app', 'id' => 'copy-button']) ?>
+    	<?= Html::button('<i class="fa fa-plus"></i> Create<br>Empty', ['value' => Url::to(['/v1/ppmp/create']), 'class' => 'btn btn-app', 'id' => 'create-button', 'style' => 'padding-bottom: 60px;']) ?>
+    	<?= Html::button('<i class="fa fa-copy"></i> Copy<br>Existing', ['value' => Url::to(['/v1/ppmp/copy']), 'class' => 'btn btn-app', 'id' => 'copy-button', 'style' => 'padding-bottom: 60px;']) ?>
     </p>
 
     <?php Pjax::begin(); ?>
 
     <div class="row">
         <div class="col-md-2 col-xs-12">
-            <h4>Search Filter</h4>
-            <?= $this->render('_search', ['model' => $searchModel]); ?>
+            <div class="box box-primary">
+                <div class="box-header"><i class="fa fa-search"></i> Search Filter</div>
+                <div class="box-body">
+                    <?= $this->render('_search', [
+                        'model' => $searchModel,
+                        'offices' => $offices,
+                        'years' => $years,
+                        'stages' => $stages,
+                    ]); ?>
+                </div>
+            </div>
         </div>
         <div class="col-md-10 col-xs-12">
-            <h4>List of PPMP</h4>
-            <?= GridView::widget([
+            <div class="box box-primary">
+                <div class="box-header"><i class="fa fa-list"></i> PPMP List</div>
+                <div class="box-body">
+                <?= GridView::widget([
                     'options' => [
                         'class' => 'table-responsive',
                     ],
@@ -47,10 +58,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         [
                             'format' => 'raw', 
                             'value' => function($model){
-                                return Html::a('View', ['/v1/nep/view', 'id' => $model->id],['class' => 'btn btn-primary btn-block']);
+                                return Html::a('View', ['/v1/ppmp/view', 'id' => $model->id],['class' => 'btn btn-primary btn-block']);
                         }],
                     ],
                 ]); ?>
+                </div>
             </div>
         </div>
     </div>

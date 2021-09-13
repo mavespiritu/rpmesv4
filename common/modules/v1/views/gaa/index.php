@@ -16,8 +16,8 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="nep-index">
 
     <p>
-    	<?= Html::button('<i class="fa fa-plus"></i> Create', ['value' => Url::to(['/v1/gaa/create']), 'class' => 'btn btn-app', 'id' => 'create-button']) ?>
-    	<?= Html::button('<i class="fa fa-copy"></i> Copy', ['value' => Url::to(['/v1/gaa/copy']), 'class' => 'btn btn-app', 'id' => 'copy-button']) ?>
+    	<?= Html::button('<i class="fa fa-plus"></i> Create<br>Empty', ['value' => Url::to(['/v1/gaa/create']), 'class' => 'btn btn-app', 'id' => 'create-button', 'style' => 'padding-bottom: 60px;']) ?>
+    	<?= Html::button('<i class="fa fa-copy"></i> Copy<br>Existing', ['value' => Url::to(['/v1/gaa/copy']), 'class' => 'btn btn-app', 'id' => 'copy-button', 'style' => 'padding-bottom: 60px;']) ?>
     </p>
 
     <?php Pjax::begin(); ?>
@@ -50,7 +50,8 @@ $this->params['breadcrumbs'][] = $this->title;
   Modal::begin([
     'id' => 'create-modal',
     'size' => "modal-sm",
-    'header' => '<div id="create-modal-header"><h4>Create GAA</h4></div>'
+    'header' => '<div id="create-modal-header"><h4>Create GAA</h4></div>',
+    'options' => ['tabindex' => false],
   ]);
   echo '<div id="create-modal-content"></div>';
   Modal::end();
@@ -59,7 +60,8 @@ $this->params['breadcrumbs'][] = $this->title;
   Modal::begin([
     'id' => 'copy-modal',
     'size' => "modal-sm",
-    'header' => '<div id="copy-modal-header"><h4>Copy GAA</h4></div>'
+    'header' => '<div id="copy-modal-header"><h4>Copy GAA</h4></div>',
+    'options' => ['tabindex' => false],
   ]);
   echo '<div id="copy-modal-content"></div>';
   Modal::end();

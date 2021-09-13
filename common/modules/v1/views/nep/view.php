@@ -17,34 +17,34 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= $this->render('_menu', ['model' => $model]) ?>
     <div class="row">
         <div class="col-md-6 col-xs-12">
-            <div class="panel panel-default">
-                <div class="panel-body">
+            <div class="box box-primary">
+                <div class="box-header panel-title"><i class="fa fa-list"></i> Manage Objects</div>
+                <div class="box-body">
                 <div class="row">
                         <div class="col-md-12 col-xs-12">
                             <div id="object-form"></div>
-                            <div id="objects" style="max-height: 45vh; overflow-y: scroll; overflow-x: hidden;"></div>
+                            <div id="objects"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-6 col-xs-12">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-12 col-xs-12">
-                            <h4>Add Programs</h4>
-                            <?= $this->render('_pap_form', [
-                                'model' => $model,
-                                'papModel' => $papModel,
-                                'paps' => $paps,
-                                'fundSources' => $fundSources,
-                            ]) ?>
-                            <hr style="opacity: 0.3">
-                            <h4>Included Programs for NEP <?= $model->year ?></h4>
-                            <p><i class="fa fa-exclamation-circle"></i> Drag and drop the items to save arrangement</p>
-                            <div id="programs" style="max-height: 45vh; overflow-y: scroll; overflow-x: hidden;"></div>
-                        </div>
+        <div class="box box-primary">
+            <div class="box-header panel-title"><i class="fa fa-list"></i> Manage Programs</div>
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-md-12 col-xs-12">
+                        <?= $this->render('_pap_form', [
+                            'model' => $model,
+                            'papModel' => $papModel,
+                            'paps' => $paps,
+                            'fundSources' => $fundSources,
+                        ]) ?>
+                        <hr style="opacity: 0.3">
+                        <p class="panel-title"><i class="fa fa-list"></i> Included Programs for NEP <?= $model->year ?></p><br>
+                        <p><i class="fa fa-exclamation-circle"></i> Drag and drop the items to save arrangement</p>
+                        <div id="programs"></div>
                     </div>
                 </div>
             </div>

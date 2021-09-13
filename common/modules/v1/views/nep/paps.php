@@ -13,6 +13,7 @@ $objectString = json_encode($model->getAppropriationPaps()->asArray()->all());
 ?>
 
 <div class="paps">
+    <?php if(!empty($items)){ ?>
     <div class="row">
         <div class="col-md-6 col-xs-12">
             <input type="checkbox" name="checboxall" id="delete-all-paps"> Select All
@@ -24,7 +25,7 @@ $objectString = json_encode($model->getAppropriationPaps()->asArray()->all());
             </div>
         </div>
     </div>
-
+    <?php } ?>
     <br>
 
     <?php $form = ActiveForm::begin([
@@ -59,12 +60,12 @@ $objectString = json_encode($model->getAppropriationPaps()->asArray()->all());
     ?>
 
     <br>
-
+    <?php if(!empty($items)){ ?>
     <div class="pull-right">
         <?= Html::button("Remove Selected",['class' => 'btn btn-danger delete-selected-paps']) ?>
         <?= Html::button("Set as default programs",['class' => 'btn btn-default default-program']) ?>
     </div>
-
+    <?php } ?>
     <?php ActiveForm::end(); ?>
 </div>
 <?php

@@ -3,12 +3,29 @@
 namespace common\modules\v1\controllers;
 
 use Yii;
+use common\modules\v1\models\Month;
+use common\modules\v1\models\Pap;
+use common\modules\v1\models\Obj;
+use common\modules\v1\models\Appropriation;
+use common\modules\v1\models\AppropriationPap;
+use common\modules\v1\models\AppropriationObj;
+use common\modules\v1\models\FundSource;
+use common\modules\v1\models\AppropriationItem;
+use common\modules\v1\models\Activity;
+use common\modules\v1\models\SubActivity;
 use common\modules\v1\models\Ppmp;
+use common\modules\v1\models\PpmpItem;
+use common\modules\v1\models\PpmpItemSearch;
+use common\modules\v1\models\Item;
+use common\modules\v1\models\ItemCost;
+use common\modules\v1\models\ObjectItem;
+use common\modules\v1\models\ItemBreakdown;
 use common\modules\v1\models\PpmpSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
+use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 use yii\web\Response;
 use yii\widgets\ActiveForm;
@@ -45,6 +62,98 @@ class PpmpController extends Controller
         ];
     }
 
+    function lastnodes($index, array $elements, $parentId = null) {
+        $branch = array();
+    
+        foreach ($elements as $element) {
+            if ($element[$index] == $parentId) {
+                $children = $this->lastnodes($index, $elements, $element['id']);
+                if ($children) {
+                    $element['children'] = $children;
+                }
+            }
+            if($element['active'] == 1)
+            {
+                $branch[] = $element;
+            }
+        }
+    
+        return $branch;
+    }
+
+    public function actionFundSourceList($id, $activity_id)
+    {
+        $activity = Activity::findOne($activity_id);
+
+        $existingFundSources = AppropriationPap::find()->select(['fund_source_id'])->where(['appropriation_id' => $id, 'pap_id' => $activity->pap_id])->asArray()->all();
+        $existingFundSources = ArrayHelper::map($existingFundSources, 'fund_source_id', 'fund_source_id');
+
+        $fundSources = FundSource::find()->select([
+            'id',
+            'code'
+        ])
+        ->where(['in', 'id', $existingFundSources])
+        ->asArray()
+        ->all();
+
+        $arr = [];
+        $arr[] = ['id'=>'','text'=>''];
+        foreach($fundSources as $fundSource){
+            $arr[] = ['id' => $fundSource['id'] ,'text' => $fundSource['code']];
+        }
+        \Yii::$app->response->format = 'json';
+        return $arr;
+    }
+
+    public function actionActivityList($id)
+    {
+        $activities = Activity::find()->where(['pap_id' => $id])->all();
+
+        $arr = [];
+        $arr[] = ['id'=>'','text'=>''];
+        foreach($activities as $activity){
+            $arr[] = ['id' => $activity->id ,'text' => $activity->title];
+        }
+        \Yii::$app->response->format = 'json';
+        return $arr;
+    }
+
+    public function actionItemList($id, $sub_activity_id, $obj_id, $item_id)
+    {
+        $existingItems = PpmpItem::find()
+                    ->select(['item_id'])
+                    ->where([
+                        'ppmp_id' => $id,
+                        'sub_activity_id' => $sub_activity_id,
+                        'obj_id' => $obj_id,
+                    ]);
+        
+        $existingItems = $item_id == 0 ? $existingItems : $existingItems->andWhere(['<>', 'item_id', $item_id]);
+    
+        $existingItems = $existingItems->asArray()->all();
+
+        $existingItems = ArrayHelper::map($existingItems, 'item_id', 'item_id');
+
+        $items = Item::find()
+                ->select([
+                    'ppmp_item.id as id',
+                    'ppmp_item.title as text',
+                ])
+                ->leftJoin('ppmp_object_item', 'ppmp_object_item.item_id = ppmp_item.id')
+                ->andWhere(['ppmp_object_item.obj_id' => $obj_id])
+                ->andWhere(['not in', 'ppmp_item.id', $existingItems])
+                ->asArray()
+                ->all();
+        
+        $arr = [];
+        $arr[] = ['id'=>'','text'=>''];
+        foreach($items as $item){
+            $arr[] = ['id' => $item['id'], 'text' => $item['text']];
+        }
+        \Yii::$app->response->format = 'json';
+        return $arr;
+    }
+
     /**
      * Lists all Ppmp models.
      * @return mixed
@@ -54,9 +163,24 @@ class PpmpController extends Controller
         $searchModel = new PpmpSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
+        $offices = Office::find()->all();
+        $offices = ArrayHelper::map($offices, 'id', 'abbreviation');
+
+        $years = Ppmp::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = ArrayHelper::map($years, 'year', 'year');
+
+        $stages = [
+            'Indicative' => 'Indicative',
+            'Adjusted' => 'Adjusted',
+            'Final' => 'Final',
+        ];
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'offices' => $offices,
+            'years' => $years,
+            'stages' => $stages,
         ]);
     }
 
@@ -68,8 +192,322 @@ class PpmpController extends Controller
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+        $refFilters = [];
+        $refFilters['Indicative'] = ['ppmp_appropriation.type' => 'GAA', 'ppmp_appropriation.year' => $model->year - 1]; 
+        $refFilters['Adjusted'] = ['ppmp_appropriation.type' => 'NEP', 'ppmp_appropriation.year' => $model->year]; 
+        $refFilters['Final'] = ['ppmp_appropriation.type' => 'GAA', 'ppmp_appropriation.year' => $model->year]; 
+        
+        $appropriationItemModel = new AppropriationItem();
+        $appropriationItemModel->scenario = 'loadItems';
+        
+        $progs = AppropriationPap::find()
+                ->leftJoin('ppmp_appropriation', 'ppmp_appropriation.id = ppmp_appropriation_pap.appropriation_id')
+                ->andWhere($refFilters[$model->stage])
+                ->orderBy(['arrangement' => SORT_ASC])
+                ->distinct(['pap_id'])
+                ->all();
+        
+        $progs = ArrayHelper::map($progs, 'pap_id', 'pap_id');
+        
+        $activities = Activity::find()
+                     ->select([
+                         'ppmp_activity.id as id',
+                         'ppmp_activity.pap_id as pap_id',
+                         'ppmp_activity.title as text',
+                         'p.title as groupTitle'
+                     ])
+                     ->leftJoin(['p' => '(SELECT id, title from ppmp_pap)'], 'p.id = ppmp_activity.pap_id')
+                     ->where(['in', 'pap_id', $progs])
+                     ->asArray()
+                     ->all();
+
+        $activities = ArrayHelper::map($activities, 'id', 'text', 'groupTitle');
+
+        $fundSources = [];
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
+            'appropriationItemModel' => $appropriationItemModel,
+            'activities' => $activities,
+            'fundSources' => $fundSources,
+        ]);
+    }
+
+    public function actionLoadItems($id, $activity_id, $fund_source_id)
+    {
+        $model = $this->findModel($id);
+        $activity = Activity::findOne($activity_id);
+        $fundSource = FundSource::findOne($fund_source_id);
+        $subActivities = SubActivity::find()-> where(['activity_id' => $activity_id])->orderBy(['code' => SORT_ASC])->all();
+        $items = [];
+        $total = 0;
+
+        if($subActivities)
+        {
+            foreach($subActivities as $key => $subActivity)
+            {
+                $items[$key]['label'] = '<table style="width:100%;" id="item-table-'.$subActivity->id.'" onclick="loadItemsInSubActivity('.$model->id.','.$subActivity->id.','.$activity->id.','.$fundSource->id.')">'; 
+                $items[$key]['label'] .= '<tr>'; 
+                $items[$key]['label'] .= '<td>'.$subActivity->title.'</td>'; 
+                $items[$key]['label'] .= '<td align=right>'.number_format(PpmpItem::getTotalPerSubActivity($model->id, $activity->id, $subActivity->id, $fundSource->id), 2).'</td>'; 
+                $items[$key]['label'] .= '</tr>'; 
+                $items[$key]['label'] .= '</table>';
+                $items[$key]['content'] = '<div id="item-list-'.$subActivity->id.'"></div>';
+
+                $total += PpmpItem::getTotalPerSubActivity($model->id, $activity->id, $subActivity->id, $fundSource->id);
+            }
+        }
+
+        return $this->renderAjax('_items', [
+            'model' => $model,
+            'items' => $items,
+            'activity_id' => $activity_id,
+            'fund_source_id' => $fund_source_id,
+            'total' => $total,
+        ]);
+    }
+
+    function computePerSubActivity($id, $subActivityId)
+    {
+        
+    }
+
+    public function actionCreateItem($id, $activity_id, $fund_source_id)
+    {
+        $model = $this->findModel($id);
+        $activity = Activity::findOne($activity_id);
+        $fundSource = FundSource::findOne($fund_source_id);
+
+        $subActivities = SubActivity::find()-> where(['activity_id' => $activity->id])->orderBy(['code' => SORT_ASC])->all();
+        $subActivities = ArrayHelper::map($subActivities, 'id', 'title');
+
+        $itemModel = new PpmpItem();
+        $itemModel->ppmp_id = $model->id;
+        $itemModel->activity_id = $activity->id;
+
+        $selectedObjs = AppropriationItem::find()
+        ->select(['ppmp_appropriation_item.obj_id as id'])
+        ->leftJoin('ppmp_appropriation', 'ppmp_appropriation.id = ppmp_appropriation_item.appropriation_id')
+        ->andWhere(['>', 'amount', 0])
+        ->andWhere([
+            'ppmp_appropriation.id' => $model->reference ? $model->reference->id : null,
+            'ppmp_appropriation_item.pap_id' => $activity->pap_id,
+            'ppmp_appropriation_item.fund_source_id' => $fundSource->id,
+        ])
+        ->distinct(['ppmp_appropriation_item.obj_id'])
+        ->all();
+
+        $selectedObjs = ArrayHelper::map($selectedObjs, 'id', 'id');
+
+        $objects = Obj::find()->select([
+            'ppmp_obj.id', 
+            'ppmp_obj.obj_id', 
+            'concat(ppmp_obj.code," - ",ppmp_obj.title) as text',
+            'p.title as groupTitle',
+            'ppmp_obj.active'
+            ])
+            ->leftJoin(['p' => '(SELECT id, concat(code," - ",title) as title from ppmp_obj)'], 'p.id = ppmp_obj.obj_id')
+            ->andWhere(['in', 'ppmp_obj.id', $selectedObjs])
+            ->asArray()
+            ->all();
+        
+        $objects = $this->lastnodes('obj_id', $objects);
+
+        $objects = ArrayHelper::map($objects, 'id', 'text', 'groupTitle');
+        
+        $items = [];
+
+        $months = Month::find()->all();
+        $itemBreakdowns = [];
+
+        if($months)
+        {
+            foreach($months as $month)
+            {
+                $breakdown = new ItemBreakdown();
+                $breakdown->month_id = $month->id;
+
+                $itemBreakdowns[$month->id] = $breakdown;
+            }
+        }
+
+        if($itemModel->load(Yii::$app->request->post()))
+        {
+            $cost = ItemCost::find()->where(['item_id' => $itemModel->item_id])->orderBy(['datetime' => SORT_DESC])->one();
+            
+            $itemModel->cost = $cost->cost;
+            if($itemModel->save())
+            {
+                $breakdowns = Yii::$app->request->post('ItemBreakdown');
+                if(!empty($breakdowns))
+                {
+                    foreach($breakdowns as $breakdown)
+                    {
+                        $breakdownModel = new ItemBreakdown();
+                        $breakdownModel->ppmp_item_id = $itemModel->id;
+                        $breakdownModel->month_id = $breakdown['month_id'];
+                        $breakdownModel->quantity = empty($breakdown['quantity']) ? 0 : $breakdown['quantity'];
+                        $breakdownModel->save();
+                    }
+                }
+            }
+            
+        }
+
+        return $this->renderAjax('_item-form', [
+            'model' => $model,
+            'activity' => $activity,
+            'fundSource' => $fundSource,
+            'itemModel' => $itemModel,
+            'subActivities' => $subActivities,
+            'items' => $items,
+            'objects' => $objects,
+            'months' => $months,
+            'itemBreakdowns' => $itemBreakdowns,
+        ]);
+    }
+
+    public function actionUpdateItem($id)
+    {
+        $itemModel = PpmpItem::findOne($id);
+
+        $model = $itemModel->ppmp;
+        $activity = $itemModel->activity;
+        $fundSource = $itemModel->fundSource;
+
+        $subActivities = SubActivity::find()-> where(['activity_id' => $activity->id])->orderBy(['code' => SORT_ASC])->all();
+        $subActivities = ArrayHelper::map($subActivities, 'id', 'title');
+
+        $selectedObjs = AppropriationItem::find()
+        ->select(['ppmp_appropriation_item.obj_id as id'])
+        ->leftJoin('ppmp_appropriation', 'ppmp_appropriation.id = ppmp_appropriation_item.appropriation_id')
+        ->andWhere(['>', 'amount', 0])
+        ->andWhere([
+            'ppmp_appropriation.id' => $model->reference ? $model->reference->id : null,
+            'ppmp_appropriation_item.pap_id' => $activity->pap_id,
+            'ppmp_appropriation_item.fund_source_id' => $fundSource->id,
+        ])
+        ->distinct(['ppmp_appropriation_item.obj_id'])
+        ->all();
+
+        $selectedObjs = ArrayHelper::map($selectedObjs, 'id', 'id');
+
+        $objects = Obj::find()->select([
+            'ppmp_obj.id', 
+            'ppmp_obj.obj_id', 
+            'concat(ppmp_obj.code," - ",ppmp_obj.title) as text',
+            'p.title as groupTitle',
+            'ppmp_obj.active'
+            ])
+            ->leftJoin(['p' => '(SELECT id, concat(code," - ",title) as title from ppmp_obj)'], 'p.id = ppmp_obj.obj_id')
+            ->andWhere(['in', 'ppmp_obj.id', $selectedObjs])
+            ->asArray()
+            ->all();
+        
+        $objects = $this->lastnodes('obj_id', $objects);
+
+        $objects = ArrayHelper::map($objects, 'id', 'text', 'groupTitle');
+        
+        $existingItems = PpmpItem::find()
+                    ->select(['item_id'])
+                    ->where([
+                        'ppmp_id' => $model->id,
+                        'sub_activity_id' => $itemModel->sub_activity_id,
+                        'obj_id' => $itemModel->obj_id,
+                    ])
+                    ->andWhere(['<>', 'item_id', $itemModel->item_id])
+                    ->asArray()
+                    ->all();
+
+        $existingItems = ArrayHelper::map($existingItems, 'item_id', 'item_id');
+
+        $items = Item::find()
+                ->select([
+                    'ppmp_item.id as id',
+                    'ppmp_item.title as text',
+                ])
+                ->leftJoin('ppmp_object_item', 'ppmp_object_item.item_id = ppmp_item.id')
+                ->andWhere(['ppmp_object_item.obj_id' => $itemModel->obj_id])
+                ->andWhere(['not in', 'ppmp_item.id', $existingItems])
+                ->asArray()
+                ->all();
+
+        $items = ArrayHelper::map($items, 'id', 'text');
+
+        $months = Month::find()->all();
+        $itemBreakdownModels = $itemModel->itemBreakdowns;
+        $itemBreakdowns = [];
+
+        if($itemBreakdownModels)
+        {
+            foreach($itemBreakdownModels as $itemBreakdownModel)
+            {
+                $itemBreakdowns[$itemBreakdownModel->month_id] = $itemBreakdownModel;
+            }
+        }
+
+        if($itemModel->load(Yii::$app->request->post()))
+        {
+            if($itemModel->save())
+            {
+                $breakdowns = Yii::$app->request->post('ItemBreakdown');
+                if(!empty($breakdowns))
+                {
+                    foreach($breakdowns as $breakdown)
+                    {
+                        $breakdownModel = ItemBreakdown::findOne(['ppmp_item_id' => $itemModel->id, 'month_id' => $breakdown['month_id']]) ? ItemBreakdown::findOne(['ppmp_item_id' => $itemModel->id, 'month_id' => $breakdown['month_id']]) : new ItemBreakdown();
+                        $breakdownModel->ppmp_item_id = $itemModel->id;
+                        $breakdownModel->month_id = $breakdown['month_id'];
+                        $breakdownModel->quantity = empty($breakdown['quantity']) ? 0 : $breakdown['quantity'];
+                        $breakdownModel->save();
+                    }
+                }
+            }
+            
+        }
+
+        return $this->renderAjax('_item-form', [
+            'model' => $model,
+            'activity' => $activity,
+            'fundSource' => $fundSource,
+            'itemModel' => $itemModel,
+            'subActivities' => $subActivities,
+            'items' => $items,
+            'objects' => $objects,
+            'months' => $months,
+            'itemBreakdowns' => $itemBreakdowns,
+        ]);
+    }
+
+    public function actionDeleteItem($id)
+    {
+        $model = PpmpItem::findOne($id);
+        $model->delete();
+    }
+
+    public function actionLoadItemsInSubActivity($id, $sub_activity_id, $activity_id, $fund_source_id)
+    {
+        $model = $this->findModel($id);
+        $activity = Activity::findOne($activity_id);
+        $fundSource = FundSource::findOne($fund_source_id);
+        $subActivity = SubActivity::findOne($sub_activity_id);
+
+        $searchModel = new PpmpItemSearch();
+        $searchModel->ppmp_id = $model->id;
+        $searchModel->activity_id = $activity->id;
+        $searchModel->fund_source_id = $fundSource->id;
+        $searchModel->sub_activity_id = $subActivity->id;
+
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->renderAjax('_items-in-sub-activity', [
+            'model' => $model,
+            'activity' => $activity,
+            'fundSource' => $fundSource,
+            'subActivity' => $subActivity,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
         ]);
     }
 
