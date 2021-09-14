@@ -334,6 +334,11 @@ class PpmpController extends Controller
             }
         }
 
+        /* if (Yii::$app->request->isAjax && $itemModel->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($itemModel);
+        } */
+
         if($itemModel->load(Yii::$app->request->post()))
         {
             $cost = ItemCost::find()->where(['item_id' => $itemModel->item_id])->orderBy(['datetime' => SORT_DESC])->one();
@@ -454,6 +459,11 @@ class PpmpController extends Controller
             }
         }
 
+        /* if (Yii::$app->request->isAjax && $itemModel->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($itemModel);
+        } */
+
         if($itemModel->load(Yii::$app->request->post()))
         {
             if($itemModel->save())
@@ -523,6 +533,27 @@ class PpmpController extends Controller
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    public function actionUnitOfMeasure($id)
+    {
+        $model = Item::findOne($id);
+
+        return $model->unit_of_measure;
+    }
+
+    public function actionCost($id)
+    {
+        $model = Item::findOne($id);
+
+        return number_format($model->cost_per_unit, 2);
+    }
+
+    public function actionCostPerUnit($id)
+    {
+        $model = Item::findOne($id);
+
+        return $model->cost_per_unit;
     }
 
     /**
