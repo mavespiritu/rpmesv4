@@ -110,6 +110,7 @@ use common\modules\v1\models\PpmpItem;
                     success: function (data) {
                         alert("Item Deleted");
                         loadItems('.$model->id.','.$activity->id.','.$fundSource->id.');
+                        loadPpmpTotal('.$model->id.');
                     },
                     error: function (err) {
                         console.log(err);

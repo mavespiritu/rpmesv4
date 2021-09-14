@@ -9,7 +9,7 @@ DisableButtonAsset::register($this);
 use yii\web\View;
 /* @var $model common\modules\v1\models\Ppmp */
 /* @var $form yii\widgets\ActiveForm */
-
+$id = $model->reference ? $model->reference->id : 0;
 ?>
 
 <div class="ppmp">
@@ -35,7 +35,7 @@ use yii\web\View;
                         $.ajax({
                             url: "'.$fundSourcesUrl.'",
                             data: {
-                                    id: '.$model->reference->id.', 
+                                    id: '.$id.', 
                                     activity_id: this.value
                                 }
                             

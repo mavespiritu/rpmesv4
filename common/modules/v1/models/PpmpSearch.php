@@ -47,12 +47,12 @@ class PpmpSearch extends Ppmp
                 ->joinWith('creator c')
                 ->joinWith('updater u')
                 ->joinWith('office')
-                ->orderBy(['year' => SORT_DESC]) : Ppmp::find()
+                ->orderBy(['id' => SORT_DESC, 'year' => SORT_DESC]) : Ppmp::find()
                 ->joinWith('creator c')
                 ->joinWith('updater u')
                 ->joinWith('office')
                 ->andWhere(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
-                ->orderBy(['year' => SORT_DESC]);
+                ->orderBy(['id' => SORT_DESC, 'year' => SORT_DESC]);
 
         // add conditions that should always apply here
 

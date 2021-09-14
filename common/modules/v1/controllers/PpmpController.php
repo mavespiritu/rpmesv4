@@ -21,6 +21,7 @@ use common\modules\v1\models\ItemCost;
 use common\modules\v1\models\ObjectItem;
 use common\modules\v1\models\ItemBreakdown;
 use common\modules\v1\models\PpmpSearch;
+use common\modules\v1\models\Settings;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -250,7 +251,8 @@ class PpmpController extends Controller
                 $items[$key]['label'] = '<table style="width:100%;" id="item-table-'.$subActivity->id.'" onclick="loadItemsInSubActivity('.$model->id.','.$subActivity->id.','.$activity->id.','.$fundSource->id.')">'; 
                 $items[$key]['label'] .= '<tr>'; 
                 $items[$key]['label'] .= '<td>'.$subActivity->title.'</td>'; 
-                $items[$key]['label'] .= '<td align=right>'.number_format(PpmpItem::getTotalPerSubActivity($model->id, $activity->id, $subActivity->id, $fundSource->id), 2).'</td>'; 
+                $items[$key]['label'] .= '<td align=right>'.PpmpItem::getCountPerSubActivity($model->id, $activity->id, $subActivity->id, $fundSource->id).'</td>'; 
+                $items[$key]['label'] .= '<td align=right style="width: 45%;">'.number_format(PpmpItem::getTotalPerSubActivity($model->id, $activity->id, $subActivity->id, $fundSource->id), 2).'</td>'; 
                 $items[$key]['label'] .= '</tr>'; 
                 $items[$key]['label'] .= '</table>';
                 $items[$key]['content'] = '<div id="item-list-'.$subActivity->id.'"></div>';
@@ -439,11 +441,16 @@ class PpmpController extends Controller
         $itemBreakdownModels = $itemModel->itemBreakdowns;
         $itemBreakdowns = [];
 
-        if($itemBreakdownModels)
+        if($months)
         {
-            foreach($itemBreakdownModels as $itemBreakdownModel)
+            foreach($months as $month)
             {
-                $itemBreakdowns[$itemBreakdownModel->month_id] = $itemBreakdownModel;
+                $breakdown = ItemBreakdown::findOne(['ppmp_item_id' => $itemModel->id, 'month_id' => $month->id]) ? 
+                ItemBreakdown::findOne(['ppmp_item_id' => $itemModel->id, 'month_id' => $month->id])  : new ItemBreakdown();
+                $breakdown->ppmp_item_id = $itemModel->id;
+                $breakdown->month_id = $month->id;
+
+                $itemBreakdowns[$month->id] = $breakdown;
             }
         }
 
@@ -484,6 +491,13 @@ class PpmpController extends Controller
     {
         $model = PpmpItem::findOne($id);
         $model->delete();
+    }
+
+    public function actionLoadPpmpTotal($id)
+    {
+        $model = $this->findModel($id);
+
+        return number_format($model->total, 2);
     }
 
     public function actionLoadItemsInSubActivity($id, $sub_activity_id, $activity_id, $fund_source_id)
@@ -532,16 +546,59 @@ class PpmpController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
 
+            $model->office_id = Yii::$app->user->can('Administrator') ? $model->office_id : Yii::$app->user->identity->userinfo->oFFICE_C;
             $model->created_by = Yii::$app->user->id;
         	$model->date_created = date("Y-m-d H:i:s");
             $model->save();
 
             \Yii::$app->getSession()->setFlash('success', 'Record Saved');
-            return $this->redirect(['index']);
+            return $this->redirect(['view', 'id' => $model->id]);
         }
 
         return $this->renderAjax('create', [
             'model' => $model,
+            'offices' => $offices,
+        ]);
+    }
+
+    public function actionCopy()
+    {
+        $model = new PPMP();
+        $model->scenario = Yii::$app->user->can('Administrator') ? 'isAdminCopy' : 'isUserCopy';
+
+        $offices = Office::find()->all();
+        $offices = ArrayHelper::map($offices, 'id', 'abbreviation');
+
+        $ppmps = Yii::$app->user->can('Administrator') ? Ppmp::find()
+        ->joinWith('office')
+        ->orderBy(['year' => SORT_DESC])
+        ->all() : Ppmp::find()
+        ->joinWith('office')
+        ->andWhere(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
+        ->orderBy(['year' => SORT_DESC])
+        ->all();
+        
+        $ppmps = ArrayHelper::map($ppmps, 'id', 'title');
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
+        if ($model->load(Yii::$app->request->post())) {
+
+            $model->office_id = Yii::$app->user->can('Administrator') ? $model->office_id : Yii::$app->user->identity->userinfo->oFFICE_C;
+            $model->created_by = Yii::$app->user->id;
+        	$model->date_created = date("Y-m-d H:i:s");
+            $model->save();
+
+            \Yii::$app->getSession()->setFlash('success', 'Record Saved');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->renderAjax('copy', [
+            'model' => $model,
+            'ppmps' => $ppmps,
             'offices' => $offices,
         ]);
     }

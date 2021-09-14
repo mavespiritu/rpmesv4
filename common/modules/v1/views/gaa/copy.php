@@ -18,7 +18,7 @@ DisableButtonAsset::register($this);
         'enableAjaxValidation' => true,
     ]); ?>
 
-<?= $form->field($model, 'year')->textInput(['type' => 'number' , 'min' => date("Y"), 'autocomplete' => 'off'])->label('New GAA Year') ?>
+<?= $form->field($model, 'year')->textInput(['type' => 'number' , 'min' => date("Y") - 1, 'autocomplete' => 'off'])->label('New GAA Year') ?>
 
     <hr style="opacity: 0.3">
 

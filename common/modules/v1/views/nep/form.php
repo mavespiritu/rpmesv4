@@ -13,6 +13,7 @@ $this->title = 'NEP '.$model->year;
 $this->params['breadcrumbs'][] = ['label' => 'NEPs', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
+$columnTotals = [];
 ?>
 <div class="nep-view">
     <?= $this->render('_menu', ['model' => $model]) ?>
@@ -35,15 +36,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </th>
                             <?php endforeach ?>
                         <?php endif ?>
+                        <th align=right style="width: <?= (count($model->appropriationPaps) + 1)/100 ?>%;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if($model->appropriationObjs): ?>
-                    <?php foreach($model->getAppropriationObjs()->orderBy(['arrangement'=> SORT_ASC])->all() as $object): ?>
+                    <?php foreach($model->getAppropriationObjs()->orderBy(['arrangement'=> SORT_ASC])->all() as $objIdx => $object): ?>
+                        <?php $rowTotal = 0; ?>
                         <tr>
                             <td><?= $object->obj->objectTitle ?></td>
                             <?php if(!empty($items)): ?>
+                                <?php $id = 0; ?>
                                 <?php foreach($items[$object->obj_id] as $key => $objectItem): ?>
+                                    <?php $columnTotals[$id] = isset($columnTotals[$id]) ? $columnTotals[$id] : 0 ?>
                                         <?php $form = ActiveForm::begin([
                                             'id' => $objectItem->obj_id.$key,
                                             'method' => 'POST',
@@ -71,10 +76,25 @@ $this->params['breadcrumbs'][] = $this->title;
                                             ])->label(false) ?>
                                         </td>
                                         <?php ActiveForm::end(); ?>
+                                        <?php $rowTotal += $objectItem->amount; ?>
+                                        <?php $columnTotals[$id] += $objectItem->amount; ?>
+                                        <?php $id++ ?>
                                 <?php endforeach ?> 
                             <?php endif ?>
+                            <td align=right style="padding-top: 25px;"><b><?= number_format($rowTotal, 2) ?></b></td>
                         </tr>
                     <?php endforeach ?>
+                        <?php $grandTotal = 0; ?>
+                        <tr>
+                            <td><b>Total</b></td>
+                            <?php if(!empty($columnTotals)){ ?>
+                                <?php foreach($columnTotals as $columnTotal){ ?>
+                                    <td align=right><b><?= number_format($columnTotal, 2) ?></b></td>
+                                    <?php $grandTotal += $columnTotal ?>
+                                <?php } ?>
+                            <?php } ?>
+                            <td align=right><b><?= number_format($grandTotal, 2) ?></b></td>
+                        </tr>
                 <?php endif ?>
                 </tbody>
             </table>

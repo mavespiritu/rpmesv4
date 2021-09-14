@@ -4,6 +4,8 @@ namespace common\modules\v1\models;
 
 use Yii;
 use markavespiritu\user\models\Office;
+use markavespiritu\user\models\Section;
+use markavespiritu\user\models\Unit;
 use markavespiritu\user\models\UserInfo;
 /**
  * This is the model class for table "ppmp_ppmp".
@@ -36,10 +38,12 @@ class Ppmp extends \yii\db\ActiveRecord
     {
         return [
             [['year','stage'], 'validatePpmp'],
+            [['office_id', 'year', 'stage', 'copy', 'data'], 'required', 'on' => 'isAdminCopy'],
+            [['year', 'stage', 'copy', 'data'], 'required', 'on' => 'isUserCopy'],
             [['year','stage'], 'required'],
             [['year','stage'], 'required', 'on' => 'isUser'],
             [['year','stage', 'office_id'], 'required', 'on' =>  'isAdmin'],
-            [['office_id', 'year', 'created_by', 'updated_by'], 'integer'],
+            [['office_id', 'section_id', 'unit_id', 'year', 'created_by', 'updated_by'], 'integer'],
             [['stage'], 'string'],
             [['date_created', 'date_updated'], 'safe'],
         ];
@@ -54,6 +58,10 @@ class Ppmp extends \yii\db\ActiveRecord
             'id' => 'ID',
             'office_id' => 'Division',
             'officeName' => 'Division',
+            'section_id' => 'Section',
+            'sectionName' => 'Section',
+            'unit_id' => 'Unit',
+            'unitName' => 'Unit',
             'stage' => 'Stage',
             'year' => 'Year',
             'copy' => 'Copy From',
@@ -69,7 +77,8 @@ class Ppmp extends \yii\db\ActiveRecord
 
     public function validatePpmp($attribute, $params, $validator)
     {
-        $model = Ppmp::findOne(['office_id' => $this->office_id, 'year' => $this->year, 'stage' => $this->stage]);
+        $model = Yii::$app->user->can('Administrator')? Ppmp::findOne(['office_id' => $this->office_id, 'year' => $this->year, 'stage' => $this->stage]) : 
+        Ppmp::findOne(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C, 'year' => $this->year, 'stage' => $this->stage]);
 
         if($model)
         {
@@ -95,6 +104,26 @@ class Ppmp extends \yii\db\ActiveRecord
     public function getOfficeName()
     {
         return $this->office ? $this->office->abbreviation : '';
+    }
+
+    public function getSection()
+    {
+        return $this->hasOne(Section::className(), ['id' => 'section_id']);
+    }
+
+    public function getSectionName()
+    {
+        return $this->office ? $this->section->abbreviation : '';
+    }
+
+    public function getUnit()
+    {
+        return $this->hasOne(Unit::className(), ['id' => 'unit_id']);
+    }
+
+    public function getUnitName()
+    {
+        return $this->office ? $this->unit->abbreviation : '';
     }
 
     public function getCreator()
@@ -161,5 +190,82 @@ class Ppmp extends \yii\db\ActiveRecord
                 ->one();
         
         return $total['total'];
+    }
+
+    public static function pageQuantityTotal($provider, $fieldName)
+    {
+        $total = 0;
+        foreach($provider as $item){
+            $total+=$item[$fieldName];
+        }
+        return '<b>'.number_format($total, 2).'</b>';
+    }
+
+    public function afterSave($insert, $changedAttributes){
+        if($insert){
+            {
+                if($this->copy != '')
+                {
+                    $model = Ppmp::findOne(['id' => $this->copy]);
+                    if($model)
+                    {
+                        $connection = \Yii::$app->db;
+
+                        $items = PpmpItem::find()
+                        ->select([
+                            'activity_id',
+                            'fund_source_id',
+                            'sub_activity_id',
+                            'obj_id',
+                            'concat("'.$this->id.'")',
+                            'item_id',
+                            'cost',
+                            'remarks'
+                        ])
+                        ->where(['ppmp_id' => $model->id])
+                        ->createCommand()
+                        ->getRawSql();
+
+                        $connection->createCommand('INSERT into ppmp_ppmp_item (activity_id, fund_source_id, sub_activity_id, obj_id, ppmp_id, item_id, cost, remarks) '.$items)->execute();
+
+                        if($this->data == 2)
+                        {
+                            $items = PpmpItem::find()
+                            ->where(['ppmp_id' => $model->id])
+                            ->all();
+
+                            if($items)
+                            {
+                                foreach($items as $item)
+                                {
+                                    $newItem = PpmpItem::findOne([
+                                        'ppmp_id' => $this->id,
+                                        'activity_id' => $item->activity_id,
+                                        'fund_source_id' => $item->fund_source_id,
+                                        'sub_activity_id' => $item->sub_activity_id,
+                                        'obj_id' => $item->obj_id,
+                                        'item_id' => $item->item_id,
+                                    ]);
+
+                                    $breakdown = ItemBreakdown::find()
+                                    ->select([
+                                        'concat("'.$newItem->id.'")',
+                                        'month_id',
+                                        'quantity',
+                                    ])
+                                    ->where(['ppmp_item_id' => $item->id])
+                                    ->createCommand()
+                                    ->getRawSql();
+
+                                    $connection->createCommand('INSERT into ppmp_ppmp_item_breakdown (ppmp_item_id, month_id, quantity) '.$breakdown)->execute();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        parent::afterSave($insert, $changedAttributes);
     }
 }

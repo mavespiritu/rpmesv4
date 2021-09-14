@@ -5,7 +5,7 @@ use yii\helpers\Url;
 
 <div>
     <div class="pull-left">
-        <?php // Html::button('<i class="fa fa-plus"></i> Add Item', ['value' => Url::to(['/v1/ppmp/create-item']), 'class' => 'btn btn-app', 'id' => 'create-button']) ?>
+        <?= Html::a('<i class="fa fa-angle-double-left"></i> Back to PPMP List', ['/v1/ppmp/'], ['class' => 'btn btn-app']) ?>
     </div>
     <div class="pull-right">
         <?= Html::a('<i class="fa fa-trash"></i> Delete PPMP', ['delete', 'id' => $model->id], [

@@ -203,4 +203,18 @@ class PpmpItem extends \yii\db\ActiveRecord
         
         return $total['total'];
     }
+
+    public static function getCountPerSubActivity($ppmp_id, $activity_id, $sub_activity_id, $fund_source_id)
+    {
+        $total = PpmpItem::find()
+                ->andWhere([
+                    'ppmp_id' => $ppmp_id,
+                    'activity_id' => $activity_id,
+                    'sub_activity_id' => $sub_activity_id,
+                    'fund_source_id' => $fund_source_id,
+                ])
+                ->count();
+        
+        return $total > 1 ? $total.' items' : $total.' item';
+    }
 }

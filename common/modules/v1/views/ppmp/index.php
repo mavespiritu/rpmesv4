@@ -6,6 +6,7 @@ use yii\widgets\Pjax;
 use yii\bootstrap\Modal;
 use yii\helpers\Url;
 use yii\web\View;
+use common\modules\v1\models\Ppmp;
 /* @var $this yii\web\View */
 /* @var $searchModel common\modules\v1\models\PpmpSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
@@ -25,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="row">
         <div class="col-md-2 col-xs-12">
             <div class="box box-primary">
-                <div class="box-header"><i class="fa fa-search"></i> Search Filter</div>
+                <div class="box-header panel-title"><i class="fa fa-search"></i> Search Filter</div>
                 <div class="box-body">
                     <?= $this->render('_search', [
                         'model' => $searchModel,
@@ -38,19 +39,42 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="col-md-10 col-xs-12">
             <div class="box box-primary">
-                <div class="box-header"><i class="fa fa-list"></i> PPMP List</div>
+                <div class="box-header panel-title"><i class="fa fa-list"></i> PPMP List</div>
                 <div class="box-body">
                 <?= GridView::widget([
                     'options' => [
                         'class' => 'table-responsive',
                     ],
                     'dataProvider' => $dataProvider,
+                    'showFooter' => true,
                     'columns' => [
                         ['class' => 'yii\grid\SerialColumn'],
 
                         'officeName',
                         'year',
-                        'stage',
+                        [
+                            'header' => 'Stage',
+                            'attribute' => 'stage',
+                            'format' => 'raw',
+                            'contentOptions' => ['style' => 'text-align: center;'],
+                            'value' => function($ppmp){
+                                $color = ['Indicative' => 'red', 'Adjusted' => 'green', 'Final' => 'blue'];
+                                return '<span class="badge bg-'.$color[$ppmp->stage].'">'.$ppmp->stage.'</span>';
+                            }
+                        ],
+                        [
+                            'header' => 'Total', 
+                            'attribute' => 'total',
+                            'contentOptions' => ['style' => 'text-align: right;'],
+                            'value' => function($ppmp){
+                                return number_format($ppmp->total, 2);
+                            },
+                            'footerOptions' => ['style' => 'text-align: right;'],
+                            'value' => function($item){
+                                return number_format($item->total, 2);
+                            },
+                            'footer' => Ppmp::pageQuantityTotal($dataProvider->models, 'total'),
+                        ],
                         'creatorName',
                         'date_created',
                         //'updated_by',
@@ -74,7 +98,8 @@ $this->params['breadcrumbs'][] = $this->title;
   Modal::begin([
     'id' => 'create-modal',
     'size' => "modal-sm",
-    'header' => '<div id="create-modal-header"><h4>Create PPMP</h4></div>'
+    'header' => '<div id="create-modal-header"><h4>Create PPMP</h4></div>',
+    'options' => ['tabindex' => false],
   ]);
   echo '<div id="create-modal-content"></div>';
   Modal::end();
@@ -83,7 +108,8 @@ $this->params['breadcrumbs'][] = $this->title;
   Modal::begin([
     'id' => 'copy-modal',
     'size' => "modal-sm",
-    'header' => '<div id="copy-modal-header"><h4>Copy PPMP</h4></div>'
+    'header' => '<div id="copy-modal-header"><h4>Copy PPMP</h4></div>',
+    'options' => ['tabindex' => false],
   ]);
   echo '<div id="copy-modal-content"></div>';
   Modal::end();

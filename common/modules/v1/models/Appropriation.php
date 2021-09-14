@@ -216,4 +216,13 @@ class Appropriation extends \yii\db\ActiveRecord
 
         parent::afterSave($insert, $changedAttributes);
     }
+
+    public static function pageQuantityTotal($provider, $fieldName)
+    {
+        $total = 0;
+        foreach($provider as $item){
+            $total+=$item[$fieldName];
+        }
+        return '<b>'.number_format($total, 2).'</b>';
+    }
 }

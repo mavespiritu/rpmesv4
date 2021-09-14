@@ -6,6 +6,7 @@ use yii\widgets\Pjax;
 use yii\bootstrap\Modal;
 use yii\helpers\Url;
 use yii\web\View;
+use common\modules\v1\models\Appropriation;
 /* @var $this yii\web\View */
 /* @var $searchModel common\modules\v1\models\PpmpSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
@@ -28,13 +29,26 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
+        'showFooter' => true,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
 
             'year',
             'creatorName',
             'date_created',
-
+            [
+              'header' => 'Total', 
+              'attribute' => 'total',
+              'contentOptions' => ['style' => 'text-align: right;'],
+              'value' => function($gaa){
+                  return number_format($gaa->total, 2);
+              },
+              'footerOptions' => ['style' => 'text-align: right;'],
+              'value' => function($gaa){
+                  return number_format($gaa->total, 2);
+              },
+              'footer' => Appropriation::pageQuantityTotal($dataProvider->models, 'total'),
+            ],
             [
                 'format' => 'raw', 
                 'value' => function($model){

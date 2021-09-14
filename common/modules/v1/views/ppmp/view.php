@@ -1,10 +1,11 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
-/* @var $this yii\web\View */
+use yii\web\View;
 /* @var $model common\modules\v1\models\Ppmp */
 
 $this->title = $model->title;
@@ -23,7 +24,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="box-body">
                     <div class="row">
                         <div class="col-md-12 col-xs-12">
-                            <p>Step 1. Load items by selecting the funded program, activity and fund source.</p>
                             <?= $this->render('_load-items', [
                                 'model' => $model,
                                 'appropriationItemModel' => $appropriationItemModel,
@@ -78,3 +78,27 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+<?php
+    $script = '
+        function loadPpmpTotal(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/ppmp/load-ppmp-total']).'",
+                data: {
+                    id: id,
+                },
+                success: function (data) {
+                    $("#ppmp-total").empty();
+                    $("#ppmp-total").hide();
+                    $("#ppmp-total").fadeIn("slow");
+                    $("#ppmp-total").html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>
