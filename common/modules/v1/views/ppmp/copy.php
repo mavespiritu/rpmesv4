@@ -16,7 +16,6 @@ DisableButtonAsset::register($this);
     	'options' => ['class' => 'disable-submit-buttons'],
         'id' => 'ppmp-copy-form',
         'enableAjaxValidation' => true,
-        'method' => 'GET',
     ]); ?>
 
     <?php if(Yii::$app->user->can('Administrator')){ ?>
