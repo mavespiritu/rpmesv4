@@ -21,7 +21,7 @@ class PpmpSearch extends Ppmp
     {
         return [
             [['id', 'office_id', 'year', 'created_by', 'updated_by'], 'integer'],
-            [['stage', 'date_created', 'date_updated', 'officeName', 'creatorName'], 'safe'],
+            [['stage', 'date_created', 'date_updated', 'officeName', 'creatorName', 'updaterName'], 'safe'],
         ];
     }
 
@@ -45,19 +45,18 @@ class PpmpSearch extends Ppmp
     {
         $query = Yii::$app->user->can('Administrator') ? Ppmp::find()
                 ->joinWith('creator c')
-                ->joinWith('updater u')
                 ->joinWith('office')
-                ->orderBy(['id' => SORT_DESC, 'year' => SORT_DESC]) : Ppmp::find()
+                 : Ppmp::find()
                 ->joinWith('creator c')
-                ->joinWith('updater u')
                 ->joinWith('office')
                 ->andWhere(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
-                ->orderBy(['id' => SORT_DESC, 'year' => SORT_DESC]);
+                ;
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort'=> ['defaultOrder' => ['id' => SORT_DESC]]
         ]);
 
         $dataProvider->setSort([
@@ -87,18 +86,13 @@ class PpmpSearch extends Ppmp
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'office_id' => $this->office_id,
             'year' => $this->year,
-            'created_by' => $this->created_by,
-            'date_created' => $this->date_created,
-            'updated_by' => $this->updated_by,
-            'date_updated' => $this->date_updated,
         ]);
 
         $query->andFilterWhere(['like', 'stage', $this->stage])
               ->andFilterWhere(['like', 'tbloffice.abbreviation', $this->officeName])
               ->andFilterWhere(['like', 'concat(c.FIRST_M," ",c.LAST_M)', $this->creatorName])
-              ->andFilterWhere(['like', 'concat(u.FIRST_M," ",u.LAST_M)', $this->updaterName]);
+              ;
 
         return $dataProvider;
     }

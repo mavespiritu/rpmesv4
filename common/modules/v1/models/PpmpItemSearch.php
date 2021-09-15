@@ -71,6 +71,7 @@ class PpmpItemSearch extends PpmpItem
             'ppmp_id' => $this->ppmp_id,
             'item_id' => $this->item_id,
             'cost' => $this->cost,
+            'type' => $this->type,
         ]);
 
         $query->andFilterWhere(['like', 'remarks', $this->remarks]);

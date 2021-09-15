@@ -46,7 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="box box-primary">
                 <div class="box-header panel-title"><i class="fa fa-bar-chart"></i> Summary</div>
                 <div class="box-body">
-                    <table class="table table-responsive">
+                    <table class="table table-responsive table-condensed table-hover">
                         <tr>
                             <th>Reference</th>
                             <td align="right"><?= $model->reference ? $model->reference->title : 'No cited reference' ?></td>
@@ -58,10 +58,18 @@ $this->params['breadcrumbs'][] = $this->title;
                     </table>
                     <br>
                     <p class="panel-title"><i class="fa fa-bar-chart"></i> This PPMP</p><br>
-                    <table class="table table-responsive">
+                    <table class="table table-responsive table-condensed table-hover">
                         <tr>
                             <th>Total</th>
                             <td align="right"><div id="ppmp-total"><?= number_format($model->total, 2) ?></div></td>
+                        </tr>
+                        <tr>
+                            <td align="right" style="font-size: 12px;">Original</td>
+                            <td align="right" style="font-size: 12px;"><div id="original-total"><?= number_format($model->originalTotal, 2) ?></div></td>
+                        </tr>
+                        <tr>
+                            <td align="right" style="font-size: 12px;">Supplemental</td>
+                            <td align="right" style="font-size: 12px;"><div id="supplemental-total"><?= number_format($model->supplementalTotal, 2) ?></div></td>
                         </tr>
                         <tr>
                             <th>Ongoing Procurement</th>
@@ -72,7 +80,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td align="right"><?= number_format(0, 2) ?></td>
                         </tr>
                     </table>
-                    
+                    <div id="item-summary"></div>
                 </div>
             </div>
         </div>
@@ -99,27 +107,90 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         }
 
-        function number_format (number, decimals, dec_point, thousands_sep) {
-            number = (number + "").replace(/[^0-9+\-Ee.]/g, "");
-            var n = !isFinite(+number) ? 0 : +number,
-                prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-                sep = (typeof thousands_sep === "undefined") ? "," : thousands_sep,
-                dec = (typeof dec_point === "undefined") ? "." : dec_point,
-                s = "",
-                toFixedFix = function (n, prec) {
-                    var k = Math.pow(10, prec);
-                    return "" + Math.round(n * k) / k;
-                };
-            s = (prec ? toFixedFix(n, prec) : "" + Math.round(n)).split(".");
-            if (s[0].length > 3) {
-                s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-            }
-            if ((s[1] || "").length < prec) {
-                s[1] = s[1] || "";
-                s[1] += new Array(prec - s[1].length + 1).join("0");
-            }
-            return s.join(dec);
+        function loadOriginalTotal(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/ppmp/load-original-total']).'",
+                data: {
+                    id: id,
+                },
+                success: function (data) {
+                    $("#original-total").empty();
+                    $("#original-total").hide();
+                    $("#original-total").fadeIn("slow");
+                    $("#original-total").html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
         }
+
+        function loadSupplementalTotal(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/ppmp/load-supplemental-total']).'",
+                data: {
+                    id: id,
+                },
+                success: function (data) {
+                    $("#supplemental-total").empty();
+                    $("#supplemental-total").hide();
+                    $("#supplemental-total").fadeIn("slow");
+                    $("#supplemental-total").html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+        function loadItemSummary(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/ppmp/load-item-summary']).'",
+                data: {
+                    id: id,
+                },
+                success: function (data) {
+                    $("#item-summary").empty();
+                    $("#item-summary").hide();
+                    $("#item-summary").fadeIn("slow");
+                    $("#item-summary").html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+        function loadItems(id, activity_id, fund_source_id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/ppmp/load-items']).'",
+                data: {
+                    id: id,
+                    activity_id: activity_id,
+                    fund_source_id: fund_source_id,
+                },
+                beforeSend: function(){
+                    $("#items").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+                },
+                success: function (data) {
+                    $("#items").empty();
+                    $("#items").hide();
+                    $("#items").fadeIn("slow");
+                    $("#items").html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+        $(document).ready(function(){
+            loadItemSummary('.$model->id.');
+        });
     ';
 
     $this->registerJs($script, View::POS_END);

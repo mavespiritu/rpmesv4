@@ -44,7 +44,7 @@ class PpmpItem extends \yii\db\ActiveRecord
             [['sub_activity_id', 'obj_id', 'item_id'], 'required'],
             [['appropriation_item_id', 'activity_id', 'sub_activity_id', 'obj_id', 'ppmp_id', 'item_id', 'fund_source_id'], 'integer'],
             [['cost'], 'number'],
-            [['remarks'], 'string'],
+            [['remarks', 'type'], 'string'],
             [['activity_id'], 'exist', 'skipOnError' => true, 'targetClass' => Activity::className(), 'targetAttribute' => ['activity_id' => 'id']],
             [['appropriation_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => AppropriationItem::className(), 'targetAttribute' => ['appropriation_item_id' => 'id']],
             [['ppmp_id'], 'exist', 'skipOnError' => true, 'targetClass' => Ppmp::className(), 'targetAttribute' => ['ppmp_id' => 'id']],
@@ -72,6 +72,7 @@ class PpmpItem extends \yii\db\ActiveRecord
             'quantity' => 'Quantity',
             'cost' => 'Cost',
             'remarks' => 'Remarks',
+            'type' => 'Type',
         ];
     }
 
@@ -174,6 +175,33 @@ class PpmpItem extends \yii\db\ActiveRecord
     public function getTotalCost()
     {
         return $this->quantity * $this->cost;
+    }
+
+    public static function getTotalPerActivity($ppmp_id, $activity_id, $fund_source_id)
+    {
+        $quantity = ItemBreakdown::find()
+                   ->select([
+                       'ppmp_item_id',
+                       'sum(quantity) as total'
+                   ])
+                    ->groupBy(['ppmp_item_id'])
+                    ->createCommand()
+                    ->getRawSql();
+
+        $total = PpmpItem::find()
+                ->select([
+                    'sum(quantity.total * cost) as total'
+                ])
+                ->leftJoin(['quantity' => '('.$quantity.')'], 'quantity.ppmp_item_id = ppmp_ppmp_item.id')
+                ->andWhere([
+                    'ppmp_id' => $ppmp_id,
+                    'activity_id' => $activity_id,
+                    'fund_source_id' => $fund_source_id,
+                ])
+                ->asArray()
+                ->one();
+        
+        return $total['total'];
     }
 
     public static function getTotalPerSubActivity($ppmp_id, $activity_id, $sub_activity_id, $fund_source_id)

@@ -127,6 +127,7 @@ class PpmpController extends Controller
                         'ppmp_id' => $id,
                         'sub_activity_id' => $sub_activity_id,
                         'obj_id' => $obj_id,
+                        'type' => 'Original'
                     ]);
         
         $existingItems = $item_id == 0 ? $existingItems : $existingItems->andWhere(['<>', 'item_id', $item_id]);
@@ -143,6 +144,7 @@ class PpmpController extends Controller
                 ->leftJoin('ppmp_object_item', 'ppmp_object_item.item_id = ppmp_item.id')
                 ->andWhere(['ppmp_object_item.obj_id' => $obj_id])
                 ->andWhere(['not in', 'ppmp_item.id', $existingItems])
+                ->orderBy(['ppmp_item.title' => SORT_ASC])
                 ->asArray()
                 ->all();
         
@@ -287,8 +289,9 @@ class PpmpController extends Controller
         $itemModel = new PpmpItem();
         $itemModel->ppmp_id = $model->id;
         $itemModel->activity_id = $activity->id;
+        $itemModel->type = 'Original';
 
-        $selectedObjs = AppropriationItem::find()
+        /* $selectedObjs = AppropriationItem::find()
         ->select(['ppmp_appropriation_item.obj_id as id'])
         ->leftJoin('ppmp_appropriation', 'ppmp_appropriation.id = ppmp_appropriation_item.appropriation_id')
         ->andWhere(['>', 'amount', 0])
@@ -300,7 +303,7 @@ class PpmpController extends Controller
         ->distinct(['ppmp_appropriation_item.obj_id'])
         ->all();
 
-        $selectedObjs = ArrayHelper::map($selectedObjs, 'id', 'id');
+        $selectedObjs = ArrayHelper::map($selectedObjs, 'id', 'id'); */
 
         $objects = Obj::find()->select([
             'ppmp_obj.id', 
@@ -310,7 +313,7 @@ class PpmpController extends Controller
             'ppmp_obj.active'
             ])
             ->leftJoin(['p' => '(SELECT id, concat(code," - ",title) as title from ppmp_obj)'], 'p.id = ppmp_obj.obj_id')
-            ->andWhere(['in', 'ppmp_obj.id', $selectedObjs])
+            //->andWhere(['in', 'ppmp_obj.id', $selectedObjs])
             ->asArray()
             ->all();
         
@@ -386,7 +389,7 @@ class PpmpController extends Controller
         $subActivities = SubActivity::find()-> where(['activity_id' => $activity->id])->orderBy(['code' => SORT_ASC])->all();
         $subActivities = ArrayHelper::map($subActivities, 'id', 'title');
 
-        $selectedObjs = AppropriationItem::find()
+        /* $selectedObjs = AppropriationItem::find()
         ->select(['ppmp_appropriation_item.obj_id as id'])
         ->leftJoin('ppmp_appropriation', 'ppmp_appropriation.id = ppmp_appropriation_item.appropriation_id')
         ->andWhere(['>', 'amount', 0])
@@ -398,7 +401,7 @@ class PpmpController extends Controller
         ->distinct(['ppmp_appropriation_item.obj_id'])
         ->all();
 
-        $selectedObjs = ArrayHelper::map($selectedObjs, 'id', 'id');
+        $selectedObjs = ArrayHelper::map($selectedObjs, 'id', 'id'); */
 
         $objects = Obj::find()->select([
             'ppmp_obj.id', 
@@ -408,7 +411,7 @@ class PpmpController extends Controller
             'ppmp_obj.active'
             ])
             ->leftJoin(['p' => '(SELECT id, concat(code," - ",title) as title from ppmp_obj)'], 'p.id = ppmp_obj.obj_id')
-            ->andWhere(['in', 'ppmp_obj.id', $selectedObjs])
+            //->andWhere(['in', 'ppmp_obj.id', $selectedObjs])
             ->asArray()
             ->all();
         
@@ -510,6 +513,20 @@ class PpmpController extends Controller
         return number_format($model->total, 2);
     }
 
+    public function actionLoadOriginalTotal($id)
+    {
+        $model = $this->findModel($id);
+
+        return number_format($model->originalTotal, 2);
+    }
+
+    public function actionLoadSupplementalTotal($id)
+    {
+        $model = $this->findModel($id);
+
+        return number_format($model->supplementalTotal, 2);
+    }
+
     public function actionLoadItemsInSubActivity($id, $sub_activity_id, $activity_id, $fund_source_id)
     {
         $model = $this->findModel($id);
@@ -532,6 +549,62 @@ class PpmpController extends Controller
             'subActivity' => $subActivity,
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionLoadItemSummary($id)
+    {
+        $model = $this->findModel($id);
+
+        $quantity = ItemBreakdown::find()
+                   ->select([
+                       'ppmp_item_id',
+                       'sum(quantity) as total'
+                   ])
+                    ->groupBy(['ppmp_item_id'])
+                    ->createCommand()
+                    ->getRawSql();
+        
+        $items = PpmpItem::find()
+                    ->select([
+                        'fundSource.id as fundSourceID',
+                        'fundSource.code as fundSourceTitle',
+                        'activity.id as activityID',
+                        'activity.title as activityTitle',
+                        'subActivity.id as subActivityID',
+                        'subActivity.title as subActivityTitle',
+                        'object.id as objectID',
+                        'concat(object.code," - ",object.title) as objectTitle',
+                        'sum(cost * quantity.total) as total',
+    
+                    ])
+                    ->leftJoin(['quantity' => '('.$quantity.')'], 'quantity.ppmp_item_id = ppmp_ppmp_item.id')
+                    ->leftJoin('ppmp_sub_activity subActivity', 'subActivity.id = ppmp_ppmp_item.sub_activity_id')
+                    ->leftJoin('ppmp_activity activity', 'activity.id = ppmp_ppmp_item.activity_id')
+                    ->leftJoin('ppmp_fund_source fundSource', 'fundSource.id = ppmp_ppmp_item.fund_source_id')
+                    ->leftJoin('ppmp_obj object', 'object.id = ppmp_ppmp_item.obj_id')
+                    ->groupBy(['subActivity.id','object.id'])
+                    ->where(['ppmp_id' => $model->id])
+                    ->asArray()
+                    ->all();
+        
+        $data = [];
+
+        if(!empty($items))
+        {
+            foreach($items as $item)
+            {
+                $data[$item['fundSourceID']]['title'] = $item['fundSourceTitle'];
+                $data[$item['fundSourceID']]['contents'][$item['activityID']]['title'] = $item['activityTitle'];
+                $data[$item['fundSourceID']]['contents'][$item['activityID']]['contents'][$item['subActivityID']]['title'] = $item['subActivityTitle'];
+                $data[$item['fundSourceID']]['contents'][$item['activityID']]['contents'][$item['subActivityID']]['contents'][$item['objectID']]['title'] = $item['objectTitle'];
+                $data[$item['fundSourceID']]['contents'][$item['activityID']]['contents'][$item['subActivityID']]['contents'][$item['objectID']]['total'] = $item['total'];
+            }
+        }
+
+        return $this->renderAjax('_item-summary',[
+            'model' => $model,
+            'data' => $data
         ]);
     }
 

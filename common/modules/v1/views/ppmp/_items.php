@@ -10,12 +10,14 @@ use yii\bootstrap\Modal;
 
 ?>
 <div class="ppmp-items">
-<div class="pull-right">
-<?= Html::button('<i class="fa fa-plus"></i> Add Item', ['value' => Url::to(['/v1/ppmp/create-item', 'id' => $model->id, 'activity_id' => $activity_id, 'fund_source_id' => $fund_source_id]), 'class' => 'btn btn-success', 'id' => 'create-item-button']) ?>
-&nbsp;&nbsp;<?= Html::button('<i class="fa fa-edit"></i> Update Prices', ['value' => Url::to(['/v1/ppmp/update-price', 'id' => $model->id]), 'class' => 'btn btn-primary']) ?>
+<div class="flex-start">
+    <div><?= Html::button('<i class="fa fa-plus"></i> Add Item', ['value' => Url::to(['/v1/ppmp/create-item', 'id' => $model->id, 'activity_id' => $activity_id, 'fund_source_id' => $fund_source_id]), 'class' => 'btn btn-success', 'id' => 'create-item-button']) ?></div>
+    <div><?= Html::button('<i class="fa fa-times"></i> Close Form', ['class' => 'btn btn-danger', 'id' => 'close-item-form-button', 'style' => 'display: none;']) ?></div>
+    <div><?php // Html::button('<i class="fa fa-edit"></i> Update Prices', ['value' => Url::to(['/v1/ppmp/update-price', 'id' => $model->id]), 'class' => 'btn btn-primary', 'style' => 'margin-left: 10px;']) ?></div>
 </div>
-<div class="clearfix"></div>
 <br>
+<div id="item-form-container"></div>
+<h3 class="panel-title">Items</h3><br>
 <?= !empty($items) ? Collapse::widget(['items' => $items, 'encodeLabels' => false, 'autoCloseItems' => true]) : 'No PPAs' ?>
 <p class="panel-title pull-right" style="margin-right: 17px;">Total:&nbsp;&nbsp;&nbsp;<b><?= number_format($total, 2) ?></b></p>
 </div>
@@ -57,7 +59,16 @@ use yii\bootstrap\Modal;
         }
         $(document).ready(function(){
             $("#create-item-button").click(function(){
-              $("#create-item-modal").modal("show").find("#create-item-modal-content").load($(this).attr("value"));
+              //$("#item-form-container").modal("show").find("#create-item-modal-content").load($(this).attr("value"));
+              $("#item-form-container").load($(this).attr("value"));
+              $("#close-item-form-button").css("display", "block");
+              $(this).css("display", "none");
+            });
+
+            $("#close-item-form-button").click(function(){
+                $("#create-item-button").css("display", "block");
+                $(this).css("display", "none");
+                $("#item-form-container").empty();
             });
         });     
     ';

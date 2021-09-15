@@ -192,6 +192,58 @@ class Ppmp extends \yii\db\ActiveRecord
         return $total['total'];
     }
 
+    public function getOriginalTotal()
+    {
+        $quantity = ItemBreakdown::find()
+                   ->select([
+                       'ppmp_item_id',
+                       'sum(quantity) as total'
+                   ])
+                    ->groupBy(['ppmp_item_id'])
+                    ->createCommand()
+                    ->getRawSql();
+
+        $total = PpmpItem::find()
+                ->select([
+                    'sum(quantity.total * cost) as total'
+                ])
+                ->leftJoin(['quantity' => '('.$quantity.')'], 'quantity.ppmp_item_id = ppmp_ppmp_item.id')
+                ->andWhere([
+                    'ppmp_id' => $this->id,
+                    'type' => 'Original'
+                ])
+                ->asArray()
+                ->one();
+        
+        return $total['total'];
+    }
+
+    public function getSupplementalTotal()
+    {
+        $quantity = ItemBreakdown::find()
+                   ->select([
+                       'ppmp_item_id',
+                       'sum(quantity) as total'
+                   ])
+                    ->groupBy(['ppmp_item_id'])
+                    ->createCommand()
+                    ->getRawSql();
+
+        $total = PpmpItem::find()
+                ->select([
+                    'sum(quantity.total * cost) as total'
+                ])
+                ->leftJoin(['quantity' => '('.$quantity.')'], 'quantity.ppmp_item_id = ppmp_ppmp_item.id')
+                ->andWhere([
+                    'ppmp_id' => $this->id,
+                    'type' => 'Supplemental'
+                ])
+                ->asArray()
+                ->one();
+        
+        return $total['total'];
+    }
+
     public static function pageQuantityTotal($provider, $fieldName)
     {
         $total = 0;

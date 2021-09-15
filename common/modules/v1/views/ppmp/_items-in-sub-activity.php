@@ -19,8 +19,20 @@ use common\modules\v1\models\PpmpItem;
     'columns' => [
         ['class' => 'yii\grid\SerialColumn'],
 
+        [
+            'header' => 'Object', 
+            'contentOptions' => ['style' => 'width: 10%;'],
+            'format' => 'raw',
+            'value' => function($item){
+                return $item->obj->code.'<br>'.$item->obj->title;
+            }
+        ],
         'item.title',
         'item.unit_of_measure',
+        [
+            'header' => 'Type', 
+            'attribute' => 'type',
+        ],
         [
             'header' => 'Quantity', 
             'attribute' => 'quantity',
@@ -111,6 +123,9 @@ use common\modules\v1\models\PpmpItem;
                         alert("Item Deleted");
                         loadItems('.$model->id.','.$activity->id.','.$fundSource->id.');
                         loadPpmpTotal('.$model->id.');
+                        loadOriginalTotal('.$model->id.');
+                        loadSupplementalTotal('.$model->id.');
+                        loadItemSummary('.$model->id.');
                     },
                     error: function (err) {
                         console.log(err);
@@ -121,10 +136,13 @@ use common\modules\v1\models\PpmpItem;
 
         $(document).ready(function(){
             $(".update-item-button-'.$subActivity->id.'").click(function(){
-                $("#update-item-modal-content-'.$subActivity->id.'").empty();
-                $("#update-item-modal-content-'.$subActivity->id.'").hide();
-                $("#update-item-modal-content-'.$subActivity->id.'").fadeIn("slow");
-                $("#update-item-modal-'.$subActivity->id.'").modal("show").find("#update-item-modal-content-'.$subActivity->id.'").load($(this).attr("value"));
+                //$("#update-item-modal-content-'.$subActivity->id.'").empty();
+                //$("#update-item-modal-content-'.$subActivity->id.'").hide();
+                //$("#update-item-modal-content-'.$subActivity->id.'").fadeIn("slow");
+                //$("#update-item-modal-'.$subActivity->id.'").modal("show").find("#update-item-modal-content-'.$subActivity->id.'").load($(this).attr("value"));
+                $("#item-form-container").load($(this).attr("value"));
+                $("#close-item-form-button").css("display", "block");
+                $("#create-item-button").css("display", "none");
             });
         });     
     ';

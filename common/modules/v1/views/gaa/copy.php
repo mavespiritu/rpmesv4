@@ -14,7 +14,7 @@ DisableButtonAsset::register($this);
 
     <?php $form = ActiveForm::begin([
     	'options' => ['class' => 'disable-submit-buttons'],
-        'id' => 'nep-form',
+        'id' => 'gaa-copy-form',
         'enableAjaxValidation' => true,
     ]); ?>
 

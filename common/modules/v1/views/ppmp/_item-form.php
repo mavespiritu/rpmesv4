@@ -14,78 +14,52 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
 ?>
 
 <div class="ppmp-item">
+    <div class="panel panel-default">
+        <div class="panel-body">
+        <?php $form = ActiveForm::begin([
+            'options' => ['class' => 'disable-submit-buttons'],
+            'id' => 'ppmp-items-form',
+        ]); ?>
+        <h3 class="panel-title">Item Form</h3>
 
-    <?php $form = ActiveForm::begin([
-    	'options' => ['class' => 'disable-submit-buttons'],
-        'id' => 'ppmp-item-form',
-    ]); ?>
-    <?= Html::hiddenInput('cost_per_unit', $itemModel->isNewRecord ? '' : $itemModel->item->cost_per_unit, ['id' => 'cost_per_unit']) ?>
-    <?= $form->field($itemModel, 'activity_id')->hiddenInput(['value' => $activity->id])->label(false) ?>
-    <?= $form->field($itemModel, 'fund_source_id')->hiddenInput(['value' => $fundSource->id])->label(false) ?>
-    
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
-            <div class="form-group">
-                <label class="control-label">Activity</label>
-                <?= Html::textInput('activity_id', $activity->title, ['disabled' => 'disabled', 'class' => 'form-control']); ?>
+        <?= Html::hiddenInput('cost_per_unit', $itemModel->isNewRecord ? '' : $itemModel->item->cost_per_unit, ['id' => 'cost_per_unit']) ?>
+        <?= $form->field($itemModel, 'activity_id')->hiddenInput(['value' => $activity->id])->label(false) ?>
+        <?= $form->field($itemModel, 'fund_source_id')->hiddenInput(['value' => $fundSource->id])->label(false) ?>
+        
+        <div class="row">
+            <div class="col-md-6 col-xs-12">
+                <div class="form-group">
+                    <label class="control-label">Activity</label>
+                    <?= Html::textInput('activity_id', $activity->title, ['disabled' => 'disabled', 'class' => 'form-control']); ?>
+                </div>
+            </div>
+            <div class="col-md-6 col-xs-12">
+                <div class="form-group">
+                    <label class="control-label">Fund Source</label>
+                    <?= Html::textInput('fund_source_id', $fundSource->code, ['disabled' => 'disabled', 'class' => 'form-control']); ?>
+                </div>
             </div>
         </div>
-        <div class="col-md-6 col-xs-12">
-            <div class="form-group">
-                <label class="control-label">Fund Source</label>
-                <?= Html::textInput('fund_source_id', $fundSource->code, ['disabled' => 'disabled', 'class' => 'form-control']); ?>
-            </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
-            <?= $form->field($itemModel, 'sub_activity_id')->widget(Select2::classname(), [
-                'data' => $subActivities,
-                'options' => ['placeholder' => 'Select PPA', 'multiple' => false, 'class' => 'sub-activity-select', 'id' => 'ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                'pluginEvents'=>[
-                    'select2:select'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.$itemsUrl.'",
-                                data: {
-                                        id: '.$model->id.',
-                                        sub_activity_id: this.value,
-                                        obj_id: $("#ppmpitem-obj_id-'.$itemModel->sub_activity_id.'").val(),
-                                        item_id: '.$item_id.'
-                                    }
-                                
-                            }).done(function(result) {
-                                $(".item-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select Item", allowClear: true});
-                                $(".item-select").select2("val","");
-                            });
-                        }'
-
-                ]
-                ]);
-            ?>
-        </div>
-        <div class="col-md-6 col-xs-12">
-            <?= $form->field($itemModel, 'obj_id')->widget(Select2::classname(), [
-                    'data' => $objects,
-                    'options' => ['placeholder' => 'Select Object', 'multiple' => false, 'class' => 'obj-select', 'id' => 'ppmpitem-obj_id-'.$itemModel->sub_activity_id],
+        <div class="row">
+            <div class="col-md-6 col-xs-12">
+                <?= $form->field($itemModel, 'sub_activity_id')->widget(Select2::classname(), [
+                    'data' => $subActivities,
+                    'options' => ['placeholder' => 'Select PPA', 'multiple' => false, 'class' => 'sub-activity-select', 'id' => 'ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id],
                     'pluginOptions' => [
-                        'allowClear' => true
+                        'allowClear' =>  true,
                     ],
-                    'pluginEvents' => [
+                    'pluginEvents'=>[
                         'select2:select'=>'
                             function(){
                                 $.ajax({
                                     url: "'.$itemsUrl.'",
                                     data: {
                                             id: '.$model->id.',
-                                            sub_activity_id: $("#ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id.'").val(),
-                                            obj_id: this.value,
+                                            sub_activity_id: this.value,
+                                            obj_id: $("#ppmpitem-obj_id-'.$itemModel->sub_activity_id.'").val(),
                                             item_id: '.$item_id.'
-                                          }
+                                        }
                                     
                                 }).done(function(result) {
                                     $(".item-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select Item", allowClear: true});
@@ -94,93 +68,100 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
                             }'
 
                     ]
-                ])->label('Object');
-            ?>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <?= $form->field($itemModel, 'item_id')->widget(Select2::classname(), [
-                    'data' => $items,
-                    'options' => ['placeholder' => 'Select Item', 'multiple' => false, 'class' => 'item-select', 'id' => 'ppmpitem-item_id-'.$itemModel->sub_activity_id],
-                    'pluginOptions' => [
-                        'allowClear' =>  true,
-                    ],
-                    'pluginEvents' => [
-                        'select2:select'=>'
-                            function(){
-                                updateItemDetails(this.value);
-                            }'
-                    ]
-                ]);
-            ?>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
-            <div class="form-group">
-                <label class="control-label">Unit of Measure</label>
-                <?= Html::textInput('unit_of_measure', $itemModel->isNewRecord ? '' : $itemModel->item->unit_of_measure, ['disabled' => 'disabled', 'class' => 'form-control', 'id' => 'ppmp-item-unit_of_measure']); ?>
+                    ]);
+                ?>
+            </div>
+            <div class="col-md-6 col-xs-12">
+                <?= $form->field($itemModel, 'obj_id')->widget(Select2::classname(), [
+                        'data' => $objects,
+                        'options' => ['placeholder' => 'Select Object', 'multiple' => false, 'class' => 'obj-select', 'id' => 'ppmpitem-obj_id-'.$itemModel->sub_activity_id],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ],
+                        'pluginEvents' => [
+                            'select2:select'=>'
+                                function(){
+                                    $.ajax({
+                                        url: "'.$itemsUrl.'",
+                                        data: {
+                                                id: '.$model->id.',
+                                                sub_activity_id: $("#ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id.'").val(),
+                                                obj_id: this.value,
+                                                item_id: '.$item_id.'
+                                            }
+                                        
+                                    }).done(function(result) {
+                                        $(".item-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select Item", allowClear: true});
+                                        $(".item-select").select2("val","");
+                                    });
+                                }'
+
+                        ]
+                    ])->label('Object');
+                ?>
             </div>
         </div>
-        <div class="col-md-6 col-xs-12">
-            <div class="form-group">
-                <label class="control-label">Cost Per Unit</label>
-                <?= Html::textInput('cost_per_unit', $itemModel->isNewRecord ? '' : number_format($itemModel->item->cost_per_unit, 2), ['disabled' => 'disabled', 'class' => 'form-control', 'id' => 'ppmp-item_cost']); ?>
+        
+        <div class="row">
+            <div class="col-md-12 col-xs-12">
+                <?= $form->field($itemModel, 'item_id')->widget(Select2::classname(), [
+                        'data' => $items,
+                        'options' => ['placeholder' => 'Select Item', 'multiple' => false, 'class' => 'item-select', 'id' => 'ppmpitem-item_id-'.$itemModel->sub_activity_id],
+                        'pluginOptions' => [
+                            'allowClear' =>  true,
+                        ],
+                        'pluginEvents' => [
+                            'select2:select'=>'
+                                function(){
+                                    updateItemDetails(this.value);
+                                    getTotal();
+                                }'
+                        ]
+                    ]);
+                ?>
             </div>
         </div>
-    </div>
-    
-    <label for="quantity" class="control-label">Quantity</label>
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
-        <table class="table table-responsive table-bordered" style="width: 100%;">
-            <?php if($months){ ?>
-                <?php $i = 0; ?>
-                <?php foreach($months as $month){ ?>
-                    <?php if($i < 6){ ?>
-                        <?= $form->field($itemBreakdowns[$month->id], "[$month->id]month_id")->hiddenInput(['value' => $month->id])->label(false) ?>
-                    <tr>
-                        <th><?= $month->month ?></th>
-                        <td><?= $form->field($itemBreakdowns[$month->id], "[$month->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 0, 'onkeyup' => 'getTotal()', 'value' => $itemBreakdowns[$month->id]->quantity > 0 ? $itemBreakdowns[$month->id]->quantity : 0])->label(false) ?></td>
-                    </tr>
-                    <?php } ?>
-                    <?php $i++ ?>
-                <?php } ?>
-            <?php } ?>
-        </table>
+        
+        <div class="row">
+            <div class="col-md-6 col-xs-12">
+                <div class="form-group">
+                    <label class="control-label">Unit of Measure</label>
+                    <?= Html::textInput('unit_of_measure', $itemModel->isNewRecord ? '' : $itemModel->item->unit_of_measure, ['disabled' => 'disabled', 'class' => 'form-control', 'id' => 'ppmp-item-unit_of_measure']); ?>
+                </div>
+            </div>
+            <div class="col-md-6 col-xs-12">
+                <div class="form-group">
+                    <label class="control-label">Cost Per Unit</label>
+                    <?= Html::textInput('cost_per_unit', $itemModel->isNewRecord ? '' : number_format($itemModel->item->cost_per_unit, 2), ['disabled' => 'disabled', 'class' => 'form-control', 'id' => 'ppmp-item_cost']); ?>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6 col-xs-12">
-        <table class="table table-responsive table-bordered" style="width: 100%;">
-            <?php if($months){ ?>
-                <?php $i = 0; ?>
-                <?php foreach($months as $month){ ?>
-                    <?php if($i > 5){ ?>
-                        <?= $form->field($itemBreakdowns[$month->id], "[$month->id]month_id")->hiddenInput(['value' => $month->id])->label(false) ?>
-                    <tr>
-                        <th><?= $month->month ?></th>
-                        <td><?= $form->field($itemBreakdowns[$month->id], "[$month->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 0, 'onkeyup' => 'getTotal()', 'value' => $itemBreakdowns[$month->id]->quantity > 0 ? $itemBreakdowns[$month->id]->quantity : 0])->label(false) ?></td>
-                    </tr>
-                    <?php } ?>
-                    <?php $i++ ?>
-                <?php } ?>
+        
+        <label for="quantity" class="control-label">Quantity</label>
+        <div class="row">
+        <?php if($months){ ?>
+            <?php $i = 0; ?>
+            <?php foreach($months as $month){ ?>
+                <div class="col-md-1 col-xs-12">
+                    <?= $form->field($itemBreakdowns[$month->id], "[$month->id]month_id")->hiddenInput(['value' => $month->id])->label(false) ?>
+                    <?= $form->field($itemBreakdowns[$month->id], "[$month->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 0, 'onkeyup' => 'getTotal()', 'value' => $itemBreakdowns[$month->id]->quantity > 0 ? $itemBreakdowns[$month->id]->quantity : 0])->label($month->abbreviation) ?>
+                </div>
+                <?php $i++ ?>
             <?php } ?>
-        </table>
+        <?php } ?>
+        </div>
+        
+        <span class="pull-right">Total</span><br>
+        <p class="panel-title pull-right" style="font-size: 35px !important;" id="total-per-item"></p>
+        <p class="clearfix"></p>
+        
+        <div class="form-group">
+            <?= Html::submitButton('Save Item', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+        </div>
+
+        <?php ActiveForm::end(); ?>
         </div>
     </div>
-    
-    <span class="pull-right">Total</span><br>
-    <p class="panel-title pull-right" style="font-size: 35px !important;" id="total-per-item"></p>
-    <p class="clearfix"></p>
-    
-    <div class="form-group">
-        <?= Html::submitButton('Save Item', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
-    </div>
-
-    <?php ActiveForm::end(); ?>
-
 </div>
 <?php
   $script = '
@@ -270,35 +251,61 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
         getTotal();
     }
 
+    function number_format (number, decimals, dec_point, thousands_sep) {
+        number = (number + "").replace(/[^0-9+\-Ee.]/g, "");
+        var n = !isFinite(+number) ? 0 : +number,
+            prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+            sep = (typeof thousands_sep === "undefined") ? "," : thousands_sep,
+            dec = (typeof dec_point === "undefined") ? "." : dec_point,
+            s = "",
+            toFixedFix = function (n, prec) {
+                var k = Math.pow(10, prec);
+                return "" + Math.round(n * k) / k;
+            };
+        s = (prec ? toFixedFix(n, prec) : "" + Math.round(n)).split(".");
+        if (s[0].length > 3) {
+            s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+        }
+        if ((s[1] || "").length < prec) {
+            s[1] = s[1] || "";
+            s[1] += new Array(prec - s[1].length + 1).join("0");
+        }
+        return s.join(dec);
+    }
+
     $(document).ready(function() {
         getTotal();
-        $("#ppmp-item-form").on("beforeSubmit", function(e) {
-            e.preventDefault();
-            var activity_id = $("#ppmpitem-activity_id").val();
-            var fund_source_id = $("#ppmpitem-fund_source_id").val();
-            var sub_activity_id = $("#ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id.'").val();
-            
-            var form = $(this);
-            var formData = form.serialize();
+    });
 
-            $.ajax({
-                url: form.attr("action"),
-                type: form.attr("method"),
-                data: formData,
-                success: function (data) {
-                    $("#create-item-modal").modal("toggle");
-                    $(".modal-backdrop").remove();
-                    loadItems('.$model->id.',activity_id,fund_source_id);
-                    loadPpmpTotal('.$model->id.');
-                    form.enableSubmitButtons();
-                },
-                error: function (err) {
-                    console.log(err);
-                }
-            });
+    $("#ppmp-items-form").on("beforeSubmit", function(e) {
+        e.preventDefault();
+        var activity_id = $("#ppmpitem-activity_id").val();
+        var fund_source_id = $("#ppmpitem-fund_source_id").val();
+        var sub_activity_id = $("#ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id.'").val();
+        
+        var form = $(this);
+        var formData = form.serialize();
 
-            return false;
+        $.ajax({
+            url: form.attr("action"),
+            type: form.attr("method"),
+            data: formData,
+            success: function (data) {
+                //$("#create-item-modal").modal("toggle");
+                //$(".modal-backdrop").remove();
+                loadItems('.$model->id.',activity_id,fund_source_id);
+                loadPpmpTotal('.$model->id.');
+                loadOriginalTotal('.$model->id.');
+                loadSupplementalTotal('.$model->id.');
+                loadItemSummary('.$model->id.');
+                form.enableSubmitButtons();
+            },
+            error: function (err) {
+                console.log(err);
+            }
         });
+
+        return false;
     });
   ';
   $this->registerJs($script, View::POS_END);

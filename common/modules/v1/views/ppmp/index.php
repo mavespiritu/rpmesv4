@@ -82,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         [
                             'format' => 'raw', 
                             'value' => function($model){
-                                return Html::a('View', ['/v1/ppmp/view', 'id' => $model->id],['class' => 'btn btn-primary btn-block']);
+                                return Html::a('View', ['/v1/ppmp/view', 'id' => $model->id],['class' => 'btn btn-primary btn-sm btn-block']);
                         }],
                     ],
                 ]); ?>
