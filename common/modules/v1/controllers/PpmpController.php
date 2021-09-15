@@ -684,12 +684,12 @@ class PpmpController extends Controller
         
         $ppmps = ArrayHelper::map($ppmps, 'id', 'title');
 
-        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->get())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
             return ActiveForm::validate($model);
         }
 
-        if ($model->load(Yii::$app->request->post())) {
+        if ($model->load(Yii::$app->request->get())) {
 
             $model->office_id = Yii::$app->user->can('Administrator') ? $model->office_id : Yii::$app->user->identity->userinfo->oFFICE_C;
             $model->created_by = Yii::$app->user->id;
