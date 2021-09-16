@@ -20,6 +20,10 @@ use common\modules\v1\models\PpmpItem;
         ['class' => 'yii\grid\SerialColumn'],
 
         [
+            'header' => 'Type', 
+            'attribute' => 'type',
+        ],
+        [
             'header' => 'Object', 
             'contentOptions' => ['style' => 'width: 10%;'],
             'format' => 'raw',
@@ -29,10 +33,6 @@ use common\modules\v1\models\PpmpItem;
         ],
         'item.title',
         'item.unit_of_measure',
-        [
-            'header' => 'Type', 
-            'attribute' => 'type',
-        ],
         [
             'header' => 'Quantity', 
             'attribute' => 'quantity',

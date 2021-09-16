@@ -260,6 +260,7 @@ class PpmpController extends Controller
                 $items[$key]['label'] .= '</tr>'; 
                 $items[$key]['label'] .= '</table>';
                 $items[$key]['content'] = '<div id="item-list-'.$subActivity->id.'"></div>';
+                $items[$key]['options'] = ['class' => PpmpItem::getTotalPerSubActivity($model->id, $activity->id, $subActivity->id, $fundSource->id) > 0 ? 'panel panel-success' : 'panel panel-default'];
 
                 $total += PpmpItem::getTotalPerSubActivity($model->id, $activity->id, $subActivity->id, $fundSource->id);
             }
