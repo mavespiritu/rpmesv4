@@ -272,13 +272,14 @@ class Ppmp extends \yii\db\ActiveRecord
                             'concat("'.$this->id.'")',
                             'item_id',
                             'cost',
-                            'remarks'
+                            'remarks',
+                            'type'
                         ])
                         ->where(['ppmp_id' => $model->id])
                         ->createCommand()
                         ->getRawSql();
 
-                        $connection->createCommand('INSERT into ppmp_ppmp_item (activity_id, fund_source_id, sub_activity_id, obj_id, ppmp_id, item_id, cost, remarks) '.$items)->execute();
+                        $connection->createCommand('INSERT into ppmp_ppmp_item (activity_id, fund_source_id, sub_activity_id, obj_id, ppmp_id, item_id, cost, remarks, type) '.$items)->execute();
 
                         if($this->data == 2)
                         {
@@ -297,6 +298,7 @@ class Ppmp extends \yii\db\ActiveRecord
                                         'sub_activity_id' => $item->sub_activity_id,
                                         'obj_id' => $item->obj_id,
                                         'item_id' => $item->item_id,
+                                        'type' => $item->type,
                                     ]);
 
                                     $breakdown = ItemBreakdown::find()
