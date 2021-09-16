@@ -204,7 +204,7 @@ class PpmpController extends Controller
         $appropriationItemModel = new AppropriationItem();
         $appropriationItemModel->scenario = 'loadItems';
         
-        $progs = AppropriationPap::find()
+        /*  $progs = AppropriationPap::find()
                 ->leftJoin('ppmp_appropriation', 'ppmp_appropriation.id = ppmp_appropriation_pap.appropriation_id')
                 ->andWhere($refFilters[$model->stage])
                 ->orderBy(['arrangement' => SORT_ASC])
@@ -212,7 +212,7 @@ class PpmpController extends Controller
                 ->all();
         
         $progs = ArrayHelper::map($progs, 'pap_id', 'pap_id');
-        
+         */
         $activities = Activity::find()
                      ->select([
                          'ppmp_activity.id as id',
@@ -221,13 +221,15 @@ class PpmpController extends Controller
                          'p.title as groupTitle'
                      ])
                      ->leftJoin(['p' => '(SELECT id, title from ppmp_pap)'], 'p.id = ppmp_activity.pap_id')
-                     ->where(['in', 'pap_id', $progs])
                      ->asArray()
                      ->all();
 
         $activities = ArrayHelper::map($activities, 'id', 'text', 'groupTitle');
 
-        $fundSources = [];
+        //$fundSources = [];
+
+        $fundSources = FundSource::find()->all();
+        $fundSources = ArrayHelper::map($fundSources, 'id', 'code');
 
         return $this->render('view', [
             'model' => $model,

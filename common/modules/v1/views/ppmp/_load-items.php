@@ -20,7 +20,7 @@ $id = $model->reference ? $model->reference->id : 0;
     ]); ?>
 
     <div class="row">
-        <div class="col-md-4 col-xs-12">
+        <div class="col-md-8 col-xs-12">
         <?php 
             $fundSourcesUrl = \yii\helpers\Url::to(['/v1/ppmp/fund-source-list']);
             echo $form->field($appropriationItemModel, 'activity_id')->widget(Select2::classname(), [
@@ -29,7 +29,7 @@ $id = $model->reference ? $model->reference->id : 0;
             'pluginOptions' => [
                 'allowClear' =>  true,
             ],
-            'pluginEvents'=>[
+            /* 'pluginEvents'=>[
                 'select2:select'=>'
                     function(){
                         $.ajax({
@@ -45,11 +45,11 @@ $id = $model->reference ? $model->reference->id : 0;
                         });
                     }'
 
-            ]
+            ] */
             ]);
         ?>
         </div>
-        <div class="col-md-4 col-xs-12">
+        <div class="col-md-2 col-xs-12">
         <?= $form->field($appropriationItemModel, 'fund_source_id')->widget(Select2::classname(), [
             'data' => $fundSources,
             'options' => ['placeholder' => 'Select Fund Source','multiple' => false, 'class'=>'fund-source-select'],
@@ -59,7 +59,7 @@ $id = $model->reference ? $model->reference->id : 0;
             ]);
         ?>
         </div>
-        <div class="col-md-3 col-xs-12">
+        <div class="col-md-2 col-xs-12">
             <div class="form-group" style="padding-top: 25px;">
                 <?= Html::submitButton('<i class="fa fa-refresh"></i> Load Items', ['class' => 'btn btn-success']) ?>
             </div>
