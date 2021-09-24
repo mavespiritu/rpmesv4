@@ -145,6 +145,7 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
                 <div class="col-md-1 col-xs-12">
                     <?= $form->field($itemBreakdowns[$month->id], "[$month->id]month_id")->hiddenInput(['value' => $month->id])->label(false) ?>
                     <?= $form->field($itemBreakdowns[$month->id], "[$month->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 0, 'onkeyup' => 'getTotal()', 'value' => $itemBreakdowns[$month->id]->quantity > 0 ? $itemBreakdowns[$month->id]->quantity : 0])->label($month->abbreviation) ?>
+            
                 </div>
                 <?php $i++ ?>
             <?php } ?>
@@ -292,6 +293,7 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
             data: formData,
             success: function (data) {
                 //$("#create-item-modal").modal("toggle");
+                //$("#update-item-modal").modal("toggle");
                 //$(".modal-backdrop").remove();
                 loadItems('.$model->id.',activity_id,fund_source_id);
                 loadPpmpTotal('.$model->id.');

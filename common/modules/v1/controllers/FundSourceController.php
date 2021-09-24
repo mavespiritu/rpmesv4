@@ -8,7 +8,7 @@ use common\modules\v1\models\FundSourceSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-
+use yii\filters\AccessControl;
 /**
  * PpmpFundSourceController implements the CRUD actions for PpmpFundSource model.
  */
@@ -24,6 +24,17 @@ class FundSourceController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
+                ],
+            ],
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['index'],
+                'rules' => [
+                    [
+                        'actions' => ['index', 'create', 'update', 'view', 'delete'],
+                        'allow' => true,
+                        'roles' => ['Administrator'],
+                    ],
                 ],
             ],
         ];

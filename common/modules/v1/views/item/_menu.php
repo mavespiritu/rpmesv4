@@ -8,14 +8,14 @@ use yii\web\View;
 
 <div>
     <div class="pull-left">
-        <?= Html::a('<i class="fa fa-angle-double-left"></i> Back to PPMP List', ['/v1/ppmp/'], ['class' => 'btn btn-app']) ?>
+        <?= Html::a('<i class="fa fa-angle-double-left"></i> Back to Item List', ['/v1/item/'], ['class' => 'btn btn-app']) ?>
     </div>
     <div class="pull-right">
-        <?= Html::button('<i class="fa fa-edit"></i> Edit PPMP', ['value' => Url::to(['/v1/ppmp/update', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'update-button']) ?>
-        <?= Html::a('<i class="fa fa-trash"></i> Delete PPMP', ['delete', 'id' => $model->id], [
+        <?= Html::button('<i class="fa fa-edit"></i> Edit Item', ['value' => Url::to(['/v1/item/update', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'update-button']) ?>
+        <?= Html::a('<i class="fa fa-trash"></i> Delete Item', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-app',
             'data' => [
-                'confirm' => 'Deleting this PPMP will also delete all included items. Would you like to proceed?',
+                'confirm' => 'Deleting this item will also delete all included items. Would you like to proceed?',
                 'method' => 'post',
             ],
         ]) ?>
@@ -25,8 +25,8 @@ use yii\web\View;
 <?php
   Modal::begin([
     'id' => 'update-modal',
-    'size' => "modal-sm",
-    'header' => '<div id="update-modal-header"><h4>Edit PPMP</h4></div>',
+    'size' => 'modal-md',
+    'header' => '<div id="update-modal-header"><h4>Edit Item</h4></div>',
     'options' => ['tabindex' => false],
   ]);
   echo '<div id="update-modal-content"></div>';

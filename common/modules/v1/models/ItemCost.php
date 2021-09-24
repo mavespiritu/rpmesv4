@@ -33,7 +33,7 @@ class ItemCost extends \yii\db\ActiveRecord
             [['item_id'], 'integer'],
             [['cost'], 'number'],
             [['datetime'], 'safe'],
-            [['ppmp_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => Item::className(), 'targetAttribute' => ['item_id' => 'id']],
+            [['item_id'], 'exist', 'skipOnError' => true, 'targetClass' => Item::className(), 'targetAttribute' => ['item_id' => 'id']],
         ];
     }
 

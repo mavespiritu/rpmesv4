@@ -6,6 +6,7 @@ use yii\widgets\DetailView;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 use yii\web\View;
+use yii\bootstrap\Modal;
 /* @var $model common\modules\v1\models\Ppmp */
 
 $this->title = $model->title;
@@ -24,6 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="box-body">
                     <div class="row">
                         <div class="col-md-12 col-xs-12">
+                            <div id="alert-container"></div>
                             <?= $this->render('_load-items', [
                                 'model' => $model,
                                 'appropriationItemModel' => $appropriationItemModel,
@@ -49,7 +51,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <table class="table table-responsive table-condensed table-hover">
                         <tr>
                             <th>Reference</th>
-                            <td align="right"><?= $model->reference ? $model->reference->title : 'No cited reference' ?></td>
+                            <td align="right"><?= $model->reference ? Html::button($model->reference->title, ['value' => Url::to(['/v1/ppmp/reference', 'id' => $model->reference->id]), 'id' => 'reference-button', 'class' => 'btn btn-xs btn-primary']) : 'No cited reference' ?></td>
                         </tr>
                         <tr>
                             <th>Approved Budget</th>
@@ -88,6 +90,56 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php
     $script = '
+        $(document).ready(function(){
+            $("#reference-button").click(function(){
+              $("#items").load($(this).attr("value"));
+            });
+        });     
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>
+<?php
+    $script = '
+        function checkPrices(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/ppmp/check-price']).'",
+                data: {
+                    id: id,
+                },
+                success: function (data) {
+                    $("#alert-container").empty();
+                    $("#alert-container").hide();
+                    $("#alert-container").fadeIn("slow");
+                    $("#alert-container").html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+        function ignoreAlert(id, con)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/ppmp/ignore-alert']).'",
+                data: {
+                    id: id,
+                    con: con,
+                },
+                success: function (data) {
+                    $("#alert-container").empty();
+                    $("#alert-container").hide();
+                    $("#alert-container").fadeIn("slow");
+                    $("#alert-container").html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
         function loadPpmpTotal(id)
         {
             $.ajax({
@@ -181,6 +233,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     $("#items").hide();
                     $("#items").fadeIn("slow");
                     $("#items").html(data);
+                    $("html").animate({ scrollTop: 0 }, "slow");
                 },
                 error: function (err) {
                     console.log(err);
@@ -190,6 +243,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         $(document).ready(function(){
             loadItemSummary('.$model->id.');
+            //checkPrices('.$model->id.');
         });
     ';
 

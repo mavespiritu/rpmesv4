@@ -1,3 +1,15 @@
+<?php 
+    $userRoles = [];
+    $roles = \Yii::$app->authManager->getRolesByUser(Yii::$app->user->id);
+    if(!empty($roles))
+    {
+        foreach($roles as $role)
+        {
+            $userRoles[] = $role->name;
+        }
+    }
+    
+?>
 <aside class="main-sidebar">
 
     <section class="sidebar">
@@ -5,7 +17,7 @@
         <!-- Sidebar user panel -->
         <div class="user-panel">
             <div class="pull-left image">
-                <p style="color: white;">Howdy, <?= Yii::$app->user->identity->userinfo->FIRST_M ?>!</p>
+                <p style="color: white;">Howdy, <?= Yii::$app->user->identity->username ?>!</p>
 
                 <a href="#"><i class="fa fa-circle text-success"></i> Online</a>
             </div>
@@ -19,54 +31,58 @@
                 'options' => ['class' => 'sidebar-menu tree', 'data-widget'=> 'tree'],
                 'items' => [
                     ['label' => 'MAIN MENU', 'options' => ['class' => 'header']],
-                    ['label' => 'Dashboard', 'icon' => 'bar-chart-o', 'url' => ['/gii']],
-                    ['label' => 'Budget Monitoring', 'icon' => 'bar-chart-o', 'url' => ['/gii']],
+                    /* ['label' => 'Dashboard', 'icon' => 'bar-chart-o', 'url' => ['/gii']],
+                    ['label' => 'Budget Monitoring', 'icon' => 'bar-chart-o', 'url' => ['/gii']], */
                     ['label' => 'Procurement Planning', 'options' => ['class' => 'header']],
-                    ['label' => 'NEP', 'icon' => 'file-code-o', 'url' => ['/v1/nep']],
-                    ['label' => 'GAA', 'icon' => 'file-code-o', 'url' => ['/v1/gaa']],
-                    ['label' => 'PPMP', 'icon' => 'file-code-o', 'url' => ['/v1/ppmp']],
-                    ['label' => 'Actual Procurement', 'options' => ['class' => 'header']],
-                    ['label' => 'RIS', 'icon' => 'file-code-o', 'url' => ['/gii']],
-                    ['label' => 'PR', 'icon' => 'file-code-o', 'url' => ['/gii']],
-                    ['label' => 'Reports', 'icon' => 'file-code-o', 'url' => ['/gii']],
+                    ['label' => 'NEP', 'icon' => 'folder', 'url' => ['/v1/nep'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
+                    ['label' => 'GAA', 'icon' => 'folder', 'url' => ['/v1/gaa'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
+                    ['label' => 'PPMP', 'icon' => 'folder', 'url' => ['/v1/ppmp']],
+                    ['label' => 'APP', 'icon' => 'folder', 'url' => ['/v1/app']],
+                    /* ['label' => 'Actual Procurement', 'options' => ['class' => 'header']],
+                    ['label' => 'RIS', 'icon' => 'folder', 'url' => ['/gii']],
+                    ['label' => 'PR', 'icon' => 'folder', 'url' => ['/gii']],
+                    ['label' => 'Reports', 'icon' => 'folder', 'url' => ['/gii']],*/
 
-                    ['label' => 'Inventory', 'options' => ['class' => 'header']],
-                    ['label' => 'Inventory', 'icon' => 'file-code-o', 'url' => ['/gii']],
-                    ['label' => 'Administrator', 'options' => ['class' => 'header']],
+                    ['label' => 'Inventory', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))],
+                    ['label' => 'Items', 'icon' => 'folder', 'url' => ['/v1/item'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))], 
+                    ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('Administrator', $userRoles))],
                     [
                         'label' => 'Libraries',
                         'icon' => 'cog',
                         'url' => '#',
+                        'visible' => !Yii::$app->user->isGuest && (in_array('Administrator', $userRoles)),
                         'items' => [
                             [
                                 'label' => 'Activities', 
-                                'icon' => 'file-code-o', 
+                                'icon' => 'folder', 
                                 'url' => '#', 
                                 'items' => [
-                                    ['label' => 'Level 1', 'icon' => 'file-code-o', 'url' => ['/v1/pap'],],
-                                    ['label' => 'Level 2', 'icon' => 'file-code-o', 'url' => ['/v1/activity'],],
-                                    ['label' => 'Level 3', 'icon' => 'file-code-o', 'url' => ['/v1/sub-activity'],],                                ]
-                            ],
-                            ['label' => 'Fund Clusters', 'icon' => 'file-code-o', 'url' => ['/v1/fund-cluster'],],
-                            ['label' => 'Fund Sources', 'icon' => 'file-code-o', 'url' => ['/v1/fund-source'],],
+                                    ['label' => 'Level 1', 'icon' => 'folder', 'url' => ['/v1/pap'],],
+                                    ['label' => 'Level 2', 'icon' => 'folder', 'url' => ['/v1/activity'],],
+                                    ['label' => 'Level 3', 'icon' => 'folder', 'url' => ['/v1/sub-activity'],],
+                            ],],
+                            ['label' => 'Fund Clusters', 'icon' => 'folder', 'url' => ['/v1/fund-cluster'],],
+                            ['label' => 'Fund Sources', 'icon' => 'folder', 'url' => ['/v1/fund-source'],],
                             [
                                 'label' => 'PREXC', 
-                                'icon' => 'file-code-o', 
-                                'url' => '#', 
+                                'icon' => 'folder', 
+                                'url' => '#',
                                 'items' => [
-                                    ['label' => 'Cost Structures', 'icon' => 'file-code-o', 'url' => ['/v1/cost-structure'],],
-                                    ['label' => 'Org Outcomes', 'icon' => 'file-code-o', 'url' => ['/v1/organizational-outcome'],],
-                                    ['label' => 'Programs', 'icon' => 'file-code-o', 'url' => ['/v1/program'],],
-                                    ['label' => 'Sub-Programs', 'icon' => 'file-code-o', 'url' => ['/v1/sub-program'],],
-                                    ['label' => 'Identifiers', 'icon' => 'file-code-o', 'url' => ['/v1/identifier'],],
+                                    ['label' => 'Cost Structures', 'icon' => 'folder', 'url' => ['/v1/cost-structure'],],
+                                    ['label' => 'Org Outcomes', 'icon' => 'folder', 'url' => ['/v1/organizational-outcome'],],
+                                    ['label' => 'Programs', 'icon' => 'folder', 'url' => ['/v1/program'],],
+                                    ['label' => 'Sub-Programs', 'icon' => 'folder', 'url' => ['/v1/sub-program'],],
+                                    ['label' => 'Identifiers', 'icon' => 'folder', 'url' => ['/v1/identifier'],],
                                     
                                 ]
                             ],
-                            ['label' => 'Objects', 'icon' => 'file-code-o', 'url' => ['/v1/obj'],],
-                            ['label' => 'Procurement Modes', 'icon' => 'file-code-o', 'url' => ['/v1/procurement-mode'],],
+                            ['label' => 'Objects', 'icon' => 'folder', 'url' => ['/v1/obj'],],
+                            ['label' => 'Procurement Modes', 'icon' => 'folder', 'url' => ['/v1/procurement-mode'],],
                         ],
+                        
                     ],
-                    ['label' => 'User Management', 'icon' => 'users', 'url' => ['/user/admin']],
+                    
+                    ['label' => 'User Management', 'icon' => 'users', 'url' => ['/user/admin'], 'visible' => !Yii::$app->user->isGuest && (in_array('Administrator', $userRoles))],
                 ],
             ]
         ) ?>

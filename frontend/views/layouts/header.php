@@ -12,7 +12,7 @@ use yii\helpers\Html;
     <nav class="navbar navbar-static-top" role="navigation">
         <?php if(Yii::$app->user->isGuest){ ?>
             <div class="navbar-header">
-                <a href="#" class="navbar-brand">ePPMP</a>
+                <a href="#" class="navbar-brand">ePS</a>
             </div>
         <?php } ?>
         <?php if(!Yii::$app->user->isGuest){ ?>

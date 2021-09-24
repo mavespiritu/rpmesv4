@@ -39,7 +39,7 @@ class PapController extends Controller
                     [
                         'actions' => ['index', 'create', 'update', 'view', 'delete'],
                         'allow' => true,
-                        'roles' => ['@'],
+                        'roles' => ['Administrator'],
                     ],
                 ],
             ],

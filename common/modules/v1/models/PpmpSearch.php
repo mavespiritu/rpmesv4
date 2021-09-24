@@ -46,10 +46,12 @@ class PpmpSearch extends Ppmp
         $query = Yii::$app->user->can('Administrator') ? Ppmp::find()
                 ->joinWith('creator c')
                 ->joinWith('office')
+                ->orderBy(['year' => SORT_DESC])
                  : Ppmp::find()
                 ->joinWith('creator c')
                 ->joinWith('office')
                 ->andWhere(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
+                ->orderBy(['year' => SORT_DESC])
                 ;
 
         // add conditions that should always apply here
@@ -87,12 +89,10 @@ class PpmpSearch extends Ppmp
         $query->andFilterWhere([
             'id' => $this->id,
             'year' => $this->year,
+            'office_id' => $this->office_id,
+            'stage' => $this->stage,
         ]);
 
-        $query->andFilterWhere(['like', 'stage', $this->stage])
-              ->andFilterWhere(['like', 'tbloffice.abbreviation', $this->officeName])
-              ->andFilterWhere(['like', 'concat(c.FIRST_M," ",c.LAST_M)', $this->creatorName])
-              ;
 
         return $dataProvider;
     }

@@ -6,16 +6,21 @@ $params = array_merge(
     require __DIR__ . '/params-local.php'
 );
 
+use \yii\web\Request;
+$baseUrl = str_replace('/frontend/web', '', (new Request)->getBaseUrl());
+
 return [
-    'name' => 'ePPMP',
+    'name' => 'ePS',
     'id' => 'app-frontend',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+    'defaultRoute' => '/v1/ppmp/',
     'controllerNamespace' => 'frontend\controllers',
     'timeZone' => 'Asia/Manila',
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-frontend',
+            'baseUrl' => $baseUrl,
         ],
         'session' => [
             // this is the name of the session cookie used for login on the frontend

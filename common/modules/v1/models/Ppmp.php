@@ -23,6 +23,8 @@ use markavespiritu\user\models\UserInfo;
  */
 class Ppmp extends \yii\db\ActiveRecord
 {
+    public $cse;
+    public $type;
     /**
      * {@inheritdoc}
      */
@@ -72,6 +74,8 @@ class Ppmp extends \yii\db\ActiveRecord
             'updated_by' => 'Updated By',
             'updaterName' => 'Updated By',
             'date_updated' => 'Date Updated',
+            'type' => 'Type',
+            'cse' => 'CSE'
         ];
     }
 
@@ -133,7 +137,7 @@ class Ppmp extends \yii\db\ActiveRecord
 
     public function getCreatorName()
     {
-        return $this->creator ? $this->creator->FIRST_M.' '.$this->creator->LAST_M : '';
+        return $this->creator ? ucwords(strtolower($this->creator->FIRST_M.' '.$this->creator->LAST_M)) : '';
     }
 
     public function getUpdater()
@@ -143,7 +147,7 @@ class Ppmp extends \yii\db\ActiveRecord
 
     public function getUpdaterName()
     {
-        return $this->updater ? $this->updater->FIRST_M.' '.$this->updater->LAST_M : '';
+        return $this->updater ? ucwords(strtolower($this->updater->FIRST_M.' '.$this->updater->LAST_M)) : '';
     }
 
     public function getTitle()
@@ -262,6 +266,17 @@ class Ppmp extends \yii\db\ActiveRecord
                     if($model)
                     {
                         $connection = \Yii::$app->db;
+                        $costs = ItemCost::find()
+                        ->alias('c')
+                        ->select([
+                            'c.id',
+                            'item_id',
+                            'cost'
+                        ])
+                        ->innerJoin(['costs' => '(SELECT max(id) as id from ppmp_item_cost group by item_id)'], 'costs.id = c.id')
+                        ->groupBy(['c.item_id'])
+                        ->createCommand()
+                        ->getRawSql();
 
                         $items = PpmpItem::find()
                         ->select([
@@ -270,11 +285,12 @@ class Ppmp extends \yii\db\ActiveRecord
                             'sub_activity_id',
                             'obj_id',
                             'concat("'.$this->id.'")',
-                            'item_id',
-                            'cost',
+                            'ppmp_ppmp_item.item_id',
+                            'costs.cost',
                             'remarks',
-                            'type'
+                            'concat("Original")'
                         ])
+                        ->leftJoin(['costs' => '('.$costs.')'], 'costs.item_id = ppmp_ppmp_item.item_id')
                         ->where(['ppmp_id' => $model->id])
                         ->createCommand()
                         ->getRawSql();

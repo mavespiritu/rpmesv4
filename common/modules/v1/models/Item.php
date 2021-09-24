@@ -34,8 +34,10 @@ class Item extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['procurement_mode_id', 'title', 'unit_of_measure', 'cost_per_unit', 'cse', 'classification'], 'required'],
+            [['title'], 'unique', 'message' => 'The title has been used already'],
             [['procurement_mode_id'], 'integer'],
-            [['title', 'cse', 'classification'], 'string'],
+            [['code', 'title', 'cse', 'classification', 'category'], 'string'],
             [['cost_per_unit'], 'number'],
             [['unit_of_measure'], 'string', 'max' => 100],
             [['procurement_mode_id'], 'exist', 'skipOnError' => true, 'targetClass' => ProcurementMode::className(), 'targetAttribute' => ['procurement_mode_id' => 'id']],
@@ -49,12 +51,14 @@ class Item extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'procurement_mode_id' => 'Procurement Mode ID',
+            'procurement_mode_id' => 'Mode of Procurement',
+            'code' => 'DBM Code',
             'title' => 'Title',
             'unit_of_measure' => 'Unit Of Measure',
             'cost_per_unit' => 'Cost Per Unit',
-            'cse' => 'Cse',
+            'cse' => 'CSE',
             'classification' => 'Classification',
+            'category' => 'DBM Category'
         ];
     }
 
@@ -76,5 +80,22 @@ class Item extends \yii\db\ActiveRecord
     public function getPpmpItems()
     {
         return $this->hasMany(PpmpItem::className(), ['item_id' => 'id']);
+    }
+
+    /**
+     * Gets query for [[PpmpPpmpItems]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getItemCosts()
+    {
+        return $this->hasMany(ItemCost::className(), ['item_id' => 'id']);
+    }
+
+    public function getCurrentCost()
+    {
+        $cost = $this->getItemCosts()->orderBy(['id' => SORT_DESC])->one();
+
+        return $cost ? $cost->cost : $this->cost_per_unit;
     }
 }

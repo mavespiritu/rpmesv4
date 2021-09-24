@@ -12,7 +12,7 @@ use common\modules\v1\models\PpmpItem;
 
 <?= GridView::widget([
     'tableOptions' => [
-        'class' => 'table table-responsive table-condensed table-bordered table-striped table-hover',
+        'class' => 'table table-responsive table-condensed table-bordered table-striped table-hover content',
     ],
     'dataProvider' => $dataProvider,
     'showFooter' => true,
@@ -31,7 +31,13 @@ use common\modules\v1\models\PpmpItem;
                 return $item->obj->code.'<br>'.$item->obj->title;
             }
         ],
-        'item.title',
+        [
+            'header' => 'Title', 
+            'format' => 'raw',
+            'value' => function($item){
+                return $item->item->title;
+            }
+        ],
         'item.unit_of_measure',
         [
             'header' => 'Quantity', 
@@ -73,6 +79,16 @@ use common\modules\v1\models\PpmpItem;
         ],
     ],
 ]); ?>
+
+<style>
+    td{
+        white-space: normal !important; 
+        word-wrap: break-word;
+    }
+    .content{
+        table-layout: fixed;
+    }
+</style>
 
 <?php
   Modal::begin([
@@ -136,10 +152,8 @@ use common\modules\v1\models\PpmpItem;
 
         $(document).ready(function(){
             $(".update-item-button-'.$subActivity->id.'").click(function(){
-                //$("#update-item-modal-content-'.$subActivity->id.'").empty();
-                //$("#update-item-modal-content-'.$subActivity->id.'").hide();
-                //$("#update-item-modal-content-'.$subActivity->id.'").fadeIn("slow");
                 //$("#update-item-modal-'.$subActivity->id.'").modal("show").find("#update-item-modal-content-'.$subActivity->id.'").load($(this).attr("value"));
+                $("html").animate({ scrollTop: 0 }, "slow");
                 $("#item-form-container").load($(this).attr("value"));
                 $("#close-item-form-button").css("display", "block");
                 $("#create-item-button").css("display", "none");

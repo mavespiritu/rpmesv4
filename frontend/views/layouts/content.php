@@ -35,7 +35,7 @@ use dmstr\widgets\Alert;
         <?= $content ?>
     </section>
 </div>
-
+<?php if(!Yii::$app->user->isGuest){ ?>
 <footer class="main-footer">
     <div class="pull-right hidden-xs">
         <b>Version</b> 2.0
@@ -43,3 +43,4 @@ use dmstr\widgets\Alert;
     <strong>Copyright &copy; <?= date('Y') ?> | NEDA RO1 ICTU</strong> All rights
     reserved.
 </footer>
+<?php } ?>

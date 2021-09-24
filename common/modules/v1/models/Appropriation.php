@@ -111,7 +111,7 @@ class Appropriation extends \yii\db\ActiveRecord
 
     public function getCreatorName()
     {
-        return $this->creator ? $this->creator->FIRST_M.' '.$this->creator->LAST_M : '';
+        return $this->creator ? ucwords(strtolower($this->creator->FIRST_M.' '.$this->creator->LAST_M)) : '';
     }
 
     public function getUpdater()
@@ -121,7 +121,7 @@ class Appropriation extends \yii\db\ActiveRecord
 
     public function getUpdaterName()
     {
-        return $this->updater ? $this->updater->FIRST_M.' '.$this->updater->LAST_M : '';
+        return $this->updater ? ucwords(strtolower($this->updater->FIRST_M.' '.$this->updater->LAST_M)) : '';
     }
 
     public function getTitle()

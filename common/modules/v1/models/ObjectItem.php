@@ -30,6 +30,7 @@ class ObjectItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['obj_id'], 'required'],
             [['obj_id', 'item_id'], 'integer'],
             [['item_id'], 'exist', 'skipOnError' => true, 'targetClass' => Item::className(), 'targetAttribute' => ['item_id' => 'id']],
             [['obj_id'], 'exist', 'skipOnError' => true, 'targetClass' => Obj::className(), 'targetAttribute' => ['obj_id' => 'id']],
@@ -43,8 +44,8 @@ class ObjectItem extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'obj_id' => 'Obj ID',
-            'item_id' => 'Item ID',
+            'obj_id' => 'Object',
+            'item_id' => 'Item',
         ];
     }
 

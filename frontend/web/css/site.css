@@ -344,7 +344,7 @@ a.desc:after {
   justify-content: center;
 }
 
-.flex-center{
+.flex-end{
   display: flex;
   align-items: center;
   justify-content: flex-end;

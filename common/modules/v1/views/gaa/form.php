@@ -20,7 +20,7 @@ $columnTotals = [];
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <p><i class="fa fa-exclamation-circle"></i> Just input the amounts. Data are autosaved.</p>
-            <div class="freeze-table" style="width: 80%; max-height: 800px;">
+            <div class="freeze-table" style="width:95%; max-height: 800px;">
             <table class="table table-responsive table-striped table-condensed table-hover table-bordered" id="main-table" style="padding: 20px auto;">
                 <thead>
                     <tr>
