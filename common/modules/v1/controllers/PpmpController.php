@@ -361,7 +361,9 @@ class PpmpController extends Controller
         return $this->renderAjax('_items', [
             'model' => $model,
             'items' => $items,
+            'activity' => $activity,
             'activity_id' => $activity_id,
+            'fundSource' => $fundSource,
             'fund_source_id' => $fund_source_id,
             'total' => $total,
         ]);

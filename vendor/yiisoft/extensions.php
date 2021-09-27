@@ -293,4 +293,23 @@ return array (
       '@kartik/sortinput' => $vendorDir . '/kartik-v/yii2-sortable-input/src',
     ),
   ),
+  '2amigos/yii2-chartjs-widget' => 
+  array (
+    'name' => '2amigos/yii2-chartjs-widget',
+    'version' => '2.1.3.0',
+    'alias' => 
+    array (
+      '@dosamigos/chartjs' => $vendorDir . '/2amigos/yii2-chartjs-widget/src',
+    ),
+  ),
+  'bedezign/yii2-audit' => 
+  array (
+    'name' => 'bedezign/yii2-audit',
+    'version' => '1.1.2.0',
+    'alias' => 
+    array (
+      '@bedezign/yii2/audit' => $vendorDir . '/bedezign/yii2-audit/src',
+    ),
+    'bootstrap' => 'bedezign\\yii2\\audit\\Bootstrap',
+  ),
 );

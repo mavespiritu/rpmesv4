@@ -16,11 +16,11 @@ class ComposerStaticInit5dc79614d4211f4e341f1ed4c7fbc2a9
         '8825ede83f2f289127722d4e842cf7e8' => __DIR__ . '/..' . '/symfony/polyfill-intl-grapheme/bootstrap.php',
         '0d59ee240a4cd96ddbb4ff164fccea4d' => __DIR__ . '/..' . '/symfony/polyfill-php73/bootstrap.php',
         'b6b991a57620e2fb6b2f66f03fe9ddc2' => __DIR__ . '/..' . '/symfony/string/Resources/functions.php',
-        '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
         '25072dd6e2470089de65ae7bf11d3109' => __DIR__ . '/..' . '/symfony/polyfill-php72/bootstrap.php',
         'f598d06aa772fa33d905e87be6398fb1' => __DIR__ . '/..' . '/symfony/polyfill-intl-idn/bootstrap.php',
-        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
+        '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
         'def43f6c87e4f8dfd0c9e1b1bab14fe8' => __DIR__ . '/..' . '/symfony/polyfill-iconv/bootstrap.php',
+        '6124b4c8570aa390c21fafd04a26c69f' => __DIR__ . '/..' . '/myclabs/deep-copy/src/DeepCopy/deep_copy.php',
         '2c102faa651ef8ea5874edb585946bce' => __DIR__ . '/..' . '/swiftmailer/swiftmailer/lib/swift_required.php',
         '538ca81a9a966a6716601ecf48f4eaef' => __DIR__ . '/..' . '/opis/closure/functions.php',
         'abede361264e2ae69ec1eee813a101af' => __DIR__ . '/..' . '/markbaker/complex/classes/src/functions/abs.php',
@@ -144,12 +144,17 @@ class ComposerStaticInit5dc79614d4211f4e341f1ed4c7fbc2a9
         array (
             'dosamigos\\datepicker\\' => 21,
             'dosamigos\\ckeditor\\' => 19,
+            'dosamigos\\chartjs\\' => 18,
             'dmstr\\' => 6,
         ),
         'c' => 
         array (
             'cebe\\markdown\\' => 14,
             'c006\\utility\\migration\\' => 23,
+        ),
+        'b' => 
+        array (
+            'bedezign\\yii2\\audit\\' => 20,
         ),
         'Z' => 
         array (
@@ -368,6 +373,10 @@ class ComposerStaticInit5dc79614d4211f4e341f1ed4c7fbc2a9
         array (
             0 => __DIR__ . '/..' . '/2amigos/yii2-ckeditor-widget/src',
         ),
+        'dosamigos\\chartjs\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/2amigos/yii2-chartjs-widget/src',
+        ),
         'dmstr\\' => 
         array (
             0 => __DIR__ . '/..' . '/dmstr/yii2-adminlte-asset',
@@ -379,6 +388,10 @@ class ComposerStaticInit5dc79614d4211f4e341f1ed4c7fbc2a9
         'c006\\utility\\migration\\' => 
         array (
             0 => __DIR__ . '/..' . '/c006/yii2-migration-utility',
+        ),
+        'bedezign\\yii2\\audit\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/bedezign/yii2-audit/src',
         ),
         'ZipStream\\' => 
         array (

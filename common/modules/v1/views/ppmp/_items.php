@@ -18,6 +18,16 @@ use yii\bootstrap\Modal;
 <br>
 <div id="item-form-container"></div>
 <h3 class="panel-title">Items</h3><br>
+<table class="table table-responsive table-condensed">
+    <tr>
+        <td align=right style="width: 10%;">Activity:</td>
+        <td><b><?= $activity->title ?></b></td>
+    </tr>
+    <tr>
+        <td align=right>Fund Source:</td>
+        <td><b><?= $fundSource->code ?></b></td>
+    </tr>
+</table>
 <?= !empty($items) ? Collapse::widget(['items' => $items, 'encodeLabels' => false, 'autoCloseItems' => true]) : 'No PPAs' ?>
 <p class="panel-title pull-right" style="margin-right: 17px;">Total:&nbsp;&nbsp;&nbsp;<b><?= number_format($total, 2) ?></b></p>
 </div>
@@ -58,6 +68,7 @@ use yii\bootstrap\Modal;
             });
         }
         $(document).ready(function(){
+            $("html").animate({ scrollTop: 0 }, "slow");
             $("#create-item-button").click(function(){
               //$("#item-form-container").modal("show").find("#create-item-modal-content").load($(this).attr("value"));
               $("#item-form-container").load($(this).attr("value"));

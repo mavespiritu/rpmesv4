@@ -38,7 +38,7 @@ class Item extends \yii\db\ActiveRecord
             [['title'], 'unique', 'message' => 'The title has been used already'],
             [['procurement_mode_id'], 'integer'],
             [['code', 'title', 'cse', 'classification', 'category'], 'string'],
-            [['cost_per_unit'], 'number'],
+            [['cost_per_unit'], 'safe'],
             [['unit_of_measure'], 'string', 'max' => 100],
             [['procurement_mode_id'], 'exist', 'skipOnError' => true, 'targetClass' => ProcurementMode::className(), 'targetAttribute' => ['procurement_mode_id' => 'id']],
         ];

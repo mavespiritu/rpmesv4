@@ -1,15 +1,24 @@
 <?php return array(
     'root' => array(
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
+        'pretty_version' => 'dev-master',
+        'version' => 'dev-master',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => NULL,
+        'reference' => '09b34997c91bc45533165c1878d6b1d69ee3137f',
         'name' => 'yiisoft/yii2-app-advanced',
         'dev' => true,
     ),
     'versions' => array(
+        '2amigos/yii2-chartjs-widget' => array(
+            'pretty_version' => '2.1.3',
+            'version' => '2.1.3.0',
+            'type' => 'yii2-extension',
+            'install_path' => __DIR__ . '/../2amigos/yii2-chartjs-widget',
+            'aliases' => array(),
+            'reference' => 'b144a4ebd923872a7263c980f8afe2e212378275',
+            'dev_requirement' => false,
+        ),
         '2amigos/yii2-ckeditor-widget' => array(
             'pretty_version' => '2.1.0',
             'version' => '2.1.0.0',
@@ -48,6 +57,15 @@
             'reference' => '28cf8ce8c05f6caa5b95e4299af21f8b4a2b3d40',
             'dev_requirement' => true,
         ),
+        'bedezign/yii2-audit' => array(
+            'pretty_version' => '1.1.2',
+            'version' => '1.1.2.0',
+            'type' => 'yii2-extension',
+            'install_path' => __DIR__ . '/../bedezign/yii2-audit',
+            'aliases' => array(),
+            'reference' => 'f198052cc98d1daadfb7600d7b816a2208d73eca',
+            'dev_requirement' => false,
+        ),
         'behat/gherkin' => array(
             'pretty_version' => 'v4.8.0',
             'version' => '4.8.0.0',
@@ -74,6 +92,15 @@
             'aliases' => array(),
             'reference' => 'd364be5b066b38f3675a5a1dc174ce1ab1f3360e',
             'dev_requirement' => true,
+        ),
+        'bower-asset/chartjs' => array(
+            'pretty_version' => 'v2.9.4',
+            'version' => '2.9.4.0',
+            'type' => 'bower-asset',
+            'install_path' => __DIR__ . '/../bower-asset/chartjs',
+            'aliases' => array(),
+            'reference' => '9bd4cf82fda9f50a5fb50b72843e06ab88124278',
+            'dev_requirement' => false,
         ),
         'bower-asset/fullcalendar' => array(
             'pretty_version' => 'v4.4.3',
@@ -554,7 +581,7 @@
             'install_path' => __DIR__ . '/../opis/closure',
             'aliases' => array(),
             'reference' => '06e2ebd25f2869e54a306dda991f7db58066f7f6',
-            'dev_requirement' => true,
+            'dev_requirement' => false,
         ),
         'paragonie/random_compat' => array(
             'pretty_version' => 'v9.99.100',
@@ -635,7 +662,7 @@
             'install_path' => __DIR__ . '/../phpspec/php-diff',
             'aliases' => array(),
             'reference' => 'fc1156187f9f6c8395886fe85ed88a0a245d72e9',
-            'dev_requirement' => true,
+            'dev_requirement' => false,
         ),
         'phpspec/prophecy' => array(
             'pretty_version' => '1.13.0',
@@ -1172,12 +1199,12 @@
             'dev_requirement' => false,
         ),
         'yiisoft/yii2-app-advanced' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => NULL,
+            'reference' => '09b34997c91bc45533165c1878d6b1d69ee3137f',
             'dev_requirement' => false,
         ),
         'yiisoft/yii2-authclient' => array(
@@ -1214,7 +1241,7 @@
             'install_path' => __DIR__ . '/../yiisoft/yii2-debug',
             'aliases' => array(),
             'reference' => '45bc5d2ef4e3b0ef6f638190d42f04a77ab1df6c',
-            'dev_requirement' => true,
+            'dev_requirement' => false,
         ),
         'yiisoft/yii2-faker' => array(
             'pretty_version' => '2.0.5',

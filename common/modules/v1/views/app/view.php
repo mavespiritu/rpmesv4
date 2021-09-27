@@ -81,7 +81,7 @@ function numberTowords($num)
     if($decnum > 0){
         $rettxt .= " and ";
         if($decnum < 20){
-            $rettxt .= $ones[$decnum];
+            $rettxt .= $ones[intval($decnum)];
         }elseif($decnum < 100){
             $rettxt .= $tens[substr($decnum,0,1)];
             $rettxt .= " ".$ones[substr($decnum,1,1)]."/100";
@@ -213,61 +213,39 @@ return $rettxt;
                     <td align=center><?= number_format($item['janTotal'], 0) ?></td>
                     <td align=center><?= number_format($item['febTotal'], 0) ?></td>
                     <td align=center><?= number_format($item['marTotal'], 0) ?></td>
-                    <td align=center><?= number_format($item['janTotal'] + $item['febTotal'] + $item['marTotal'], 0) ?></td>
-                    <td align=right><?= number_format(($item['janTotal'] + $item['febTotal'] + $item['marTotal']) * $item['cost'], 2) ?></td>
+                    <td align=center><?= number_format($item['q1total'], 0) ?></td>
+                    <td align=right><?= number_format($item['q1amount'], 2) ?></td>
                     <td align=center><?= number_format($item['aprTotal'], 0) ?></td>
                     <td align=center><?= number_format($item['mayTotal'], 0) ?></td>
                     <td align=center><?= number_format($item['junTotal'], 0) ?></td>
-                    <td align=center><?= number_format($item['aprTotal'] + $item['mayTotal'] + $item['junTotal'], 0) ?></td>
-                    <td align=right><?= number_format(($item['aprTotal'] + $item['mayTotal'] + $item['junTotal']) * $item['cost'], 2) ?></td>
+                    <td align=center><?= number_format($item['q2total'], 0) ?></td>
+                    <td align=right><?= number_format($item['q2amount'], 2) ?></td>
                     <td align=center><?= number_format($item['julTotal'], 0) ?></td>
                     <td align=center><?= number_format($item['augTotal'], 0) ?></td>
                     <td align=center><?= number_format($item['sepTotal'], 0) ?></td>
-                    <td align=center><?= number_format($item['julTotal'] + $item['augTotal'] + $item['sepTotal'], 0) ?></td>
-                    <td align=right><?= number_format(($item['julTotal'] + $item['augTotal'] + $item['sepTotal']) * $item['cost'], 2) ?></td>
+                    <td align=center><?= number_format($item['q3total'], 0) ?></td>
+                    <td align=right><?= number_format($item['q3amount'], 2) ?></td>
                     <td align=center><?= number_format($item['octTotal'], 0) ?></td>
                     <td align=center><?= number_format($item['novTotal'], 0) ?></td>
                     <td align=center><?= number_format($item['decTotal'], 0) ?></td>
-                    <td align=center><?= number_format($item['octTotal'] + $item['novTotal'] + $item['decTotal'], 0) ?></td>
-                    <td align=right><?= number_format(($item['octTotal'] + $item['novTotal'] + $item['decTotal']) * $item['cost'], 2) ?></td>
-                    <td align=center><?= number_format($item['janTotal'] + 
-                                                    $item['febTotal'] + 
-                                                    $item['marTotal'] + 
-                                                    $item['aprTotal'] + 
-                                                    $item['mayTotal'] + 
-                                                    $item['junTotal'] + 
-                                                    $item['julTotal'] + 
-                                                    $item['augTotal'] + 
-                                                    $item['sepTotal'] + 
-                                                    $item['octTotal'] + 
-                                                    $item['novTotal'] + 
-                                                    $item['decTotal'], 0) ?></td>
+                    <td align=center><?= number_format($item['q4total'], 0) ?></td>
+                    <td align=right><?= number_format($item['q4amount'], 2) ?></td>
+                    <td align=center><?= number_format($item['q1total'] + 
+                                                       $item['q2total'] + 
+                                                       $item['q3total'] + 
+                                                       $item['q4total']
+                                                        , 0) ?></td>
                     <td align=right><?= number_format($item['cost'], 2) ?></td>
-                    <td align=right><?= number_format(($item['janTotal'] + 
-                                                    $item['febTotal'] + 
-                                                    $item['marTotal'] + 
-                                                    $item['aprTotal'] + 
-                                                    $item['mayTotal'] + 
-                                                    $item['junTotal'] + 
-                                                    $item['julTotal'] + 
-                                                    $item['augTotal'] + 
-                                                    $item['sepTotal'] + 
-                                                    $item['octTotal'] + 
-                                                    $item['novTotal'] + 
-                                                    $item['decTotal']) * $item['cost'], 2) ?></td>
+                    <td align=right><?= number_format($item['q1amount'] + 
+                                                       $item['q2amount'] + 
+                                                       $item['q3amount'] + 
+                                                       $item['q4amount']
+                                                        , 2) ?></td>
                 </tr>
-                <?php $total += ($item['janTotal'] + 
-                                $item['febTotal'] + 
-                                $item['marTotal'] + 
-                                $item['aprTotal'] + 
-                                $item['mayTotal'] + 
-                                $item['junTotal'] + 
-                                $item['julTotal'] + 
-                                $item['augTotal'] + 
-                                $item['sepTotal'] + 
-                                $item['octTotal'] + 
-                                $item['novTotal'] + 
-                                $item['decTotal']) * $item['cost']; ?>
+                <?php $total += ($item['q1amount'] + 
+                                $item['q2amount'] + 
+                                $item['q3amount'] + 
+                                $item['q4amount']); ?>
                 <?php $i++ ?>
             <?php } ?>
         <?php } ?>

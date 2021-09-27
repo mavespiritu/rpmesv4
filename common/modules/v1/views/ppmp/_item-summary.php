@@ -28,16 +28,16 @@ use common\modules\v1\models\PpmpItem;
                             <td style="font-size: 12px;" colspan=2> <?= $subActivities['title'] ?></td>
                             <td style="font-size: 12px;" align=right><?= number_format(PpmpItem::getTotalPerSubActivity($model->id, $activityID, $subActivityID, $fundSourceID), 2) ?></td>
                         </tr>
-                        <?php if(!empty($subActivities['contents'])){ ?>
-                            <?php foreach($subActivities['contents'] as $objectID => $object): ?>
-                                <tr>
+                        <?php //if(!empty($subActivities['contents'])){ ?>
+                            <?php //foreach($subActivities['contents'] as $objectID => $object): ?>
+                                <!-- <tr>
                                     <td>&nbsp;</td>
                                     <td>&nbsp;</td>
-                                    <td style="font-size: 11px;"> <?= $object['title'] ?></td>
-                                    <td style="font-size: 11px;" align=right><?= number_format($object['total'], 2) ?></td>
-                                </tr>
-                            <?php endforeach ?>
-                        <?php } ?>
+                                    <td style="font-size: 11px;"> <?php //$object['title'] ?></td>
+                                    <td style="font-size: 11px;" align=right><?php //number_format($object['total'], 2) ?></td>
+                                </tr> -->
+                            <?php //endforeach ?>
+                        <?php //} ?>
                     <?php endforeach ?>
                 <?php } ?>
             <?php endforeach ?>
