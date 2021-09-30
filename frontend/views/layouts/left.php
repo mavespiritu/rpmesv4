@@ -38,10 +38,9 @@
                     ['label' => 'GAA', 'icon' => 'folder', 'url' => ['/v1/gaa'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'PPMP', 'icon' => 'folder', 'url' => ['/v1/ppmp']],
                     ['label' => 'APP', 'icon' => 'folder', 'url' => ['/v1/app']],
-                    /* ['label' => 'Actual Procurement', 'options' => ['class' => 'header']],
-                    ['label' => 'RIS', 'icon' => 'folder', 'url' => ['/gii']],
+                    ['label' => 'Actual Procurement', 'options' => ['class' => 'header']],
+                    ['label' => 'RIS', 'icon' => 'folder', 'url' => ['/v1/ris']],
                     ['label' => 'PR', 'icon' => 'folder', 'url' => ['/gii']],
-                    ['label' => 'Reports', 'icon' => 'folder', 'url' => ['/gii']],*/
 
                     ['label' => 'Inventory', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Items', 'icon' => 'folder', 'url' => ['/v1/item'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))], 
@@ -78,6 +77,7 @@
                             ],
                             ['label' => 'Objects', 'icon' => 'folder', 'url' => ['/v1/obj'],],
                             ['label' => 'Procurement Modes', 'icon' => 'folder', 'url' => ['/v1/procurement-mode'],],
+                            ['label' => 'Signatories', 'icon' => 'folder', 'url' => ['/v1/signatory'],],
                         ],
                         
                     ],

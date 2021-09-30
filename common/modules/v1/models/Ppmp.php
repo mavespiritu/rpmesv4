@@ -314,7 +314,7 @@ class Ppmp extends \yii\db\ActiveRecord
                                         'sub_activity_id' => $item->sub_activity_id,
                                         'obj_id' => $item->obj_id,
                                         'item_id' => $item->item_id,
-                                        'type' => $item->type,
+                                        'type' => 'Original',
                                     ]);
 
                                     $breakdown = ItemBreakdown::find()
