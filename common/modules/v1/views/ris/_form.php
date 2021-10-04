@@ -13,7 +13,6 @@ DisableButtonAsset::register($this);
 ?>
 
 <div class="ris-form">
-
     <?php $form = ActiveForm::begin([
     	'options' => ['class' => 'disable-submit-buttons'],
         'id' => 'ris-form',
@@ -47,6 +46,15 @@ DisableButtonAsset::register($this);
             ]);
         ?>
     <?php } ?>
+
+    <?= $form->field($model, 'ppmp_id')->widget(Select2::classname(), [
+        'data' => $ppmps,
+        'options' => ['placeholder' => 'Select PPMP Year','multiple' => false, 'class'=>'ppmp-select'],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('PPMP Year');
+    ?>
 
     <?= $form->field($model, 'fund_cluster_id')->widget(Select2::classname(), [
         'data' => $fundClusters,

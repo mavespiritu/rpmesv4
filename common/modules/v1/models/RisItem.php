@@ -33,9 +33,10 @@ class RisItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['month_id', 'quantity'], 'required'],
             [['ris_id', 'ppmp_item_id', 'month_id', 'quantity'], 'integer'],
-            [['ris_id'], 'exist', 'skipOnError' => true, 'targetClass' => PpmpRis::className(), 'targetAttribute' => ['ris_id' => 'id']],
-            [['ppmp_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => PpmpPpmpItem::className(), 'targetAttribute' => ['ppmp_item_id' => 'id']],
+            [['ris_id'], 'exist', 'skipOnError' => true, 'targetClass' => Ris::className(), 'targetAttribute' => ['ris_id' => 'id']],
+            [['ppmp_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => PpmpItem::className(), 'targetAttribute' => ['ppmp_item_id' => 'id']],
         ];
     }
 

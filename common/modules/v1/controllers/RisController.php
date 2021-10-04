@@ -3,9 +3,18 @@
 namespace common\modules\v1\controllers;
 
 use Yii;
+use common\modules\v1\models\AppropriationItem;
+use common\modules\v1\models\Activity;
+use common\modules\v1\models\SubActivity;
+use common\modules\v1\models\FUndSource;
 use common\modules\v1\models\Ris;
+use common\modules\v1\models\Ppmp;
+use common\modules\v1\models\PpmpItem;
+use common\modules\v1\models\PpmpItemSearch;
 use common\modules\v1\models\FundCluster;
 use common\modules\v1\models\Signatory;
+use common\modules\v1\models\RisItem;
+use common\modules\v1\models\ItemBreakdown;
 use common\modules\v1\models\RisSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -59,6 +68,19 @@ class RisController extends Controller
         return $arr;
     }
 
+    public function actionSubActivityList($id)
+    {
+        $subActivities = SubActivity::find()->where(['activity_id' => $id])->all();
+
+        $arr = [];
+        $arr[] = ['id'=>'','text'=>''];
+        foreach($subActivities as $subActivity){
+            $arr[] = ['id' => $subActivity->id ,'text' => $subActivity->title];
+        }
+        \Yii::$app->response->format = 'json';
+        return $arr;
+    }
+
     /**
      * Lists all Ris models.
      * @return mixed
@@ -82,15 +104,95 @@ class RisController extends Controller
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+
+        $appropriationItemModel = new AppropriationItem();
+        $appropriationItemModel->scenario = 'loadItemsInRis';
+
+        $fundedActivities = PpmpItem::find()->select(['distinct(activity_id) as id'])->where(['ppmp_id' => $model->ppmp->id])->all();
+        $fundedActivities = ArrayHelper::map($fundedActivities, 'id', 'id');
+
+        $activities = Activity::find()
+                     ->select([
+                         'ppmp_activity.id as id',
+                         'ppmp_activity.pap_id as pap_id',
+                         'ppmp_activity.title as text',
+                         'p.title as groupTitle'
+                     ])
+                     ->leftJoin(['p' => '(SELECT id, code, title from ppmp_pap)'], 'p.id = ppmp_activity.pap_id')
+                     ->andWhere(['in', 'ppmp_activity.id', $fundedActivities])
+                     ->asArray()
+                     ->all();
+        
+        $activities = ArrayHelper::map($activities, 'id', 'text', 'groupTitle');
+                        
+        $subActivities = [];
+
+        $fundSources = FundSource::find()->all();
+        $fundSources = ArrayHelper::map($fundSources, 'id', 'code');
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
+            'appropriationItemModel' => $appropriationItemModel,
+            'activities' => $activities,
+            'subActivities' => $subActivities,
+            'fundSources' => $fundSources,
+        ]);
+    }
+
+    public function actionLoadItems($id, $activity_id, $sub_activity_id, $fund_source_id)
+    {
+        $model = $this->findModel($id);
+        $ppmp = $model->ppmp;
+        $activity = Activity::findOne($activity_id);
+        $subActivity = SubActivity::findOne($sub_activity_id);
+        $fundSource = FundSource::findOne($fund_source_id);
+
+        $searchModel = new PpmpItemSearch();
+        $searchModel->ppmp_id = $ppmp->id;
+        $searchModel->activity_id = $activity->id;
+        $searchModel->fund_source_id = $fundSource->id;
+        $searchModel->sub_activity_id = $subActivity->id;
+
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->renderAjax('_ris-items', [
+            'model' => $model,
+            'activity' => $activity,
+            'subActivity' => $subActivity,
+            'fundSource' => $fundSource,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionRisItems($id)
+    {
+
+    }
+
+    public function actionBuy($id, $item_id)
+    {
+        $model = $this->findModel($id);
+        $item = PpmpItem::findOne($item_id);
+
+        $risItemModel = new RisItem();
+        $risItemModel->ris_id = $model->id;
+        $risItemModel->ppmp_item_id = $item->id;
+
+        return $this->renderAjax('_buy', [
+            'model' => $model,
+            'item' => $item,
+            'risItemModel' => $risItemModel,
         ]);
     }
 
     public function actionInfo($id)
     {
+        $model = $this->findModel($id);
+
         return $this->renderAjax('_info', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 
@@ -104,6 +206,19 @@ class RisController extends Controller
         $model = new Ris();
 
         $model->scenario = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? 'isAdmin' : 'isUser';
+
+        $ppmps = Yii::$app->user->can('Administrator') ? Ppmp::find()
+        ->joinWith('office')
+        ->where(['stage' => 'Final'])
+        ->orderBy(['year' => SORT_DESC])
+        ->all() : Ppmp::find()
+        ->joinWith('office')
+        ->where(['stage' => 'Final'])
+        ->andWhere(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
+        ->orderBy(['year' => SORT_DESC])
+        ->all();
+        
+        $ppmps = Yii::$app->user->can('Administrator') ? ArrayHelper::map($ppmps, 'id', 'title') : ArrayHelper::map($ppmps, 'id', 'year');
 
         $offices = Office::find()->all();
         $offices = ArrayHelper::map($offices, 'id', 'abbreviation');
@@ -123,6 +238,7 @@ class RisController extends Controller
             $lastRis = Ris::find()->where(['date_created' => date("Y-m-d")])->orderBy(['id' => SORT_DESC])->one();
             $ris_no = $lastRis ? substr(date("Y"), -2).'-'.date("md").'-'.str_pad(substr($lastRis->ris_no, -1) + 1, 3, '0', STR_PAD_LEFT) : substr(date("Y"), -2).'-'.date("md").'-001';
             $model->ris_no = $ris_no;
+            $model->office_id = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? $model->office_id : Yii::$app->user->identity->userinfo->OFFICE_C;
             $model->date_requested = $model->date_required; 
             $model->created_by = Yii::$app->user->id; 
             $model->date_created = date("Y-m-d"); 
@@ -135,6 +251,7 @@ class RisController extends Controller
         return $this->renderAjax('create', [
             'model' => $model,
             'offices' => $offices,
+            'ppmps' => $ppmps,
             'fundClusters' => $fundClusters,
             'signatories' => $signatories,
         ]);
@@ -152,6 +269,19 @@ class RisController extends Controller
         $model = $this->findModel($id);
 
         $model->scenario = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? 'isAdmin' : 'isUser';
+
+        $ppmps = Yii::$app->user->can('Administrator') ? Ppmp::find()
+        ->joinWith('office')
+        ->where(['stage' => 'Final'])
+        ->orderBy(['year' => SORT_DESC])
+        ->all() : Ppmp::find()
+        ->joinWith('office')
+        ->where(['stage' => 'Final'])
+        ->andWhere(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
+        ->orderBy(['year' => SORT_DESC])
+        ->all();
+        
+        $ppmps = Yii::$app->user->can('Administrator') ? ArrayHelper::map($ppmps, 'id', 'title') : ArrayHelper::map($ppmps, 'id', 'year');
 
         $offices = Office::find()->all();
         $offices = ArrayHelper::map($offices, 'id', 'abbreviation');
@@ -174,6 +304,7 @@ class RisController extends Controller
 
         return $this->renderAjax('update', [
             'model' => $model,
+            'ppmps' => $ppmps,
             'offices' => $offices,
             'fundClusters' => $fundClusters,
             'signatories' => $signatories,

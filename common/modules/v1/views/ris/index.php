@@ -30,6 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
 
+            'ppmpName',
             'ris_no',
             'officeName',
             'purpose:ntext',

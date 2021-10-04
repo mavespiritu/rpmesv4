@@ -17,7 +17,10 @@ use common\modules\v1\models\PpmpItem;
     'dataProvider' => $dataProvider,
     'showFooter' => true,
     'columns' => [
-        ['class' => 'yii\grid\SerialColumn'],
+        [
+            'class' => 'yii\grid\SerialColumn',
+            'headerOptions' => ['style' => 'width: 3%;'],
+        ],
 
         [
             'header' => 'Type', 
@@ -25,7 +28,6 @@ use common\modules\v1\models\PpmpItem;
         ],
         [
             'header' => 'Object', 
-            'contentOptions' => ['style' => 'width: 10%;'],
             'format' => 'raw',
             'value' => function($item){
                 return $item->obj->code.'<br>'.$item->obj->title;
@@ -62,6 +64,10 @@ use common\modules\v1\models\PpmpItem;
                 return number_format($item->totalCost, 2);
             },
             'footer' => PpmpItem::pageQuantityTotal($dataProvider->models, 'totalCost'),
+        ],
+        [
+            'header' => 'Remarks', 
+            'attribute' => 'remarks',
         ],
         [
             'format' => 'raw', 

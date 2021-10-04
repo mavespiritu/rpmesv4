@@ -21,7 +21,7 @@ class RisSearch extends Ris
     public function rules()
     {
         return [
-            [['id', 'office_id', 'section_id', 'unit_id', 'fund_cluster_id', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by'], 'integer'],
+            [['id', 'ppmp_id', 'office_id', 'section_id', 'unit_id', 'fund_cluster_id', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by'], 'integer'],
             [['ris_no', 'purpose', 'date_required', 'date_created', 'date_requested', 'date_approved', 'date_issued', 'date_received'], 'safe'],
         ];
     }
@@ -54,7 +54,7 @@ class RisSearch extends Ris
             ->joinWith('creator c')
             ->joinWith('requester r')
             ->joinWith('office')
-            ->andWhere(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
+            ->andWhere(['ppmp_ris.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
             ->orderBy(['ris_no' => SORT_DESC]);
 
         // add conditions that should always apply here
@@ -96,6 +96,7 @@ class RisSearch extends Ris
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'ppmp_id' => $this->ppmp_id,
             'office_id' => $this->office_id,
             'section_id' => $this->section_id,
             'unit_id' => $this->unit_id,

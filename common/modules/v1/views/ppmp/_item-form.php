@@ -151,6 +151,12 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
             <?php } ?>
         <?php } ?>
         </div>
+
+        <div class="row">
+            <div class="col-md-12 col-xs-12">
+                <?= $form->field($itemModel, 'remarks')->textArea(['rows' => 6]) ?>
+            </div>
+        </div>
         
         <span class="pull-right">Total</span><br>
         <p class="panel-title pull-right" style="font-size: 35px !important;" id="total-per-item"></p>

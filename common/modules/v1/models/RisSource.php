@@ -33,8 +33,8 @@ class RisSource extends \yii\db\ActiveRecord
     {
         return [
             [['ris_id', 'ppmp_item_id', 'month_id', 'quantity'], 'integer'],
-            [['ppmp_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => PpmpPpmpItem::className(), 'targetAttribute' => ['ppmp_item_id' => 'id']],
-            [['ris_id'], 'exist', 'skipOnError' => true, 'targetClass' => PpmpRisItem::className(), 'targetAttribute' => ['ris_id' => 'id']],
+            [['ppmp_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => PpmpItem::className(), 'targetAttribute' => ['ppmp_item_id' => 'id']],
+            [['ris_id'], 'exist', 'skipOnError' => true, 'targetClass' => Ris::className(), 'targetAttribute' => ['ris_id' => 'id']],
         ];
     }
 
@@ -59,7 +59,7 @@ class RisSource extends \yii\db\ActiveRecord
      */
     public function getPpmpItem()
     {
-        return $this->hasOne(PpmpPpmpItem::className(), ['id' => 'ppmp_item_id']);
+        return $this->hasOne(PpmpItem::className(), ['id' => 'ppmp_item_id']);
     }
 
     /**
@@ -69,6 +69,6 @@ class RisSource extends \yii\db\ActiveRecord
      */
     public function getRis()
     {
-        return $this->hasOne(PpmpRisItem::className(), ['id' => 'ris_id']);
+        return $this->hasOne(Ris::className(), ['id' => 'ris_id']);
     }
 }

@@ -70,6 +70,7 @@ class PpmpItem extends \yii\db\ActiveRecord
             'ppmp_id' => 'Ppmp ID',
             'item_id' => 'Item',
             'quantity' => 'Quantity',
+            'quantityUsed' => 'Quantity',
             'cost' => 'Cost',
             'remarks' => 'Remarks',
             'type' => 'Type',
@@ -170,6 +171,23 @@ class PpmpItem extends \yii\db\ActiveRecord
         $total = ItemBreakdown::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id])->asArray()->one();
 
         return $total['quantity'];
+    }
+
+    public function getQuantityUsed()
+    {
+        $total = RisSource::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id])->asArray()->one();
+
+        return $total['quantity'];
+    }
+
+    public function getRemainingQuantity()
+    {
+        return $this->quantity - $this->quantityUsed;
+    }
+
+    public function getRemainingQuantityTotalCost()
+    {
+        return $this->remainingQuantity * $this->cost;
     }
 
     public function getTotalCost()

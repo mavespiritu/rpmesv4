@@ -43,12 +43,13 @@ class Ris extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['office_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose'], 'required', 'on' => 'isAdmin'],
-            [['fund_cluster_id', 'requested_by', 'date_required', 'purpose'], 'required', 'on' => 'isUser'],
+            [['office_id', 'ppmp_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose'], 'required', 'on' => 'isAdmin'],
+            [['ppmp_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose'], 'required', 'on' => 'isUser'],
             [['office_id', 'section_id', 'unit_id', 'fund_cluster_id', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by'], 'integer'],
             [['purpose'], 'string'],
             [['date_required', 'date_created', 'date_requested', 'date_approved', 'date_issued', 'date_received'], 'safe'],
             [['ris_no'], 'string', 'max' => 15],
+            [['ppmp_id'], 'exist', 'skipOnError' => true, 'targetClass' => Ppmp::className(), 'targetAttribute' => ['ppmp_id' => 'id']],
             [['fund_cluster_id'], 'exist', 'skipOnError' => true, 'targetClass' => FundCluster::className(), 'targetAttribute' => ['fund_cluster_id' => 'id']],
         ];
     }
@@ -62,6 +63,8 @@ class Ris extends \yii\db\ActiveRecord
             'id' => 'ID',
             'ris_no' => 'RIS No.',
             'office_id' => 'Division',
+            'ppmp_id' => 'PPMP Year',
+            'ppmpName' => 'PPMP Year',
             'officeName' => 'Division',
             'section_id' => 'Section',
             'unit_id' => 'Unit',
@@ -94,6 +97,11 @@ class Ris extends \yii\db\ActiveRecord
         return $this->hasMany(RisItem::className(), ['ris_id' => 'id']);
     }
 
+    public function getRisSources()
+    {
+        return $this->hasMany(RisSource::className(), ['ris_id' => 'id']);
+    }
+
     public function getFundCluster()
     {
         return $this->hasOne(FundCluster::className(), ['id' => 'fund_cluster_id']);
@@ -102,6 +110,16 @@ class Ris extends \yii\db\ActiveRecord
     public function getFundClusterName()
     {
         return $this->fundCluster ? $this->fundCluster->title : '';
+    }
+
+    public function getPpmp()
+    {
+        return $this->hasOne(Ppmp::className(), ['id' => 'ppmp_id']);
+    }
+
+    public function getPpmpName()
+    {
+        return $this->ppmp ? Yii::$app->user->can('Administrator') ? $this->ppmp->title : $this->ppmp->year : '';
     }
 
     public function getOffice()

@@ -20,6 +20,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
 {
     public $idx;
     public $activity_id;
+    public $sub_activity_id;
     /**
      * {@inheritdoc}
      */
@@ -35,6 +36,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
     {
         return [
             [['activity_id', 'fund_source_id'], 'required', 'on' => 'loadItems'],
+            [['activity_id', 'sub_activity_id', 'fund_source_id'], 'required', 'on' => 'loadItemsInRis'],
             [['amount'], 'required'],
             [['appropriation_id', 'obj_id', 'pap_id', 'fund_source_id'], 'integer'],
             [['amount'], 'number'],
@@ -56,6 +58,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
             'obj_id' => 'Object ID',
             'pap_id' => 'Program',
             'activity_id' => 'Activity',
+            'sub_activity_id' => 'PAP',
             'fund_source_id' => 'Fund Source',
             'amount' => 'Amount',
         ];
