@@ -138,19 +138,30 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
         </div>
         
         <label for="quantity" class="control-label">Quantity</label>
-        <div class="row">
+        
         <?php if($months){ ?>
-            <?php $i = 0; ?>
-            <?php foreach($months as $month){ ?>
-                <div class="col-md-1 col-xs-12">
-                    <?= $form->field($itemBreakdowns[$month->id], "[$month->id]month_id")->hiddenInput(['value' => $month->id])->label(false) ?>
-                    <?= $form->field($itemBreakdowns[$month->id], "[$month->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 0, 'onkeyup' => 'getTotal()', 'value' => $itemBreakdowns[$month->id]->quantity > 0 ? $itemBreakdowns[$month->id]->quantity : 0])->label($month->abbreviation) ?>
-            
-                </div>
-                <?php $i++ ?>
-            <?php } ?>
+            <div class="row">
+                <?php foreach($months as $idx => $month){ ?>
+                    <?php if($idx <= 5){ ?>
+                    <div class="col-md-2 col-xs-12">
+                        <?= $form->field($itemBreakdowns[$month->id], "[$month->id]month_id")->hiddenInput(['value' => $month->id])->label(false) ?>
+                        <?= $form->field($itemBreakdowns[$month->id], "[$month->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 0, 'onkeyup' => 'getTotal()', 'value' => $itemBreakdowns[$month->id]->quantity > 0 ? $itemBreakdowns[$month->id]->quantity : 0])->label($month->abbreviation) ?>
+                    </div>
+                    <?php } ?>
+                <?php } ?>
+            </div>
+            <div class="row">
+                <?php foreach($months as $idx => $month){ ?>
+                    <?php if($idx > 5){ ?>
+                    <div class="col-md-2 col-xs-12">
+                        <?= $form->field($itemBreakdowns[$month->id], "[$month->id]month_id")->hiddenInput(['value' => $month->id])->label(false) ?>
+                        <?= $form->field($itemBreakdowns[$month->id], "[$month->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 0, 'onkeyup' => 'getTotal()', 'value' => $itemBreakdowns[$month->id]->quantity > 0 ? $itemBreakdowns[$month->id]->quantity : 0])->label($month->abbreviation) ?>
+                    </div>
+                    <?php } ?>
+                <?php } ?>
+            </div>
         <?php } ?>
-        </div>
+        
 
         <div class="row">
             <div class="col-md-12 col-xs-12">
