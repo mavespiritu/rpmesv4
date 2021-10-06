@@ -9,6 +9,7 @@ DisableButtonAsset::register($this);
 use yii\web\View;
 /* @var $model common\modules\v1\models\Ppmp */
 /* @var $form yii\widgets\ActiveForm */
+$maxValueUrl = \yii\helpers\Url::to(['/v1/ris/max-value']);
 ?>
 
 <div class="buy-form">
@@ -36,22 +37,80 @@ use yii\web\View;
             <td><b><?= $item->cost ?></b></td>
         </tr>
     </table>
+
+    <table class="table table-bordered table-responsive table-condensed">
+        <tbody>
+            <tr>
+            <?php if($item->itemBreakdowns){ ?>
+                <?php foreach($item->itemBreakdowns as $breakdown){ ?>
+                    <th><?= $breakdown->month->abbreviation ?></th>
+                <?php } ?>
+            <?php } ?>
+            </tr>
+            <tr>
+            <?php if($item->itemBreakdowns){ ?>
+                <?php foreach($item->itemBreakdowns as $breakdown){ ?>
+                    <td><?= $breakdown->quantity ?></td>
+                <?php } ?>
+            <?php } ?>
+            </tr>
+        </tbody>
+    </table>
+
     <?php $form = ActiveForm::begin([
     	'options' => ['class' => 'disable-submit-buttons'],
         'id' => 'buy-form',
+        'enableAjaxValidation' => true,
     ]); ?>
 
+    <div class="row">
+        <div class="col-md-6 col-xs-12">
+            <?= $form->field($risItemModel, 'month_id')->widget(Select2::classname(), [
+                'data' => $months,
+                'options' => ['placeholder' => 'Select Month','multiple' => false, 'class'=>'month-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                'pluginEvents'=>[
+                    'select2:select'=>'
+                        function(){
+                            $.ajax({
+                                url: "'.$maxValueUrl.'",
+                                data: {
+                                        id: '.$item->id.',
+                                        month_id: this.value
+                                    }
+                                
+                            }).done(function(result) {
+                                $("#quantity-select").val("");
+                                $("#quantity-select").attr({
+                                    "max" : result,
+                                    "min" : 1
+                                });
+                            });
+                        }'
+
+                ]
+                ]);
+            ?>
+        </div>
+        <div class="col-md-6 col-xs-12">
+            <?= $form->field($risItemModel, 'quantity')->textInput(['type' => 'number', 'maxlength' => true, 'id' => 'quantity-select']) ?>
+        </div>
+    </div>
+    
     <div class="form-group pull-right">
-        <?= Html::submitButton('<i class="fa fa-shopping-cart"></i> Add to RIS', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('<i class="fa fa-shopping-cart"></i> Add to RIS', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
     </div>
     <div class="clearfix"></div>
+
     <?php ActiveForm::end(); ?>
 
 </div>
 <?php
   $script = '
     $(document).ready(function() {
-        $("#activity-form").on("beforeSubmit", function(e) {
+        $("#buy-form").on("beforeSubmit", function(e) {
             var form = $(this);
             e.preventDefault();
             $.ajax({

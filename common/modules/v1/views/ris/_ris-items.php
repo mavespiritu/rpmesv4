@@ -13,11 +13,11 @@ use common\modules\v1\models\PpmpItem;
 <div class="ris-items">
     <table class="table table-responsive table-condensed">
         <tr>
-            <td align=right style="width: 20%;">Activity:</td>
+            <td align=right style="width: 15%;">Activity:</td>
             <td><b><?= $activity->title ?></b></td>
         </tr>
         <tr>
-            <td align=right style="width: 20%;">Sub Activity:</td>
+            <td align=right>PAP:</td>
             <td><b><?= $subActivity->title ?></b></td>
         </tr>
         <tr>
@@ -63,6 +63,13 @@ use common\modules\v1\models\PpmpItem;
             'attribute' => 'quantity',
             'value' => function($item){
                 return number_format($item->quantity, 0);
+            }
+        ],
+        [
+            'header' => 'Used Qty', 
+            'attribute' => 'quantityUsed',
+            'value' => function($item){
+                return number_format($item->quantityUsed, 0);
             }
         ],
         [

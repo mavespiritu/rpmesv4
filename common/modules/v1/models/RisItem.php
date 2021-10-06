@@ -49,7 +49,7 @@ class RisItem extends \yii\db\ActiveRecord
             'id' => 'ID',
             'ris_id' => 'Ris ID',
             'ppmp_item_id' => 'Ppmp Item ID',
-            'month_id' => 'Month ID',
+            'month_id' => 'Month',
             'quantity' => 'Quantity',
         ];
     }
@@ -79,8 +79,8 @@ class RisItem extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getPpmpRisSources()
+    public function getRisSources()
     {
-        return $this->hasMany(PpmpRisSource::className(), ['ris_id' => 'id']);
+        return $this->hasMany(RisSource::className(), ['ris_item_id' => 'id']);
     }
 }

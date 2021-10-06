@@ -81,6 +81,13 @@ class RisController extends Controller
         return $arr;
     }
 
+    public function actionMaxValue($id, $month_id)
+    {
+        $max = ItemBreakdown::findOne(['ppmp_item_id' => $id, 'month_id' => $month_id]);
+
+        return $max ? $max->remaining : 0;
+    }
+
     /**
      * Lists all Ris models.
      * @return mixed
@@ -166,9 +173,14 @@ class RisController extends Controller
         ]);
     }
 
-    public function actionRisItems($id)
+    public function actionForProcurement($id)
     {
+        $model = $this->findModel($id);
 
+        $content = $this->renderPartial('_for-procurement',[
+            'model' => $model
+        ]);
+        return Json::encode($content);
     }
 
     public function actionBuy($id, $item_id)
@@ -180,10 +192,40 @@ class RisController extends Controller
         $risItemModel->ris_id = $model->id;
         $risItemModel->ppmp_item_id = $item->id;
 
+        $months = ItemBreakdown::find()
+                ->alias('i')
+                ->select(['ppmp_month.id as id', 'ppmp_month.month as title'])
+                ->leftJoin('ppmp_month', 'ppmp_month.id = i.month_id')
+                ->andWhere(['i.ppmp_item_id' => $item->id])
+                ->andWhere(['>', 'quantity', 0])
+                ->asArray()
+                ->all();
+
+        $months = ArrayHelper::map($months, 'id', 'title');
+
+        if (Yii::$app->request->isAjax && $risItemModel->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($risItemModel);
+        }
+
+        if($risItemModel->load(Yii::$app->request->post()))
+        {
+            if($risItemModel->save())
+            {
+                $source = new RisSource();
+                $source->ris_id = $model->id;
+                $source->ris_item_id = $risItemModel->id;
+                $source->month_id = $risItemModel->month_id;
+                $source->quantity = $risItemModel->quantity;
+                $source->save();
+            }
+        }
+
         return $this->renderAjax('_buy', [
             'model' => $model,
             'item' => $item,
             'risItemModel' => $risItemModel,
+            'months' => $months,
         ]);
     }
 

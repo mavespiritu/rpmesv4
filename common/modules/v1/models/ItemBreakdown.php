@@ -69,4 +69,16 @@ class ItemBreakdown extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Month::className(), ['id' => 'month_id']);
     }
+
+    public function getQuantityUsed()
+    {
+        $total = RisSource::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->ppmp_item_id, 'month_id' => $this->month_id])->asArray()->one();
+
+        return $total['quantity'];
+    }
+
+    public function getRemaining()
+    {
+        return $this->quantity - $this->quantityUsed;
+    }
 }

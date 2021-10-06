@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     [
                                         'label' => '<i class="fa fa-list"></i> For Procurement',
                                         'content' => '',
-                                        'linkOptions'=>['data-url' => Url::to(['/v1/ris/ris-items', 'id' => $model->id])]
+                                        'linkOptions'=>['data-url' => Url::to(['/v1/ris/for-procurement', 'id' => $model->id])]
                                     ],
                                 ],
                                 'bordered'=>true,

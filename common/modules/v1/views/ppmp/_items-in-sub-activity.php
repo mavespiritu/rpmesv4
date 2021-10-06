@@ -11,8 +11,8 @@ use common\modules\v1\models\PpmpItem;
 ?>
 
 <?= GridView::widget([
-    'tableOptions' => [
-        'class' => 'table table-responsive table-condensed table-bordered table-striped table-hover content',
+    'options' => [
+        'class' => 'table-responsive table-condensed table-bordered table-striped table-hover content',
     ],
     'dataProvider' => $dataProvider,
     'showFooter' => true,
@@ -85,16 +85,6 @@ use common\modules\v1\models\PpmpItem;
         ],
     ],
 ]); ?>
-
-<style>
-    td{
-        white-space: normal !important; 
-        word-wrap: break-word;
-    }
-    .content{
-        table-layout: fixed;
-    }
-</style>
 
 <?php
   Modal::begin([
