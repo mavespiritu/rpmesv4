@@ -300,16 +300,7 @@ class Ppmp extends \yii\db\ActiveRecord
                         if($this->data == 2)
                         {
                             $items = PpmpItem::find()
-                            ->select([
-                                'id',
-                                'activity_id',
-                                'fund_source_id',
-                                'sub_activity_id',
-                                'obj_id',
-                                'item_id',
-                            ])
                             ->where(['ppmp_id' => $model->id])
-                            ->asArray()
                             ->all();
 
                             if($items)
@@ -318,11 +309,11 @@ class Ppmp extends \yii\db\ActiveRecord
                                 {
                                     $newItem = PpmpItem::findOne([
                                         'ppmp_id' => $this->id,
-                                        'activity_id' => $item['activity_id'],
-                                        'fund_source_id' => $item['fund_source_id'],
-                                        'sub_activity_id' => $item['sub_activity_id'],
-                                        'obj_id' => $item['obj_id'],
-                                        'item_id' => $item['item_id'],
+                                        'activity_id' => $item->activity_id,
+                                        'fund_source_id' => $item->fund_source_id,
+                                        'sub_activity_id' => $item->sub_activity_id,
+                                        'obj_id' => $item->obj_id,
+                                        'item_id' => $item->item_id,
                                         'type' => 'Original',
                                     ]);
 
@@ -332,7 +323,7 @@ class Ppmp extends \yii\db\ActiveRecord
                                         'month_id',
                                         'quantity',
                                     ])
-                                    ->where(['ppmp_item_id' => $item['id']])
+                                    ->where(['ppmp_item_id' => $item->id])
                                     ->createCommand()
                                     ->getRawSql();
 

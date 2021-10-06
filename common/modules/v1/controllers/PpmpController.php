@@ -441,16 +441,19 @@ class PpmpController extends Controller
             $itemModel->cost = $cost->cost;
             if($itemModel->save())
             {
-                $breakdowns = Yii::$app->request->post('ItemBreakdown');
-                if(!empty($breakdowns))
+                if(!$itemModel->itemBreakdowns)
                 {
-                    foreach($breakdowns as $breakdown)
+                    $breakdowns = Yii::$app->request->post('ItemBreakdown');
+                    if(!empty($breakdowns))
                     {
-                        $breakdownModel = new ItemBreakdown();
-                        $breakdownModel->ppmp_item_id = $itemModel->id;
-                        $breakdownModel->month_id = $breakdown['month_id'];
-                        $breakdownModel->quantity = empty($breakdown['quantity']) ? 0 : $breakdown['quantity'];
-                        $breakdownModel->save();
+                        foreach($breakdowns as $breakdown)
+                        {
+                            $breakdownModel = new ItemBreakdown();
+                            $breakdownModel->ppmp_item_id = $itemModel->id;
+                            $breakdownModel->month_id = $breakdown['month_id'];
+                            $breakdownModel->quantity = empty($breakdown['quantity']) ? 0 : $breakdown['quantity'];
+                            $breakdownModel->save();
+                        }
                     }
                 }
             }
