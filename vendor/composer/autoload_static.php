@@ -138,6 +138,7 @@ class ComposerStaticInit5dc79614d4211f4e341f1ed4c7fbc2a9
         'f' => 
         array (
             'file\\' => 5,
+            'fedemotta\\datatables\\' => 21,
             'faryshta\\disableSubmitButtons\\' => 30,
         ),
         'd' => 
@@ -360,6 +361,10 @@ class ComposerStaticInit5dc79614d4211f4e341f1ed4c7fbc2a9
         'file\\' => 
         array (
             0 => __DIR__ . '/..' . '/axelpal/yii2-attachments',
+        ),
+        'fedemotta\\datatables\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/fedemotta/yii2-widget-datatables',
         ),
         'faryshta\\disableSubmitButtons\\' => 
         array (

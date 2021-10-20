@@ -7,12 +7,13 @@ use yii\bootstrap\Modal;
 use yii\helpers\Url;
 use yii\web\View;
 use common\modules\v1\models\PpmpItem;
-
+use fedemotta\datatables\DataTables;
 ?>
 
-<?= GridView::widget([
+<?= $dataProvider->getTotalCount() > 0 ? Gridview::widget([
     'options' => [
         'class' => 'table-responsive table-condensed table-bordered table-striped table-hover content',
+        'id' => 'table-subactivity-'.$subActivity->id,
     ],
     'dataProvider' => $dataProvider,
     'showFooter' => true,
@@ -84,7 +85,7 @@ use common\modules\v1\models\PpmpItem;
             }
         ],
     ],
-]); ?>
+]) : '<p class="text-center">No items found</p>' ?>
 
 <?php
   Modal::begin([

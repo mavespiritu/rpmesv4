@@ -61,7 +61,7 @@ use yii\web\View;
         <div class="col-md-2 col-xs-12">
             <div class="form-group flex-center" style="margin-top: 25px;">
                 <label>&nbsp;</label>
-                <?= Html::submitButton('Generate', ['class' => 'btn btn-primary btn-block']) ?>&nbsp;&nbsp;
+                <?= Html::submitButton('Preview', ['class' => 'btn btn-primary btn-block']) ?>&nbsp;&nbsp;
                 <?= Html::resetButton('Clear', ['class' => 'btn btn-outline-secondary', 'onClick' => 'redirectPage()']) ?>
             </div>
         </div>

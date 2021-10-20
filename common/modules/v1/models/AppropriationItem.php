@@ -21,6 +21,8 @@ class AppropriationItem extends \yii\db\ActiveRecord
     public $idx;
     public $activity_id;
     public $sub_activity_id;
+    public $stage;
+    public $year;
     /**
      * {@inheritdoc}
      */
@@ -35,6 +37,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['activity_id', 'stage', 'year'], 'required', 'on' => 'loadBudgetMonitoring'],
             [['activity_id', 'fund_source_id'], 'required', 'on' => 'loadItems'],
             [['activity_id', 'sub_activity_id', 'fund_source_id'], 'required', 'on' => 'loadItemsInRis'],
             [['amount'], 'required'],
@@ -57,6 +60,8 @@ class AppropriationItem extends \yii\db\ActiveRecord
             'appropriation_id' => 'Appropriation ID',
             'obj_id' => 'Object ID',
             'pap_id' => 'Program',
+            'stage' => 'Stage',
+            'year' => 'Year',
             'activity_id' => 'Activity',
             'sub_activity_id' => 'PAP',
             'fund_source_id' => 'Fund Source',

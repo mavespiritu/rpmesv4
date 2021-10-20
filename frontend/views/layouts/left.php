@@ -38,6 +38,13 @@
                     ['label' => 'GAA', 'icon' => 'folder', 'url' => ['/v1/gaa'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'PPMP', 'icon' => 'folder', 'url' => ['/v1/ppmp']],
                     ['label' => 'APP', 'icon' => 'folder', 'url' => ['/v1/app']],
+                    [
+                        'label' => 'Reports', 
+                        'icon' => 'folder', 
+                        'url' => '#', 
+                        'items' => [
+                            ['label' => 'Budget Monitoring', 'icon' => 'folder', 'url' => ['/v1/budget-monitoring'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
+                    ],],
                     ['label' => 'Actual Procurement', 'options' => ['class' => 'header']],
                     ['label' => 'RIS', 'icon' => 'folder', 'url' => ['/v1/ris']],
                     ['label' => 'PR', 'icon' => 'folder', 'url' => ['/gii']],

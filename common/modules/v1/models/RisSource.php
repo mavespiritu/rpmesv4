@@ -51,6 +51,7 @@ class RisSource extends \yii\db\ActiveRecord
             'ppmp_item_id' => 'Ppmp Item ID',
             'month_id' => 'Month ID',
             'quantity' => 'Quantity',
+            'type' => 'Type',
         ];
     }
 

@@ -7,9 +7,10 @@ use yii\bootstrap\Modal;
 use yii\helpers\Url;
 use yii\web\View;
 use common\modules\v1\models\PpmpItem;
+use fedemotta\datatables\DataTables;
 
 ?>
-
+<div id="alert-ris"></div>
 <div class="ris-items">
     <table class="table table-responsive table-condensed">
         <tr>
@@ -27,7 +28,7 @@ use common\modules\v1\models\PpmpItem;
     </table>
 </div>
 
-<?= GridView::widget([
+<?= $dataProvider->getTotalCount() > 0 ? DataTables::widget([
     'options' => [
         'class' => 'table-responsive table-condensed table-bordered table-striped table-hover',
     ],
@@ -108,11 +109,11 @@ use common\modules\v1\models\PpmpItem;
             }
         ],
     ],
-]); ?>
+]) : '<p class="text-center">No items found</p>' ?>
 <?php
   Modal::begin([
     'id' => 'buy-modal',
-    'size' => "modal-md",
+    'size' => "modal-lg",
     'header' => '<div id="buy-modal-header"><h4>Add to RIS</h4></div>',
     'options' => ['tabindex' => false],
   ]);
@@ -121,11 +122,12 @@ use common\modules\v1\models\PpmpItem;
 ?>
 <?php
     $script = '
-        $(document).ready(function(){
-            $(".buy-button").click(function(){
-              $("#buy-modal").modal("show").find("#buy-modal-content").load($(this).attr("value"));
-            });
-        });     
+    $(".buy-button").click(function(){
+        $("#ris-item-list").empty();
+        $("#ris-item-list").hide();
+        $("#ris-item-list").fadeIn("slow");
+        $("#ris-item-list").load($(this).attr("value"));
+    });
     ';
 
     $this->registerJs($script, View::POS_END);

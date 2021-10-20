@@ -94,10 +94,10 @@ use yii\web\View;
                 },
                 success: function (data) {
                     console.log(this.data);
-                    $("#ris-items").empty();
-                    $("#ris-items").hide();
-                    $("#ris-items").fadeIn("slow");
-                    $("#ris-items").html(data);
+                    $("#ris-item-list").empty();
+                    $("#ris-item-list").hide();
+                    $("#ris-item-list").fadeIn("slow");
+                    $("#ris-item-list").html(data);
                 },
                 error: function (err) {
                     console.log(err);

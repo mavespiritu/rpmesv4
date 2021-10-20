@@ -71,7 +71,7 @@ class RisItem extends \yii\db\ActiveRecord
      */
     public function getPpmpItem()
     {
-        return $this->hasOne(PpmpPpmpItem::className(), ['id' => 'ppmp_item_id']);
+        return $this->hasOne(PpmpItem::className(), ['id' => 'ppmp_item_id']);
     }
 
     /**

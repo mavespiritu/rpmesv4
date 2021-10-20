@@ -14,6 +14,7 @@ use common\modules\v1\models\PpmpItemSearch;
 use common\modules\v1\models\FundCluster;
 use common\modules\v1\models\Signatory;
 use common\modules\v1\models\RisItem;
+use common\modules\v1\models\RisSource;
 use common\modules\v1\models\ItemBreakdown;
 use common\modules\v1\models\RisSearch;
 use yii\web\Controller;
@@ -203,21 +204,21 @@ class RisController extends Controller
 
         $months = ArrayHelper::map($months, 'id', 'title');
 
-        if (Yii::$app->request->isAjax && $risItemModel->load(Yii::$app->request->post())) {
-            Yii::$app->response->format = Response::FORMAT_JSON;
-            return ActiveForm::validate($risItemModel);
-        }
-
         if($risItemModel->load(Yii::$app->request->post()))
         {
             if($risItemModel->save())
             {
-                $source = new RisSource();
-                $source->ris_id = $model->id;
-                $source->ris_item_id = $risItemModel->id;
-                $source->month_id = $risItemModel->month_id;
-                $source->quantity = $risItemModel->quantity;
-                $source->save();
+                if($risItemModel->ppmpItem->type == 'Original')
+                {
+                    $source = new RisSource();
+                    $source->ris_id = $model->id;
+                    $source->ris_item_id = $risItemModel->id;
+                    $source->ppmp_item_id = $item->id;
+                    $source->month_id = $risItemModel->month_id;
+                    $source->quantity = $risItemModel->quantity;
+                    $source->type = 'Original';
+                    $source->save();
+                }
             }
         }
 
@@ -236,6 +237,13 @@ class RisController extends Controller
         return $this->renderAjax('_info', [
             'model' => $model,
         ]);
+    }
+
+    public function actionLoadRisItemsTotal($id)
+    {
+        $model = $this->findModel($id);
+
+        return $model->getRisItems()->count();
     }
 
     /**

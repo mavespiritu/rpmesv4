@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'active' => true,
                                     ],
                                     [
-                                        'label' => '<i class="fa fa-list"></i> For Procurement',
+                                        'label' => '<i class="fa fa-list"></i> For Procurement <span class="badge bg-red" id="badge-ris">'.$model->getRisItems()->count().'</span>',
                                         'content' => '',
                                         'linkOptions'=>['data-url' => Url::to(['/v1/ris/for-procurement', 'id' => $model->id])]
                                     ],

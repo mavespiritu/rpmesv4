@@ -312,4 +312,13 @@ return array (
     ),
     'bootstrap' => 'bedezign\\yii2\\audit\\Bootstrap',
   ),
+  'fedemotta/yii2-widget-datatables' => 
+  array (
+    'name' => 'fedemotta/yii2-widget-datatables',
+    'version' => '1.3.0.0',
+    'alias' => 
+    array (
+      '@fedemotta/datatables' => $vendorDir . '/fedemotta/yii2-widget-datatables',
+    ),
+  ),
 );

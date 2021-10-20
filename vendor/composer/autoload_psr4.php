@@ -36,6 +36,7 @@ return array(
     'kartik\\base\\' => array($vendorDir . '/kartik-v/yii2-krajee-base/src'),
     'himiklab\\colorbox\\' => array($vendorDir . '/himiklab/yii2-colorbox-widget'),
     'file\\' => array($vendorDir . '/axelpal/yii2-attachments'),
+    'fedemotta\\datatables\\' => array($vendorDir . '/fedemotta/yii2-widget-datatables'),
     'faryshta\\disableSubmitButtons\\' => array($vendorDir . '/faryshta/yii2-disable-submit-buttons/src'),
     'dosamigos\\datepicker\\' => array($vendorDir . '/2amigos/yii2-date-picker-widget/src'),
     'dosamigos\\ckeditor\\' => array($vendorDir . '/2amigos/yii2-ckeditor-widget/src'),
