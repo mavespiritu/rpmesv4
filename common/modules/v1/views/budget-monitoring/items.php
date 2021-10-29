@@ -9,6 +9,7 @@ $total = 0;
     <table class="table table-striped table-responsive table-condensed table-hover">
         <thead>
             <tr>
+                <th>PAP</th>
                 <th>Title</th>
                 <th>Unit of Measure</th>
                 <th>Quantity</th>
@@ -21,6 +22,7 @@ $total = 0;
         <?php if(!empty($items)){ ?>
             <?php foreach($items as $item){ ?>
                 <tr>
+                    <td><?= $item['pap'] ?></td>
                     <td><?= $item['title'] ?></td>
                     <td><?= $item['unit_of_measure'] ?></td>
                     <td><?= number_format($item['quantity'], 0) ?></td>
@@ -32,7 +34,7 @@ $total = 0;
             <?php } ?>
         <?php } ?>
         <tr>
-            <td colspan=4 align=right><b>Total:</b></td>
+            <td colspan=5 align=right><b>Total:</b></td>
             <td align=right><b><?= number_format($total, 2) ?></b></td>
             <td>&nbsp;</td>
         </tr>

@@ -36,7 +36,7 @@ use yii\db\Query;
 use yii\helpers\Url;
 use kartik\mpdf\Pdf;
 
-class BudgetMonitoringController extends \yii\web\Controller
+class AppropriationController extends \yii\web\Controller
 {
     /**
      * {@inheritdoc}
@@ -64,58 +64,51 @@ class BudgetMonitoringController extends \yii\web\Controller
         ];
     }
 
-    function sumSourceElement(array $elements, $key)
+    function sumPrevElement(array $elements)
     {
         $sum = 0;
         foreach($elements as $element){
-            $sum += isset($element['source'][$key]) ? $element['source'][$key] : 0;
+            $sum += isset($element['prevSource']) ? $element['prevSource'] : 0;
             if (isset($element['children'])){
-                $sum += $this->sumSourceElement($element['children'], $key);
+                $sum += $this->sumPrevElement($element['children']);
             }
         }
         return $sum;
     }
 
-    function sumPpmpElement(array $elements, $office, $fundSource)
+    function sumElement(array $elements, $type, $key, $fundSource)
     {
         $sum = 0;
         foreach($elements as $element){
-            $sum += isset($element['ppmp'][$office][$fundSource]) ? $element['ppmp'][$office][$fundSource] : 0;
+            $sum += isset($element[$type][$key][$fundSource]) ? $element[$type][$key][$fundSource] : 0;
             if (isset($element['children'])){
-                $sum += $this->sumPpmpElement($element['children'], $office, $fundSource);
+                $sum += $this->sumElement($element['children'], $type, $key, $fundSource);
             }
         }
         return $sum;
     }
 
-    function recursive(array $elements, $parentId = null) {
+    function recursive(array $elements, $parentId = null, $appropriation, $prevAppropriation) {
         $branch = array();
-        $offices = Office::find()->orderBy(['abbreviation' => SORT_ASC])->all();
-        $fundSources = FundSource::find()->all();
 
         foreach ($elements as $element) {
             if ($element['obj_id'] == $parentId) {
+                
+                $children = $this->recursive($elements, $element['id'], $appropriation, $prevAppropriation);
 
-                $children = $this->recursive($elements, $element['id']);
-
-                if($fundSources)
+                if($prevAppropriation)
                 {
-                    foreach($fundSources as $fundSource)
-                    {
-                        $element['source'][$fundSource->code] = isset($element['source'][$fundSource->code]) ? $element['source'][$fundSource->code] : 0;
-                    }
+                    $element['prevSource'] = isset($element['prevSource']) ? $element['prevSource'] : 0;
                 }
-
-                if($offices)
+                
+                if($appropriation)
                 {
-                    foreach($offices as $office)
+                    if($appropriation->appropriationPaps)
                     {
-                        if($fundSources)
+                        foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
                         {
-                            foreach($fundSources as $fundSource)
-                            {
-                                $element['ppmp'][$office->id][$fundSource->code] = isset($element['ppmp'][$office->id][$fundSource->code]) ? $element['ppmp'][$office->id][$fundSource->code] : 0;
-                            }
+                            $element['source'][$pap->pap->id][$pap->fundSource->code] = isset($element['source'][$pap->pap->id][$pap->fundSource->code]) ? $element['source'][$pap->pap->id][$pap->fundSource->code] : 0;
+                            $element['ppmp'][$pap->pap->id][$pap->fundSource->code] = isset($element['ppmp'][$pap->pap->id][$pap->fundSource->code]) ? $element['ppmp'][$pap->pap->id][$pap->fundSource->code] : 0;
                         }
                     }
                 }
@@ -131,41 +124,33 @@ class BudgetMonitoringController extends \yii\web\Controller
         return $branch;
     }
 
-    function finalRecursive(array $elements)
+    function finalRecursive(array $elements, $appropriation, $prevAppropriation)
     {
         $branch = array();
-        $offices = Office::find()->orderBy(['abbreviation' => SORT_ASC])->all();
-        $fundSources = FundSource::find()->all();
 
         foreach ($elements as $element) {
             if(isset($element['children']))
             {
-                $children = $this->finalRecursive($element['children']);
-
-                if($fundSources)
+                if($appropriation)
                 {
-                    foreach($fundSources as $fundSource)
+                    $children = $this->finalRecursive($element['children'], $appropriation, $prevAppropriation);
+
+                    if($prevAppropriation)
                     {
-                        $element['source'][$fundSource->code] += $this->sumSourceElement($element['children'], $fundSource->code);
+                        $element['prevSource'] += $this->sumPrevElement($element['children']);
                     }
-                }
 
-                if($offices)
-                {
-                    foreach($offices as $office)
+                    if($appropriation->appropriationPaps)
                     {
-                        if($fundSources)
+                        foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
                         {
-                            foreach($fundSources as $fundSource)
-                            {
-                                $element['ppmp'][$office->id][$fundSource->code] += $this->sumPpmpElement($element['children'], $office->id, $fundSource->code);
-                            }
+                            $element['source'][$pap->pap->id][$pap->fundSource->code] += $this->sumElement($element['children'], 'source', $pap->pap->id, $pap->fundSource->code);
+                            $element['ppmp'][$pap->pap->id][$pap->fundSource->code] += $this->sumElement($element['children'], 'ppmp', $pap->pap->id, $pap->fundSource->code);
                         }
                     }
-                }
-
-                if ($children) {
-                    $element['children'] = $children;
+                    if ($children) {
+                        $element['children'] = $children;
+                    }
                 }
             }
             
@@ -175,111 +160,10 @@ class BudgetMonitoringController extends \yii\web\Controller
         return $branch;
     }
 
-    function getAppropriationPerObjectPerFundSource($stage, $year, $obj_id, $pap_id, $fund_source_id)
-    {
-        $appropriation = AppropriationItem::find()
-            ->select(['amount'])
-            ->leftJoin('ppmp_appropriation', 'ppmp_appropriation.id = ppmp_appropriation_item.appropriation_id');
-
-        if($stage == 'Indicative')
-        {
-            $appropriation = $appropriation->andWhere(['ppmp_appropriation.type' => 'GAA', 'ppmp_appropriation.year' => $year - 1]);
-        }
-        else if($stage == 'Adjusted')
-        {
-            $appropriation = $appropriation->andWhere(['ppmp_appropriation.type' => 'NEP', 'ppmp_appropriation.year' => $year]);
-        }
-        else if($stage == 'Final')
-        {
-            $appropriation = $appropriation->andWhere(['ppmp_appropriation.type' => 'GAA', 'ppmp_appropriation.year' => $year]);
-        }
-
-        if($obj_id != '')
-        {
-            $appropriation = $appropriation->andWhere(['ppmp_appropriation_item.obj_id' => $obj_id]);
-        }
-
-        if($pap_id != '')
-        {
-            $appropriation = $appropriation->andWhere(['ppmp_appropriation_item.pap_id' => $pap_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $appropriation = $appropriation->andWhere(['ppmp_appropriation_item.fund_source_id' => $fund_source_id]);
-        }
-
-        $appropriation = $appropriation
-                        ->asArray()
-                        ->one();
-        
-        return isset($appropriation['amount']) ? $appropriation['amount'] : 0;
-    }
-
-    function getObjectPerFundSource($stage, $year, $activity_id, $obj_id, $office_id, $fund_source_id)
-    {
-        $quantities = ItemBreakdown::find()
-            ->select([
-                'ppmp_item_id',
-                'sum(quantity) as total'
-            ])
-            ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ppmp_item_breakdown.ppmp_item_id')
-            ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
-            ->leftJoin('ppmp_ppmp', 'ppmp_ppmp.id = ppmp_ppmp_item.ppmp_id');
-        
-        $items = PpmpItem::find()
-            ->select([
-                'SUM(quantities.total * cost) as total'
-            ])
-            ->leftJoin('ppmp_ppmp', 'ppmp_ppmp.id = ppmp_ppmp_item.ppmp_id');
-
-            if($year != ''){
-                $quantities = $quantities->andWhere(['ppmp_ppmp.year' => $year]);
-                $items = $items->andWhere(['ppmp_ppmp.year' => $year]);
-            }
-
-            if($stage != ''){
-                $quantities = $quantities->andWhere(['ppmp_ppmp.stage' => $stage]);
-                $items = $items->andWhere(['ppmp_ppmp.stage' => $stage]);
-            }
-
-            if($office_id != ''){
-                $quantities = $quantities->andWhere(['ppmp_ppmp.office_id' => $office_id]);
-                $items = $items->andWhere(['ppmp_ppmp.office_id' => $office_id]);
-            }
-
-            if($activity_id != ''){
-                $quantities = $quantities->andWhere(['ppmp_ppmp_item.activity_id' => $activity_id]);
-                $items = $items->andWhere(['ppmp_ppmp_item.activity_id' => $activity_id]);
-            }
-
-            if($obj_id != ''){
-                $quantities = $quantities->andWhere(['ppmp_ppmp_item.obj_id' => $obj_id]);
-                $items = $items->andWhere(['ppmp_ppmp_item.obj_id' => $obj_id]);
-            }
-
-            if($fund_source_id != ''){
-                $quantities = $quantities->andWhere(['ppmp_ppmp_item.fund_source_id' => $fund_source_id]);
-                $items = $items->andWhere(['ppmp_ppmp_item.fund_source_id' => $fund_source_id]);
-            }
-
-            $quantities = $quantities
-            ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
-            ->groupBy(['ppmp_item_id'])
-            ->createCommand()
-            ->getRawSql();
-
-            $items = $items->leftJoin(['quantities' => '('.$quantities.')'], 'quantities.ppmp_item_id = ppmp_ppmp_item.id')
-                           ->asArray()
-                           ->one();
-
-            return isset($items['total']) ? $items['total'] : 0;
-    }
-
     public function actionIndex()
     {
         $model = new AppropriationItem();
-        $model->scenario = 'loadBudgetMonitoring';
+        $model->scenario = 'loadAppropriation';
 
         $stages = [
             'Indicative' => 'Indicative',
@@ -287,29 +171,18 @@ class BudgetMonitoringController extends \yii\web\Controller
             'Final' => 'Final',
         ];
 
-        $years = Ppmp::find()->select(['distinct(year) as year'])->asArray()->orderBy(['year' => SORT_DESC])->all();
+        $years = Appropriation::find()->select(['distinct(year) as year'])->asArray()->orderBy(['year' => SORT_DESC])->all();
         $years = ArrayHelper::map($years, 'year', 'year');
-
-        $activities = Activity::find()
-                     ->select([
-                         'ppmp_activity.id as id',
-                         'ppmp_activity.pap_id as pap_id',
-                         'ppmp_activity.title as text',
-                         'p.title as groupTitle'
-                     ])
-                     ->leftJoin(['p' => '(SELECT id, code, title from ppmp_pap)'], 'p.id = ppmp_activity.pap_id')
-                     ->asArray()
-                     ->all();
-
-        $activities = ArrayHelper::map($activities, 'id', 'text', 'groupTitle');
 
         if($model->load(Yii::$app->request->post()))
         {
-            $activity = Activity::findOne($model->activity_id);
-
             $temp = [];
 
             $appropriationItems = [];
+
+            $prevAppropriationItems = [];
+
+            $headers = [];
 
             $objects = Obj::find()->asArray()->all();
 
@@ -319,57 +192,105 @@ class BudgetMonitoringController extends \yii\web\Controller
             if($model->stage == 'Indicative')
             {
                 $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $model->year - 1]);
+                $prevAppropriation = $prevAppropriation->andWhere(['type' => 'NEP', 'year' => $model->year - 1]);
             }
             else if($model->stage == 'Adjusted')
             {
                 $appropriation = $appropriation->andWhere(['type' => 'NEP', 'year' => $model->year]);
+                $prevAppropriation = $prevAppropriation->andWhere(['type' => 'GAA', 'year' => $model->year - 1]);
             }
             else if($model->stage == 'Final')
             {
                 $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $model->year]);
+                $prevAppropriation = $prevAppropriation->andWhere(['type' => 'NEP', 'year' => $model->year]);
             }
     
             $appropriation = $appropriation->one();
-
+            $prevAppropriation = $prevAppropriation->one();
+    
             if($appropriation)
             {
                 $appropriationItems = AppropriationItem::find()
                 ->select([
                     'ppmp_appropriation_item.obj_id',
+                    'ppmp_appropriation_item.pap_id',
                     'ppmp_appropriation_item.fund_source_id',
                     'ppmp_fund_source.code as fundSource',
-                    'COALESCE(SUM(amount), 0) as total'
+                    'COALESCE(amount, 0) as total'
                 ])
                 ->leftJoin('ppmp_fund_source', 'ppmp_fund_source.id = ppmp_appropriation_item.fund_source_id');
-                
-                $appropriationItems = $appropriationItems->andWhere(['ppmp_appropriation_item.pap_id' => $activity->pap_id]);
     
                 $appropriationItems = $appropriationItems
                 ->andWhere(['ppmp_appropriation_item.appropriation_id' => $appropriation->id])
                 ->groupBy([
                     'ppmp_appropriation_item.obj_id',
+                    'ppmp_appropriation_item.pap_id',
                     'ppmp_appropriation_item.fund_source_id'
                 ])
                 ->asArray()
                 ->all();
+                
+                if($appropriation->appropriationPaps)
+                {
+                    foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
+                    {
+                        $headers[$pap->pap->costStructure->abbreviation][$pap->pap->codeAndTitle][] = $pap->fundSource->code;
+                        $headers[$pap->pap->costStructure->abbreviation][$pap->pap->codeAndTitle][] = 'PPMP';
+                    }
+                }
             }
-
+    
+            if($prevAppropriation)
+            {
+                $prevAppropriationItems = AppropriationItem::find()
+                ->select([
+                    'ppmp_appropriation_item.obj_id',
+                    'COALESCE(SUM(amount), 0) as total'
+                ])
+                ->leftJoin('ppmp_fund_source', 'ppmp_fund_source.id = ppmp_appropriation_item.fund_source_id');
+    
+                $prevAppropriationItems = $prevAppropriationItems
+                ->andWhere(['ppmp_appropriation_item.appropriation_id' => $prevAppropriation->id])
+                ->groupBy([
+                    'ppmp_appropriation_item.obj_id',
+                ])
+                ->asArray()
+                ->all();
+            }
+    
             if(!empty($appropriationItems))
             {
                 foreach($appropriationItems as $item)
                 {
-                    $temp[$item['obj_id']]['source'][$item['fundSource']] = $item['total'];
+                    $temp[$item['obj_id']]['source'][$item['pap_id']][$item['fundSource']] = $item['total'];
                 }
             }
-
+    
+            if(!empty($prevAppropriationItems))
+            {
+                foreach($prevAppropriationItems as $item)
+                {
+                    $temp[$item['obj_id']]['prevSource'] = $item['total'];
+                }
+            }
+    
+            if(!empty($appropriationItems))
+            {
+                foreach($appropriationItems as $item)
+                {
+                    $temp[$item['obj_id']]['source'][$item['pap_id']][$item['fundSource']] = $item['total'];
+                }
+            }
+    
             if(!empty($objects))
             {
                 foreach($objects as $idx => $object)
                 {
                     $objects[$idx]['source'] = isset($temp[$object['id']]['source']) ? $temp[$object['id']]['source'] : [];
+                    $objects[$idx]['prevSource'] = isset($temp[$object['id']]['prevSource']) ? $temp[$object['id']]['prevSource'] : 0;
                 }
             }
-
+                        
             $quantities = ItemBreakdown::find()
             ->select([
                 'ppmp_item_id',
@@ -378,10 +299,10 @@ class BudgetMonitoringController extends \yii\web\Controller
             ->groupBy(['ppmp_item_id'])
             ->createCommand()
             ->getRawSql();
-        
+
             $items = PpmpItem::find()
             ->select([
-                'ppmp_ppmp.office_id',
+                'ppmp_activity.pap_id',
                 'ppmp_ppmp_item.fund_source_id',
                 'ppmp_fund_source.code as fundSource',
                 'ppmp_ppmp_item.obj_id',
@@ -402,13 +323,9 @@ class BudgetMonitoringController extends \yii\web\Controller
                 $items = $items->andWhere(['ppmp_ppmp.stage' => $model->stage]);
             }
 
-            if($model->activity_id != ''){
-                $items = $items->andWhere(['ppmp_ppmp_item.activity_id' => $model->activity_id]);
-            }
-
             $items = $items
             ->groupBy([
-                'ppmp_ppmp.office_id',
+                'ppmp_activity.pap_id',
                 'ppmp_ppmp_item.fund_source_id',
                 'ppmp_ppmp_item.obj_id',
             ])
@@ -419,7 +336,7 @@ class BudgetMonitoringController extends \yii\web\Controller
             {
                 foreach($items as $item)
                 {
-                    $temp[$item['obj_id']]['ppmp'][$item['office_id']][$item['fundSource']] = $item['total'];
+                    $temp[$item['obj_id']]['ppmp'][$item['pap_id']][$item['fundSource']] = $item['total'];
                 }
             }
 
@@ -431,32 +348,23 @@ class BudgetMonitoringController extends \yii\web\Controller
                 }
             }
 
-            $data = $this->finalRecursive($this->recursive($objects, null));
+            $data = $this->finalRecursive($this->recursive($objects, null, $appropriation, $prevAppropriation), $appropriation, $prevAppropriation);
 
             $total = [];
-
+            $total['prevSource'] = 0;
+            
             if(!empty($data))
             {
                 foreach($data as $datum)
                 {
                     if(isset($datum['source']))
                     {
-                        foreach($datum['source'] as $fundSource => $source)
+                        foreach($datum['source'] as $idx => $source)
                         {
-                            $total['source'][$fundSource] = 0;
-                        }
-                    }
-
-                    if(isset($datum['ppmp']))
-                    {
-                        foreach($datum['ppmp'] as $office => $ppmp)
-                        {
-                            if(!empty($ppmp))
+                            foreach($source as $fundSource => $value)
                             {
-                                foreach($ppmp as $fundSource => $value)
-                                {
-                                    $total['ppmp'][$office][$fundSource] = 0;
-                                }
+                                $total['source'][$idx][$fundSource] = 0;
+                                $total['ppmp'][$idx][$fundSource] = 0;
                             }
                         }
                     }
@@ -469,38 +377,35 @@ class BudgetMonitoringController extends \yii\web\Controller
                 {
                     if(isset($datum['source']))
                     {
-                        foreach($datum['source'] as $fundSource => $source)
+                        foreach($datum['source'] as $idx => $source)
                         {
-                            $total['source'][$fundSource] += isset($datum['source'][$fundSource]) ? $datum['source'][$fundSource] : 0;
-                        }
-                    }
-
-                    if(isset($datum['ppmp']))
-                    {
-                        foreach($datum['ppmp'] as $office => $ppmp)
-                        {
-                            if(!empty($ppmp))
+                            foreach($source as $fundSource => $value)
                             {
-                                foreach($ppmp as $fundSource => $value)
-                                {
-                                    $total['ppmp'][$office][$fundSource] += isset($datum['ppmp'][$office][$fundSource]) ? $datum['ppmp'][$office][$fundSource] : 0;
-                                }
+                                $total['source'][$idx][$fundSource] += $value;
+                            }
+                        }
+
+                        foreach($datum['ppmp'] as $idx => $ppmp)
+                        {
+                            foreach($ppmp as $fundSource => $value)
+                            {
+                                $total['ppmp'][$idx][$fundSource] += $value;
                             }
                         }
                     }
+
+                    $total['prevSource'] += isset($datum['prevSource']) ? $datum['prevSource'] : 0;
                 }
             }
-
-            $fundSources = FundSource::find()->all();
-            $offices = Office::find()->orderBy(['abbreviation' => SORT_ASC])->all();
+            
             $postData = Yii::$app->request->post('AppropriationItem');
             
             return $this->renderAjax('view',[
+                'headers' => $headers,
                 'data' => $data,
                 'total' => $total,
-                'activity' => $activity,
-                'fundSources' => $fundSources,
-                'offices' => $offices,
+                'appropriation' => $appropriation,
+                'prevAppropriation' => $prevAppropriation,
                 'year' => $model->year,
                 'stage' => $model->stage,
                 'postData' => $postData,
@@ -510,12 +415,11 @@ class BudgetMonitoringController extends \yii\web\Controller
         return $this->render('index',[
             'model' => $model,
             'stages' => $stages,
-            'activities' => $activities,
             'years' => $years,
         ]);
     }
 
-    public function actionViewItems($office_id, $fund_source_id, $activity_id, $stage, $year, $obj_id)
+    /* public function actionViewItems($office_id, $fund_source_id, $activity_id, $stage, $year, $obj_id)
     {
         $office = Office::findOne($office_id);
         $fundSource = FundSource::findOne($fund_source_id);
@@ -575,12 +479,13 @@ class BudgetMonitoringController extends \yii\web\Controller
             }
 
             $quantities = $quantities
+            ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
             ->groupBy(['ppmp_item_id'])
             ->createCommand()
             ->getRawSql();
 
             $items = $items->leftJoin(['quantities' => '('.$quantities.')'], 'quantities.ppmp_item_id = ppmp_ppmp_item.id')
-                           ->orderBy(['ppmp_sub_activity.title' => SORT_ASC])
+                            ->orderBy(['ppmp_sub_activity.title' => SORT_ASC])
                            ->asArray()
                            ->all();
                     
@@ -593,17 +498,19 @@ class BudgetMonitoringController extends \yii\web\Controller
                 'stage' => $stage,
                 'year' => $year,
             ]);
-    }
+    } */
 
     public function actionDownload($type, $post)
     {
         $postData = json_decode($post, true);
 
-        $activity = Activity::findOne($postData['activity_id']);
-
         $temp = [];
 
         $appropriationItems = [];
+
+        $prevAppropriationItems = [];
+
+        $headers = [];
 
         $objects = Obj::find()->asArray()->all();
 
@@ -613,36 +520,67 @@ class BudgetMonitoringController extends \yii\web\Controller
         if($postData['stage'] == 'Indicative')
         {
             $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $postData['year'] - 1]);
+            $prevAppropriation = $prevAppropriation->andWhere(['type' => 'NEP', 'year' => $postData['year'] - 1]);
         }
         else if($postData['stage'] == 'Adjusted')
         {
-            $appropriation = $appropriation->andWhere(['type' => 'NEP', 'year' =>$postData['year']]);
+            $appropriation = $appropriation->andWhere(['type' => 'NEP', 'year' => $postData['year']]);
+            $prevAppropriation = $prevAppropriation->andWhere(['type' => 'GAA', 'year' => $postData['year'] - 1]);
         }
         else if($postData['stage'] == 'Final')
         {
             $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $postData['year']]);
+            $prevAppropriation = $prevAppropriation->andWhere(['type' => 'NEP', 'year' => $postData['year']]);
         }
 
         $appropriation = $appropriation->one();
+        $prevAppropriation = $prevAppropriation->one();
 
         if($appropriation)
         {
             $appropriationItems = AppropriationItem::find()
             ->select([
                 'ppmp_appropriation_item.obj_id',
+                'ppmp_appropriation_item.pap_id',
                 'ppmp_appropriation_item.fund_source_id',
                 'ppmp_fund_source.code as fundSource',
-                'COALESCE(SUM(amount), 0) as total'
+                'COALESCE(amount, 0) as total'
             ])
             ->leftJoin('ppmp_fund_source', 'ppmp_fund_source.id = ppmp_appropriation_item.fund_source_id');
-            
-            $appropriationItems = $appropriationItems->andWhere(['ppmp_appropriation_item.pap_id' => $activity->pap_id]);
 
             $appropriationItems = $appropriationItems
             ->andWhere(['ppmp_appropriation_item.appropriation_id' => $appropriation->id])
             ->groupBy([
                 'ppmp_appropriation_item.obj_id',
+                'ppmp_appropriation_item.pap_id',
                 'ppmp_appropriation_item.fund_source_id'
+            ])
+            ->asArray()
+            ->all();
+            
+            if($appropriation->appropriationPaps)
+            {
+                foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
+                {
+                    $headers[$pap->pap->costStructure->abbreviation][$pap->pap->codeAndTitle][] = $pap->fundSource->code;
+                    $headers[$pap->pap->costStructure->abbreviation][$pap->pap->codeAndTitle][] = 'PPMP';
+                }
+            }
+        }
+
+        if($prevAppropriation)
+        {
+            $prevAppropriationItems = AppropriationItem::find()
+            ->select([
+                'ppmp_appropriation_item.obj_id',
+                'COALESCE(SUM(amount), 0) as total'
+            ])
+            ->leftJoin('ppmp_fund_source', 'ppmp_fund_source.id = ppmp_appropriation_item.fund_source_id');
+
+            $prevAppropriationItems = $prevAppropriationItems
+            ->andWhere(['ppmp_appropriation_item.appropriation_id' => $prevAppropriation->id])
+            ->groupBy([
+                'ppmp_appropriation_item.obj_id',
             ])
             ->asArray()
             ->all();
@@ -652,7 +590,23 @@ class BudgetMonitoringController extends \yii\web\Controller
         {
             foreach($appropriationItems as $item)
             {
-                $temp[$item['obj_id']]['source'][$item['fundSource']] = $item['total'];
+                $temp[$item['obj_id']]['source'][$item['pap_id']][$item['fundSource']] = $item['total'];
+            }
+        }
+
+        if(!empty($prevAppropriationItems))
+        {
+            foreach($prevAppropriationItems as $item)
+            {
+                $temp[$item['obj_id']]['prevSource'] = $item['total'];
+            }
+        }
+
+        if(!empty($appropriationItems))
+        {
+            foreach($appropriationItems as $item)
+            {
+                $temp[$item['obj_id']]['source'][$item['pap_id']][$item['fundSource']] = $item['total'];
             }
         }
 
@@ -661,9 +615,10 @@ class BudgetMonitoringController extends \yii\web\Controller
             foreach($objects as $idx => $object)
             {
                 $objects[$idx]['source'] = isset($temp[$object['id']]['source']) ? $temp[$object['id']]['source'] : [];
+                $objects[$idx]['prevSource'] = isset($temp[$object['id']]['prevSource']) ? $temp[$object['id']]['prevSource'] : 0;
             }
         }
-
+                    
         $quantities = ItemBreakdown::find()
         ->select([
             'ppmp_item_id',
@@ -672,10 +627,10 @@ class BudgetMonitoringController extends \yii\web\Controller
         ->groupBy(['ppmp_item_id'])
         ->createCommand()
         ->getRawSql();
-    
+
         $items = PpmpItem::find()
         ->select([
-            'ppmp_ppmp.office_id',
+            'ppmp_activity.pap_id',
             'ppmp_ppmp_item.fund_source_id',
             'ppmp_fund_source.code as fundSource',
             'ppmp_ppmp_item.obj_id',
@@ -696,13 +651,9 @@ class BudgetMonitoringController extends \yii\web\Controller
             $items = $items->andWhere(['ppmp_ppmp.stage' => $postData['stage']]);
         }
 
-        if($postData['activity_id'] != ''){
-            $items = $items->andWhere(['ppmp_ppmp_item.activity_id' => $postData['activity_id']]);
-        }
-
         $items = $items
         ->groupBy([
-            'ppmp_ppmp.office_id',
+            'ppmp_activity.pap_id',
             'ppmp_ppmp_item.fund_source_id',
             'ppmp_ppmp_item.obj_id',
         ])
@@ -713,7 +664,7 @@ class BudgetMonitoringController extends \yii\web\Controller
         {
             foreach($items as $item)
             {
-                $temp[$item['obj_id']]['ppmp'][$item['office_id']][$item['fundSource']] = $item['total'];
+                $temp[$item['obj_id']]['ppmp'][$item['pap_id']][$item['fundSource']] = $item['total'];
             }
         }
 
@@ -725,32 +676,23 @@ class BudgetMonitoringController extends \yii\web\Controller
             }
         }
 
-        $data = $this->finalRecursive($this->recursive($objects, null));
+        $data = $this->finalRecursive($this->recursive($objects, null, $appropriation, $prevAppropriation), $appropriation, $prevAppropriation);
 
         $total = [];
-
+        $total['prevSource'] = 0;
+        
         if(!empty($data))
         {
             foreach($data as $datum)
             {
                 if(isset($datum['source']))
                 {
-                    foreach($datum['source'] as $fundSource => $source)
+                    foreach($datum['source'] as $idx => $source)
                     {
-                        $total['source'][$fundSource] = 0;
-                    }
-                }
-
-                if(isset($datum['ppmp']))
-                {
-                    foreach($datum['ppmp'] as $office => $ppmp)
-                    {
-                        if(!empty($ppmp))
+                        foreach($source as $fundSource => $value)
                         {
-                            foreach($ppmp as $fundSource => $value)
-                            {
-                                $total['ppmp'][$office][$fundSource] = 0;
-                            }
+                            $total['source'][$idx][$fundSource] = 0;
+                            $total['ppmp'][$idx][$fundSource] = 0;
                         }
                     }
                 }
@@ -763,57 +705,55 @@ class BudgetMonitoringController extends \yii\web\Controller
             {
                 if(isset($datum['source']))
                 {
-                    foreach($datum['source'] as $fundSource => $source)
+                    foreach($datum['source'] as $idx => $source)
                     {
-                        $total['source'][$fundSource] += isset($datum['source'][$fundSource]) ? $datum['source'][$fundSource] : 0;
-                    }
-                }
-
-                if(isset($datum['ppmp']))
-                {
-                    foreach($datum['ppmp'] as $office => $ppmp)
-                    {
-                        if(!empty($ppmp))
+                        foreach($source as $fundSource => $value)
                         {
-                            foreach($ppmp as $fundSource => $value)
-                            {
-                                $total['ppmp'][$office][$fundSource] += isset($datum['ppmp'][$office][$fundSource]) ? $datum['ppmp'][$office][$fundSource] : 0;
-                            }
+                            $total['source'][$idx][$fundSource] += $value;
+                        }
+                    }
+
+                    foreach($datum['ppmp'] as $idx => $ppmp)
+                    {
+                        foreach($ppmp as $fundSource => $value)
+                        {
+                            $total['ppmp'][$idx][$fundSource] += $value;
                         }
                     }
                 }
+
+                $total['prevSource'] += isset($datum['prevSource']) ? $datum['prevSource'] : 0;
             }
         }
-
-        $fundSources = FundSource::find()->all();
-        $offices = Office::find()->orderBy(['abbreviation' => SORT_ASC])->all();
-
-        $filename = 'Budget Monitoring';
+        
+        $filename = 'Appropriation Monitoring';
 
         if($type == 'excel')
         {
             header("Content-type: application/vnd.ms-excel");
             header("Content-Disposition: attachment; filename=".$filename.".xls");
             return $this->renderPartial('file', [
+                'headers' => $headers,
                 'data' => $data,
                 'total' => $total,
-                'activity' => $activity,
-                'fundSources' => $fundSources,
-                'offices' => $offices,
+                'appropriation' => $appropriation,
+                'prevAppropriation' => $prevAppropriation,
                 'year' => $postData['year'],
-                'stage' =>$postData['stage'],
+                'stage' => $postData['stage'],
+                'postData' => $postData,
                 'type' => $type,
             ]);
         }else if($type == 'pdf')
         {
             $content = $this->renderPartial('file', [
+                'headers' => $headers,
                 'data' => $data,
                 'total' => $total,
-                'activity' => $activity,
-                'fundSources' => $fundSources,
-                'offices' => $offices,
+                'appropriation' => $appropriation,
+                'prevAppropriation' => $prevAppropriation,
                 'year' => $postData['year'],
                 'stage' => $postData['stage'],
+                'postData' => $postData,
                 'type' => $type,
             ]);
 

@@ -37,7 +37,8 @@ class AppropriationItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['activity_id', 'stage', 'year'], 'required', 'on' => 'loadBudgetMonitoring'],
+            [['stage', 'year'], 'required', 'on' => 'loadAppropriation'],
+            [['stage', 'year', 'activity_id'], 'required', 'on' => 'loadBudgetMonitoring'],
             [['activity_id', 'fund_source_id'], 'required', 'on' => 'loadItems'],
             [['activity_id', 'sub_activity_id', 'fund_source_id'], 'required', 'on' => 'loadItemsInRis'],
             [['amount'], 'required'],
@@ -57,10 +58,11 @@ class AppropriationItem extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'appropriation_id' => 'Appropriation ID',
+            'appropriation_id' => 'Source',
             'obj_id' => 'Object ID',
             'pap_id' => 'Program',
             'stage' => 'Stage',
+            'type' => 'Type',
             'year' => 'Year',
             'activity_id' => 'Activity',
             'sub_activity_id' => 'PAP',

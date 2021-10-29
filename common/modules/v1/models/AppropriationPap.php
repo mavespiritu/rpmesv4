@@ -94,4 +94,9 @@ class AppropriationPap extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Pap::className(), ['id' => 'pap_id']);
     }
+    
+    public function getFundSourcesCount()
+    {
+        return AppropriationPap::find()->where(['appropriation_id' => $this->appropriation_id, 'pap_id' => $this->pap_id])->count();
+    }
 }

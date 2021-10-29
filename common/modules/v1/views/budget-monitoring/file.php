@@ -20,8 +20,6 @@
 </style>
 <?php } ?>
 <?php
-$total = 0;
-
 function getAreaTree(array $elements, $parentId = null) {
     $branch = array();
     foreach ($elements as $element) {
@@ -36,28 +34,25 @@ function getAreaTree(array $elements, $parentId = null) {
     return empty($branch) ? null : $branch;
 }
 
-function getChildren($elements, $padding = 0, $fontSize = 20, $fundSources, $offices, $stage, $year, $activity){
+function getChildren($elements, $padding = 0, $fundSources, $offices, $activity, $stage, $year){
     $data = '';
     if(!empty($elements)){
         foreach ($elements as $element) {
             if(isset($element["children"])){
-                $nroAppropriation = 0;
-                $rdcAppropriation = 0;
-                $nroTotal = 0;
-                $rdcTotal = 0;
-                $data.='<tr>';
-                    $data.='<td style="text-indent: '.$padding.'px; width: 20%; font-size: '.$fontSize.'px;"><b>'.$element['title'].'</b></td>';
+                $utilizationTotal = [];
+                $data.='<tr style="background: #F9F9F9;">';
+                
+                    $data.='<td style="text-indent: '.$padding.'px; width: 20%;"><b>'.$element['title'].'</b></td>';
 
                     if($fundSources)
                     {
                         foreach($fundSources as $fundSource)
                         {
-                            $data.= $element['source'.$fundSource->code] > 0 ? '<td style="font-size: '.$fontSize.'px;" align=right><b>'.number_format($element['source'.$fundSource->code], 2).'</b></td>' : '<td>&nbsp;</td>';
+                            $data.= $element['source'][$fundSource->code] > 0 ? '<td align=right><b>'.number_format($element['source'][$fundSource->code], 2).'</b></td>' : '<td>&nbsp;</td>';
+
+                            $utilizationTotal[$fundSource->code] = 0;
                         }
                     }
-
-                    $nroAppropriation += isset($element['sourceNRO']) ? $element['sourceNRO'] : 0;
-                    $rdcAppropriation += isset($element['sourceRDC']) ? $element['sourceRDC'] : 0;
 
                     if($offices)
                     {
@@ -67,43 +62,50 @@ function getChildren($elements, $padding = 0, $fontSize = 20, $fundSources, $off
                             {
                                 foreach($fundSources as $fundSource)
                                 {
-                                    $data.= $element['ppmp'.$office->abbreviation.$fundSource->code] > 0 ? '<td style="font-size: '.$fontSize.'px;" align=right><b>'.number_format($element['ppmp'.$office->abbreviation.$fundSource->code], 2).'</b></td>' : '<td>&nbsp;</td>';
-                                    if($fundSource->code == 'NRO')
-                                    {
-                                        $nroTotal += $element['ppmp'.$office->abbreviation.$fundSource->code];
-                                    }else{
-                                        $rdcTotal += $element['ppmp'.$office->abbreviation.$fundSource->code];
-                                    }
+                                    $data.= $element['ppmp'][$office->id][$fundSource->code] > 0 ? '<td align=right><b>'.number_format($element['ppmp'][$office->id][$fundSource->code], 2).'</b></td>' : '<td>&nbsp;</td>';
+
+                                    $utilizationTotal[$fundSource->code] += $element['ppmp'][$office->id][$fundSource->code];
                                 }
                             }
                         }
                     }
 
-                    $data.= $nroTotal > 0 ? '<td style="font-size: '.$fontSize.'px;" align=right><b>'.number_format($nroTotal, 2).'</b></td>' : '<td>&nbsp;</td>';
-                    $data.= $rdcTotal > 0 ? '<td style="font-size: '.$fontSize.'px;" align=right><b>'.number_format($rdcTotal, 2).'</b></td>' : '<td>&nbsp;</td>';
-                    $data.= ($nroAppropriation - $nroTotal) >= 0 ? ($nroAppropriation - $nroTotal) == 0 ? '<td>&nbsp;</td>' : '<td style="font-size: '.$fontSize.'px;" align=right><b>'.number_format($nroAppropriation - $nroTotal, 2).'</b></td>' : '<td style="font-size: '.$fontSize.'px; color: red" align=right><b>('.number_format(abs($nroAppropriation - $nroTotal), 2).')</b></td>';
-                    $data.= ($rdcAppropriation - $rdcTotal) >= 0 ? ($rdcAppropriation - $rdcTotal) == 0 ? '<td>&nbsp;</td>' : '<td style="font-size: '.$fontSize.'px;" align=right><b>'.number_format($rdcAppropriation - $rdcTotal, 2).'</b></td>' : '<td style="font-size: '.$fontSize.'px; color: red" align=right><b>('.number_format(abs($rdcAppropriation - $rdcTotal), 2).')</b></td>';
+                    if($fundSources)
+                    {
+                        foreach($fundSources as $fundSource)
+                        {
+                            $data.= $utilizationTotal[$fundSource->code] > 0 ? '<td align=right><b>'.number_format($utilizationTotal[$fundSource->code], 2).'</b></td>' : '<td>&nbsp;</td>';
+                        }
+                    }
+
+                    if($fundSources)
+                    {
+                        foreach($fundSources as $fundSource)
+                        {
+                            $overUnder = $element['source'][$fundSource->code] - $utilizationTotal[$fundSource->code];
+                            $data.= $overUnder != 0 ? $overUnder > 0 ? '<td align=right><b>'.number_format($overUnder, 2).'</b></td>' : '<td align=right style="color: red;"><b>('.number_format(abs($overUnder), 2).')</b></td>' : '<td>&nbsp;</td>';
+                        }
+                    }
+
                 $data.='</tr>';
 
-                $data.= getChildren($element['children'], intval($padding) + 20, intval($fontSize) - 2, $fundSources, $offices, $stage, $year, $activity);
+                $data.= getChildren($element['children'], intval($padding) + 20, $fundSources, $offices, $activity, $stage, $year);
             }else{
-                $nroAppropriation = 0;
-                $rdcAppropriation = 0;
-                $nroTotal = 0;
-                $rdcTotal = 0;
+                $utilizationTotal = [];
+
                 $data.='<tr>';
-                    $data.='<td style="text-indent: '.$padding.'px; width: 20%; font-size: '.$fontSize.'px;">'.$element['title'].'</td>';
+                
+                    $data.='<td style="text-indent: '.$padding.'px; width: 20%;">'.$element['title'].'</td>';
 
                     if($fundSources)
                     {
                         foreach($fundSources as $fundSource)
                         {
-                            $data.= $element['source'.$fundSource->code] > 0 ? '<td style="font-size: '.$fontSize.'px;" align=right>'.number_format($element['source'.$fundSource->code], 2).'</td>' : '<td>&nbsp;</td>';
+                            $data.= $element['source'][$fundSource->code] > 0 ? '<td align=right>'.number_format($element['source'][$fundSource->code], 2).'</td>' : '<td>&nbsp;</td>';
+
+                            $utilizationTotal[$fundSource->code] = 0;
                         }
                     }
-
-                    $nroAppropriation += isset($element['sourceNRO']) ? $element['sourceNRO'] : 0;
-                    $rdcAppropriation += isset($element['sourceRDC']) ? $element['sourceRDC'] : 0;
 
                     if($offices)
                     {
@@ -113,22 +115,31 @@ function getChildren($elements, $padding = 0, $fontSize = 20, $fundSources, $off
                             {
                                 foreach($fundSources as $fundSource)
                                 {
-                                    $data.= $element['ppmp'.$office->abbreviation.$fundSource->code] > 0 ? '<td style="font-size: '.$fontSize.'px;" align=right>'.number_format($element['ppmp'.$office->abbreviation.$fundSource->code], 2).'</td>' : '<td>&nbsp;</td>';
-                                    if($fundSource->code == 'NRO')
-                                    {
-                                        $nroTotal += $element['ppmp'.$office->abbreviation.$fundSource->code];
-                                    }else{
-                                        $rdcTotal += $element['ppmp'.$office->abbreviation.$fundSource->code];
-                                    }
+                                    $data.= $element['ppmp'][$office->id][$fundSource->code] > 0 ? '<td align=right>'.number_format($element['ppmp'][$office->id][$fundSource->code], 2).'</td>' : '<td>&nbsp;</td>';
+
+                                    $utilizationTotal[$fundSource->code] += $element['ppmp'][$office->id][$fundSource->code];
                                 }
                             }
                         }
                     }
 
-                    $data.= $nroTotal > 0 ? '<td style="font-size: '.$fontSize.'px;" align=right>'.number_format($nroTotal, 2).'</td>' : '<td>&nbsp;</td>';
-                    $data.= $rdcTotal > 0 ? '<td style="font-size: '.$fontSize.'px;" align=right>'.number_format($rdcTotal, 2).'</td>' : '<td>&nbsp;</td>';
-                    $data.= ($nroAppropriation - $nroTotal) >= 0 ? ($nroAppropriation - $nroTotal) == 0 ? '<td>&nbsp;</td>' : '<td style="font-size: '.$fontSize.'px;" align=right>'.number_format($nroAppropriation - $nroTotal, 2).'</td>' : '<td style="color: red" align=right>('.number_format(abs($nroAppropriation - $nroTotal), 2).')</td>';
-                    $data.= ($rdcAppropriation - $rdcTotal) >= 0 ? ($rdcAppropriation - $rdcTotal) == 0 ? '<td>&nbsp;</td>' : '<td style="font-size: '.$fontSize.'px;" align=right>'.number_format($rdcAppropriation - $rdcTotal, 2).'</td>' : '<td style="color: red" align=right>('.number_format(abs($rdcAppropriation - $rdcTotal), 2).')</td>';
+                    if($fundSources)
+                    {
+                        foreach($fundSources as $fundSource)
+                        {
+                            $data.= $utilizationTotal[$fundSource->code] > 0 ? '<td align=right>'.number_format($utilizationTotal[$fundSource->code], 2).'</td>' : '<td>&nbsp;</td>';
+                        }
+                    }
+
+                    if($fundSources)
+                    {
+                        foreach($fundSources as $fundSource)
+                        {
+                            $overUnder = $element['source'][$fundSource->code] - $utilizationTotal[$fundSource->code];
+                            $data.= $overUnder != 0 ? $overUnder > 0 ? '<td align=right>'.number_format($overUnder, 2).'</td>' : '<td align=right style="color: red;">('.number_format(abs($overUnder), 2).')</td>' : '<td>&nbsp;</td>';
+                        }
+                    }
+                    
                 $data.='</tr>';
             }
         }
@@ -155,7 +166,7 @@ function getChildren($elements, $padding = 0, $fontSize = 20, $fundSources, $off
             <th colspan=2><?= $activity->pap->codeTitle ?></th>
         </tr>
         <tr>
-            <?php for($i = 0; $i < 9; $i++){ ?>
+            <?php for($i = 0; $i < (count($offices) + 3); $i++){ ?>
                 <?php if($fundSources){ ?>
                     <?php foreach($fundSources as $fundSource){ ?>
                         <th><?= $fundSource->code ?></th>
@@ -165,7 +176,42 @@ function getChildren($elements, $padding = 0, $fontSize = 20, $fundSources, $off
         </tr>
     </thead>
     <tbody>
-        <?= getChildren(getAreaTree($data, null), "", "", $fundSources, $offices, $stage, $year, $activity) ?>
+        <tr style="background: #F9F9F9;">
+            <?php $grandUtilizationTotal = []; ?>
+            <td><b>Total</b></td>
+            <?php if(!empty($total)){ ?>
+                <?php if($fundSources){ ?>
+                    <?php foreach($fundSources as $fundSource){ ?>
+                        <td align=right><b><?= $total['source'][$fundSource->code] > 0 ? number_format($total['source'][$fundSource->code], 2) : '' ?></td>
+                        <?php $grandUtilizationTotal[$fundSource->code] = 0; ?>
+                    <?php } ?>
+                <?php } ?>
+
+                <?php if($offices){ ?>
+                    <?php foreach($offices as $office){ ?>
+                        <?php if($fundSources){ ?>
+                            <?php foreach($fundSources as $fundSource){ ?>
+                                <td align=right><b><?= $total['ppmp'][$office->id][$fundSource->code] > 0 ? number_format($total['ppmp'][$office->id][$fundSource->code], 2) : '' ?></td>
+                                <?php $grandUtilizationTotal[$fundSource->code] += $total['ppmp'][$office->id][$fundSource->code]; ?>
+                            <?php } ?>
+                        <?php } ?>
+                    <?php } ?>
+                <?php } ?>
+                
+                <?php if($fundSources){ ?>
+                    <?php foreach($fundSources as $fundSource){ ?>
+                        <?= $grandUtilizationTotal[$fundSource->code] > 0 ? '<td align=right><b>'.number_format($grandUtilizationTotal[$fundSource->code], 2).'</b></td>' : '<td>&nbsp;</td>'; ?>
+                    <?php } ?>
+                <?php } ?>
+
+                <?php if($fundSources){ ?>
+                    <?php foreach($fundSources as $fundSource){ ?>
+                        <?php $overUnder = $total['source'][$fundSource->code] - $grandUtilizationTotal[$fundSource->code]; ?>
+                        <?= $overUnder != 0 ? $overUnder > 0 ? '<td align=right><b>'.number_format($overUnder, 2).'</b></td>' : '<td align=right style="color: red;"><b>('.number_format(abs($overUnder), 2).')</b></td>' : '<td>&nbsp;</td>'; ?>
+                    <?php } ?>
+                <?php } ?>    
+            <?php } ?>
+        </tr>
+        <?= getChildren(getAreaTree($data, null), "", $fundSources, $offices, $activity, $stage, $year) ?>
     </tbody>
-</table>
- 
+    </table>
