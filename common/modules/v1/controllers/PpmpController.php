@@ -242,95 +242,6 @@ class PpmpController extends Controller
         ]);
     }
 
-    /* public function actionCheckPrice($id)
-    {
-        $model = $this->findModel($id);
-
-        $costs = ItemCost::find()
-        ->alias('c')
-        ->select([
-            'c.id',
-            'item_id',
-            'cost'
-        ])
-        ->innerJoin(['costs' => '(SELECT max(id) as id from ppmp_item_cost group by item_id)'], 'costs.id = c.id')
-        ->groupBy(['c.item_id'])
-        ->createCommand()
-        ->getRawSql();
-
-        $itemCount = PpmpItem::find()
-        ->select([
-            'costs.cost as updatedCost',
-            'ppmp_ppmp_item.cost as currentCost',
-        ])
-        ->leftJoin(['costs' => '('.$costs.')'], 'costs.item_id = ppmp_ppmp_item.item_id')
-        ->andWhere(['<>', 'costs.cost', 'ppmp_ppmp_item.cost'])
-        ->andWhere(['ppmp_id' => $model->id])
-        ->asArray()->all();
-
-        echo "<pre>"; print_r($itemCount); exit;
-
-        $con = PpmpCondition::findOne(['ppmp_id' => $model->id, 'con' => 'update-price']) ? PpmpCondition::findOne(['ppmp_id' => $model->id, 'con' => 'update-price']) : new PpmpCondition();
-
-        if($con->isNewRecord){
-            $con->ppmp_id = $model->id;
-            $con->con = 'update-price';
-            $con->value = $itemCount > 0 ? '1' : '0';
-            $con->counter = '1';
-            $con->save(false);
-        }
-
-        return ($con->counter == 1 && $con->value == 1) ? $this->renderAjax('_alert-price', [
-            'model' => $model,
-            'itemCount' => $itemCount,
-        ]) : '';
-    }
-
-    public function actionUpdatePrice($id)
-    {
-        $model = $this->findModel($id);
-
-        $q = new Query;
-        $q->select('id, item_id, cost')
-            ->from('ppmp_item_cost c')
-            ->where('id = (SELECT max(id) from ppmp_item_cost where item_id = c.item_id)');
-        $costs = $q->all();
-        $command = $q->createCommand();
-        $costs = $command->getRawSql();
-
-        $items = PpmpItem::find()
-        ->select([
-            'costs.cost as updatedCost',
-            'ppmp_item.title as title',
-            'ppmp_item.unit_of_measure as unit_of_measure',
-            'ppmp_ppmp_item.cost as currentCost'
-        ])
-        ->leftJoin(['costs' => '('.$costs.')'], 'costs.item_id = ppmp_ppmp_item.item_id')
-        ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
-        ->where(['<>', 'costs.cost', 'ppmp_ppmp_item.cost'])
-        ->asArray()
-        ->all();
-
-        if($model->load(Yii::$app->request->post()))
-        {
-
-        }
-
-        return $this->renderAjax('_price-form', [
-            'model' => $model,
-            'items' => $items,
-        ]);
-    }
-
-    public function actionIgnoreAlert($id, $con)
-    {
-        $model = $this->findModel($id);
-
-        $condition = PpmpCondition::findOne(['ppmp_id' => $model->id, 'con' => 'update-price']);
-        $condition->value = '0';
-        $condition->save();
-    } */
-
     public function actionLoadItems($id, $activity_id, $fund_source_id)
     {
         $model = $this->findModel($id);
@@ -571,6 +482,10 @@ class PpmpController extends Controller
 
         if($itemModel->load(Yii::$app->request->post()))
         {
+            $cost = ItemCost::find()->where(['item_id' => $itemModel->item_id])->orderBy(['datetime' => SORT_DESC])->one();
+            
+            $itemModel->cost = $cost->cost;
+
             if($itemModel->save())
             {
                 $breakdowns = Yii::$app->request->post('ItemBreakdown');
@@ -728,7 +643,7 @@ class PpmpController extends Controller
         $model = Item::findOne($id);
         $cost = $model->getItemCosts()->orderBy(['datetime' => SORT_DESC])->one();
 
-        return $cost ? number_format($cost->cost, 2) : number_format(0, 2);
+        return $cost ? number_format($cost->cost, 2) : number_format($model->cost_per_unit, 2);
     }
 
     public function actionCostPerUnit($id)

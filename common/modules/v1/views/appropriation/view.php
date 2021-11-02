@@ -53,6 +53,8 @@ function getChildren($elements, $padding = 0, $stage, $year){
                         }
                     }
 
+                    // NEED TO FIXED HERE TO REFLECT TOTAL NOT BASING FROM THE SOURCE
+
                     $totalPrevSourcePerObject += isset($element['prevSource']) ? $element['prevSource'] : 0;
                     $totalAppDifference = $totalAppPerObject - $totalPrevSourcePerObject;
 

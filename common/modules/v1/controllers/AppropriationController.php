@@ -364,6 +364,16 @@ class AppropriationController extends \yii\web\Controller
                             foreach($source as $fundSource => $value)
                             {
                                 $total['source'][$idx][$fundSource] = 0;
+                            }
+                        }
+                    }
+
+                    if(isset($datum['ppmp']))
+                    {
+                        foreach($datum['ppmp'] as $idx => $source)
+                        {
+                            foreach($source as $fundSource => $value)
+                            {
                                 $total['ppmp'][$idx][$fundSource] = 0;
                             }
                         }
@@ -384,7 +394,10 @@ class AppropriationController extends \yii\web\Controller
                                 $total['source'][$idx][$fundSource] += $value;
                             }
                         }
+                    }
 
+                    if(isset($datum['ppmp']))
+                    {
                         foreach($datum['ppmp'] as $idx => $ppmp)
                         {
                             foreach($ppmp as $fundSource => $value)
