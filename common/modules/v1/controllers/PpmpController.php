@@ -598,12 +598,14 @@ class PpmpController extends Controller
                     ->leftJoin(['quantity' => '('.$quantity.')'], 'quantity.ppmp_item_id = ppmp_ppmp_item.id')
                     ->leftJoin('ppmp_sub_activity subActivity', 'subActivity.id = ppmp_ppmp_item.sub_activity_id')
                     ->leftJoin('ppmp_activity activity', 'activity.id = ppmp_ppmp_item.activity_id')
+                    ->leftJoin('ppmp_pap pap', 'pap.id = activity.pap_id')
                     ->leftJoin('ppmp_fund_source fundSource', 'fundSource.id = ppmp_ppmp_item.fund_source_id')
                     ->leftJoin('ppmp_obj object', 'object.id = ppmp_ppmp_item.obj_id')
                     ->groupBy(['subActivity.id','object.id'])
                     ->where(['ppmp_id' => $model->id])
                     ->orderBy([
                         'fundSourceTitle' => SORT_ASC,
+                        'pap.code' => SORT_ASC,
                         'activity.code' => SORT_ASC,
                         'subActivity.code' => SORT_ASC,
                         'object.code' => SORT_ASC,
