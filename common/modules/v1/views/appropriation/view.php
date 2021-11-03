@@ -24,7 +24,7 @@ function getAreaTree(array $elements, $parentId = null) {
     return empty($branch) ? null : $branch;
 }
 
-function getChildren($elements, $padding = 0, $stage, $year){
+function getChildren($elements, $padding = 0, $stage, $year, $appropriation){
     $data = '';
     if(!empty($elements)){
         foreach ($elements as $element) {
@@ -36,19 +36,17 @@ function getChildren($elements, $padding = 0, $stage, $year){
                 $data.='<tr style="background: #F9F9F9;">';
                     $data.='<td style="text-indent: '.$padding.'px;"><b>'.$element['title'].'</b></td>';
 
-                    if(!empty($element['source']))
+                    if($appropriation)
                     {
-                        foreach($element['source'] as $idx => $source)
+                        if($appropriation->appropriationPaps)
                         {
-                            if(!empty($source))
+                            foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
                             {
-                                foreach($source as $fundSource => $value)
-                                {
-                                    $data.= $value > 0 ? '<td align=right><b>'.number_format($value, 2).'</b></td>' : '<td>&nbsp;</td>';
-                                    $data.= isset($element['ppmp'][$idx][$fundSource]) ? $element['ppmp'][$idx][$fundSource] > 0 ? '<td align=right><b>'.number_format($element['ppmp'][$idx][$fundSource], 2).'</b></td>' : '<td>&nbsp;</td>' : '<td>&nbsp;</td>';
-                                    $totalAppPerObject += $value;
-                                    $totalPpmpPerObject += isset($element['ppmp'][$idx][$fundSource]) ? $element['ppmp'][$idx][$fundSource] : 0;
-                                }
+                                $data.= isset($element['source'][$pap->pap->id][$pap->fundSource->code]) ? $element['source'][$pap->pap->id][$pap->fundSource->code] > 0 ? '<td align=right><b>'.number_format($element['source'][$pap->pap->id][$pap->fundSource->code], 2).'</b></td>' : '<td>&nbsp;</td>' : '<td>&nbsp;</td>';
+                                $data.= isset($element['ppmp'][$pap->pap->id][$pap->fundSource->code]) ? $element['ppmp'][$pap->pap->id][$pap->fundSource->code] > 0 ? '<td align=right><b>'.number_format($element['ppmp'][$pap->pap->id][$pap->fundSource->code], 2).'</b></td>' : '<td>&nbsp;</td>' : '<td>&nbsp;</td>';
+                                
+                                $totalAppPerObject += isset($element['source'][$pap->pap->id][$pap->fundSource->code]) ? $element['source'][$pap->pap->id][$pap->fundSource->code] : 0;
+                                $totalPpmpPerObject += isset($element['ppmp'][$pap->pap->id][$pap->fundSource->code]) ? $element['ppmp'][$pap->pap->id][$pap->fundSource->code] : 0;
                             }
                         }
                     }
@@ -65,24 +63,22 @@ function getChildren($elements, $padding = 0, $stage, $year){
                     $data.= $totalPrevSourcePerObject != 0 ? ($totalAppDifference/$totalPrevSourcePerObject)*100 >= 0 ? '<td align=right><b>'.number_format(($totalAppDifference/$totalPrevSourcePerObject)*100, 2).'</b></td>' : '<td align=right><b>('.number_format(abs(($totalAppDifference/$totalPrevSourcePerObject)*100), 2).')</b></td>' : '<td>&nbsp;</td>';
                 $data.='</tr>';
 
-                $data.= getChildren($element['children'], intval($padding) + 20, $stage, $year);
+                $data.= getChildren($element['children'], intval($padding) + 20, $stage, $year, $appropriation);
             }else{
                 $data.='<tr>';
                     $data.='<td style="text-indent: '.$padding.'px;">'.$element['title'].'</td>';
 
-                    if(!empty($element['source']))
+                    if($appropriation)
                     {
-                        foreach($element['source'] as $idx => $source)
+                        if($appropriation->appropriationPaps)
                         {
-                            if(!empty($source))
+                            foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
                             {
-                                foreach($source as $fundSource => $value)
-                                {
-                                    $data.= $value > 0 ? '<td align=right>'.number_format($value, 2).'</td>' : '<td>&nbsp;</td>';
-                                    $data.= isset($element['ppmp'][$idx][$fundSource]) ? $element['ppmp'][$idx][$fundSource] > 0 ? '<td align=right>'.number_format($element['ppmp'][$idx][$fundSource], 2).'</td>' : '<td>&nbsp;</td>' : '<td>&nbsp;</td>';
-                                    $totalAppPerObject += $value;
-                                    $totalPpmpPerObject += isset($element['ppmp'][$idx][$fundSource]) ? $element['ppmp'][$idx][$fundSource] : 0;
-                                }
+                                $data.= isset($element['source'][$pap->pap->id][$pap->fundSource->code]) ? $element['source'][$pap->pap->id][$pap->fundSource->code] > 0 ? '<td align=right>'.number_format($element['source'][$pap->pap->id][$pap->fundSource->code], 2).'</td>' : '<td>&nbsp;</td>' : '<td>&nbsp;</td>';
+                                $data.= isset($element['ppmp'][$pap->pap->id][$pap->fundSource->code]) ? $element['ppmp'][$pap->pap->id][$pap->fundSource->code] > 0 ? '<td align=right>'.number_format($element['ppmp'][$pap->pap->id][$pap->fundSource->code], 2).'</td>' : '<td>&nbsp;</td>' : '<td>&nbsp;</td>';
+                                
+                                $totalAppPerObject += isset($element['source'][$pap->pap->id][$pap->fundSource->code]) ? $element['source'][$pap->pap->id][$pap->fundSource->code] : 0;
+                                $totalPpmpPerObject += isset($element['ppmp'][$pap->pap->id][$pap->fundSource->code]) ? $element['ppmp'][$pap->pap->id][$pap->fundSource->code] : 0;
                             }
                         }
                     }
@@ -126,38 +122,23 @@ function getChildren($elements, $padding = 0, $stage, $year){
         <table class="table table-responsive table-bordered table-hover">
             <thead>
                 <tr>
-                    <th rowspan=3>Objects</th>
+                    <th rowspan=2>Objects</th>
                     <?php if(!empty($headers)){ ?>
-                        <?php foreach($headers as $costStructure => $header){ ?>
-                            <th colspan=<?= array_sum(array_map("count", $header));?>><?= $costStructure ?></th>
+                        <?php foreach($headers as $pap => $header){ ?>
+                            <th colspan=<?= count($header) ?>><?= $pap ?></th>
                         <?php } ?>
                     <?php } ?>
-                    <th rowspan=3>PPMP Total</th>
-                    <th rowspan=3><?= $appropriation ? $appropriation->type.' '.$appropriation->year : 'No encoded appropriation' ?></th>
-                    <th rowspan=3><?= $prevAppropriation ? $prevAppropriation->type.' '.$prevAppropriation->year : 'No encoded appropriation' ?></th>
-                    <th rowspan=2 colspan=2><?= $appropriation ? $prevAppropriation ? $appropriation->type.' '.$appropriation->year. ' vs. ' .$prevAppropriation->type.' '.$prevAppropriation->year : $appropriation->type.' '.$appropriation->year. ' vs. No encoded appropriation' : 'No encoded appropriation' ?></th>
+                    <th rowspan=2>PPMP Total</th>
+                    <th rowspan=2><?= $appropriation ? $appropriation->type.' '.$appropriation->year : 'No encoded appropriation' ?></th>
+                    <th rowspan=2><?= $prevAppropriation ? $prevAppropriation->type.' '.$prevAppropriation->year : 'No encoded appropriation' ?></th>
+                    <th colspan=2><?= $appropriation ? $prevAppropriation ? $appropriation->type.' '.$appropriation->year. ' vs. ' .$prevAppropriation->type.' '.$prevAppropriation->year : $appropriation->type.' '.$appropriation->year. ' vs. No encoded appropriation' : 'No encoded appropriation' ?></th>
                 </tr>
                 <tr>
                     <?php if(!empty($headers)){ ?>
                         <?php foreach($headers as $header){ ?>
                             <?php if(!empty($header)){ ?>
-                                <?php foreach($header as $pap => $contents){ ?>
-                                    <th colspan=<?= count($contents) ?>><?= $pap ?></th>
-                                <?php } ?>
-                            <?php } ?>
-                        <?php } ?>
-                    <?php } ?>
-                </tr>
-                <tr>
-                    <?php if(!empty($headers)){ ?>
-                        <?php foreach($headers as $header){ ?>
-                            <?php if(!empty($header)){ ?>
-                                <?php foreach($header as $contents){ ?>
-                                    <?php if(!empty($contents)){ ?>
-                                        <?php foreach($contents as $content){ ?>
-                                            <th><?= $content ?></th>
-                                        <?php } ?>  
-                                    <?php } ?>
+                                <?php foreach($header as $head){ ?>
+                                    <th><?= $head ?></th>
                                 <?php } ?>
                             <?php } ?>
                         <?php } ?>
@@ -169,17 +150,22 @@ function getChildren($elements, $padding = 0, $stage, $year){
             <tbody>
                 <tr style="background: #F9F9F9;">
                     <td><b>Total</b></td>
-                    <?php if(!empty($total)){ ?>
-                        <?php foreach($total['source'] as $idx => $source){ ?>
-                            <?php foreach($source as $fundSource => $value){ ?>
-                                <td align="right"><b><?= $value > 0 ? number_format($value, 2) : '&nbsp;' ?></b></td>
-                                <td align="right"><b><?= isset($total['ppmp'][$idx][$fundSource]) ? $total['ppmp'][$idx][$fundSource] > 0 ? number_format($total['ppmp'][$idx][$fundSource], 2) : '&nbsp;' : '&nbsp;' ?></b></td>
-                                <?php $grandTotalAppPerObject += $value ?>
-                                <?php $grandTotalPpmpPerObject += isset($total['ppmp'][$idx][$fundSource]) ? $total['ppmp'][$idx][$fundSource]: 0 ?>
+                    <?php if($appropriation){ ?>
+                        <?php if($appropriation->appropriationPaps){ ?>
+                            <?php foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap){ ?>
+                                <td align="right"><b><?= isset($total['source'][$pap->pap->id][$pap->fundSource->code]) ? $total['source'][$pap->pap->id][$pap->fundSource->code] > 0 ? number_format($total['source'][$pap->pap->id][$pap->fundSource->code], 2) : '&nbsp;' : '&nbsp;' ?></b></td>
+                                <td align="right"><b><?= isset($total['ppmp'][$pap->pap->id][$pap->fundSource->code]) ? $total['ppmp'][$pap->pap->id][$pap->fundSource->code] > 0 ? number_format($total['ppmp'][$pap->pap->id][$pap->fundSource->code], 2) : '&nbsp;' : '&nbsp;' ?></b></td>
+                                
+                                <?php $grandTotalAppPerObject += isset($total['source'][$pap->pap->id][$pap->fundSource->code]) ? $total['source'][$pap->pap->id][$pap->fundSource->code] : 0 ?>
+                                <?php $grandTotalPpmpPerObject += isset($total['ppmp'][$pap->pap->id][$pap->fundSource->code]) ? $total['ppmp'][$pap->pap->id][$pap->fundSource->code] : 0 ?>
                             <?php } ?>
                         <?php } ?>
-                        <?php $grandTotalPrevSourcePerObject += $total['prevSource'] ?>
                     <?php } ?>
+
+                    <?php if(!empty($total)){ ?>
+                        <?php $grandTotalPrevSourcePerObject += isset($total['prevSource']) ? $total['prevSource'] : 0 ?>
+                    <?php } ?>
+
                     <?php $grandTotalAppDifference = $grandTotalAppPerObject - $grandTotalPrevSourcePerObject; ?>
                     <td align=right><b><?= $grandTotalPpmpPerObject > 0 ? number_format($grandTotalPpmpPerObject, 2) : '&nbsp;' ?></b></td>
                     <td align=right><b><?= $grandTotalAppPerObject > 0 ? number_format($grandTotalAppPerObject, 2) : '&nbsp;' ?></b></td>
@@ -187,7 +173,7 @@ function getChildren($elements, $padding = 0, $stage, $year){
                     <td align=right><b><?= $grandTotalAppDifference >= 0 ? $grandTotalAppDifference == 0 ? '' : number_format($grandTotalAppDifference, 2) : '('.number_format(abs($grandTotalAppDifference), 2).')' ?></b></td>
                     <td align=right><b><?= $grandTotalPrevSourcePerObject != 0 ? ($grandTotalAppDifference/$grandTotalPrevSourcePerObject)*100 >= 0 ? number_format(($grandTotalAppDifference/$grandTotalPrevSourcePerObject)*100, 2) : '('.number_format(abs(($grandTotalAppDifference/$grandTotalPrevSourcePerObject)*100), 2).')' : '' ?></b></td>
                 </tr>
-                <?= getChildren(getAreaTree($data, null), "", "", $stage, $year) ?>
+                <?= getChildren(getAreaTree($data, null), "", $stage, $year, $appropriation) ?>
             </tbody>
         </table>
         </div>

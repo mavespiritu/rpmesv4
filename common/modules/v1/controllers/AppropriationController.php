@@ -234,11 +234,12 @@ class AppropriationController extends \yii\web\Controller
                 {
                     foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
                     {
-                        $headers[$pap->pap->costStructure->abbreviation][$pap->pap->codeAndTitle][] = $pap->fundSource->code;
-                        $headers[$pap->pap->costStructure->abbreviation][$pap->pap->codeAndTitle][] = 'PPMP';
+                        $headers[$pap->pap->codeAndTitle][] = $pap->fundSource->code;
+                        $headers[$pap->pap->codeAndTitle][] = 'PPMP';
                     }
                 }
             }
+
     
             if($prevAppropriation)
             {
@@ -575,8 +576,8 @@ class AppropriationController extends \yii\web\Controller
             {
                 foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
                 {
-                    $headers[$pap->pap->costStructure->abbreviation][$pap->pap->codeAndTitle][] = $pap->fundSource->code;
-                    $headers[$pap->pap->costStructure->abbreviation][$pap->pap->codeAndTitle][] = 'PPMP';
+                    $headers[$pap->pap->codeAndTitle][] = $pap->fundSource->code;
+                    $headers[$pap->pap->codeAndTitle][] = 'PPMP';
                 }
             }
         }
