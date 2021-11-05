@@ -102,6 +102,70 @@ class DashboardController extends \yii\web\Controller
         ]);
     }
 
+    public function actionAppropriation($params)
+    {
+        $filter = $this->filterized($params);
+
+        $appropriation = Appropriation::find();
+
+        if($filter['AppropriationItem[stage]'] == 'Indicative')
+        {
+            $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $filter['AppropriationItem[year]'] - 1]);
+        }
+        else if($filter['AppropriationItem[stage]'] == 'Adjusted')
+        {
+            $appropriation = $appropriation->andWhere(['type' => 'NEP', 'year' => $filter['AppropriationItem[year]']]);
+        }
+        else if($filter['AppropriationItem[stage]'] == 'Final')
+        {
+            $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $filter['AppropriationItem[year]']]);
+        }
+        
+        $appropriation = $appropriation->one();
+        $appropriationItems = [];
+
+        if($appropriation)
+        {
+            $appropriationItems = AppropriationItem::find()
+            ->select([
+                'ppmp_appropriation_item.pap_id',
+                'ppmp_appropriation_item.fund_source_id',
+                'ppmp_fund_source.code as fundSource',
+                'SUM(amount) as total'
+            ])
+            ->leftJoin('ppmp_fund_source', 'ppmp_fund_source.id = ppmp_appropriation_item.fund_source_id');
+
+            $appropriationItems = $appropriationItems
+            ->andWhere(['ppmp_appropriation_item.appropriation_id' => $appropriation->id])
+            ->groupBy([
+                'ppmp_appropriation_item.pap_id',
+                'ppmp_appropriation_item.fund_source_id'
+            ])
+            ->asArray()
+            ->all();
+        }
+
+        $data = [];
+
+        if(!empty($appropriationItems))
+        {
+            foreach($appropriationItems as $item)
+            {
+                $data[$item['pap_id']][$item['fundSource']] = $item;
+            }
+        }
+        
+        $paps = Pap::find()->orderBy(['id' => SORT_ASC])->all();
+        $fundSources = FundSource::find()->all();
+
+        return $this->renderAjax('_appropriation', [
+            'data' => $data,
+            'paps' => $paps,
+            'appropriation' => $appropriation,
+            'fundSources' => $fundSources
+         ]);
+    }
+
     public function actionPrexcSummary($params)
     {
         $filter = $this->filterized($params);
@@ -158,9 +222,8 @@ class DashboardController extends \yii\web\Controller
         ])
         ->asArray()
         ->all();
-
+        
         $offices = Office::find()->where(['<>', 'abbreviation', 'ORD'])->all();
-        $paps = Pap::find()->all();
         $paps = Pap::find()->all();
         $fundSources = FundSource::find()->all();
 

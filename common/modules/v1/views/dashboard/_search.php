@@ -55,6 +55,22 @@ $script = '
         window.location.href = "'.Url::to(['/v1/dashboard/']).'";
     }
 
+    function appropriation(data)
+    {
+        $.ajax({
+            url: "'.Url::to(['/v1/dashboard/appropriation']).'?params=" + data,
+            beforeSend: function(){
+                $("#appropriation").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+            },
+            success: function (data) { 
+                $("#appropriation").empty();
+                $("#appropriation").hide();
+                $("#appropriation").fadeIn();
+                $("#appropriation").html(data);
+            }
+        });
+    }
+
     function prexcSummary(data)
     {
         $.ajax({
@@ -81,6 +97,7 @@ $script = '
             type: form.attr("method"),
             data: formData,
             success: function (data) {
+                appropriation(formData);
                 prexcSummary(formData);
             },
             error: function (err) {

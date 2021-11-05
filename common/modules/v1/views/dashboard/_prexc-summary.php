@@ -64,6 +64,10 @@ use yii\bootstrap\Modal;
                         <td align=right><b><?= $tot > 0 ? number_format($tot, 2) : '' ?></b></td>
                     </tr>
                 <?php } ?>
+                
+                <!-- <tr style="background: #8BE78B;">
+                    <th colspan=<?php// count($paps)*12 + 1?>><?php // $pap->short_code != '' ? $pap->short_code.' TOTAL' : '-' ?></th>
+                </tr> -->
             <?php } ?>
         <?php } ?>
         </tbody>

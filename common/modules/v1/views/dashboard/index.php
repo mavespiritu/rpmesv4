@@ -29,7 +29,14 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
     </div>
-    <div id="prexc-summary"></div>
+    <div class="row">
+        <div class="col-md-4 col-xs-12">
+        <div id="appropriation"></div>
+        </div>
+        <div class="col-md-8 col-xs-12">
+            <div id="prexc-summary"></div>
+        </div>
+    </div>
 </div>
 
 <?php
