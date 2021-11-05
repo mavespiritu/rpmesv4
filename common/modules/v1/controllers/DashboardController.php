@@ -159,7 +159,7 @@ class DashboardController extends \yii\web\Controller
         ->asArray()
         ->all();
 
-        $offices = Office::find()->all();
+        $offices = Office::find()->where(['<>', 'abbreviation', 'ORD'])->all();
         $paps = Pap::find()->all();
         $paps = Pap::find()->all();
         $fundSources = FundSource::find()->all();
