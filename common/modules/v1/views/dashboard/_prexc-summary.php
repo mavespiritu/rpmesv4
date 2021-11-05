@@ -15,7 +15,7 @@ use yii\bootstrap\Modal;
         <tr>
             <th rowspan=3>PROGRAMS/PROJECTS/ACTIVITIES</th>
             <?php foreach($headers as $shortCode => $header){ ?>
-            <th colspan=12><?= $shortCode ?></th>
+            <th colspan=10><?= $shortCode ?></th>
             <th rowspan=3>TOTAL</th>
             <?php } ?>
             <th rowspan=3>GRAND TOTAL</th>
@@ -43,7 +43,7 @@ use yii\bootstrap\Modal;
             <?php foreach($paps as $pap){ ?>
                 <?php $papTotal = 0; ?>
                 <tr style="background: yellow;">
-                    <th colspan=<?= count($paps)*13 + 1?>><?= $pap->short_code != '' ? $pap->short_code : '-' ?></th>
+                    <th colspan=<?= count($paps)*12 + 1?>><?= $pap->short_code != '' ? $pap->short_code : '-' ?></th>
                 </tr>
 
                 <?php foreach($pap->getActivities()->orderBy(['code' => SORT_ASC])->asArray()->all() as $activity){ ?>
