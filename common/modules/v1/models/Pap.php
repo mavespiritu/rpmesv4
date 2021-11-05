@@ -162,4 +162,9 @@ class Pap extends \yii\db\ActiveRecord
             $this->title 
             : '';
     }
+
+    public function getActivities()
+    {
+        return $this->hasMany(Activity::className(), ['pap_id' => 'id']);
+    }
 }

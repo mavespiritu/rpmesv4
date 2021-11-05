@@ -31,8 +31,7 @@
                 'options' => ['class' => 'sidebar-menu tree', 'data-widget'=> 'tree'],
                 'items' => [
                     ['label' => 'MAIN MENU', 'options' => ['class' => 'header']],
-                    /* ['label' => 'Dashboard', 'icon' => 'bar-chart-o', 'url' => ['/gii']],
-                    ['label' => 'Budget Monitoring', 'icon' => 'bar-chart-o', 'url' => ['/gii']], */
+                    ['label' => 'Dashboard', 'icon' => 'bar-chart-o', 'url' => ['/v1/dashboard']],
                     ['label' => 'Procurement Planning', 'options' => ['class' => 'header']],
                     ['label' => 'NEP', 'icon' => 'folder', 'url' => ['/v1/nep'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'GAA', 'icon' => 'folder', 'url' => ['/v1/gaa'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
