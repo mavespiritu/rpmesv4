@@ -237,6 +237,15 @@ class DashboardController extends \yii\web\Controller
         $filter = $this->filterized($params);
 
         $appropriation = Appropriation::find();
+
+        $ppmpPaps = PpmpItem::find()
+        ->select([
+            'distinct(ppmp_pap.id) as pap_id'
+        ])
+        ->leftJoin('ppmp_ppmp', 'ppmp_ppmp.id = ppmp_ppmp_item.ppmp_id')
+        ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+        ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id');
+
         $quantities = ItemBreakdown::find()
         ->select([
             'ppmp_item_id',
@@ -270,10 +279,12 @@ class DashboardController extends \yii\web\Controller
 
         if($filter['AppropriationItem[year]'] != ''){
             $items = $items->andWhere(['ppmp_ppmp.year' => $filter['AppropriationItem[year]']]);
+            $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.year' => $filter['AppropriationItem[year]']]);
         }
 
         if($filter['AppropriationItem[stage]'] != ''){
             $items = $items->andWhere(['ppmp_ppmp.stage' => $filter['AppropriationItem[stage]']]);
+            $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.stage' => $filter['AppropriationItem[stage]']]);
         }
 
         $items = $items
@@ -289,9 +300,15 @@ class DashboardController extends \yii\web\Controller
         ])
         ->asArray()
         ->all();
+
+        $ppmpPaps = $ppmpPaps
+        ->asArray()
+        ->all();
+
+        $ppmpPaps = ArrayHelper::map($ppmpPaps, 'pap_id', 'pap_id');
         
         $offices = Office::find()->where(['<>', 'abbreviation', 'ORD'])->all();
-        $paps = Pap::find()->all();
+        $paps = Pap::find()->where(['in', 'id', $ppmpPaps])->all();
         $fundSources = FundSource::find()->all();
 
         $data = [];
