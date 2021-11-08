@@ -88,27 +88,30 @@ class AppropriationController extends \yii\web\Controller
         return $sum;
     }
 
-    function recursive(array $elements, $parentId = null, $appropriation, $prevAppropriation) {
+    function recursive(array $elements, $parentId = null, $paps, $fundSources, $prevAppropriation) {
         $branch = array();
 
         foreach ($elements as $element) {
             if ($element['obj_id'] == $parentId) {
                 
-                $children = $this->recursive($elements, $element['id'], $appropriation, $prevAppropriation);
+                $children = $this->recursive($elements, $element['id'], $paps, $fundSources, $prevAppropriation);
 
                 if($prevAppropriation)
                 {
                     $element['prevSource'] = isset($element['prevSource']) ? $element['prevSource'] : 0;
                 }
                 
-                if($appropriation)
+                if($paps)
                 {
-                    if($appropriation->appropriationPaps)
+                    foreach($paps as $pap)
                     {
-                        foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
+                        if($fundSources)
                         {
-                            $element['source'][$pap->pap->id][$pap->fundSource->code] = isset($element['source'][$pap->pap->id][$pap->fundSource->code]) ? $element['source'][$pap->pap->id][$pap->fundSource->code] : 0;
-                            $element['ppmp'][$pap->pap->id][$pap->fundSource->code] = isset($element['ppmp'][$pap->pap->id][$pap->fundSource->code]) ? $element['ppmp'][$pap->pap->id][$pap->fundSource->code] : 0;
+                            foreach($fundSources as $fundSource)
+                            {
+                                $element['source'][$pap->id][$fundSource->code] = isset($element['source'][$pap->id][$fundSource->code]) ? $element['source'][$pap->id][$fundSource->code] : 0;
+                                $element['ppmp'][$pap->id][$fundSource->code] = isset($element['ppmp'][$pap->id][$fundSource->code]) ? $element['ppmp'][$pap->id][$fundSource->code] : 0;
+                            }
                         }
                     }
                 }
@@ -124,33 +127,37 @@ class AppropriationController extends \yii\web\Controller
         return $branch;
     }
 
-    function finalRecursive(array $elements, $appropriation, $prevAppropriation)
+    function finalRecursive(array $elements, $paps, $fundSources, $prevAppropriation)
     {
         $branch = array();
 
         foreach ($elements as $element) {
             if(isset($element['children']))
             {
-                if($appropriation)
+                $children = $this->finalRecursive($element['children'], $paps, $fundSources, $prevAppropriation);
+
+                if($prevAppropriation)
                 {
-                    $children = $this->finalRecursive($element['children'], $appropriation, $prevAppropriation);
+                    $element['prevSource'] += $this->sumPrevElement($element['children']);
+                }
 
-                    if($prevAppropriation)
+                if($paps)
+                {
+                    foreach($paps as $pap)
                     {
-                        $element['prevSource'] += $this->sumPrevElement($element['children']);
-                    }
-
-                    if($appropriation->appropriationPaps)
-                    {
-                        foreach($appropriation->getAppropriationPaps()->orderBy(['arrangement' => SORT_ASC])->all() as $pap)
+                        if($fundSources)
                         {
-                            $element['source'][$pap->pap->id][$pap->fundSource->code] += $this->sumElement($element['children'], 'source', $pap->pap->id, $pap->fundSource->code);
-                            $element['ppmp'][$pap->pap->id][$pap->fundSource->code] += $this->sumElement($element['children'], 'ppmp', $pap->pap->id, $pap->fundSource->code);
+                            foreach($fundSources as $fundSource)
+                            {
+                                $element['source'][$pap->id][$fundSource->code] += $this->sumElement($element['children'], 'source', $pap->id, $fundSource->code);
+                                $element['ppmp'][$pap->id][$fundSource->code] += $this->sumElement($element['children'], 'ppmp', $pap->id, $fundSource->code);
+                            }
                         }
                     }
-                    if ($children) {
-                        $element['children'] = $children;
-                    }
+                }
+
+                if ($children) {
+                    $element['children'] = $children;
                 }
             }
             
@@ -188,6 +195,8 @@ class AppropriationController extends \yii\web\Controller
 
             $appropriation = Appropriation::find();
             $prevAppropriation = Appropriation::find();
+
+            $appPaps = [];
 
             if($model->stage == 'Indicative')
             {
@@ -238,6 +247,9 @@ class AppropriationController extends \yii\web\Controller
                         $headers[$pap->pap->codeAndTitle][] = 'PPMP';
                     }
                 }
+
+                $appPaps = AppropriationPap::find()->select(['distinct(pap_id) as pap_id'])->where(['appropriation_id' => $appropriation->id])->asArray()->all();
+                $appPaps = ArrayHelper::map($appPaps, 'pap_id', 'pap_id');
             }
 
     
@@ -316,12 +328,22 @@ class AppropriationController extends \yii\web\Controller
             ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
             ->leftJoin(['quantities' => '('.$quantities.')'], 'quantities.ppmp_item_id = ppmp_ppmp_item.id');
 
+            $ppmpPaps = PpmpItem::find()
+            ->select([
+                'distinct(ppmp_pap.id) as pap_id'
+            ])
+            ->leftJoin('ppmp_ppmp', 'ppmp_ppmp.id = ppmp_ppmp_item.ppmp_id')
+            ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+            ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id');
+
             if($model->year != ''){
                 $items = $items->andWhere(['ppmp_ppmp.year' => $model->year]);
+                $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.year' => $model->year]);
             }
 
             if($model->stage != ''){
                 $items = $items->andWhere(['ppmp_ppmp.stage' => $model->stage]);
+                $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.stage' => $model->stage]);
             }
 
             $items = $items
@@ -332,6 +354,12 @@ class AppropriationController extends \yii\web\Controller
             ])
             ->asArray()
             ->all();
+
+            $ppmpPaps = $ppmpPaps
+            ->asArray()
+            ->all();
+
+            $ppmpPaps = ArrayHelper::map($ppmpPaps, 'pap_id', 'pap_id');
 
             if(!empty($items))
             {
@@ -349,7 +377,11 @@ class AppropriationController extends \yii\web\Controller
                 }
             }
 
-            $data = $this->finalRecursive($this->recursive($objects, null, $appropriation, $prevAppropriation), $appropriation, $prevAppropriation);
+            $paps = Pap::find()->where(['in', 'id', array_unique(array_merge($appPaps, $ppmpPaps))])->orderBy(['id' => SORT_ASC])->all();
+
+            $fundSources = FundSource::find()->all();
+
+            $data = $this->finalRecursive($this->recursive($objects, null, $paps, $fundSources, $prevAppropriation), $paps, $fundSources, $prevAppropriation);
 
             $total = [];
             $total['prevSource'] = 0;
@@ -418,6 +450,8 @@ class AppropriationController extends \yii\web\Controller
                 'headers' => $headers,
                 'data' => $data,
                 'total' => $total,
+                'paps' => $paps,
+                'fundSources' => $fundSources,
                 'appropriation' => $appropriation,
                 'prevAppropriation' => $prevAppropriation,
                 'year' => $model->year,
@@ -531,6 +565,8 @@ class AppropriationController extends \yii\web\Controller
         $appropriation = Appropriation::find();
         $prevAppropriation = Appropriation::find();
 
+        $appPaps = [];
+
         if($postData['stage'] == 'Indicative')
         {
             $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $postData['year'] - 1]);
@@ -580,7 +616,11 @@ class AppropriationController extends \yii\web\Controller
                     $headers[$pap->pap->codeAndTitle][] = 'PPMP';
                 }
             }
+
+            $appPaps = AppropriationPap::find()->select(['distinct(pap_id) as pap_id'])->where(['appropriation_id' => $appropriation->id])->asArray()->all();
+            $appPaps = ArrayHelper::map($appPaps, 'pap_id', 'pap_id');
         }
+
 
         if($prevAppropriation)
         {
@@ -657,12 +697,22 @@ class AppropriationController extends \yii\web\Controller
         ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
         ->leftJoin(['quantities' => '('.$quantities.')'], 'quantities.ppmp_item_id = ppmp_ppmp_item.id');
 
+        $ppmpPaps = PpmpItem::find()
+        ->select([
+            'distinct(ppmp_pap.id) as pap_id'
+        ])
+        ->leftJoin('ppmp_ppmp', 'ppmp_ppmp.id = ppmp_ppmp_item.ppmp_id')
+        ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+        ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id');
+
         if($postData['year'] != ''){
             $items = $items->andWhere(['ppmp_ppmp.year' => $postData['year']]);
+            $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.year' => $postData['year']]);
         }
 
         if($postData['stage'] != ''){
             $items = $items->andWhere(['ppmp_ppmp.stage' => $postData['stage']]);
+            $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.stage' => $postData['stage']]);
         }
 
         $items = $items
@@ -673,6 +723,12 @@ class AppropriationController extends \yii\web\Controller
         ])
         ->asArray()
         ->all();
+
+        $ppmpPaps = $ppmpPaps
+        ->asArray()
+        ->all();
+
+        $ppmpPaps = ArrayHelper::map($ppmpPaps, 'pap_id', 'pap_id');
 
         if(!empty($items))
         {
@@ -690,7 +746,11 @@ class AppropriationController extends \yii\web\Controller
             }
         }
 
-        $data = $this->finalRecursive($this->recursive($objects, null, $appropriation, $prevAppropriation), $appropriation, $prevAppropriation);
+        $paps = Pap::find()->where(['in', 'id', array_unique(array_merge($appPaps, $ppmpPaps))])->orderBy(['id' => SORT_ASC])->all();
+
+        $fundSources = FundSource::find()->all();
+
+        $data = $this->finalRecursive($this->recursive($objects, null, $paps, $fundSources, $prevAppropriation), $paps, $fundSources, $prevAppropriation);
 
         $total = [];
         $total['prevSource'] = 0;
@@ -706,6 +766,16 @@ class AppropriationController extends \yii\web\Controller
                         foreach($source as $fundSource => $value)
                         {
                             $total['source'][$idx][$fundSource] = 0;
+                        }
+                    }
+                }
+
+                if(isset($datum['ppmp']))
+                {
+                    foreach($datum['ppmp'] as $idx => $source)
+                    {
+                        foreach($source as $fundSource => $value)
+                        {
                             $total['ppmp'][$idx][$fundSource] = 0;
                         }
                     }
@@ -726,7 +796,10 @@ class AppropriationController extends \yii\web\Controller
                             $total['source'][$idx][$fundSource] += $value;
                         }
                     }
+                }
 
+                if(isset($datum['ppmp']))
+                {
                     foreach($datum['ppmp'] as $idx => $ppmp)
                     {
                         foreach($ppmp as $fundSource => $value)
@@ -739,7 +812,7 @@ class AppropriationController extends \yii\web\Controller
                 $total['prevSource'] += isset($datum['prevSource']) ? $datum['prevSource'] : 0;
             }
         }
-        
+            
         $filename = 'Appropriation Monitoring';
 
         if($type == 'excel')
@@ -750,6 +823,8 @@ class AppropriationController extends \yii\web\Controller
                 'headers' => $headers,
                 'data' => $data,
                 'total' => $total,
+                'paps' => $paps,
+                'fundSources' => $fundSources,
                 'appropriation' => $appropriation,
                 'prevAppropriation' => $prevAppropriation,
                 'year' => $postData['year'],
@@ -763,6 +838,8 @@ class AppropriationController extends \yii\web\Controller
                 'headers' => $headers,
                 'data' => $data,
                 'total' => $total,
+                'paps' => $paps,
+                'fundSources' => $fundSources,
                 'appropriation' => $appropriation,
                 'prevAppropriation' => $prevAppropriation,
                 'year' => $postData['year'],
