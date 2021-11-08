@@ -131,16 +131,22 @@ class DashboardController extends \yii\web\Controller
         if($filter['AppropriationItem[stage]'] == 'Indicative')
         {
             $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $filter['AppropriationItem[year]'] - 1]);
-            $items = $items->andWhere(['ppmp_ppmp.year' => $filter['AppropriationItem[year]']]);
         }
         else if($filter['AppropriationItem[stage]'] == 'Adjusted')
         {
             $appropriation = $appropriation->andWhere(['type' => 'NEP', 'year' => $filter['AppropriationItem[year]']]);
-            $items = $items->andWhere(['ppmp_ppmp.stage' => $filter['AppropriationItem[stage]']]);
         }
         else if($filter['AppropriationItem[stage]'] == 'Final')
         {
             $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $filter['AppropriationItem[year]']]);
+        }
+
+        if($filter['AppropriationItem[year]'] != ''){
+            $items = $items->andWhere(['ppmp_ppmp.year' => $filter['AppropriationItem[year]']]);
+        }
+
+        if($filter['AppropriationItem[stage]'] != ''){
+            $items = $items->andWhere(['ppmp_ppmp.stage' => $filter['AppropriationItem[stage]']]);
         }
         
         $appropriation = $appropriation->one();
@@ -214,6 +220,7 @@ class DashboardController extends \yii\web\Controller
     {
         $filter = $this->filterized($params);
 
+        $appropriation = Appropriation::find();
         $quantities = ItemBreakdown::find()
         ->select([
             'ppmp_item_id',
