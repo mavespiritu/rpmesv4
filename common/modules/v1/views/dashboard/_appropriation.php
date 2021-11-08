@@ -33,7 +33,7 @@ use yii\bootstrap\Modal;
                             <?php $source = isset($data['source'][$pap->id][$fundSource->id]['total']) ? $data['source'][$pap->id][$fundSource->id]['total'] : 0 ?>
                             <?php $ppmp = isset($data['ppmp'][$pap->id][$fundSource->id]['total']) ? $data['ppmp'][$pap->id][$fundSource->id]['total'] : 0 ?>
 
-                            <?= $source - $ppmp != 0 ? $source - $ppmp > 0 ? '<td align=right><b>'.number_format($source - $ppmp, 2).'</b></td>' : '<td align=right style="color: red;"><b>('.number_format($source - $ppmp, 2).')</b></td>' : '<td>&nbsp;</td>' ?>
+                            <?= $source - $ppmp != 0 ? $source - $ppmp > 0 ? '<td align=right><b>'.number_format($source - $ppmp, 2).'</b></td>' : '<td align=right style="color: red;"><b>('.number_format(abs($source - $ppmp), 2).')</b></td>' : '<td>&nbsp;</td>' ?>
                             </tr>
                         <?php } ?>
                     <?php } ?>

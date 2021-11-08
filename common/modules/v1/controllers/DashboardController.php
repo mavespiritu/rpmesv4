@@ -108,6 +108,15 @@ class DashboardController extends \yii\web\Controller
 
         $appropriation = Appropriation::find();
 
+        $appPaps = [];
+        $ppmpPaps = PpmpItem::find()
+        ->select([
+            'distinct(ppmp_pap.id) as pap_id'
+        ])
+        ->leftJoin('ppmp_ppmp', 'ppmp_ppmp.id = ppmp_ppmp_item.ppmp_id')
+        ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+        ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id');
+
         $quantities = ItemBreakdown::find()
         ->select([
             'ppmp_item_id',
@@ -143,15 +152,16 @@ class DashboardController extends \yii\web\Controller
 
         if($filter['AppropriationItem[year]'] != ''){
             $items = $items->andWhere(['ppmp_ppmp.year' => $filter['AppropriationItem[year]']]);
+            $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.year' => $filter['AppropriationItem[year]']]);
         }
 
         if($filter['AppropriationItem[stage]'] != ''){
             $items = $items->andWhere(['ppmp_ppmp.stage' => $filter['AppropriationItem[stage]']]);
+            $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.stage' => $filter['AppropriationItem[stage]']]);
         }
         
         $appropriation = $appropriation->one();
         $appropriationItems = [];
-        $appPaps = [];
 
         if($appropriation)
         {
@@ -186,6 +196,12 @@ class DashboardController extends \yii\web\Controller
         ->asArray()
         ->all();
 
+        $ppmpPaps = $ppmpPaps
+        ->asArray()
+        ->all();
+
+        $ppmpPaps = ArrayHelper::map($ppmpPaps, 'pap_id', 'pap_id');
+
         $data = [];
 
         if(!empty($appropriationItems))
@@ -204,7 +220,7 @@ class DashboardController extends \yii\web\Controller
             }
         }
 
-        $paps = Pap::find()->where(['in', 'id', $appPaps])->orderBy(['id' => SORT_ASC])->all();
+        $paps = Pap::find()->where(['in', 'id', array_unique(array_merge($appPaps, $ppmpPaps))])->orderBy(['id' => SORT_ASC])->all();
 
         $fundSources = FundSource::find()->all();
 
