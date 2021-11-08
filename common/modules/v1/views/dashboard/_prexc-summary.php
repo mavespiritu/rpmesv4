@@ -8,8 +8,8 @@ use yii\bootstrap\Modal;
 
 ?>
 
+<h5>FINANCIAL PLAN</h5>
 <div class="freeze-table" style="height: 800px;">
-    <h5>FINANCIAL PLAN</h5>
     <table class="table table-condensed table-hover table-bordered table-responsive">
         <thead>
         <?php if(!empty($headers)){ ?>
