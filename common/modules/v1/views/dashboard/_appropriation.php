@@ -9,29 +9,34 @@ use yii\bootstrap\Modal;
 ?>
 
 <div class="freeze-table" style="height: 800px;">
-    <h5><?= $appropriation ? $appropriation->type.' '.$appropriation->year : '' ?></h5>
+    <h5><?= $appropriation ? $appropriation->type.' '.$appropriation->year.' SUMMARY' : '' ?></h5>
     <table class="table table-condensed table-hover table-bordered table-responsive">
         <thead>
             <tr>
-            <th>PREXC</th>
-            <?php if($fundSources){ ?>
-                <?php foreach($fundSources as $fundSource){ ?>
-                    <th><?= $fundSource->code ?></th>
-                <?php } ?>
-            <?php } ?>
+                <th colspan=2>PREXC</th>
+                <th><?= $appropriation ? $appropriation->type.' '.$appropriation->year.' TOTAL' : '' ?></th>
+                <th><?= 'PPMP TOTAL' ?></th>
+                <th>Over (Deficit)</th>
             </tr>
         </thead>
         <tbody>
         <?php if($paps){ ?>
             <?php foreach($paps as $pap){ ?>
                 <tr>
-                    <th><?= $pap->short_code != '' ? $pap->short_code : '-' ?></th>
-                <?php if($fundSources){ ?>
-                    <?php foreach($fundSources as $fundSource){ ?>
-                        <td align=right><b><?= isset($data[$pap->id][$fundSource->code]['total']) ? number_format($data[$pap->id][$fundSource->code]['total'], 2) : '' ?></b></td>
+                    <th rowspan=2><?= $pap->short_code != '' ? $pap->short_code : '-' ?></th>
+                    <?php if($fundSources){ ?>
+                        <?php foreach($fundSources as $fundSource){ ?>
+                            <th><?= $fundSource->code ?></th>
+                            <td align=right><b><?= isset($data['source'][$pap->id][$fundSource->id]['total']) ? number_format($data['source'][$pap->id][$fundSource->id]['total'], 2) : '' ?></b></td>
+                            <td align=right><b><?= isset($data['ppmp'][$pap->id][$fundSource->id]['total']) ? number_format($data['ppmp'][$pap->id][$fundSource->id]['total'], 2) : '' ?></b></td>
+
+                            <?php $source = isset($data['source'][$pap->id][$fundSource->id]['total']) ? $data['source'][$pap->id][$fundSource->id]['total'] : 0 ?>
+                            <?php $ppmp = isset($data['ppmp'][$pap->id][$fundSource->id]['total']) ? $data['ppmp'][$pap->id][$fundSource->id]['total'] : 0 ?>
+
+                            <?= $source - $ppmp != 0 ? $source - $ppmp > 0 ? '<td align=right><b>'.number_format($source - $ppmp, 2).'</b></td>' : '<td align=right style="color: red;"><b>('.number_format($source - $ppmp, 2).')</b></td>' : '<td>&nbsp;</td>' ?>
+                            </tr>
+                        <?php } ?>
                     <?php } ?>
-                <?php } ?>
-                </tr>
             <?php } ?>
         <?php } ?>
         </tbody>

@@ -108,13 +108,35 @@ class DashboardController extends \yii\web\Controller
 
         $appropriation = Appropriation::find();
 
+        $quantities = ItemBreakdown::find()
+        ->select([
+            'ppmp_item_id',
+            'sum(quantity) as total'
+        ])
+        ->groupBy(['ppmp_item_id'])
+        ->createCommand()
+        ->getRawSql();
+
+        $items = PpmpItem::find()
+        ->select([
+            'ppmp_pap.id as pap_id',
+            'ppmp_ppmp_item.fund_source_id as fund_source_id',
+            'SUM(quantities.total * ppmp_ppmp_item.cost) as total'
+        ])
+        ->leftJoin('ppmp_ppmp', 'ppmp_ppmp.id = ppmp_ppmp_item.ppmp_id')
+        ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+        ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id')
+        ->leftJoin(['quantities' => '('.$quantities.')'], 'quantities.ppmp_item_id = ppmp_ppmp_item.id');
+
         if($filter['AppropriationItem[stage]'] == 'Indicative')
         {
             $appropriation = $appropriation->andWhere(['type' => 'GAA', 'year' => $filter['AppropriationItem[year]'] - 1]);
+            $items = $items->andWhere(['ppmp_ppmp.year' => $filter['AppropriationItem[year]']]);
         }
         else if($filter['AppropriationItem[stage]'] == 'Adjusted')
         {
             $appropriation = $appropriation->andWhere(['type' => 'NEP', 'year' => $filter['AppropriationItem[year]']]);
+            $items = $items->andWhere(['ppmp_ppmp.stage' => $filter['AppropriationItem[stage]']]);
         }
         else if($filter['AppropriationItem[stage]'] == 'Final')
         {
@@ -130,20 +152,32 @@ class DashboardController extends \yii\web\Controller
             ->select([
                 'ppmp_appropriation_item.pap_id',
                 'ppmp_appropriation_item.fund_source_id',
-                'ppmp_fund_source.code as fundSource',
                 'SUM(amount) as total'
-            ])
-            ->leftJoin('ppmp_fund_source', 'ppmp_fund_source.id = ppmp_appropriation_item.fund_source_id');
+            ]);
 
             $appropriationItems = $appropriationItems
             ->andWhere(['ppmp_appropriation_item.appropriation_id' => $appropriation->id])
             ->groupBy([
                 'ppmp_appropriation_item.pap_id',
-                'ppmp_appropriation_item.fund_source_id'
+                'ppmp_appropriation_item.fund_source_id',
             ])
             ->asArray()
             ->all();
+
+            $appPaps = AppropriationPap::find()->select(['distinct(pap_id) as pap_id'])->where(['appropriation_id' => $appropriation->id])->asArray()->all();
+            $appPaps = ArrayHelper::map($appPaps, 'pap_id', 'pap_id');
         }
+
+        $items = $items
+        ->groupBy([
+            'ppmp_activity.pap_id',
+            'ppmp_ppmp_item.fund_source_id',
+        ])
+        ->orderBy([
+            'ppmp_pap.id' => SORT_ASC,
+        ])
+        ->asArray()
+        ->all();
 
         $data = [];
 
@@ -151,18 +185,27 @@ class DashboardController extends \yii\web\Controller
         {
             foreach($appropriationItems as $item)
             {
-                $data[$item['pap_id']][$item['fundSource']] = $item;
+                $data['source'][$item['pap_id']][$item['fund_source_id']] = $item;
             }
         }
-        
-        $paps = Pap::find()->orderBy(['id' => SORT_ASC])->all();
+
+        if(!empty($items))
+        {
+            foreach($items as $item)
+            {
+                $data['ppmp'][$item['pap_id']][$item['fund_source_id']] = $item;
+            }
+        }
+
+        $paps = Pap::find()->where(['in', 'id', $appPaps])->orderBy(['id' => SORT_ASC])->all();
+
         $fundSources = FundSource::find()->all();
 
         return $this->renderAjax('_appropriation', [
             'data' => $data,
             'paps' => $paps,
+            'fundSources' => $fundSources,
             'appropriation' => $appropriation,
-            'fundSources' => $fundSources
          ]);
     }
 

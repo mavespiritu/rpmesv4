@@ -20,6 +20,10 @@ use yii\bootstrap\Modal;
 <h3 class="panel-title">Items</h3><br>
 <table class="table table-responsive table-condensed">
     <tr>
+        <td align=right style="width: 10%;">Program</td>
+        <td><b><?= $activity->pap->codeAndTitle ?></b></td>
+    </tr>
+    <tr>
         <td align=right style="width: 10%;">Activity:</td>
         <td><b><?= $activity->title ?></b></td>
     </tr>
