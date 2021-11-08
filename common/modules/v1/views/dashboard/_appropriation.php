@@ -6,6 +6,8 @@ use yii\bootstrap\ButtonDropdown;
 use yii\web\View;   
 use yii\bootstrap\Modal;
 
+$sourceTotal = 0;
+$ppmpTotal = 0;
 ?>
 <h5><?= $appropriation ? $appropriation->type.' '.$appropriation->year.' SUMMARY' : '' ?></h5>
 <div class="freeze-table">
@@ -32,12 +34,21 @@ use yii\bootstrap\Modal;
                             <?php $source = isset($data['source'][$pap->id][$fundSource->id]['total']) ? $data['source'][$pap->id][$fundSource->id]['total'] : 0 ?>
                             <?php $ppmp = isset($data['ppmp'][$pap->id][$fundSource->id]['total']) ? $data['ppmp'][$pap->id][$fundSource->id]['total'] : 0 ?>
 
+                            <?php $sourceTotal += $source; ?>
+                            <?php $ppmpTotal += $ppmp; ?>
+
                             <?= $source - $ppmp != 0 ? $source - $ppmp > 0 ? '<td align=right><b>'.number_format($source - $ppmp, 2).'</b></td>' : '<td align=right style="color: red;"><b>('.number_format(abs($source - $ppmp), 2).')</b></td>' : '<td>&nbsp;</td>' ?>
                             </tr>
                         <?php } ?>
                     <?php } ?>
             <?php } ?>
         <?php } ?>
+        <tr>
+            <td colspan=2 align=right><b>TOTAL</b></td>
+            <td align=right><b><?= number_format($sourceTotal, 2) ?></b></td>
+            <td align=right><b><?= number_format($ppmpTotal, 2) ?></b></td>
+            <?= $sourceTotal - $ppmpTotal != 0 ? $sourceTotal - $ppmpTotal > 0 ? '<td align=right><b>'.number_format($sourceTotal - $ppmpTotal, 2).'</b></td>' : '<td align=right style="color: red;"><b>('.number_format(abs($sourceTotal - $ppmpTotal), 2).')</b></td>' : '<td>&nbsp;</td>' ?>
+        </tr>
         </tbody>
     </table>
 </div>
