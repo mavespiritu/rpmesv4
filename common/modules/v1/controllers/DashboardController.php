@@ -145,6 +145,7 @@ class DashboardController extends \yii\web\Controller
         
         $appropriation = $appropriation->one();
         $appropriationItems = [];
+        $appPaps = [];
 
         if($appropriation)
         {
