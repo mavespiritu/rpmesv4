@@ -7,9 +7,8 @@ use yii\web\View;
 use yii\bootstrap\Modal;
 
 ?>
-
-<div class="freeze-table" style="height: 800px;">
-    <h5><?= $appropriation ? $appropriation->type.' '.$appropriation->year.' SUMMARY' : '' ?></h5>
+<h5><?= $appropriation ? $appropriation->type.' '.$appropriation->year.' SUMMARY' : '' ?></h5>
+<div class="freeze-table">
     <table class="table table-condensed table-hover table-bordered table-responsive">
         <thead>
             <tr>
