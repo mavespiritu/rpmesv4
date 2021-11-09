@@ -9,7 +9,23 @@ use yii\bootstrap\Modal;
 $sourceTotal = 0;
 $ppmpTotal = 0;
 ?>
-<h5><?= $appropriation ? $appropriation->type.' '.$appropriation->year.' SUMMARY' : '' ?></h5>
+<h5><?= $appropriation ? $appropriation->type.' '.$appropriation->year.' SUMMARY' : '' ?>
+<span class="pull-right">
+    <?= ButtonDropdown::widget([
+        'label' => 'Export',
+        'options' => ['class' => 'btn btn-success btn-sm'],
+        'dropdown' => [
+            'items' => [
+                ['label' => 'Excel', 'url' => Url::to(['/v1/dashboard/download-appropriation', 'type' => 'excel', 'post' => json_encode($postData)])],
+                ['label' => 'PDF', 'url' => Url::to(['/v1/dashboard/download-appropriation', 'type' => 'pdf', 'post' => json_encode($postData)])],
+            ],
+        ],
+    ]); ?>
+    <?php // Html::a('<i class="fa fa-print"></i> Print', ['#'],['class' => 'btn btn-danger']) ?>
+</span>
+</h5>
+<div class="clearfix"></div>
+<br>
 <div class="freeze-table">
     <table class="table table-condensed table-hover table-bordered table-responsive">
         <thead>
@@ -38,7 +54,7 @@ $ppmpTotal = 0;
                             <?php $ppmpTotal += $ppmp; ?>
 
                             <?= $source - $ppmp != 0 ? $source - $ppmp > 0 ? '<td align=right><b>'.number_format($source - $ppmp, 2).'</b></td>' : '<td align=right style="color: red;"><b>('.number_format(abs($source - $ppmp), 2).')</b></td>' : '<td>&nbsp;</td>' ?>
-                            </tr>
+                            </tr><tr>
                         <?php } ?>
                     <?php } ?>
             <?php } ?>
