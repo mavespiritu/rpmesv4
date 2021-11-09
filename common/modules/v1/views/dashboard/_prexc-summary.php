@@ -16,7 +16,7 @@ use yii\bootstrap\Modal;
         'dropdown' => [
             'items' => [
                 ['label' => 'Excel', 'url' => Url::to(['/v1/dashboard/download-prexc-summary', 'type' => 'excel', 'post' => json_encode($postData)])],
-                ['label' => 'PDF', 'url' => Url::to(['/v1/dashboard/download-prexc-summary', 'type' => 'pdf', 'post' => json_encode($postData)])],
+                //['label' => 'PDF', 'url' => Url::to(['/v1/dashboard/download-prexc-summary', 'type' => 'pdf', 'post' => json_encode($postData)])],
             ],
         ],
     ]); ?>

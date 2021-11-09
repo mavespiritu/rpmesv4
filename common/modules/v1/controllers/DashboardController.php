@@ -842,6 +842,7 @@ class DashboardController extends \yii\web\Controller
                 $response->format = \yii\web\Response::FORMAT_RAW;
                 $headers = Yii::$app->response->headers;
                 $headers->add('Content-Type', 'application/pdf');
+                
                 return $pdf->render();
         }
     }
