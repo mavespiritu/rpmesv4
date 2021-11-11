@@ -151,7 +151,7 @@ function getChildren($elements, $padding = 0, $fundSources, $offices, $activity,
 <br>
 <div class="panel panel-default">
     <div class="panel-body">
-        <div class="freeze-table">
+        <div class="freeze-table" style="height: 800px;">
         <table class="table table-responsive table-bordered table-hover">
             <thead>
                 <tr>

@@ -20,9 +20,11 @@ class AppropriationItem extends \yii\db\ActiveRecord
 {
     public $idx;
     public $activity_id;
+    public $office_id;
     public $sub_activity_id;
     public $stage;
     public $year;
+    public $order;
     /**
      * {@inheritdoc}
      */
@@ -39,6 +41,8 @@ class AppropriationItem extends \yii\db\ActiveRecord
         return [
             [['stage', 'year'], 'required', 'on' => 'loadAppropriation'],
             [['stage', 'year', 'activity_id'], 'required', 'on' => 'loadBudgetMonitoring'],
+            [['stage', 'year', 'order'], 'required', 'on' => 'loadPpmpMonitoringUser'],
+            [['stage', 'year'], 'required', 'on' => 'loadPpmpMonitoringAdmin'],
             [['activity_id', 'fund_source_id'], 'required', 'on' => 'loadItems'],
             [['activity_id', 'sub_activity_id', 'fund_source_id'], 'required', 'on' => 'loadItemsInRis'],
             [['amount'], 'required'],
@@ -67,7 +71,9 @@ class AppropriationItem extends \yii\db\ActiveRecord
             'activity_id' => 'Activity',
             'sub_activity_id' => 'PAP',
             'fund_source_id' => 'Fund Source',
+            'office_id' => 'Division',
             'amount' => 'Amount',
+            'order' => 'Sort (Top to Bottom)'
         ];
     }
 

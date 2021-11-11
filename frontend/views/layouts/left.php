@@ -49,6 +49,7 @@
                                 'items' => [
                                     ['label' => 'Appropriation', 'icon' => 'folder', 'url' => ['/v1/appropriation'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
                                     ['label' => 'Budget', 'icon' => 'folder', 'url' => ['/v1/budget-monitoring'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
+                                    ['label' => 'PPMP', 'icon' => 'folder', 'url' => ['/v1/ppmp-monitoring'], 'visible' => !Yii::$app->user->isGuest],
                             ],
                         ],
         
