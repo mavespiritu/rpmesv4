@@ -20,32 +20,46 @@ $this->params['breadcrumbs'][] = $this->title;
     </p>
 
     <?php Pjax::begin(); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <div class="row">
+        <div class="col-md-2 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header panel-title"><i class="fa fa-search"></i> Search Filter</div>
+                <div class="box-body">
+                    <?= $this->render('_search', ['model' => $searchModel]); ?>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header panel-title"><i class="fa fa-list"></i> RIS List</div>
+                <div class="box-body">
+                    <?= GridView::widget([
+                        'options' => [
+                            'class' => 'table-responsive',
+                        ],
+                        'dataProvider' => $dataProvider,
+                        'columns' => [
+                            ['class' => 'yii\grid\SerialColumn'],
 
-    <?= GridView::widget([
-        'options' => [
-            'class' => 'table-responsive',
-        ],
-        'dataProvider' => $dataProvider,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
+                            'ris_no',
+                            'officeName',
+                            'ppmpName',
+                            'purpose:ntext',
+                            'date_required',
+                            'creatorName',
+                            'requesterName',
 
-            'ppmpName',
-            'ris_no',
-            'officeName',
-            'purpose:ntext',
-            'date_required',
-            'creatorName',
-            'requesterName',
-
-            [
-                'format' => 'raw', 
-                'value' => function($model){
-                    return Html::a('View', ['/v1/ris/view', 'id' => $model->id],['class' => 'btn btn-primary btn-sm btn-block']);
-            }],
-        ],
-    ]); ?>
-
+                            [
+                                'format' => 'raw', 
+                                'value' => function($model){
+                                    return Html::a('View', ['/v1/ris/view', 'id' => $model->id],['class' => 'btn btn-primary btn-sm btn-block']);
+                            }],
+                        ],
+                    ]); ?>
+                </div>
+            </div>
+        </div>
+    </div>
     <?php Pjax::end(); ?>
 
 </div>
