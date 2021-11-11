@@ -105,6 +105,7 @@ class PpmpMonitoringController extends \yii\web\Controller
 
             $items = PpmpItem::find()
             ->select([
+                'ppmp_ppmp_item.id as id',
                 'concat(
                     ppmp_cost_structure.code,
                     ppmp_organizational_outcome.code,
