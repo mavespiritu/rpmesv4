@@ -175,10 +175,7 @@ class PpmpMonitoringController extends \yii\web\Controller
             ->leftJoin(['novQuantity' => '('.$quantities.')'], 'novQuantity.ppmp_item_id = ppmp_ppmp_item.id and novQuantity.month_id = "11"')
             ->leftJoin(['decQuantity' => '('.$quantities.')'], 'decQuantity.ppmp_item_id = ppmp_ppmp_item.id and decQuantity.month_id = "12"');
 
-            if(!empty($postData['office_id']))
-            {
-                $items = Yii::$app->user->can('Administrator') ? $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]) : $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
-            }
+            $items = Yii::$app->user->can('Administrator') ? $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]) : $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
 
             if(!empty($postData['stage']))
             {

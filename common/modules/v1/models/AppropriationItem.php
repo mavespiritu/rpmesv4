@@ -41,8 +41,8 @@ class AppropriationItem extends \yii\db\ActiveRecord
         return [
             [['stage', 'year'], 'required', 'on' => 'loadAppropriation'],
             [['stage', 'year', 'activity_id'], 'required', 'on' => 'loadBudgetMonitoring'],
-            [['stage', 'year', 'order'], 'required', 'on' => 'loadPpmpMonitoringUser'],
-            [['stage', 'year'], 'required', 'on' => 'loadPpmpMonitoringAdmin'],
+            [['stage', 'year'], 'required', 'on' => 'loadPpmpMonitoringUser'],
+            [['stage', 'year', 'office_id'], 'required', 'on' => 'loadPpmpMonitoringAdmin'],
             [['activity_id', 'fund_source_id'], 'required', 'on' => 'loadItems'],
             [['activity_id', 'sub_activity_id', 'fund_source_id'], 'required', 'on' => 'loadItemsInRis'],
             [['amount'], 'required'],
