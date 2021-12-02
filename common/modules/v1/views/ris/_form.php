@@ -19,9 +19,21 @@ DisableButtonAsset::register($this);
         'enableAjaxValidation' => true,
     ]); ?>
 
+    <p>Reminder: Divisions must have a Final PPMP to create RIS.</p>
+
+    <?= $form->field($model, 'type')->widget(Select2::classname(), [
+        'data' => $types,
+        'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select'],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('Type');
+    ?>
+
     <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')){ ?>
         <?php 
             $signatoryUrl = \yii\helpers\Url::to(['/v1/ris/signatory-list']);
+            $ppmpUrl = \yii\helpers\Url::to(['/v1/ris/ppmp-list']);
             echo $form->field($model, 'office_id')->widget(Select2::classname(), [
             'data' => $offices,
             'options' => ['placeholder' => 'Select Division','multiple' => false, 'class'=>'office-select'],
@@ -39,6 +51,16 @@ DisableButtonAsset::register($this);
                         }).done(function(result) {
                             $(".requested-by-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select Staff", allowClear: true});
                             $(".requested-by-select").select2("val","");
+                        });
+
+                        $.ajax({
+                            url: "'.$ppmpUrl.'",
+                            data: {
+                                    id: this.value,
+                                }
+                        }).done(function(result) {
+                            $(".ppmp-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select PPMP Year", allowClear: true});
+                            $(".ppmp-select").select2("val","");
                         });
                     }'
 
@@ -65,7 +87,7 @@ DisableButtonAsset::register($this);
         ]);
     ?>
 
-    <?= $form->field($model, 'purpose')->textarea(['rows' => 6]) ?>
+    <?= $form->field($model, 'purpose')->textarea(['rows' => 3]) ?>
 
     <?= $form->field($model, 'date_required')->widget(DatePicker::classname(), [
         'options' => ['placeholder' => 'Enter date'],

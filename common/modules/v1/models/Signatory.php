@@ -31,7 +31,7 @@ class Signatory extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'position'], 'required'],
+            [['emp_id', 'name', 'position'], 'required'],
             [['office_id', 'section_id', 'unit_id'], 'integer'],
             [['name'], 'string'],
             [['position', 'designation'], 'string', 'max' => 200],
@@ -49,6 +49,7 @@ class Signatory extends \yii\db\ActiveRecord
             'officeName' => 'Division',
             'section_id' => 'Section',
             'unit_id' => 'Unit',
+            'emp_id' => 'Employee ID',
             'name' => 'Name',
             'position' => 'Position',
             'designation' => 'Designation',

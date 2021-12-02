@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
+use dosamigos\datepicker\DatePicker;
 use yii\web\View;
 /* @var $model common\modules\v1\models\PpmpSearch */
 /* @var $form yii\widgets\ActiveForm */
@@ -21,9 +22,35 @@ use yii\web\View;
 
     <?= $form->field($model, 'ris_no') ?>
 
-    <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')){ ?>
-        <?= $form->field($model, 'office_id') ?>
+    <?= $form->field($model, 'type')->widget(Select2::classname(), [
+        'data' => $types,
+        'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select'],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('Type');
+    ?>
+
+    <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement') || Yii::$app->user->can('Accounting')){ ?>
+        <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
+            'data' => ['' => 'All Divisions'] + $offices,
+            'options' => ['multiple' => false, 'class'=>'office-select'],
+            'pluginOptions' => [
+                'allowClear' =>  false,
+            ],
+        ]);
+        ?>
     <?php } ?>
+
+    <?= $form->field($model, 'purpose')->textarea(['rows' => 3]) ?>
+
+    <?= $form->field($model, 'date_required')->widget(DatePicker::classname(), [
+        'options' => ['placeholder' => 'Enter date'],
+        'clientOptions' => [
+            'autoclose' => true,
+            'format' => 'yyyy-mm-dd'
+        ],
+    ]) ?>
 
     <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>

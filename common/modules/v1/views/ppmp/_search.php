@@ -19,7 +19,7 @@ use yii\web\View;
         ],
     ]); ?>
 
-    <?php if(Yii::$app->user->can('Administrator')){ ?>
+    <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Accounting')){ ?>
         <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
             'data' => ['' => 'All Divisions'] + $offices,
             'options' => ['multiple' => false, 'class'=>'office-select'],

@@ -58,12 +58,27 @@ class RisController extends Controller
 
     public function actionSignatoryList($id)
     {
-        $signatories = Signatory::find()->where(['office_id' => $id])->all();
+        $office = Office::findOne(['abbreviation' => $id]);
+        $signatories = Signatory::find()->where(['office_id' => $office->id])->all();
 
         $arr = [];
         $arr[] = ['id'=>'','text'=>''];
         foreach($signatories as $signatory){
-            $arr[] = ['id' => $signatory->id ,'text' => $signatory->name];
+            $arr[] = ['id' => $signatory->emp_id ,'text' => $signatory->name];
+        }
+        \Yii::$app->response->format = 'json';
+        return $arr;
+    }
+
+    public function actionPpmpList($id)
+    {
+        $office = Office::findOne(['abbreviation' => $id]);
+        $ppmps = $office ? Ppmp::find()->where(['office_id' => $office->id, 'stage' => 'Final'])->all() : []; 
+
+        $arr = [];
+        $arr[] = ['id'=>'','text'=>''];
+        foreach($ppmps as $ppmp){
+            $arr[] = ['id' => $ppmp->id ,'text' => $ppmp->title];
         }
         \Yii::$app->response->format = 'json';
         return $arr;
@@ -98,9 +113,19 @@ class RisController extends Controller
         $searchModel = new RisSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
+        $types = [
+            'Supply' => 'Supply',
+            'Service' => 'Service',
+        ];
+
+        $offices = Office::find()->all();
+        $offices = ArrayHelper::map($offices, 'abbreviation', 'abbreviation');
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'offices' => $offices,
+            'types' => $types,
         ]);
     }
 
@@ -257,11 +282,7 @@ class RisController extends Controller
 
         $model->scenario = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? 'isAdmin' : 'isUser';
 
-        $ppmps = Yii::$app->user->can('Administrator') ? Ppmp::find()
-        ->joinWith('office')
-        ->where(['stage' => 'Final'])
-        ->orderBy(['year' => SORT_DESC])
-        ->all() : Ppmp::find()
+        $ppmps = Yii::$app->user->can('Administrator') ? [] : Ppmp::find()
         ->joinWith('office')
         ->where(['stage' => 'Final'])
         ->andWhere(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
@@ -271,13 +292,18 @@ class RisController extends Controller
         $ppmps = Yii::$app->user->can('Administrator') ? ArrayHelper::map($ppmps, 'id', 'title') : ArrayHelper::map($ppmps, 'id', 'year');
 
         $offices = Office::find()->all();
-        $offices = ArrayHelper::map($offices, 'id', 'abbreviation');
+        $offices = ArrayHelper::map($offices, 'abbreviation', 'abbreviation');
 
         $fundClusters = FundCluster::find()->all();
         $fundClusters = ArrayHelper::map($fundClusters, 'id', 'title');
 
         $signatories = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? [] : Signatory::find()->where(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])->all();
-        $signatories = ArrayHelper::map($signatories, 'id', 'name');
+        $signatories = ArrayHelper::map($signatories, 'emp_id', 'name');
+
+        $types = [
+            'Supply' => 'Supply',
+            'Service' => 'Service',
+        ];
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -285,14 +311,16 @@ class RisController extends Controller
         }
 
         if ($model->load(Yii::$app->request->post())) {
+
             $lastRis = Ris::find()->where(['date_created' => date("Y-m-d")])->orderBy(['id' => SORT_DESC])->one();
+            $userOffice = Office::findOne(['id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
             $ris_no = $lastRis ? substr(date("Y"), -2).'-'.date("md").'-'.str_pad(substr($lastRis->ris_no, -1) + 1, 3, '0', STR_PAD_LEFT) : substr(date("Y"), -2).'-'.date("md").'-001';
             $model->ris_no = $ris_no;
-            $model->office_id = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? $model->office_id : Yii::$app->user->identity->userinfo->OFFICE_C;
+            $model->office_id = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? $model->office_id : $userOffice->abbreviation;
             $model->date_requested = $model->date_required; 
-            $model->created_by = Yii::$app->user->id; 
+            $model->created_by = Yii::$app->user->identity->userinfo->EMP_N; 
             $model->date_created = date("Y-m-d"); 
-            $model->save();
+            $model->save(false);
 
             \Yii::$app->getSession()->setFlash('success', 'Record Saved');
             return $this->redirect(['view', 'id' => $model->id]);
@@ -304,6 +332,7 @@ class RisController extends Controller
             'ppmps' => $ppmps,
             'fundClusters' => $fundClusters,
             'signatories' => $signatories,
+            'types' => $types
         ]);
     }
 
@@ -334,13 +363,18 @@ class RisController extends Controller
         $ppmps = Yii::$app->user->can('Administrator') ? ArrayHelper::map($ppmps, 'id', 'title') : ArrayHelper::map($ppmps, 'id', 'year');
 
         $offices = Office::find()->all();
-        $offices = ArrayHelper::map($offices, 'id', 'abbreviation');
+        $offices = ArrayHelper::map($offices, 'abbreviation', 'abbreviation');
 
         $fundClusters = FundCluster::find()->all();
         $fundClusters = ArrayHelper::map($fundClusters, 'id', 'title');
 
-        $signatories = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? Signatory::find()->where(['office_id' => $model->office_id])->all() : Signatory::find()->where(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])->all();
-        $signatories = ArrayHelper::map($signatories, 'id', 'name');
+        $signatories = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? Signatory::find()->all() : Signatory::find()->where(['office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])->all();
+        $signatories = ArrayHelper::map($signatories, 'emp_id', 'name');
+
+        $types = [
+            'Supply' => 'Supply',
+            'Service' => 'Service',
+        ];
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             Yii::$app->response->format = Response::FORMAT_JSON;
@@ -358,6 +392,7 @@ class RisController extends Controller
             'offices' => $offices,
             'fundClusters' => $fundClusters,
             'signatories' => $signatories,
+            'types' => $types
         ]);
     }
 

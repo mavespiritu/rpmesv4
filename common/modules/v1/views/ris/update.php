@@ -17,6 +17,7 @@ $this->params['breadcrumbs'][] = 'Update';
         'ppmps' => $ppmps,
         'fundClusters' => $fundClusters,
         'signatories' => $signatories,
+        'types' => $types
     ]) ?>
 
 </div>

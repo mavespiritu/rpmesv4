@@ -25,7 +25,11 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="box box-primary">
                 <div class="box-header panel-title"><i class="fa fa-search"></i> Search Filter</div>
                 <div class="box-body">
-                    <?= $this->render('_search', ['model' => $searchModel]); ?>
+                    <?= $this->render('_search', [
+                        'model' => $searchModel,
+                        'offices' => $offices,
+                        'types' => $types
+                    ]); ?>
                 </div>
             </div>
         </div>
@@ -34,16 +38,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="box-header panel-title"><i class="fa fa-list"></i> RIS List</div>
                 <div class="box-body">
                     <?= GridView::widget([
-                        'options' => [
-                            'class' => 'table-responsive',
+                        'tableOptions' => [
+                            'class' => 'table table-responsive table-condensed table-striped table-condensed table-hover',
                         ],
                         'dataProvider' => $dataProvider,
                         'columns' => [
                             ['class' => 'yii\grid\SerialColumn'],
 
+                            'type',
+                            'ppmpName',
                             'ris_no',
                             'officeName',
-                            'ppmpName',
                             'purpose:ntext',
                             'date_required',
                             'creatorName',
@@ -52,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'format' => 'raw', 
                                 'value' => function($model){
-                                    return Html::a('View', ['/v1/ris/view', 'id' => $model->id],['class' => 'btn btn-primary btn-sm btn-block']);
+                                    return Html::a('View', ['/v1/ris/view', 'id' => $model->id],['class' => 'btn btn-primary btn-xs btn-block']);
                             }],
                         ],
                     ]); ?>

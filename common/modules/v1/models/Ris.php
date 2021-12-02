@@ -43,10 +43,10 @@ class Ris extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['office_id', 'ppmp_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose'], 'required', 'on' => 'isAdmin'],
-            [['ppmp_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose'], 'required', 'on' => 'isUser'],
-            [['office_id', 'section_id', 'unit_id', 'fund_cluster_id', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by'], 'integer'],
-            [['purpose'], 'string'],
+            [['office_id', 'ppmp_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose', 'type'], 'required', 'on' => 'isAdmin'],
+            [['ppmp_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose', 'type'], 'required', 'on' => 'isUser'],
+            [['fund_cluster_id'], 'integer'],
+            [['purpose', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by', 'office_id', 'section_id', 'unit_id'], 'string'],
             [['date_required', 'date_created', 'date_requested', 'date_approved', 'date_issued', 'date_received'], 'safe'],
             [['ris_no'], 'string', 'max' => 15],
             [['ppmp_id'], 'exist', 'skipOnError' => true, 'targetClass' => Ppmp::className(), 'targetAttribute' => ['ppmp_id' => 'id']],
@@ -84,6 +84,7 @@ class Ris extends \yii\db\ActiveRecord
             'date_issued' => 'Date Issued',
             'received_by' => 'Received By',
             'date_received' => 'Date Received',
+            'type' => 'Type'
         ];
     }
 
@@ -124,7 +125,7 @@ class Ris extends \yii\db\ActiveRecord
 
     public function getOffice()
     {
-        return $this->hasOne(Office::className(), ['id' => 'office_id']);
+        return $this->hasOne(Office::className(), ['abbreviation' => 'office_id']);
     }
 
     public function getOfficeName()
@@ -134,7 +135,7 @@ class Ris extends \yii\db\ActiveRecord
 
     public function getSection()
     {
-        return $this->hasOne(Section::className(), ['id' => 'section_id']);
+        return $this->hasOne(Section::className(), ['abbreviation' => 'section_id']);
     }
 
     public function getSectionName()
@@ -144,7 +145,7 @@ class Ris extends \yii\db\ActiveRecord
 
     public function getUnit()
     {
-        return $this->hasOne(Unit::className(), ['id' => 'unit_id']);
+        return $this->hasOne(Unit::className(), ['abbreviation' => 'unit_id']);
     }
 
     public function getUnitName()
@@ -154,7 +155,7 @@ class Ris extends \yii\db\ActiveRecord
 
     public function getRequester()
     {
-        return $this->hasOne(Signatory::className(), ['id' => 'requested_by']);
+        return $this->hasOne(Signatory::className(), ['emp_id' => 'requested_by']);
     }
 
     public function getRequesterName()
@@ -164,7 +165,7 @@ class Ris extends \yii\db\ActiveRecord
 
     public function getCreator()
     {
-        return $this->hasOne(UserInfo::className(), ['user_id' => 'created_by']); 
+        return $this->hasOne(UserInfo::className(), ['EMP_N' => 'created_by']); 
     }
 
     public function getCreatorName()
@@ -174,7 +175,7 @@ class Ris extends \yii\db\ActiveRecord
 
     public function getApprover()
     {
-        return $this->hasOne(Signatory::className(), ['id' => 'approved_by']);
+        return $this->hasOne(Signatory::className(), ['emp_id' => 'approved_by']);
     }
 
     public function getApproverName()
@@ -184,7 +185,7 @@ class Ris extends \yii\db\ActiveRecord
 
     public function getIssuer()
     {
-        return $this->hasOne(UserInfo::className(), ['user_id' => 'issued_by']); 
+        return $this->hasOne(UserInfo::className(), ['EMP_N' => 'issued_by']); 
     }
 
     public function getIssuerName()
@@ -194,7 +195,7 @@ class Ris extends \yii\db\ActiveRecord
 
     public function getReceiver()
     {
-        return $this->hasOne(UserInfo::className(), ['user_id' => 'received_by']); 
+        return $this->hasOne(UserInfo::className(), ['EMP_N' => 'received_by']); 
     }
 
     public function getReceiverName()

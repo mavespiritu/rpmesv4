@@ -103,7 +103,7 @@
                                                 <td>&nbsp;</td>
                                                 <td><?= $item['itemTitle'] ?></td>
                                                 <td><?= number_format($item['totalQty'], 0) ?></td>
-                                                <td align=right><?= number_format($item['costPerUnit'], 2) ?></td>
+                                                <td align=right><?= number_format($item['totalQty'] * $item['costPerUnit'], 2) ?></td>
                                                 <td align=right><?= number_format($item['janQty'], 0) ?></td>
                                                 <td align=right><?= number_format($item['janQty'] * $item['costPerUnit'], 2) ?></td>
                                                 <td align=right><?= number_format($item['febQty'], 0) ?></td>

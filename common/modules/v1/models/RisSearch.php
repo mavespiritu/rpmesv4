@@ -22,7 +22,7 @@ class RisSearch extends Ris
     {
         return [
             [['id', 'ppmp_id', 'office_id', 'section_id', 'unit_id', 'fund_cluster_id', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by'], 'integer'],
-            [['ris_no', 'purpose', 'date_required', 'date_created', 'date_requested', 'date_approved', 'date_issued', 'date_received'], 'safe'],
+            [['type', 'ris_no', 'purpose', 'date_required', 'date_created', 'date_requested', 'date_approved', 'date_issued', 'date_received'], 'safe'],
         ];
     }
 
@@ -54,7 +54,7 @@ class RisSearch extends Ris
             ->joinWith('creator c')
             ->joinWith('requester r')
             ->joinWith('office')
-            ->andWhere(['ppmp_ris.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C])
+            ->andWhere(['ppmp_ris.office_id' => Yii::$app->user->identity->userinfo->office->abbreviation])
             ->orderBy(['ris_no' => SORT_DESC]);
 
         // add conditions that should always apply here
@@ -66,6 +66,7 @@ class RisSearch extends Ris
 
         $dataProvider->setSort([
             'attributes' => [
+                'type',
                 'ris_no',
                 'officeName' => [
                     'asc' => ['tbloffice.abbreviation' => SORT_ASC],
@@ -97,7 +98,7 @@ class RisSearch extends Ris
         $query->andFilterWhere([
             'id' => $this->id,
             'ppmp_id' => $this->ppmp_id,
-            'office_id' => $this->office_id,
+            'ppmp_ris.office_id' => $this->office_id,
             'section_id' => $this->section_id,
             'unit_id' => $this->unit_id,
             'fund_cluster_id' => $this->fund_cluster_id,
@@ -112,6 +113,7 @@ class RisSearch extends Ris
             'approved_by' => $this->approved_by,
             'issued_by' => $this->issued_by,
             'received_by' => $this->received_by,
+            'type' => $this->type,
         ]);
 
         $query->andFilterWhere(['like', 'ris_no', $this->ris_no])
