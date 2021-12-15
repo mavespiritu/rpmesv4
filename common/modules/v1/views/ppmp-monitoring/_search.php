@@ -16,8 +16,8 @@ use kartik\sortinput\SortableInput;
     <?php if(Yii::$app->user->can('Administrator')){ ?>
 
         <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
-                'data' => $offices,
-                'options' => ['placeholder' => 'Select Division', 'multiple' => false, 'class'=>'division-select'],
+                'data' => ['' => 'All Divisions'] + $offices,
+                'options' => ['multiple' => false, 'class'=>'division-select'],
                 'pluginOptions' => [
                     'allowClear' =>  false,
                 ],

@@ -106,6 +106,7 @@ class PpmpMonitoringController extends \yii\web\Controller
             $items = PpmpItem::find()
             ->select([
                 'ppmp_ppmp_item.id as id',
+                'tbloffice.abbreviation as division',
                 'concat(
                     ppmp_cost_structure.code,
                     ppmp_organizational_outcome.code,
@@ -121,6 +122,7 @@ class PpmpMonitoringController extends \yii\web\Controller
                 'IF(originalObj.obj_id IS NOT NULL, concat(parentObj.title," - ",originalObj.title), originalObj.title) as objectTitle',
                 'ppmp_item.title as itemTitle',
                 'ppmp_ppmp_item.cost as costPerUnit',
+                'ppmp_fund_source.code as fundSource',
                 '
                 (
                     janQuantity.quantity +
@@ -176,7 +178,17 @@ class PpmpMonitoringController extends \yii\web\Controller
             ->leftJoin(['novQuantity' => '('.$quantities.')'], 'novQuantity.ppmp_item_id = ppmp_ppmp_item.id and novQuantity.month_id = "11"')
             ->leftJoin(['decQuantity' => '('.$quantities.')'], 'decQuantity.ppmp_item_id = ppmp_ppmp_item.id and decQuantity.month_id = "12"');
 
-            $items = Yii::$app->user->can('Administrator') ? $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]) : $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
+            //$items = Yii::$app->user->can('Administrator') ? $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]) : $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
+            
+            if(!Yii::$app->user->can('Administrator'))
+            {
+                $items = $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
+            }else{
+                if(!empty($postData['office_id']))
+                {
+                    $items = $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]);
+                }
+            }
 
             if(!empty($postData['stage']))
             {
@@ -200,7 +212,9 @@ class PpmpMonitoringController extends \yii\web\Controller
                 'ppmp_sub_activity.code' => SORT_ASC,
                 'originalObj.obj_id' => SORT_ASC,
                 'originalObj.id' => SORT_ASC,
-                'ppmp_item.title' => SORT_ASC
+                'ppmp_item.title' => SORT_ASC,
+                'tbloffice.abbreviation' => SORT_ASC,
+                'ppmp_fund_source.code' => SORT_ASC,
             ])
             ->asArray()
             ->all();
@@ -482,8 +496,6 @@ class PpmpMonitoringController extends \yii\web\Controller
                 'decCost',
             ];
 
-            //echo "<pre>"; print_r($data); exit;
-
             return $this->renderAjax('view',[
                 'model' => $model,
                 'data' => $data,
@@ -521,6 +533,7 @@ class PpmpMonitoringController extends \yii\web\Controller
 
         $items = PpmpItem::find()
         ->select([
+            'tbloffice.abbreviation as division',
             'concat(
                 ppmp_cost_structure.code,
                 ppmp_organizational_outcome.code,
@@ -536,6 +549,7 @@ class PpmpMonitoringController extends \yii\web\Controller
             'IF(originalObj.obj_id IS NOT NULL, concat(parentObj.title," - ",originalObj.title), originalObj.title) as objectTitle',
             'ppmp_item.title as itemTitle',
             'ppmp_ppmp_item.cost as costPerUnit',
+            'ppmp_fund_source.code as fundSource',
             '
             (
                 janQuantity.quantity +
@@ -591,8 +605,17 @@ class PpmpMonitoringController extends \yii\web\Controller
         ->leftJoin(['novQuantity' => '('.$quantities.')'], 'novQuantity.ppmp_item_id = ppmp_ppmp_item.id and novQuantity.month_id = "11"')
         ->leftJoin(['decQuantity' => '('.$quantities.')'], 'decQuantity.ppmp_item_id = ppmp_ppmp_item.id and decQuantity.month_id = "12"');
 
-        $items = Yii::$app->user->can('Administrator') ? $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]) : $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
-
+        //$items = Yii::$app->user->can('Administrator') ? $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]) : $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
+        if(!Yii::$app->user->can('Administrator'))
+        {
+            $items = $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
+        }else{
+            if(!empty($postData['office_id']))
+            {
+                $items = $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]);
+            }
+        }
+        
         if(!empty($postData['stage']))
         {
             $items = $items->andWhere(['ppmp_ppmp.stage' => $postData['stage']]);
@@ -615,7 +638,9 @@ class PpmpMonitoringController extends \yii\web\Controller
             'ppmp_sub_activity.code' => SORT_ASC,
             'originalObj.obj_id' => SORT_ASC,
             'originalObj.id' => SORT_ASC,
-            'ppmp_item.title' => SORT_ASC
+            'ppmp_item.title' => SORT_ASC,
+            'tbloffice.abbreviation' => SORT_ASC,
+            'ppmp_fund_source.code' => SORT_ASC,
         ])
         ->asArray()
         ->all();

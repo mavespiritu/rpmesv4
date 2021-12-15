@@ -34,6 +34,8 @@
                 <?php } ?>
             <?php } ?>
             <th rowspan=2>Item</th>
+            <th rowspan=2>End User</th>
+            <th rowspan=2>Fund Source</th>
             <th>Quantity</th>
             <th rowspan=2>Estimated Budget</th>
             <?php if($quarters){ ?>
@@ -71,7 +73,7 @@
     <?php if(!empty($data)){ ?>
         <?php foreach((array) $data as $firstFilter => $firstLevel){ ?>
             <tr style="font-weight: bold;">
-                <td colspan=6><?= $firstFilter ?></td>
+                <td colspan=8><?= $firstFilter ?></td>
                 <td align=right><?= number_format($firstLevel['estimatedBudget'], 2) ?></td>
                 <td align=right><?= number_format($firstLevel['janQty'], 0) ?></td>
                 <td align=right><?= number_format($firstLevel['janCost'], 2) ?></td>
@@ -111,7 +113,7 @@
                     <?php if(!in_array($secondFilter, $unAllowedIndexes)){ ?>
                     <tr style="font-weight: bold;">
                         <td>&nbsp;</td>
-                        <td colspan=5><?= $secondFilter ?></td>
+                        <td colspan=7><?= $secondFilter ?></td>
                         <td align=right><?= number_format($secondLevel['estimatedBudget'], 2) ?></td>
                         <td align=right><?= number_format($secondLevel['janQty'], 0) ?></td>
                         <td align=right><?= number_format($secondLevel['janCost'], 2) ?></td>
@@ -153,7 +155,7 @@
                             <tr style="font-weight: bold;">
                                 <td>&nbsp;</td>
                                 <td>&nbsp;</td>
-                                <td colspan=4><?= $thirdFilter ?></td>
+                                <td colspan=6><?= $thirdFilter ?></td>
                                 <td align=right><?= number_format($thirdLevel['estimatedBudget'], 2) ?></td>
                                 <td align=right><?= number_format($thirdLevel['janQty'], 0) ?></td>
                                 <td align=right><?= number_format($thirdLevel['janCost'], 2) ?></td>
@@ -196,7 +198,7 @@
                                         <td>&nbsp;</td>
                                         <td>&nbsp;</td>
                                         <td>&nbsp;</td>
-                                        <td colspan=3><?= $fourthFilter ?></td>
+                                        <td colspan=5><?= $fourthFilter ?></td>
                                         <td align=right><?= number_format($items['estimatedBudget'], 2) ?></td>
                                         <td align=right><?= number_format($items['janQty'], 0) ?></td>
                                         <td align=right><?= number_format($items['janCost'], 2) ?></td>
@@ -240,6 +242,8 @@
                                                 <td>&nbsp;</td>
                                                 <td>&nbsp;</td>
                                                 <td><?= $item['itemTitle'] ?></td>
+                                                <td><?= $item['division'] ?></td>
+                                                <td><?= $item['fundSource'] ?></td>
                                                 <td><?= number_format($item['totalQty'], 0) ?></td>
                                                 <td align=right><?= number_format($item['totalQty'] * $item['costPerUnit'], 2) ?></td>
                                                 <td align=right><?= number_format($item['janQty'], 0) ?></td>
