@@ -228,12 +228,261 @@ class PpmpMonitoringController extends \yii\web\Controller
             {
                 foreach($items as $item)
                 {
-                    $data[$item[$orders[0]]][$item[$orders[1]]][$item[$orders[2]]][$item[$orders[3]]][] = $item;
+                    $data[$item[$orders[0]]][$item[$orders[1]]][$item[$orders[2]]][$item[$orders[3]]]['items'][] = $item;
+                }
+            }
+
+            if(!empty($data))
+            {
+                foreach($data as $firstIdx => $firstOrders)
+                {
+                    $data[$firstIdx]['estimatedBudget'] = 0;
+                    $data[$firstIdx]['janQty'] = 0;
+                    $data[$firstIdx]['janCost'] = 0;
+                    $data[$firstIdx]['febQty'] = 0;
+                    $data[$firstIdx]['febCost'] = 0;
+                    $data[$firstIdx]['marQty'] = 0;
+                    $data[$firstIdx]['marCost'] = 0;
+                    $data[$firstIdx]['aprQty'] = 0;
+                    $data[$firstIdx]['aprCost'] = 0;
+                    $data[$firstIdx]['mayQty'] = 0;
+                    $data[$firstIdx]['mayCost'] = 0;
+                    $data[$firstIdx]['junQty'] = 0;
+                    $data[$firstIdx]['junCost'] = 0;
+                    $data[$firstIdx]['julQty'] = 0;
+                    $data[$firstIdx]['julCost'] = 0;
+                    $data[$firstIdx]['augQty'] = 0;
+                    $data[$firstIdx]['augCost'] = 0;
+                    $data[$firstIdx]['sepQty'] = 0;
+                    $data[$firstIdx]['sepCost'] = 0;
+                    $data[$firstIdx]['octQty'] = 0;
+                    $data[$firstIdx]['octCost'] = 0;
+                    $data[$firstIdx]['novQty'] = 0;
+                    $data[$firstIdx]['novCost'] = 0;
+                    $data[$firstIdx]['decQty'] = 0;
+                    $data[$firstIdx]['decCost'] = 0;
+                    foreach($firstOrders as $secondIdx => $secondOrders)
+                    {
+                        $data[$firstIdx][$secondIdx]['estimatedBudget'] = 0;
+                        $data[$firstIdx][$secondIdx]['janQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['janCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['febQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['febCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['marQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['marCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['aprQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['aprCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['mayQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['mayCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['junQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['junCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['julQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['julCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['augQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['augCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['sepQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['sepCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['octQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['octCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['novQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['novCost'] = 0;
+                        $data[$firstIdx][$secondIdx]['decQty'] = 0;
+                        $data[$firstIdx][$secondIdx]['decCost'] = 0;
+                        foreach($secondOrders as $thirdIdx => $thirdOrders)
+                        {
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['estimatedBudget'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['janQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['janCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['febQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['febCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['marQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['marCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['aprQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['aprCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['mayQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['mayCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['junQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['junCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['julQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['julCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['augQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['augCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['sepQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['sepCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['octQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['octCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['novQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['novCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['decQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['decCost'] = 0;
+                            foreach($thirdOrders as $fourthIdx => $items)
+                            {
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['estimatedBudget'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novCost'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decQty'] = 0;
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decCost'] = 0;
+                                foreach($items['items'] as $item)
+                                {
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['estimatedBudget'] += ($item['totalQty'] * $item['costPerUnit']);
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janQty'] += $item['janQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janCost'] += $item['janQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febQty'] += $item['febQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febCost'] += $item['febQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marQty'] += $item['marQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marCost'] += $item['marQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprQty'] += $item['aprQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprCost'] += $item['aprQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayQty'] += $item['mayQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayCost'] += $item['mayQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junQty'] += $item['junQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junCost'] += $item['junQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julQty'] += $item['julQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julCost'] += $item['julQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augQty'] += $item['augQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augCost'] += $item['augQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepQty'] += $item['sepQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepCost'] += $item['sepQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octQty'] += $item['octQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octCost'] += $item['octQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novQty'] += $item['novQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novCost'] += $item['novQty'] * $item['costPerUnit'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decQty'] += $item['decQty'];
+                                    $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decCost'] += $item['decQty'] * $item['costPerUnit'];
+                                }
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['estimatedBudget'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['estimatedBudget'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['janQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['janCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['febQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['febCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['marQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['marCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['aprQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['aprCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['mayQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['mayCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['junQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['junCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['julQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['julCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['augQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['augCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['sepQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['sepCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['octQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['octCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['novQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['novCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novCost'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['decQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx]['decCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decCost'];
+                            }
+                            $data[$firstIdx][$secondIdx]['estimatedBudget'] += $data[$firstIdx][$secondIdx][$thirdIdx]['estimatedBudget'];
+                            $data[$firstIdx][$secondIdx]['janQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['janQty'];
+                            $data[$firstIdx][$secondIdx]['janCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['janCost'];
+                            $data[$firstIdx][$secondIdx]['febQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['febQty'];
+                            $data[$firstIdx][$secondIdx]['febCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['febCost'];
+                            $data[$firstIdx][$secondIdx]['marQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['marQty'];
+                            $data[$firstIdx][$secondIdx]['marCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['marCost'];
+                            $data[$firstIdx][$secondIdx]['aprQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['aprQty'];
+                            $data[$firstIdx][$secondIdx]['aprCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['aprCost'];
+                            $data[$firstIdx][$secondIdx]['mayQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['mayQty'];
+                            $data[$firstIdx][$secondIdx]['mayCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['mayCost'];
+                            $data[$firstIdx][$secondIdx]['junQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['junQty'];
+                            $data[$firstIdx][$secondIdx]['junCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['junCost'];
+                            $data[$firstIdx][$secondIdx]['julQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['julQty'];
+                            $data[$firstIdx][$secondIdx]['julCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['julCost'];
+                            $data[$firstIdx][$secondIdx]['augQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['augQty'];
+                            $data[$firstIdx][$secondIdx]['augCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['augCost'];
+                            $data[$firstIdx][$secondIdx]['sepQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['sepQty'];
+                            $data[$firstIdx][$secondIdx]['sepCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['sepCost'];
+                            $data[$firstIdx][$secondIdx]['octQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['octQty'];
+                            $data[$firstIdx][$secondIdx]['octCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['octCost'];
+                            $data[$firstIdx][$secondIdx]['novQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['novQty'];
+                            $data[$firstIdx][$secondIdx]['novCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['novCost'];
+                            $data[$firstIdx][$secondIdx]['decQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['decQty'];
+                            $data[$firstIdx][$secondIdx]['decCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['decCost'];
+                        }
+                        $data[$firstIdx]['estimatedBudget'] += $data[$firstIdx][$secondIdx]['estimatedBudget'];
+                        $data[$firstIdx]['janQty'] += $data[$firstIdx][$secondIdx]['janQty'];
+                        $data[$firstIdx]['janCost'] += $data[$firstIdx][$secondIdx]['janCost'];
+                        $data[$firstIdx]['febQty'] += $data[$firstIdx][$secondIdx]['febQty'];
+                        $data[$firstIdx]['febCost'] += $data[$firstIdx][$secondIdx]['febCost'];
+                        $data[$firstIdx]['marQty'] += $data[$firstIdx][$secondIdx]['marQty'];
+                        $data[$firstIdx]['marCost'] += $data[$firstIdx][$secondIdx]['marCost'];
+                        $data[$firstIdx]['aprQty'] += $data[$firstIdx][$secondIdx]['aprQty'];
+                        $data[$firstIdx]['aprCost'] += $data[$firstIdx][$secondIdx]['aprCost'];
+                        $data[$firstIdx]['mayQty'] += $data[$firstIdx][$secondIdx]['mayQty'];
+                        $data[$firstIdx]['mayCost'] += $data[$firstIdx][$secondIdx]['mayCost'];
+                        $data[$firstIdx]['junQty'] += $data[$firstIdx][$secondIdx]['junQty'];
+                        $data[$firstIdx]['junCost'] += $data[$firstIdx][$secondIdx]['junCost'];
+                        $data[$firstIdx]['julQty'] += $data[$firstIdx][$secondIdx]['julQty'];
+                        $data[$firstIdx]['julCost'] += $data[$firstIdx][$secondIdx]['julCost'];
+                        $data[$firstIdx]['augQty'] += $data[$firstIdx][$secondIdx]['augQty'];
+                        $data[$firstIdx]['augCost'] += $data[$firstIdx][$secondIdx]['augCost'];
+                        $data[$firstIdx]['sepQty'] += $data[$firstIdx][$secondIdx]['sepQty'];
+                        $data[$firstIdx]['sepCost'] += $data[$firstIdx][$secondIdx]['sepCost'];
+                        $data[$firstIdx]['octQty'] += $data[$firstIdx][$secondIdx]['octQty'];
+                        $data[$firstIdx]['octCost'] += $data[$firstIdx][$secondIdx]['octCost'];
+                        $data[$firstIdx]['novQty'] += $data[$firstIdx][$secondIdx]['novQty'];
+                        $data[$firstIdx]['novCost'] += $data[$firstIdx][$secondIdx]['novCost'];
+                        $data[$firstIdx]['decQty'] += $data[$firstIdx][$secondIdx]['decQty'];
+                        $data[$firstIdx]['decCost'] += $data[$firstIdx][$secondIdx]['decCost'];
+                    }
                 }
             }
 
             $months = Month::find()->all();
             $quarters = Month::find()->select(['distinct(quarter) as quarter'])->all();
+
+            $unAllowedIndexes = [
+                'estimatedBudget',
+                'janQty',
+                'febQty',
+                'marQty',
+                'aprQty',
+                'mayQty',
+                'junQty',
+                'julQty',
+                'augQty',
+                'sepQty',
+                'octQty',
+                'novQty',
+                'decQty',
+                'janCost',
+                'febCost',
+                'marCost',
+                'aprCost',
+                'mayCost',
+                'junCost',
+                'julCost',
+                'augCost',
+                'sepCost',
+                'octCost',
+                'novCost',
+                'decCost',
+            ];
+
+            //echo "<pre>"; print_r($data); exit;
 
             return $this->renderAjax('view',[
                 'model' => $model,
@@ -243,6 +492,7 @@ class PpmpMonitoringController extends \yii\web\Controller
                 'groups' => $groups,
                 'months' => $months,
                 'quarters' => $quarters,
+                'unAllowedIndexes' => $unAllowedIndexes,
             ]);
         }
 
@@ -393,9 +643,256 @@ class PpmpMonitoringController extends \yii\web\Controller
         {
             foreach($items as $item)
             {
-                $data[$item[$orders[0]]][$item[$orders[1]]][$item[$orders[2]]][$item[$orders[3]]][] = $item;
+                $data[$item[$orders[0]]][$item[$orders[1]]][$item[$orders[2]]][$item[$orders[3]]]['items'][] = $item;
             }
         }
+
+        if(!empty($data))
+        {
+            foreach($data as $firstIdx => $firstOrders)
+            {
+                $data[$firstIdx]['estimatedBudget'] = 0;
+                $data[$firstIdx]['janQty'] = 0;
+                $data[$firstIdx]['janCost'] = 0;
+                $data[$firstIdx]['febQty'] = 0;
+                $data[$firstIdx]['febCost'] = 0;
+                $data[$firstIdx]['marQty'] = 0;
+                $data[$firstIdx]['marCost'] = 0;
+                $data[$firstIdx]['aprQty'] = 0;
+                $data[$firstIdx]['aprCost'] = 0;
+                $data[$firstIdx]['mayQty'] = 0;
+                $data[$firstIdx]['mayCost'] = 0;
+                $data[$firstIdx]['junQty'] = 0;
+                $data[$firstIdx]['junCost'] = 0;
+                $data[$firstIdx]['julQty'] = 0;
+                $data[$firstIdx]['julCost'] = 0;
+                $data[$firstIdx]['augQty'] = 0;
+                $data[$firstIdx]['augCost'] = 0;
+                $data[$firstIdx]['sepQty'] = 0;
+                $data[$firstIdx]['sepCost'] = 0;
+                $data[$firstIdx]['octQty'] = 0;
+                $data[$firstIdx]['octCost'] = 0;
+                $data[$firstIdx]['novQty'] = 0;
+                $data[$firstIdx]['novCost'] = 0;
+                $data[$firstIdx]['decQty'] = 0;
+                $data[$firstIdx]['decCost'] = 0;
+                foreach($firstOrders as $secondIdx => $secondOrders)
+                {
+                    $data[$firstIdx][$secondIdx]['estimatedBudget'] = 0;
+                    $data[$firstIdx][$secondIdx]['janQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['janCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['febQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['febCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['marQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['marCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['aprQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['aprCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['mayQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['mayCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['junQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['junCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['julQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['julCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['augQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['augCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['sepQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['sepCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['octQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['octCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['novQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['novCost'] = 0;
+                    $data[$firstIdx][$secondIdx]['decQty'] = 0;
+                    $data[$firstIdx][$secondIdx]['decCost'] = 0;
+                    foreach($secondOrders as $thirdIdx => $thirdOrders)
+                    {
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['estimatedBudget'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['janQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['janCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['febQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['febCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['marQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['marCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['aprQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['aprCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['mayQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['mayCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['junQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['junCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['julQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['julCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['augQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['augCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['sepQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['sepCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['octQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['octCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['novQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['novCost'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['decQty'] = 0;
+                        $data[$firstIdx][$secondIdx][$thirdIdx]['decCost'] = 0;
+                        foreach($thirdOrders as $fourthIdx => $items)
+                        {
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['estimatedBudget'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novCost'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decQty'] = 0;
+                            $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decCost'] = 0;
+                            foreach($items['items'] as $item)
+                            {
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['estimatedBudget'] += ($item['totalQty'] * $item['costPerUnit']);
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janQty'] += $item['janQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janCost'] += $item['janQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febQty'] += $item['febQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febCost'] += $item['febQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marQty'] += $item['marQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marCost'] += $item['marQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprQty'] += $item['aprQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprCost'] += $item['aprQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayQty'] += $item['mayQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayCost'] += $item['mayQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junQty'] += $item['junQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junCost'] += $item['junQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julQty'] += $item['julQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julCost'] += $item['julQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augQty'] += $item['augQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augCost'] += $item['augQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepQty'] += $item['sepQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepCost'] += $item['sepQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octQty'] += $item['octQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octCost'] += $item['octQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novQty'] += $item['novQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novCost'] += $item['novQty'] * $item['costPerUnit'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decQty'] += $item['decQty'];
+                                $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decCost'] += $item['decQty'] * $item['costPerUnit'];
+                            }
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['estimatedBudget'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['estimatedBudget'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['janQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['janCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['janCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['febQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['febCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['febCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['marQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['marCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['marCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['aprQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['aprCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['aprCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['mayQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['mayCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['mayCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['junQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['junCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['junCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['julQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['julCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['julCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['augQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['augCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['augCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['sepQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['sepCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['sepCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['octQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['octCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['octCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['novQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['novCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['novCost'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['decQty'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decQty'];
+                            $data[$firstIdx][$secondIdx][$thirdIdx]['decCost'] += $data[$firstIdx][$secondIdx][$thirdIdx][$fourthIdx]['decCost'];
+                        }
+                        $data[$firstIdx][$secondIdx]['estimatedBudget'] += $data[$firstIdx][$secondIdx][$thirdIdx]['estimatedBudget'];
+                        $data[$firstIdx][$secondIdx]['janQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['janQty'];
+                        $data[$firstIdx][$secondIdx]['janCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['janCost'];
+                        $data[$firstIdx][$secondIdx]['febQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['febQty'];
+                        $data[$firstIdx][$secondIdx]['febCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['febCost'];
+                        $data[$firstIdx][$secondIdx]['marQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['marQty'];
+                        $data[$firstIdx][$secondIdx]['marCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['marCost'];
+                        $data[$firstIdx][$secondIdx]['aprQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['aprQty'];
+                        $data[$firstIdx][$secondIdx]['aprCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['aprCost'];
+                        $data[$firstIdx][$secondIdx]['mayQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['mayQty'];
+                        $data[$firstIdx][$secondIdx]['mayCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['mayCost'];
+                        $data[$firstIdx][$secondIdx]['junQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['junQty'];
+                        $data[$firstIdx][$secondIdx]['junCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['junCost'];
+                        $data[$firstIdx][$secondIdx]['julQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['julQty'];
+                        $data[$firstIdx][$secondIdx]['julCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['julCost'];
+                        $data[$firstIdx][$secondIdx]['augQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['augQty'];
+                        $data[$firstIdx][$secondIdx]['augCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['augCost'];
+                        $data[$firstIdx][$secondIdx]['sepQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['sepQty'];
+                        $data[$firstIdx][$secondIdx]['sepCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['sepCost'];
+                        $data[$firstIdx][$secondIdx]['octQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['octQty'];
+                        $data[$firstIdx][$secondIdx]['octCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['octCost'];
+                        $data[$firstIdx][$secondIdx]['novQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['novQty'];
+                        $data[$firstIdx][$secondIdx]['novCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['novCost'];
+                        $data[$firstIdx][$secondIdx]['decQty'] += $data[$firstIdx][$secondIdx][$thirdIdx]['decQty'];
+                        $data[$firstIdx][$secondIdx]['decCost'] += $data[$firstIdx][$secondIdx][$thirdIdx]['decCost'];
+                    }
+                    $data[$firstIdx]['estimatedBudget'] += $data[$firstIdx][$secondIdx]['estimatedBudget'];
+                    $data[$firstIdx]['janQty'] += $data[$firstIdx][$secondIdx]['janQty'];
+                    $data[$firstIdx]['janCost'] += $data[$firstIdx][$secondIdx]['janCost'];
+                    $data[$firstIdx]['febQty'] += $data[$firstIdx][$secondIdx]['febQty'];
+                    $data[$firstIdx]['febCost'] += $data[$firstIdx][$secondIdx]['febCost'];
+                    $data[$firstIdx]['marQty'] += $data[$firstIdx][$secondIdx]['marQty'];
+                    $data[$firstIdx]['marCost'] += $data[$firstIdx][$secondIdx]['marCost'];
+                    $data[$firstIdx]['aprQty'] += $data[$firstIdx][$secondIdx]['aprQty'];
+                    $data[$firstIdx]['aprCost'] += $data[$firstIdx][$secondIdx]['aprCost'];
+                    $data[$firstIdx]['mayQty'] += $data[$firstIdx][$secondIdx]['mayQty'];
+                    $data[$firstIdx]['mayCost'] += $data[$firstIdx][$secondIdx]['mayCost'];
+                    $data[$firstIdx]['junQty'] += $data[$firstIdx][$secondIdx]['junQty'];
+                    $data[$firstIdx]['junCost'] += $data[$firstIdx][$secondIdx]['junCost'];
+                    $data[$firstIdx]['julQty'] += $data[$firstIdx][$secondIdx]['julQty'];
+                    $data[$firstIdx]['julCost'] += $data[$firstIdx][$secondIdx]['julCost'];
+                    $data[$firstIdx]['augQty'] += $data[$firstIdx][$secondIdx]['augQty'];
+                    $data[$firstIdx]['augCost'] += $data[$firstIdx][$secondIdx]['augCost'];
+                    $data[$firstIdx]['sepQty'] += $data[$firstIdx][$secondIdx]['sepQty'];
+                    $data[$firstIdx]['sepCost'] += $data[$firstIdx][$secondIdx]['sepCost'];
+                    $data[$firstIdx]['octQty'] += $data[$firstIdx][$secondIdx]['octQty'];
+                    $data[$firstIdx]['octCost'] += $data[$firstIdx][$secondIdx]['octCost'];
+                    $data[$firstIdx]['novQty'] += $data[$firstIdx][$secondIdx]['novQty'];
+                    $data[$firstIdx]['novCost'] += $data[$firstIdx][$secondIdx]['novCost'];
+                    $data[$firstIdx]['decQty'] += $data[$firstIdx][$secondIdx]['decQty'];
+                    $data[$firstIdx]['decCost'] += $data[$firstIdx][$secondIdx]['decCost'];
+                }
+            }
+        }
+
+        $unAllowedIndexes = [
+            'estimatedBudget',
+            'janQty',
+            'febQty',
+            'marQty',
+            'aprQty',
+            'mayQty',
+            'junQty',
+            'julQty',
+            'augQty',
+            'sepQty',
+            'octQty',
+            'novQty',
+            'decQty',
+            'janCost',
+            'febCost',
+            'marCost',
+            'aprCost',
+            'mayCost',
+            'junCost',
+            'julCost',
+            'augCost',
+            'sepCost',
+            'octCost',
+            'novCost',
+            'decCost',
+        ];
 
         $months = Month::find()->all();
         $quarters = Month::find()->select(['distinct(quarter) as quarter'])->all();
@@ -414,6 +911,7 @@ class PpmpMonitoringController extends \yii\web\Controller
                 'quarters' => $quarters,
                 'postData' => $postData,
                 'type' => $type,
+                'unAllowedIndexes' => $unAllowedIndexes
             ]);
         }else if($type == 'pdf')
         {
@@ -425,6 +923,7 @@ class PpmpMonitoringController extends \yii\web\Controller
                 'quarters' => $quarters,
                 'postData' => $postData,
                 'type' => $type,
+                'unAllowedIndexes' => $unAllowedIndexes
             ]);
 
             $pdf = new Pdf([

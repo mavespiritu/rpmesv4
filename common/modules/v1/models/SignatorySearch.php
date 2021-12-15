@@ -18,7 +18,7 @@ class SignatorySearch extends Signatory
     {
         return [
             [['id', 'office_id'], 'integer'],
-            [['name', 'position', 'designation'], 'safe'],
+            [['emp_id', 'name', 'position', 'designation'], 'safe'],
         ];
     }
 
@@ -60,6 +60,7 @@ class SignatorySearch extends Signatory
         $query->andFilterWhere([
             'id' => $this->id,
             'office_id' => $this->office_id,
+            'emp_id' => $this->emp_id,
         ]);
 
         $query->andFilterWhere(['like', 'name', $this->name])

@@ -69,33 +69,171 @@
     </thead>
     <tbody>
     <?php if(!empty($data)){ ?>
-        <?php foreach($data as $firstFilter => $firstLevel){ ?>
-            <tr>
-                <td colspan=<?= (count($quarters) + count($months))*2 + 7 ?>><?= $firstFilter ?></td>
+        <?php foreach((array) $data as $firstFilter => $firstLevel){ ?>
+            <tr style="font-weight: bold;">
+                <td colspan=6><?= $firstFilter ?></td>
+                <td align=right><?= number_format($firstLevel['estimatedBudget'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['janQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['janCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['febQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['febCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['marQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['marCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['janQty'] + $firstLevel['febQty'] + $firstLevel['marQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['janCost'] + $firstLevel['febCost'] + $firstLevel['marCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['aprQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['aprCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['mayQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['mayCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['junQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['junCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['aprQty'] + $firstLevel['mayQty'] + $firstLevel['junQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['aprCost'] + $firstLevel['mayCost'] + $firstLevel['junCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['julQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['julCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['augQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['augCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['sepQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['sepCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['julQty'] + $firstLevel['augQty'] + $firstLevel['sepQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['julCost'] + $firstLevel['augCost'] + $firstLevel['sepCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['octQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['octCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['novQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['novCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['decQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['decCost'], 2) ?></td>
+                <td align=right><?= number_format($firstLevel['octQty'] + $firstLevel['novQty'] + $firstLevel['decQty'], 0) ?></td>
+                <td align=right><?= number_format($firstLevel['octCost'] + $firstLevel['novCost'] + $firstLevel['decCost'], 2) ?></td>
             </tr>
-            <?php if(!empty($firstLevel)){ ?>
-                <?php foreach($firstLevel as $secondFilter => $secondLevel){ ?>
-                    <tr>
+            <?php if(!empty($firstLevel) && is_array($firstLevel)){ ?>
+                <?php foreach((array) $firstLevel as $secondFilter => $secondLevel){ ?>
+                    <?php if(!in_array($secondFilter, $unAllowedIndexes)){ ?>
+                    <tr style="font-weight: bold;">
                         <td>&nbsp;</td>
-                        <td colspan=<?= (count($quarters) + count($months))*2 + 6 ?>><?= $secondFilter ?></td>
+                        <td colspan=5><?= $secondFilter ?></td>
+                        <td align=right><?= number_format($secondLevel['estimatedBudget'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['janQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['janCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['febQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['febCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['marQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['marCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['janQty'] + $secondLevel['febQty'] + $secondLevel['marQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['janCost'] + $secondLevel['febCost'] + $secondLevel['marCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['aprQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['aprCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['mayQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['mayCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['junQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['junCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['aprQty'] + $secondLevel['mayQty'] + $secondLevel['junQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['aprCost'] + $secondLevel['mayCost'] + $secondLevel['junCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['julQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['julCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['augQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['augCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['sepQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['sepCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['julQty'] + $secondLevel['augQty'] + $secondLevel['sepQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['julCost'] + $secondLevel['augCost'] + $secondLevel['sepCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['octQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['octCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['novQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['novCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['decQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['decCost'], 2) ?></td>
+                        <td align=right><?= number_format($secondLevel['octQty'] + $secondLevel['novQty'] + $secondLevel['decQty'], 0) ?></td>
+                        <td align=right><?= number_format($secondLevel['octCost'] + $secondLevel['novCost'] + $secondLevel['decCost'], 2) ?></td>
                     </tr>
-                    <?php if(!empty($secondLevel)){ ?>
-                        <?php foreach($secondLevel as $thirdFilter => $thirdLevel){ ?>
-                            <tr>
+                    <?php } ?>
+                    <?php if(!empty($secondLevel) && is_array($secondLevel)){ ?>
+                        <?php foreach((array) $secondLevel as $thirdFilter => $thirdLevel){ ?>
+                            <?php if(!in_array($thirdFilter, $unAllowedIndexes)){ ?>
+                            <tr style="font-weight: bold;">
                                 <td>&nbsp;</td>
                                 <td>&nbsp;</td>
-                                <td colspan=<?= (count($quarters) + count($months))*2 + 5 ?>><?= $thirdFilter ?></td>
+                                <td colspan=4><?= $thirdFilter ?></td>
+                                <td align=right><?= number_format($thirdLevel['estimatedBudget'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['janQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['janCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['febQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['febCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['marQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['marCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['janQty'] + $thirdLevel['febQty'] + $thirdLevel['marQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['janCost'] + $thirdLevel['febCost'] + $thirdLevel['marCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['aprQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['aprCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['mayQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['mayCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['junQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['junCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['aprQty'] + $thirdLevel['mayQty'] + $thirdLevel['junQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['aprCost'] + $thirdLevel['mayCost'] + $thirdLevel['junCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['julQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['julCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['augQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['augCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['sepQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['sepCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['julQty'] + $thirdLevel['augQty'] + $thirdLevel['sepQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['julCost'] + $thirdLevel['augCost'] + $thirdLevel['sepCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['octQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['octCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['novQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['novCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['decQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['decCost'], 2) ?></td>
+                                <td align=right><?= number_format($thirdLevel['octQty'] + $thirdLevel['novQty'] + $thirdLevel['decQty'], 0) ?></td>
+                                <td align=right><?= number_format($thirdLevel['octCost'] + $thirdLevel['novCost'] + $thirdLevel['decCost'], 2) ?></td>
                             </tr>
-                            <?php if(!empty($thirdLevel)){ ?>
-                                <?php foreach($thirdLevel as $fourthFilter => $items){ ?>
-                                    <tr>
+                            <?php } ?>
+                            <?php if(!empty($thirdLevel) && is_array($thirdLevel)){ ?>
+                                <?php foreach((array) $thirdLevel as $fourthFilter => $items){ ?>
+                                    <?php if(!in_array($fourthFilter, $unAllowedIndexes)){ ?>
+                                    <tr style="font-weight: bold;">
                                         <td>&nbsp;</td>
                                         <td>&nbsp;</td>
                                         <td>&nbsp;</td>
-                                        <td colspan=<?= (count($quarters) + count($months))*2 + 4 ?>><?= $fourthFilter ?></td>
+                                        <td colspan=3><?= $fourthFilter ?></td>
+                                        <td align=right><?= number_format($items['estimatedBudget'], 2) ?></td>
+                                        <td align=right><?= number_format($items['janQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['janCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['febQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['febCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['marQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['marCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['janQty'] + $items['febQty'] + $items['marQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['janCost'] + $items['febCost'] + $items['marCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['aprQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['aprCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['mayQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['mayCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['junQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['junCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['aprQty'] + $items['mayQty'] + $items['junQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['aprCost'] + $items['mayCost'] + $items['junCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['julQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['julCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['augQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['augCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['sepQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['sepCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['julQty'] + $items['augQty'] + $items['sepQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['julCost'] + $items['augCost'] + $items['sepCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['octQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['octCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['novQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['novCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['decQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['decCost'], 2) ?></td>
+                                        <td align=right><?= number_format($items['octQty'] + $items['novQty'] + $items['decQty'], 0) ?></td>
+                                        <td align=right><?= number_format($items['octCost'] + $items['novCost'] + $items['decCost'], 2) ?></td>
                                     </tr>
-                                    <?php if(!empty($items)){ ?>
-                                        <?php foreach($items as $item){ ?>
+                                    <?php } ?>
+                                    <?php if(!empty($items['items'])){ ?>
+                                        <?php foreach((array) $items['items'] as $item){ ?>
                                             <tr>
                                                 <td>&nbsp;</td>
                                                 <td>&nbsp;</td>
@@ -148,4 +286,4 @@
         <?php } ?>
     <?php } ?>
     </tbody>
-    </table>
+</table>

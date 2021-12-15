@@ -25,6 +25,8 @@ DisableButtonAsset::register($this);
         ]);
     ?>
 
+<?= $form->field($model, 'emp_id')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'name')->textarea(['rows' => 6]) ?>
 
     <?= $form->field($model, 'position')->textInput(['maxlength' => true]) ?>
