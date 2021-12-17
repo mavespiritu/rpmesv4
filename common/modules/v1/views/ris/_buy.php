@@ -11,104 +11,109 @@ use yii\web\View;
 /* @var $form yii\widgets\ActiveForm */
 $maxValueUrl = \yii\helpers\Url::to(['/v1/ris/max-value']);
 ?>
-<p class="panel-title"><i class="fa fa-shopping-cart"></i> Add to RIS: <b><?= $item->item->title ?></b></p><br>
-<div class="buy-form">
-    <table class="table table-responsive table-condensed">
-        <tr>
-            <td align=right style="width: 20%;">Title:</td>
-            <td><b><?= $item->item->title ?></b></td>
-            <td align=right style="width: 20%;">Object:</td>
-            <td><b><?= $item->obj->objTitle ?></b></td>
-        </tr>
-        <tr>
-            <td align=right style="width: 20%;">Unit of Measure:</td>
-            <td><b><?= $item->item->unit_of_measure ?></b></td>
-            <td align=right style="width: 20%;">Type:</td>
-            <td><b><?= $item->type ?></b></td>
-        </tr>
-        <tr>
-            <td align=right style="width: 20%;">Remaining Qty:</td>
-            <td><b><?= $item->remainingQuantity ?></b></td>
-            <td rowspan=2 align=right style="width: 20%;">Remarks:</td>
-            <td rowspan=2><b><?= $item->remarks ?></b></td>
-        </tr>
-        <tr>
-            <td align=right style="width: 20%;">Cost Per Unit:</td>
-            <td><b><?= number_format($item->cost, 2) ?></b></td>
-        </tr>
-    </table>
+<br>
+<div class="panel panel-default">
+    <div class="panel-body">
+        <p class="panel-title"><i class="fa fa-shopping-cart"></i> Add to RIS: <b><?= $item->item->title ?></b></p><br>
+        <div class="buy-form">
+            <table class="table table-responsive table-condensed">
+                <tr>
+                    <td align=right style="width: 20%;">Title:</td>
+                    <td><b><?= $item->item->title ?></b></td>
+                    <td align=right style="width: 20%;">Object:</td>
+                    <td><b><?= $item->obj->objTitle ?></b></td>
+                </tr>
+                <tr>
+                    <td align=right style="width: 20%;">Unit of Measure:</td>
+                    <td><b><?= $item->item->unit_of_measure ?></b></td>
+                    <td align=right style="width: 20%;">Type:</td>
+                    <td><b><?= $item->type ?></b></td>
+                </tr>
+                <tr>
+                    <td align=right style="width: 20%;">Remaining Qty:</td>
+                    <td><b><?= $item->remainingQuantity ?></b></td>
+                    <td rowspan=2 align=right style="width: 20%;">Remarks:</td>
+                    <td rowspan=2><b><?= $item->remarks ?></b></td>
+                </tr>
+                <tr>
+                    <td align=right style="width: 20%;">Cost Per Unit:</td>
+                    <td><b><?= number_format($item->cost, 2) ?></b></td>
+                </tr>
+            </table>
 
-    <table class="table table-bordered table-responsive table-condensed">
-        <tbody>
-            <tr>
-            <?php if($item->itemBreakdowns){ ?>
-                <?php foreach($item->itemBreakdowns as $breakdown){ ?>
-                    <th><?= $breakdown->month->abbreviation ?></th>
-                <?php } ?>
-            <?php } ?>
-            </tr>
-            <tr>
-            <?php if($item->itemBreakdowns){ ?>
-                <?php foreach($item->itemBreakdowns as $breakdown){ ?>
-                    <td><?= $breakdown->quantity ?></td>
-                <?php } ?>
-            <?php } ?>
-            </tr>
-        </tbody>
-    </table>
+            <table class="table table-bordered table-responsive table-condensed">
+                <tbody>
+                    <tr>
+                    <?php if($item->itemBreakdowns){ ?>
+                        <?php foreach($item->itemBreakdowns as $breakdown){ ?>
+                            <th><?= $breakdown->month->abbreviation ?></th>
+                        <?php } ?>
+                    <?php } ?>
+                    </tr>
+                    <tr>
+                    <?php if($item->itemBreakdowns){ ?>
+                        <?php foreach($item->itemBreakdowns as $breakdown){ ?>
+                            <td><?= $breakdown->quantity ?></td>
+                        <?php } ?>
+                    <?php } ?>
+                    </tr>
+                </tbody>
+            </table>
 
-    <?php $form = ActiveForm::begin([
-        'options' => ['class' => 'disable-submit-buttons'],
-        'id' => 'buy-item-form',
-    ]); ?>
+            <?php $form = ActiveForm::begin([
+                'options' => ['class' => 'disable-submit-buttons'],
+                'id' => 'buy-item-form',
+            ]); ?>
 
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
-            <?= $form->field($risItemModel, 'month_id')->widget(Select2::classname(), [
-                'data' => $months,
-                'options' => ['placeholder' => 'Select Month','multiple' => false, 'class'=>'month-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                'pluginEvents'=>[
-                    'select2:select'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.$maxValueUrl.'",
-                                data: {
-                                        id: '.$item->id.',
-                                        month_id: this.value
-                                    }
-                                
-                            }).done(function(result) {
-                                $("#risitem-quantity").val("");
-                                $("#risitem-quantity").attr({
-                                    "max" : result,
-                                    "min" : 1
-                                });
-                            });
-                        }'
+            <div class="row">
+                <div class="col-md-6 col-xs-12">
+                    <?= $form->field($risItemModel, 'month_id')->widget(Select2::classname(), [
+                        'data' => $months,
+                        'options' => ['placeholder' => 'Select Month','multiple' => false, 'class'=>'month-select'],
+                        'pluginOptions' => [
+                            'allowClear' =>  true,
+                        ],
+                        'pluginEvents'=>[
+                            'select2:select'=>'
+                                function(){
+                                    $.ajax({
+                                        url: "'.$maxValueUrl.'",
+                                        data: {
+                                                id: '.$item->id.',
+                                                month_id: this.value
+                                            }
+                                        
+                                    }).done(function(result) {
+                                        $("#risitem-quantity").val("");
+                                        $("#risitem-quantity").attr({
+                                            "max" : result,
+                                            "min" : 1
+                                        });
+                                    });
+                                }'
 
-                ]
-                ]);
-            ?>
-        </div>
-        <div class="col-md-6 col-xs-12">
-            <?= $form->field($risItemModel, 'quantity')->textInput(['type' => 'number', 'maxlength' => true, 'onkeyup' => 'getTotal()']) ?>
+                        ]
+                        ]);
+                    ?>
+                </div>
+                <div class="col-md-6 col-xs-12">
+                    <?= $form->field($risItemModel, 'quantity')->textInput(['type' => 'number', 'maxlength' => true, 'onkeyup' => 'getTotal()']) ?>
+                </div>
+            </div>
+
+            <span class="pull-right">Total</span><br>
+            <p class="panel-title pull-right" style="font-size: 35px !important;" id="total"></p>
+            <p class="clearfix"></p>
+            
+            <div class="form-group pull-right">
+                <?= Html::submitButton('<i class="fa fa-shopping-cart"></i> Add to RIS', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+            </div>
+            <div class="clearfix"></div>
+
+            <?php ActiveForm::end(); ?>
+
         </div>
     </div>
-
-    <span class="pull-right">Total</span><br>
-    <p class="panel-title pull-right" style="font-size: 35px !important;" id="total"></p>
-    <p class="clearfix"></p>
-    
-    <div class="form-group pull-right">
-        <?= Html::submitButton('<i class="fa fa-shopping-cart"></i> Add to RIS', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
-    </div>
-    <div class="clearfix"></div>
-
-    <?php ActiveForm::end(); ?>
-
 </div>
 <?php
   $script = '

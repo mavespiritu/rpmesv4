@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= TabsX::widget([
                                 'items'=> [
                                     [
-                                        'label' => '<i class="fa fa-list"></i> Items in PPMP',
+                                        'label' => '<i class="fa fa-list"></i> PPMP Items',
                                         'content' => $this->render('_home',[
                                             'model' => $model,
                                             'appropriationItemModel' => $appropriationItemModel,
@@ -37,13 +37,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'active' => true,
                                     ],
                                     [
-                                        'label' => '<i class="fa fa-list"></i> Included in RIS <span class="badge bg-green" id="badge-ris">'.$model->getRisItems()->count().'</span>',
+                                        'label' => '<i class="fa fa-shopping-cart"></i> RIS Items <span class="badge bg-green" id="badge-ris">'.$model->getRisItems()->count().'</span>',
                                         'content' => '',
                                         'linkOptions'=>['data-url' => Url::to(['/v1/ris/for-procurement', 'id' => $model->id])]
                                     ],
                                 ],
                                 'bordered'=>true,
                                 'position'=>TabsX::POS_ABOVE,
+                                'align'=>TabsX::ALIGN_RIGHT,
                                 'encodeLabels'=>false
                             ]); ?>
                         </div>
