@@ -8,14 +8,15 @@ use common\modules\v1\models\Activity;
 use common\modules\v1\models\SubActivity;
 use common\modules\v1\models\FUndSource;
 use common\modules\v1\models\Ris;
+use common\modules\v1\models\Month;
 use common\modules\v1\models\Ppmp;
 use common\modules\v1\models\PpmpItem;
+use common\modules\v1\models\ItemBreakdown;
 use common\modules\v1\models\PpmpItemSearch;
 use common\modules\v1\models\FundCluster;
 use common\modules\v1\models\Signatory;
 use common\modules\v1\models\RisItem;
 use common\modules\v1\models\RisSource;
-use common\modules\v1\models\ItemBreakdown;
 use common\modules\v1\models\RisSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -164,16 +165,20 @@ class RisController extends Controller
         $fundSources = FundSource::find()->all();
         $fundSources = ArrayHelper::map($fundSources, 'id', 'code');
 
+        $months = Month::find()->all();
+        $months = ArrayHelper::map($months, 'id', 'abbreviation');
+
         return $this->render('view', [
             'model' => $model,
             'appropriationItemModel' => $appropriationItemModel,
             'activities' => $activities,
             'subActivities' => $subActivities,
             'fundSources' => $fundSources,
+            'months' => $months,
         ]);
     }
 
-    public function actionLoadItems($id, $activity_id, $sub_activity_id, $fund_source_id)
+    public function actionLoadItems($id, $activity_id, $sub_activity_id, $fund_source_id, $month_id)
     {
         $model = $this->findModel($id);
         $ppmp = $model->ppmp;
@@ -181,21 +186,35 @@ class RisController extends Controller
         $subActivity = SubActivity::findOne($sub_activity_id);
         $fundSource = FundSource::findOne($fund_source_id);
 
-        $searchModel = new PpmpItemSearch();
-        $searchModel->ppmp_id = $ppmp->id;
-        $searchModel->activity_id = $activity->id;
-        $searchModel->fund_source_id = $fundSource->id;
-        $searchModel->sub_activity_id = $subActivity->id;
+        $months = explode(',', $month_id);
+        
+        $itemIDs = ItemBreakdown::find()
+                ->select(['ppmp_item_id'])
+                ->leftJoin('ppmp_ppmp_item i', 'i.id = ppmp_ppmp_item_breakdown.ppmp_item_id')
+                ->andWhere([
+                    'i.ppmp_id' => $ppmp->id,
+                    'i.activity_id' => $activity->id,
+                    'i.sub_activity_id' => $subActivity->id,
+                    'i.fund_source_id' => $fundSource->id,
+                ])
+                ->andWhere(['in', 'month_id', $months])
+                ->andWhere(['>', 'quantity', 0])
+                ->asArray()
+                ->all();
+        
+        $itemIDs = ArrayHelper::map($itemIDs, 'ppmp_item_id', 'ppmp_item_id');
+        
+        $items = PpmpItem::find()->where(['in', 'id', $itemIDs])->all();
 
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $monthModels = Month::find()->all();
 
         return $this->renderAjax('_ris-items', [
             'model' => $model,
             'activity' => $activity,
             'subActivity' => $subActivity,
             'fundSource' => $fundSource,
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+            'items' => $items,
+            'months' => $monthModels,
         ]);
     }
 
@@ -302,7 +321,7 @@ class RisController extends Controller
 
         $types = [
             'Supply' => 'Supply',
-            'Service' => 'Service',
+            'Service' => 'Service/Contract',
         ];
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
@@ -373,7 +392,7 @@ class RisController extends Controller
 
         $types = [
             'Supply' => 'Supply',
-            'Service' => 'Service',
+            'Service' => 'Service/Contract',
         ];
 
         if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {

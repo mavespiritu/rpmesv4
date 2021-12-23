@@ -7,6 +7,18 @@ body {
     height: 100%;
     font-family: "Poppins" , sans-serif;
 }
+table.bordered-table{
+  width: 100%;
+}
+
+table.bordered-table tr td{
+  padding: 2px auto;
+}
+
+table.bordered-table, table.bordered-table tr, table.bordered-table tr th, table.bordered-table tr td
+{
+  border: 2px solid black;
+}
 
 h1,
 h2,

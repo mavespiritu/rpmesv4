@@ -38,18 +38,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="box-header panel-title"><i class="fa fa-list"></i> RIS List</div>
                 <div class="box-body">
                     <?= GridView::widget([
-                        'tableOptions' => [
-                            'class' => 'table table-responsive table-condensed table-striped table-condensed table-hover',
-                        ],
                         'dataProvider' => $dataProvider,
                         'columns' => [
                             ['class' => 'yii\grid\SerialColumn'],
 
-                            'type',
                             'ppmpName',
                             'ris_no',
                             'officeName',
                             'purpose:ntext',
+                            'type',
                             'date_required',
                             'creatorName',
                             'requesterName',

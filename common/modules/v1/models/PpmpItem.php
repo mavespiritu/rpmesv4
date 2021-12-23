@@ -180,6 +180,27 @@ class PpmpItem extends \yii\db\ActiveRecord
         return $total['quantity'];
     }
 
+    public function getQuantityUsedPerMonth($month_id)
+    {
+        $total = RisSource::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id, 'month_id' => $month_id])->asArray()->one();
+
+        return $total['quantity'];
+    }
+
+    public function getQuantityPerMonth($month_id)
+    {
+        $quantity = $this->getItemBreakdowns()->where(['month_id' => $month_id])->one();
+
+        return $quantity ? $quantity->quantity : 0;
+    }
+
+    public function getRemainingQuantityPerMonth($month_id)
+    {
+        $maxQuantity = $this->getItemBreakdowns()->where(['month_id' => $month_id])->one();
+
+        return $maxQuantity ? $maxQuantity->quantity - $this->getQuantityUsedPerMonth($month_id) : 0;
+    }
+
     public function getRemainingQuantity()
     {
         return $this->quantity - $this->quantityUsed;

@@ -11,7 +11,7 @@ use fedemotta\datatables\DataTables;
 use yii\widgets\ListView;
 ?>
 
-<?= $dataProvider->getTotalCount() > 0 ? ListView::widget([
+<?php /* $dataProvider->getTotalCount() > 0 ? ListView::widget([
     'dataProvider' => $dataProvider,
     'itemView' => function($item) use ($model){ return $this->render('_ris-item',['model' => $item, 'item' => $model]); },
     'layout' => "<div class='text-info'>{pager}{summary}</div>\n{items}\n{pager}",
@@ -21,7 +21,34 @@ use yii\widgets\ListView;
         'prevPageLabel' => '<i class="fa fa-backward"></i>',
         'nextPageLabel' => '<i class="fa fa-forward"></i>',
     ],
-]) : '<p class="text-center">No items found</p>' ?>
+]) : '<p class="text-center">No items found</p>' */ ?>
+
+<?php if($items){ ?>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Available Qty</th>
+        <?php if($months){ ?>
+          <?php foreach($months as $month){ ?>
+            <th><?= $month->abbreviation ?></th>
+          <?php } ?>
+        <?php } ?>
+      </tr>
+    </thead>
+  <?php foreach($items as $item){ ?>
+    <tr>
+      <td><?= $item->item->title ?></td>
+      <td><?= $item->remainingQuantity ?></td>
+      <?php if($months){ ?>
+        <?php foreach($months as $month){ ?>
+          <td>Max: <?= $item->getRemainingQuantityPerMonth($month->id) ?></td>
+        <?php } ?>
+      <?php } ?>
+      </tr>
+  <?php } ?>
+  </table>
+<?php } ?>
 <?php
   Modal::begin([
     'id' => 'buy-modal',
@@ -35,10 +62,10 @@ use yii\widgets\ListView;
 <?php
     $script = '
     $(".buy-button").click(function(){
-        $("#ris-item-list").empty();
-        $("#ris-item-list").hide();
-        $("#ris-item-list").fadeIn("slow");
-        $("#ris-item-list").load($(this).attr("value"));
+        $("#ris-item-form").empty();
+        $("#ris-item-form").hide();
+        $("#ris-item-form").fadeIn("slow");
+        $("#ris-item-form").load($(this).attr("value"));
     });
     ';
 

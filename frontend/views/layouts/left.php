@@ -60,6 +60,7 @@
 
                     ['label' => 'Inventory', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Items', 'icon' => 'folder', 'url' => ['/v1/item'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))], 
+                    ['label' => 'For Contract Items', 'icon' => 'folder', 'url' => ['/v1/for-contract-item'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))], 
                     ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('Administrator', $userRoles))],
                     [
                         'label' => 'Libraries',
