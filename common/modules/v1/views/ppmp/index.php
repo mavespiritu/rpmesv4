@@ -64,6 +64,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 return '<span class="badge bg-'.$color[$ppmp->stage].'">'.$ppmp->stage.'</span>';
                             }
                         ],
+                        'creatorName',
+                        'date_created',
+                        //'updated_by',
+                        //'date_updated',
                         [
                             'header' => 'Total', 
                             'attribute' => 'total',
@@ -77,10 +81,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             },
                             'footer' => Ppmp::pageQuantityTotal($dataProvider->models, 'total'),
                         ],
-                        'creatorName',
-                        'date_created',
-                        //'updated_by',
-                        //'date_updated',
+                        [
+                            'header' => 'Status',
+                            'attribute' => 'status.status',
+                        ],
                         [
                             'format' => 'raw', 
                             'value' => function($model){

@@ -549,6 +549,26 @@ class RisController extends Controller
             }
         }
 
+        $types = RisItem::find()->select(['distinct(type) as type'])->andWhere(['ris_id' => $model->id])->asArray()->all();
+        $types = ArrayHelper::map($types, 'type', 'type');
+
+        $comment = '';
+
+        if(!empty($types))
+        {
+            if(count($types) > 1)
+            {
+                $comment = 'Some of the items indicated herein are NOT in the APP';
+            }else{
+                if(in_array('Original', $types))
+                {
+                    $comment = 'All items indicated herein are in the APP';
+                }else{
+                    $comment = 'All items indicated herein are NOT in the APP';
+                }
+            }
+        }
+
         if($type == 'pdf')
         {
             $content = $this->renderPartial('file', [
@@ -558,6 +578,7 @@ class RisController extends Controller
                 'risItems' => $risItems,
                 'realignedItems' => $realignedItems,
                 'months' => $months,
+                'comment' => $comment
             ]);
 
             $filename = 'RIS No. '.$model->ris_no;

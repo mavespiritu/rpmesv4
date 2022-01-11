@@ -76,6 +76,10 @@
         <td style="width: 10%; border: none;">Purpose:</td>
         <td style="width: 80%; border-bottom: 1px solid black; border-top: none; border-right: none; border-left: none;"><?= $model->purpose ?></td>
     </tr>
+    <tr>
+        <td style="width: 10%; border: none">&nbsp;</td>
+        <td style="width: 80%; border: none;"><?= $comment ?></td>
+    </tr>
 </table>
 <br>
 <table style="width: 100%;">
