@@ -70,7 +70,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
             'type' => 'Type',
             'year' => 'Year',
             'activity_id' => 'Activity',
-            'sub_activity_id' => 'PAP',
+            'sub_activity_id' => 'PPA',
             'fund_source_id' => 'Fund Source',
             'office_id' => 'Division',
             'amount' => 'Amount',

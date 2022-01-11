@@ -15,6 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'offices' => $offices,
         'ppmps' => $ppmps,
+        'fundSources' => $fundSources,
         'fundClusters' => $fundClusters,
         'signatories' => $signatories,
         'types' => $types

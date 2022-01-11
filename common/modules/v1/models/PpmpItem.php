@@ -41,6 +41,7 @@ class PpmpItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['activity_id', 'sub_activity_id', 'obj_id', 'item_id'], 'required', 'on' => 'Supplemental'],
             [['sub_activity_id', 'obj_id', 'item_id'], 'required'],
             [['appropriation_item_id', 'activity_id', 'sub_activity_id', 'obj_id', 'ppmp_id', 'item_id', 'fund_source_id'], 'integer'],
             [['cost'], 'number'],
@@ -63,8 +64,8 @@ class PpmpItem extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'appropriation_item_id' => 'Appropriation Item ID',
-            'fund_source_id' => 'Fund Source ID',
-            'activity_id' => 'Activity ID',
+            'fund_source_id' => 'Fund Source',
+            'activity_id' => 'Activity',
             'sub_activity_id' => 'PPA',
             'obj_id' => 'Object',
             'ppmp_id' => 'Ppmp ID',
@@ -166,44 +167,68 @@ class PpmpItem extends \yii\db\ActiveRecord
         return '<b>'.number_format($total, 2).'</b>';
     }
 
-    public function getQuantity()
+    public function getQuantities()
     {
-        $total = ItemBreakdown::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id])->asArray()->one();
+        $total = ItemBreakdown::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id])->limit(12)->asArray()->one();
 
-        return $total['quantity'];
+        return $total ? $total['quantity'] : 0;
+    }
+
+    public function getQuantityPerMonth($month_id)
+    {
+        $total = ItemBreakdown::find()->select(['quantity'])->where(['ppmp_item_id' => $this->id, 'month_id' => $month_id])->asArray()->one();
+
+        return $total ? $total['quantity'] : 0;
     }
 
     public function getQuantityUsed()
     {
         $total = RisSource::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id])->asArray()->one();
 
-        return $total['quantity'];
+        return $total ? $total['quantity'] : 0;
     }
 
     public function getQuantityUsedPerMonth($month_id)
     {
-        $total = RisSource::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id, 'month_id' => $month_id])->asArray()->one();
+        $total = RisSource::find()->select(['quantity'])->where(['ppmp_item_id' => $this->id, 'month_id' => $month_id])->asArray()->one();
 
-        return $total['quantity'];
+        return $total ? $total['quantity'] : 0;
     }
 
-    public function getQuantityPerMonth($month_id)
+    public function getQuantityUsedPerMonths($months)
     {
-        $quantity = $this->getItemBreakdowns()->where(['month_id' => $month_id])->one();
+        $total = RisSource::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id])->asArray()->one();
 
-        return $quantity ? $quantity->quantity : 0;
+        return $total ? $total['quantity'] : 0;
     }
 
-    public function getRemainingQuantityPerMonth($month_id)
-    {
-        $maxQuantity = $this->getItemBreakdowns()->where(['month_id' => $month_id])->one();
 
-        return $maxQuantity ? $maxQuantity->quantity - $this->getQuantityUsedPerMonth($month_id) : 0;
+    public function getQuantityPerMonths($months)
+    {
+        $quantities = $this->getItemBreakdowns()->select(['sum(quantity) as total'])->where(['in', 'month_id', $months])->asArray()->one();
+
+        return $quantities ? $quantities['total'] : 0;
     }
 
     public function getRemainingQuantity()
     {
-        return $this->quantity - $this->quantityUsed;
+        return $this->quantities - $this->quantityUsed;
+    }
+
+    public function getRemainingQuantityPerMonth($month_id)
+    {
+        $maxQuantity = $this->getQuantityPerMonth($month_id);
+        $quantityUsed = $this->getQuantityUsedPerMonth($month_id);
+
+        return $maxQuantity - $quantityUsed;
+    }
+
+    public function getRemainingQuantityPerMonths($months)
+    {
+        $maxQuantity = $this->getQuantityPerMonths($months);
+        $quantityUsed = $this->getQuantityUsedPerMonths($months);
+
+        return $maxQuantity - $quantityUsed;
     }
 
     public function getRemainingQuantityTotalCost()
@@ -213,7 +238,7 @@ class PpmpItem extends \yii\db\ActiveRecord
 
     public function getTotalCost()
     {
-        return $this->quantity * $this->cost;
+        return $this->quantities * $this->cost;
     }
 
     public static function getTotalPerActivity($ppmp_id, $activity_id, $fund_source_id)

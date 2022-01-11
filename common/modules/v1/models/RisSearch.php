@@ -21,8 +21,8 @@ class RisSearch extends Ris
     public function rules()
     {
         return [
-            [['id', 'ppmp_id', 'office_id', 'section_id', 'unit_id', 'fund_cluster_id', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by'], 'integer'],
-            [['type', 'ris_no', 'purpose', 'date_required', 'date_created', 'date_requested', 'date_approved', 'date_issued', 'date_received'], 'safe'],
+            [['id', 'ppmp_id', 'fund_source_id', 'fund_cluster_id', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by'], 'integer'],
+            [['type', 'office_id', 'section_id', 'unit_id', 'ris_no', 'purpose', 'date_required', 'date_created', 'date_requested', 'date_approved', 'date_issued', 'date_received'], 'safe'],
         ];
     }
 
@@ -49,11 +49,13 @@ class RisSearch extends Ris
             ->joinWith('creator c')
             ->joinWith('requester r')
             ->joinWith('office')
+            ->joinWith('fundSource')
              ->orderBy(['ris_no' => SORT_DESC]) :
             Ris::find()
             ->joinWith('creator c')
             ->joinWith('requester r')
             ->joinWith('office')
+            ->joinWith('fundSource')
             ->andWhere(['ppmp_ris.office_id' => Yii::$app->user->identity->userinfo->office->abbreviation])
             ->orderBy(['ris_no' => SORT_DESC]);
 
@@ -71,6 +73,10 @@ class RisSearch extends Ris
                 'officeName' => [
                     'asc' => ['tbloffice.abbreviation' => SORT_ASC],
                     'desc' => ['tbloffice.abbreviation' => SORT_DESC],
+                ],
+                'fundSourceName' => [
+                    'asc' => ['ppmp_fund_source.code' => SORT_ASC],
+                    'desc' => ['ppmp_fund_source.code' => SORT_DESC],
                 ],
                 'purpose',
                 'date_required',
@@ -101,6 +107,7 @@ class RisSearch extends Ris
             'ppmp_ris.office_id' => $this->office_id,
             'section_id' => $this->section_id,
             'unit_id' => $this->unit_id,
+            'fund_source_id' => $this->fund_source_id,
             'fund_cluster_id' => $this->fund_cluster_id,
             'date_required' => $this->date_required,
             'date_created' => $this->date_created,

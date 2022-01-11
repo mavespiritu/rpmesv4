@@ -46,7 +46,7 @@ use fedemotta\datatables\DataTables;
             'header' => 'Quantity', 
             'attribute' => 'quantity',
             'value' => function($item){
-                return number_format($item->quantity, 0);
+                return number_format($item->quantities, 0);
             }
         ],
         [

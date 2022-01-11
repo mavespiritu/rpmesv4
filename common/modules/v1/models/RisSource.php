@@ -32,10 +32,11 @@ class RisSource extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['ris_id', 'ppmp_item_id', 'month_id', 'quantity'], 'integer'],
+            [['ris_id', 'ppmp_item_id', 'quantity'], 'integer'],
             [['ppmp_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => PpmpItem::className(), 'targetAttribute' => ['ppmp_item_id' => 'id']],
             [['ris_id'], 'exist', 'skipOnError' => true, 'targetClass' => Ris::className(), 'targetAttribute' => ['ris_id' => 'id']],
             [['ris_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => RisItem::className(), 'targetAttribute' => ['ris_item_id' => 'id']],
+            [['month_id'], 'exist', 'skipOnError' => true, 'targetClass' => Month::className(), 'targetAttribute' => ['month_id' => 'id']],
         ];
     }
 
@@ -47,9 +48,8 @@ class RisSource extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'ris_id' => 'Ris ID',
-            'ris_item_id' => 'Ris Item ID',
-            'ppmp_item_id' => 'Ppmp Item ID',
             'month_id' => 'Month ID',
+            'ppmp_item_id' => 'Ppmp Item ID',
             'quantity' => 'Quantity',
             'type' => 'Type',
         ];
@@ -83,5 +83,15 @@ class RisSource extends \yii\db\ActiveRecord
     public function getRisItem()
     {
         return $this->hasOne(RisItem::className(), ['id' => 'ris_item_id']);
+    }
+
+    /**
+     * Gets query for [[Ris]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getMonth()
+    {
+        return $this->hasOne(Month::className(), ['id' => 'month_id']);
     }
 }

@@ -15,7 +15,7 @@ use yii\widgets\ActiveForm;
 
 <?php $form = ActiveForm::begin([
     'options' => ['class' => 'disable-submit-buttons'],
-    'id' => 'ris-items-form',
+    'id' => 'ris-realign-items-form',
 ]); ?>
 
 <?php if($items){ ?>
@@ -55,19 +55,27 @@ use yii\widgets\ActiveForm;
           <?php } ?> -->
           <td align=center><?= number_format($total, 0) ?></td>
           <?= Html::hiddenInput('total-'.$item->id.'-hidden', 0, ['id' => 'total-'.$item->id.'-hidden']) ?>
-          <td><?= $total > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 1, 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.', '.$item->cost.', '.json_encode($itemIDs).')'])->label(false) : '' ?></td>
+          <td><?= $total > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.', '.$item->cost.', '.json_encode($itemIDs).')'])->label(false) : '' ?></td>
           <td align=right><p id="total-<?= $item->id ?>">0.00</p></td>
         </tr>
       <?php } ?>
+      <tr>
+        <td colspan=5 align=right><h4>Minimum</h4></td>
+        <td align=right><h4><?= number_format($model->getRealignAmount(), 2) ?></h4></td>
+      </tr>
       <tr>
         <td colspan=5 align=right><h4>Grand Total</h4></td>
         <td align=right><h4 id="grand-total">0.00</h4></td>
         <?= Html::hiddenInput('grandtotal-hidden', 0, ['id' => 'grandtotal-hidden']) ?>
       </tr>
+      <tr>
+        <td colspan=5 align=right><h4>Maximum</h4></td>
+        <td align=right><h4><?= number_format($model->getRealignAmount() + ($model->getItemsTotal('Supplemental') * 0.20), 2) ?></h4></td>
+      </tr>
     </tbody>
   </table>
   <div class="form-group pull-right">
-  <?= $quantityTotal > 0 && ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::submitButton('Submit', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
+  <?= $quantityTotal > 0 && ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::submitButton('Submit', ['class' => 'btn btn-success', 'id' => 'realign-submit-button', 'data' => ['disabled-text' => 'Please Wait'], 'disabled' => true]) : '' ?>
   </div>
 <?php }else{ ?>
   <p class="text-center">No items selected.</p>
@@ -88,10 +96,10 @@ use yii\widgets\ActiveForm;
 <?php
     $script = '
     $(".buy-button").click(function(){
-        $("#ris-item-form").empty();
-        $("#ris-item-form").hide();
-        $("#ris-item-form").fadeIn("slow");
-        $("#ris-item-form").load($(this).attr("value"));
+        $("#ris-realign-item-form").empty();
+        $("#ris-realign-item-form").hide();
+        $("#ris-realign-item-form").fadeIn("slow");
+        $("#ris-realign-item-form").load($(this).attr("value"));
     });
 
     function number_format (number, decimals, dec_point, thousands_sep) {
@@ -127,6 +135,7 @@ use yii\widgets\ActiveForm;
       $("#total-"+id).html(number_format(total, 2, ".", ","));    
       
       getGrandTotal(ids);
+      
     }
 
     function getGrandTotal(ids)
@@ -143,34 +152,51 @@ use yii\widgets\ActiveForm;
 
       $("#grand-total").empty();
       $("#grand-total").html(number_format(grandTotal, 2, ".", ","));  
-      $("#grandtotal-hidden").val(grandTotal);  
+      $("#grandtotal-hidden").val(grandTotal);
+
+      allowButton(grandTotal);
     }
 
-    function loadItems()
+    function allowButton(tot)
+    {
+        if(
+            ('.$quantityTotal.' > 0) && 
+            ("'.$model->status->status.'" == "Draft" || "'.$model->status->status.'" == "For Revision") && 
+            (tot >= '.$model->getRealignAmount().') &&
+            (tot <= '.$model->getRealignAmount() + ($model->getItemsTotal('Supplemental') * 0.20).')
+        )
+        {
+            $("#realign-submit-button").removeAttr("disabled");
+        }else{
+            $("#realign-submit-button").attr("disabled", "true");
+        }
+    }
+
+    function loadRealignItems()
     {
       $.ajax({
-        url: "'.Url::to(['/v1/ris/load-items']).'",
+        url: "'.Url::to(['/v1/ris/realign-items']).'",
         data: {
             id: '.$model->id.',
             activity_id: '.$activity->id.',
             sub_activity_id: '.$subActivity->id.',
         },
         beforeSend: function(){
-            $("#ris-item-list").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+            $("#ris-realign-item-list").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
         },
         success: function (data) {
             console.log(this.data);
-            $("#ris-item-list").empty();
-            $("#ris-item-list").hide();
-            $("#ris-item-list").fadeIn("slow");
-            $("#ris-item-list").html(data);
+            $("#ris-realign-item-list").empty();
+            $("#ris-realign-item-list").hide();
+            $("#ris-realign-item-list").fadeIn("slow");
+            $("#ris-realign-item-list").html(data);
         },
         error: function (err) {
             console.log(err);
         }
     });
     }
-    $("#ris-items-form").on("beforeSubmit", function(e) {
+    $("#ris-realign-items-form").on("beforeSubmit", function(e) {
       e.preventDefault();
      
       var form = $(this);
@@ -185,8 +211,7 @@ use yii\widgets\ActiveForm;
             {
               form.enableSubmitButtons();
               alert("Record Saved");
-              loadItems();
-              loadOriginalItems();
+              location.reload();
             }else{
               alert("You need to enter quantity");
             }

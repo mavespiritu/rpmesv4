@@ -74,7 +74,7 @@ class ItemBreakdown extends \yii\db\ActiveRecord
     {
         $total = RisSource::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->ppmp_item_id, 'month_id' => $this->month_id])->asArray()->one();
 
-        return $total['quantity'];
+        return $total ? $total['quantity'] : 0;
     }
 
     public function getRemaining()

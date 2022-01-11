@@ -23,6 +23,7 @@ use common\modules\v1\models\ObjectItem;
 use common\modules\v1\models\ItemBreakdown;
 use common\modules\v1\models\PpmpSearch;
 use common\modules\v1\models\Settings;
+use common\modules\v1\models\Transaction;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -294,20 +295,6 @@ class PpmpController extends Controller
         $itemModel->activity_id = $activity->id;
         $itemModel->type = 'Original';
 
-        /* $selectedObjs = AppropriationItem::find()
-        ->select(['ppmp_appropriation_item.obj_id as id'])
-        ->leftJoin('ppmp_appropriation', 'ppmp_appropriation.id = ppmp_appropriation_item.appropriation_id')
-        ->andWhere(['>', 'amount', 0])
-        ->andWhere([
-            'ppmp_appropriation.id' => $model->reference ? $model->reference->id : null,
-            'ppmp_appropriation_item.pap_id' => $activity->pap_id,
-            'ppmp_appropriation_item.fund_source_id' => $fundSource->id,
-        ])
-        ->distinct(['ppmp_appropriation_item.obj_id'])
-        ->all();
-
-        $selectedObjs = ArrayHelper::map($selectedObjs, 'id', 'id'); */
-
         $objects = Obj::find()->select([
             'ppmp_obj.id', 
             'ppmp_obj.obj_id', 
@@ -316,7 +303,6 @@ class PpmpController extends Controller
             'ppmp_obj.active'
             ])
             ->leftJoin(['p' => '(SELECT id, concat(code," - ",title) as title from ppmp_obj)'], 'p.id = ppmp_obj.obj_id')
-            //->andWhere(['in', 'ppmp_obj.id', $selectedObjs])
             ->asArray()
             ->all();
         
@@ -816,9 +802,16 @@ class PpmpController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
-        \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
-        return $this->redirect(['index']);
+        $model = $this->findModel($id);
+        
+        if($model->delete())
+        {
+            $statuses = Transaction::deleteAll(['model' => 'Ppmp', 'model_id' => $id]);
+
+            \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
+            return $this->redirect(['index']);
+
+        }
     }
 
     /**

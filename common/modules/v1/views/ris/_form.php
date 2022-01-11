@@ -21,7 +21,13 @@ DisableButtonAsset::register($this);
 
     <p>Reminder: Divisions must have a Final PPMP to create RIS.</p>
 
-    <?= $form->field($model, 'type')->widget(Select2::classname(), [
+    <?= $model->risItems ? $form->field($model, 'type')->widget(Select2::classname(), [
+        'data' => $types,
+        'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select', 'disabled' => true],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('Type') : $form->field($model, 'type')->widget(Select2::classname(), [
         'data' => $types,
         'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select'],
         'pluginOptions' => [
@@ -78,6 +84,15 @@ DisableButtonAsset::register($this);
         ])->label('PPMP Year');
     ?>
 
+<?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
+        'data' => $fundSources,
+        'options' => ['placeholder' => 'Select Fund Source','multiple' => false, 'class'=>'fund-source-select'],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ]);
+    ?>
+
     <?= $form->field($model, 'fund_cluster_id')->widget(Select2::classname(), [
         'data' => $fundClusters,
         'options' => ['placeholder' => 'Select Fund Cluster','multiple' => false, 'class'=>'fund-cluster-select'],
@@ -90,7 +105,7 @@ DisableButtonAsset::register($this);
     <?= $form->field($model, 'purpose')->textarea(['rows' => 3]) ?>
 
     <?= $form->field($model, 'date_required')->widget(DatePicker::classname(), [
-        'options' => ['placeholder' => 'Enter date'],
+        'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
         'clientOptions' => [
             'autoclose' => true,
             'format' => 'yyyy-mm-dd',

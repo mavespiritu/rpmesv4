@@ -257,9 +257,23 @@ class Ppmp extends \yii\db\ActiveRecord
         return '<b>'.number_format($total, 2).'</b>';
     }
 
+    public function getStatus()
+    {
+        $status = Transaction::find()->where(['model' => 'Ris', 'model_id' => $this->id])->orderBy(['datetime' => SORT_DESC])->one();
+
+        return $status;
+    }
+
     public function afterSave($insert, $changedAttributes){
         if($insert){
             {
+                $status = new Transaction();
+                $status->actor = Yii::$app->user->identity->userinfo->EMP_N;
+                $status->model = 'Ppmp';
+                $status->model_id = $this->id;
+                $status->status = 'Draft';
+                $status->save();
+
                 if($this->copy != '')
                 {
                     $model = Ppmp::findOne(['id' => $this->copy]);
@@ -277,8 +291,9 @@ class Ppmp extends \yii\db\ActiveRecord
                         ->groupBy(['c.item_id'])
                         ->createCommand()
                         ->getRawSql();
-
-                        $items = PpmpItem::find()
+                        
+                        // update cost
+                        /* $items = PpmpItem::find()
                         ->select([
                             'activity_id',
                             'fund_source_id',
@@ -293,7 +308,24 @@ class Ppmp extends \yii\db\ActiveRecord
                         ->leftJoin(['costs' => '('.$costs.')'], 'costs.item_id = ppmp_ppmp_item.item_id')
                         ->where(['ppmp_id' => $model->id])
                         ->createCommand()
-                        ->getRawSql();
+                        ->getRawSql(); */
+
+                        // retain cost
+                         $items = PpmpItem::find()
+                        ->select([
+                            'activity_id',
+                            'fund_source_id',
+                            'sub_activity_id',
+                            'obj_id',
+                            'concat("'.$this->id.'")',
+                            'ppmp_ppmp_item.item_id',
+                            'ppmp_ppmp_item.cost',
+                            'remarks',
+                            'concat("Original")'
+                        ])
+                        ->where(['ppmp_id' => $model->id])
+                        ->createCommand()
+                        ->getRawSql(); 
 
                         $connection->createCommand('INSERT into ppmp_ppmp_item (activity_id, fund_source_id, sub_activity_id, obj_id, ppmp_id, item_id, cost, remarks, type) '.$items)->execute();
 

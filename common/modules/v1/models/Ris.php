@@ -43,13 +43,16 @@ class Ris extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['office_id', 'ppmp_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose', 'type'], 'required', 'on' => 'isAdmin'],
-            [['ppmp_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose', 'type'], 'required', 'on' => 'isUser'],
+            [['office_id', 'ppmp_id', 'fund_source_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose', 'type'], 'required', 'on' => 'isAdmin'],
+            [['ppmp_id', 'fund_source_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose', 'type'], 'required', 'on' => 'isUser'],
+            [['approved_by', 'date_approved'], 'required', 'on' => 'Approve'],
+            [['disapproved_by', 'date_disapproved'], 'required', 'on' => 'Disapprove'],
             [['fund_cluster_id'], 'integer'],
             [['purpose', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by', 'office_id', 'section_id', 'unit_id'], 'string'],
             [['date_required', 'date_created', 'date_requested', 'date_approved', 'date_issued', 'date_received'], 'safe'],
             [['ris_no'], 'string', 'max' => 15],
             [['ppmp_id'], 'exist', 'skipOnError' => true, 'targetClass' => Ppmp::className(), 'targetAttribute' => ['ppmp_id' => 'id']],
+            [['fund_source_id'], 'exist', 'skipOnError' => true, 'targetClass' => FundSource::className(), 'targetAttribute' => ['fund_source_id' => 'id']],
             [['fund_cluster_id'], 'exist', 'skipOnError' => true, 'targetClass' => FundCluster::className(), 'targetAttribute' => ['fund_cluster_id' => 'id']],
         ];
     }
@@ -68,6 +71,8 @@ class Ris extends \yii\db\ActiveRecord
             'officeName' => 'Division',
             'section_id' => 'Section',
             'unit_id' => 'Unit',
+            'fund_source_id' => 'Fund Source',
+            'fundSourceName' => 'Fund Source',
             'fund_cluster_id' => 'Fund Cluster',
             'fundClusterName' => 'Fund Cluster',
             'purpose' => 'Purpose',
@@ -80,11 +85,14 @@ class Ris extends \yii\db\ActiveRecord
             'date_requested' => 'Date Requested',
             'approved_by' => 'Approved By',
             'date_approved' => 'Date Approved',
+            'disapproved_by' => 'Disapproved By',
+            'date_disapproved' => 'Date Disapproved',
             'issued_by' => 'Issued By',
             'date_issued' => 'Date Issued',
             'received_by' => 'Received By',
             'date_received' => 'Date Received',
-            'type' => 'Type'
+            'type' => 'Type',
+            'total' => 'Total'
         ];
     }
 
@@ -101,6 +109,16 @@ class Ris extends \yii\db\ActiveRecord
     public function getRisSources()
     {
         return $this->hasMany(RisSource::className(), ['ris_id' => 'id']);
+    }
+
+    public function getFundSource()
+    {
+        return $this->hasOne(FundSource::className(), ['id' => 'fund_source_id']);
+    }
+
+    public function getFundSourceName()
+    {
+        return $this->fundSource ? $this->fundSource->code : '';
     }
 
     public function getFundCluster()
@@ -201,5 +219,100 @@ class Ris extends \yii\db\ActiveRecord
     public function getReceiverName()
     {
         return $this->receiver ? ucwords(strtolower($this->receiver->FIRST_M.' '.$this->receiver->LAST_M)) : '';
+    }
+
+    public function getDisapprover()
+    {
+        return $this->hasOne(Signatory::className(), ['emp_id' => 'disapproved_by']);
+    }
+
+    public function getDisApproverName()
+    {
+        return $this->disapprover ? $this->disapprover->name : '';
+    }
+
+    public function getStatus()
+    {
+        $status = Transaction::find()->where(['model' => 'Ris', 'model_id' => $this->id])->orderBy(['datetime' => SORT_DESC])->one();
+
+        return $status;
+    }
+
+    public function geItems($type)
+    {
+        $items = RisItem::find()->where(['ris_id' => $this->id, 'type' => $type])->all();
+
+        return $items;
+    }
+
+    public function getItemsTotal($type)
+    {
+        $total = RisItem::find()
+                ->select(['COALESCE(sum(cost * quantity), 0) as total'])
+                ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
+                ->where([
+                    'ris_id' => $this->id,
+                    'ppmp_ris_item.type' => $type
+                ])
+                ->asArray()
+                ->one();
+        
+        return !empty($total) ? $total['total'] : 0;
+    }
+
+    public function getItemSourceTotal($type)
+    {
+        $total = RisSource::find()
+                ->select(['COALESCE(sum(cost * ppmp_ris_source.quantity), 0) as total'])
+                ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_ris_source.ris_item_id')
+                ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
+                ->where([
+                    'ppmp_ris_source.ris_id' => $this->id,
+                    'ppmp_ris_item.type' => $type,
+                    'ppmp_ris_source.type' => $type
+                ])
+                ->asArray()
+                ->one();
+        
+        return !empty($total) ? $total['total'] : 0;
+    }
+
+    public function getRealignAmount()
+    {
+        $supplementalTotal = $this->getItemsTotal('Supplemental');
+        $realignedSourceTotal = $this->getItemSourceTotal('Realigned');
+
+        return $supplementalTotal - $realignedSourceTotal > 0 ? $supplementalTotal - $realignedSourceTotal : 0;
+    }
+
+    public function getTotal()
+    {
+        $total = $this->getItemsTotal('Original') + $this->getItemsTotal('Supplemental');
+
+        return $total;
+    }
+
+    public static function pageQuantityTotal($provider, $fieldName)
+    {
+        $total = 0;
+        foreach($provider as $item){
+            $total+=$item[$fieldName];
+        }
+        return '<b>'.number_format($total, 2).'</b>';
+    }
+
+    public function afterSave($insert, $changedAttributes){
+
+        if($insert)
+        {
+            $status = new Transaction();
+            $status->actor = Yii::$app->user->identity->userinfo->EMP_N;
+            $status->model = 'Ris';
+            $status->model_id = $this->id;
+            $status->status = 'Draft';
+            $status->save();
+        }
+
+        parent::afterSave($insert, $changedAttributes);
     }
 }

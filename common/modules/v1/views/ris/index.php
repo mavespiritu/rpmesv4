@@ -6,6 +6,7 @@ use yii\widgets\Pjax;
 use yii\bootstrap\Modal;
 use yii\helpers\Url;
 use yii\web\View;
+use common\modules\v1\models\Ris;
 /* @var $this yii\web\View */
 /* @var $searchModel common\modules\v1\models\RisSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
@@ -19,42 +20,68 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::button('<i class="fa fa-plus"></i> Create', ['value' => Url::to(['/v1/ris/create']), 'class' => 'btn btn-app', 'id' => 'create-button']) ?>
     </p>
 
-    <?php Pjax::begin(); ?>
     <div class="row">
-        <div class="col-md-2 col-xs-12">
-            <div class="box box-primary">
-                <div class="box-header panel-title"><i class="fa fa-search"></i> Search Filter</div>
+        <div class="col-md-12 col-xs-12">
+            <div class="box box-primary collapsed-box">
+                <div class="box-header panel-title"><i class="fa fa-search"></i> Search Filter
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-plus"></i></button>
+                    </div>
+                </div>
                 <div class="box-body">
                     <?= $this->render('_search', [
                         'model' => $searchModel,
                         'offices' => $offices,
+                        'fundSources' => $fundSources,
                         'types' => $types
                     ]); ?>
                 </div>
             </div>
         </div>
-        <div class="col-md-10 col-xs-12">
+        <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header panel-title"><i class="fa fa-list"></i> RIS List</div>
                 <div class="box-body">
                     <?= GridView::widget([
                         'dataProvider' => $dataProvider,
+                        'tableOptions' => ['class' => 'table table-hover table-responsive'],
                         'columns' => [
                             ['class' => 'yii\grid\SerialColumn'],
 
-                            'ppmpName',
                             'ris_no',
                             'officeName',
-                            'purpose:ntext',
-                            'type',
-                            'date_required',
-                            'creatorName',
+                            [
+                                'attribute' => 'purpose',
+                                'format' => 'raw',
+                                'contentOptions' => ['style' => 'width: 30%;'],
+                                'value' => function($model){
+                                    return $model->purpose;
+                                }
+                            ],
+                            'fundSourceName',
                             'requesterName',
-
+                            'date_required',
+                            [
+                                'header' => 'Total', 
+                                'attribute' => 'total',
+                                'contentOptions' => ['style' => 'text-align: right;'],
+                                'value' => function($model){
+                                    return number_format($model->total, 2);
+                                },
+                                'footerOptions' => ['style' => 'text-align: right;'],
+                                'value' => function($model){
+                                    return number_format($model->total, 2);
+                                },
+                                'footer' => Ris::pageQuantityTotal($dataProvider->models, 'total'),
+                            ],
+                            [
+                                'header' => 'Status',
+                                'attribute' => 'status.status',
+                            ],
                             [
                                 'format' => 'raw', 
                                 'value' => function($model){
-                                    return Html::a('View', ['/v1/ris/view', 'id' => $model->id],['class' => 'btn btn-primary btn-xs btn-block']);
+                                    return Html::a('View', ['/v1/ris/info', 'id' => $model->id],['class' => 'btn btn-primary btn-xs btn-block']);
                             }],
                         ],
                     ]); ?>
@@ -62,8 +89,6 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
     </div>
-    <?php Pjax::end(); ?>
-
 </div>
 <?php
   Modal::begin([

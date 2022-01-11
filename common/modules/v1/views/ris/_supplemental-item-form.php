@@ -9,7 +9,7 @@ DisableButtonAsset::register($this);
 use yii\web\View;
 /* @var $model common\modules\v1\models\Ppmp */
 /* @var $form yii\widgets\ActiveForm */
-$itemsUrl = \yii\helpers\Url::to(['/v1/ppmp/item-list']);
+$itemsUrl = \yii\helpers\Url::to(['/v1/ris/item-list']);
 $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
 ?>
 
@@ -18,34 +18,18 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
         <div class="panel-body">
         <?php $form = ActiveForm::begin([
             'options' => ['class' => 'disable-submit-buttons'],
-            'id' => 'ppmp-items-form',
+            'id' => 'supplemental-items-form',
         ]); ?>
-        <h3 class="panel-title">Item Form</h3>
 
         <?= Html::hiddenInput('cost_per_unit', $itemModel->isNewRecord ? '' : $itemModel->item->cost_per_unit, ['id' => 'cost_per_unit']) ?>
-        <?= $form->field($itemModel, 'activity_id')->hiddenInput(['value' => $activity->id])->label(false) ?>
-        <?= $form->field($itemModel, 'fund_source_id')->hiddenInput(['value' => $fundSource->id])->label(false) ?>
         
         <div class="row">
             <div class="col-md-6 col-xs-12">
-                <div class="form-group">
-                    <label class="control-label">Activity</label>
-                    <?= Html::textInput('activity_id', $activity->title, ['disabled' => 'disabled', 'class' => 'form-control']); ?>
-                </div>
-            </div>
-            <div class="col-md-6 col-xs-12">
-                <div class="form-group">
-                    <label class="control-label">Fund Source</label>
-                    <?= Html::textInput('fund_source_id', $fundSource->code, ['disabled' => 'disabled', 'class' => 'form-control']); ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6 col-xs-12">
-                <?= $form->field($itemModel, 'sub_activity_id')->widget(Select2::classname(), [
-                    'data' => $subActivities,
-                    'options' => ['placeholder' => 'Select PPA', 'multiple' => false, 'class' => 'sub-activity-select', 'id' => 'ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id],
+                <?php 
+                    $subActivitiesUrl = \yii\helpers\Url::to(['/v1/ris/sub-activity-list']);
+                    echo $form->field($itemModel, 'activity_id')->widget(Select2::classname(), [
+                    'data' => $activities,
+                    'options' => ['placeholder' => 'Select Activity','multiple' => false, 'class'=>'activity-select'],
                     'pluginOptions' => [
                         'allowClear' =>  true,
                     ],
@@ -53,17 +37,14 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
                         'select2:select'=>'
                             function(){
                                 $.ajax({
-                                    url: "'.$itemsUrl.'",
+                                    url: "'.$subActivitiesUrl.'",
                                     data: {
-                                            id: '.$model->id.',
-                                            sub_activity_id: this.value,
-                                            obj_id: $("#ppmpitem-obj_id-'.$itemModel->sub_activity_id.'").val(),
-                                            item_id: '.$item_id.'
+                                            id: this.value
                                         }
                                     
                                 }).done(function(result) {
-                                    $(".item-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select Item", allowClear: true});
-                                    $(".item-select").select2("val","");
+                                    $(".sub-activity-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select PPA", allowClear: true});
+                                    $(".sub-activity-select").select2("val","");
                                 });
                             }'
 
@@ -72,9 +53,23 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
                 ?>
             </div>
             <div class="col-md-6 col-xs-12">
+                <?= $form->field($itemModel, 'sub_activity_id')->widget(Select2::classname(), [
+                        'data' => $subActivities,
+                        'options' => ['placeholder' => 'Select PPA', 'multiple' => false, 'class' => 'sub-activity-select'],
+                        'pluginOptions' => [
+                            'allowClear' =>  true,
+                        ],
+                        
+                    ]);
+                ?>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12 col-xs-12">
                 <?= $form->field($itemModel, 'obj_id')->widget(Select2::classname(), [
                         'data' => $objects,
-                        'options' => ['placeholder' => 'Select Object', 'multiple' => false, 'class' => 'obj-select', 'id' => 'ppmpitem-obj_id-'.$itemModel->sub_activity_id],
+                        'options' => ['placeholder' => 'Select Object', 'multiple' => false, 'class' => 'obj-select'],
                         'pluginOptions' => [
                             'allowClear' => true
                         ],
@@ -85,9 +80,8 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
                                         url: "'.$itemsUrl.'",
                                         data: {
                                                 id: '.$model->id.',
-                                                sub_activity_id: $("#ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id.'").val(),
                                                 obj_id: this.value,
-                                                item_id: '.$item_id.'
+                                                type: "Supplemental"
                                             }
                                         
                                     }).done(function(result) {
@@ -174,7 +168,7 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
         <p class="clearfix"></p>
         
         <div class="form-group">
-            <?= Html::submitButton('Save Item', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+            <?= ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::submitButton('Save Item', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
         </div>
 
         <?php ActiveForm::end(); ?>
@@ -183,30 +177,6 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
 </div>
 <?php
   $script = '
-    function loadItems(id, activity_id, fund_source_id)
-    {
-        $.ajax({
-            url: "'.Url::to(['/v1/ppmp/load-items']).'",
-            data: {
-                id: id,
-                activity_id: activity_id,
-                fund_source_id: fund_source_id,
-            },
-            beforeSend: function(){
-                $("#items").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
-            },
-            success: function (data) {
-                $("#items").empty();
-                $("#items").hide();
-                $("#items").fadeIn("slow");
-                $("#items").html(data);
-            },
-            error: function (err) {
-                console.log(err);
-            }
-        });
-    }
-
     function getTotal()
     {
         var cost_per_unit = parseInt($("#cost_per_unit").val());
@@ -295,37 +265,6 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
         getTotal();
     });
 
-    $("#ppmp-items-form").on("beforeSubmit", function(e) {
-        e.preventDefault();
-        var activity_id = $("#ppmpitem-activity_id").val();
-        var fund_source_id = $("#ppmpitem-fund_source_id").val();
-        var sub_activity_id = $("#ppmpitem-sub_activity_id-'.$itemModel->sub_activity_id.'").val();
-        
-        var form = $(this);
-        var formData = form.serialize();
-
-        $.ajax({
-            url: form.attr("action"),
-            type: form.attr("method"),
-            data: formData,
-            success: function (data) {
-                //$("#create-item-modal").modal("toggle");
-                //$("#update-item-modal").modal("toggle");
-                //$(".modal-backdrop").remove();
-                loadItems('.$model->id.',activity_id,fund_source_id);
-                loadPpmpTotal('.$model->id.');
-                loadOriginalTotal('.$model->id.');
-                loadSupplementalTotal('.$model->id.');
-                loadItemSummary('.$model->id.');
-                form.enableSubmitButtons();
-            },
-            error: function (err) {
-                console.log(err);
-            }
-        });
-
-        return false;
-    });
   ';
   $this->registerJs($script, View::POS_END);
 ?>

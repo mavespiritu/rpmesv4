@@ -19,38 +19,55 @@ use yii\web\View;
             'data-pjax' => 1
         ],
     ]); ?>
-
+    
     <?= $form->field($model, 'ris_no') ?>
 
-    <?= $form->field($model, 'type')->widget(Select2::classname(), [
-        'data' => $types,
-        'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select'],
-        'pluginOptions' => [
-            'allowClear' =>  true,
-        ],
-        ])->label('Type');
-    ?>
+    <div class="row">
+        <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement') || Yii::$app->user->can('Accounting')){ ?>
+            <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
+                'data' => ['' => 'All Divisions'] + $offices,
+                'options' => ['multiple' => false, 'class'=>'office-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  false,
+                ],
+            ]);
+            ?>
+            </div>
+        <?php } ?>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'type')->widget(Select2::classname(), [
+                'data' => $types,
+                'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Type');
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
+                'data' => $fundSources,
+                'options' => ['placeholder' => 'Select Fund Source','multiple' => false, 'class'=>'fund-source-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
 
-    <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement') || Yii::$app->user->can('Accounting')){ ?>
-        <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
-            'data' => ['' => 'All Divisions'] + $offices,
-            'options' => ['multiple' => false, 'class'=>'office-select'],
-            'pluginOptions' => [
-                'allowClear' =>  false,
-            ],
-        ]);
-        ?>
-    <?php } ?>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'date_required')->widget(DatePicker::classname(), [
+                'options' => ['placeholder' => 'Enter date'],
+                'clientOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd'
+                ],
+            ]) ?>
+        </div>
+    </div>
 
     <?= $form->field($model, 'purpose')->textarea(['rows' => 3]) ?>
-
-    <?= $form->field($model, 'date_required')->widget(DatePicker::classname(), [
-        'options' => ['placeholder' => 'Enter date'],
-        'clientOptions' => [
-            'autoclose' => true,
-            'format' => 'yyyy-mm-dd'
-        ],
-    ]) ?>
 
     <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>

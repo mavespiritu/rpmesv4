@@ -19,35 +19,40 @@ use yii\web\View;
         ],
     ]); ?>
 
-    <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Accounting')){ ?>
-        <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
-            'data' => ['' => 'All Divisions'] + $offices,
-            'options' => ['multiple' => false, 'class'=>'office-select'],
-            'pluginOptions' => [
-                'allowClear' =>  false,
-            ],
-        ]);
-        ?>
-    <?php } ?>
-
-    <?= $form->field($model, 'stage')->widget(Select2::classname(), [
-            'data' => ['' => 'All Stages'] + $stages,
-            'options' => ['multiple' => false, 'class'=>'stage-select'],
-            'pluginOptions' => [
-                'allowClear' =>  false,
-            ],
-        ]);
-    ?>
-
-    <?= $form->field($model, 'year')->widget(Select2::classname(), [
-            'data' => ['' => 'All Years'] + $years,
-            'options' => ['multiple' => false, 'class'=>'year-select'],
-            'pluginOptions' => [
-                'allowClear' =>  false,
-            ],
-        ]);
-    ?>
-
+    <div class="row">
+        <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Accounting')){ ?>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
+                'data' => ['' => 'All Divisions'] + $offices,
+                'options' => ['multiple' => false, 'class'=>'office-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  false,
+                ],
+            ]);
+            ?>
+        </div>
+        <?php } ?>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'stage')->widget(Select2::classname(), [
+                    'data' => ['' => 'All Stages'] + $stages,
+                    'options' => ['multiple' => false, 'class'=>'stage-select'],
+                    'pluginOptions' => [
+                        'allowClear' =>  false,
+                    ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'year')->widget(Select2::classname(), [
+                    'data' => ['' => 'All Years'] + $years,
+                    'options' => ['multiple' => false, 'class'=>'year-select'],
+                    'pluginOptions' => [
+                        'allowClear' =>  false,
+                    ],
+                ]);
+            ?>
+        </div>
+    </div>
     <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
         <?= Html::resetButton('Clear', ['class' => 'btn btn-outline-secondary', 'onClick' => 'redirectPage()']) ?>
