@@ -11,7 +11,7 @@ use yii\bootstrap\Modal;
 ?>
 <div class="ppmp-items">
 <div class="flex-start">
-    <div><?= Html::button('<i class="fa fa-plus"></i> Add Item', ['value' => Url::to(['/v1/ppmp/create-item', 'id' => $model->id, 'activity_id' => $activity_id, 'fund_source_id' => $fund_source_id]), 'class' => 'btn btn-success', 'id' => 'create-item-button']) ?></div>
+    <div><?= $model->status ? $model->status->status != 'Approved' ? Html::button('<i class="fa fa-plus"></i> Add Item', ['value' => Url::to(['/v1/ppmp/create-item', 'id' => $model->id, 'activity_id' => $activity_id, 'fund_source_id' => $fund_source_id]), 'class' => 'btn btn-success', 'id' => 'create-item-button']) : '' : Html::button('<i class="fa fa-plus"></i> Add Item', ['value' => Url::to(['/v1/ppmp/create-item', 'id' => $model->id, 'activity_id' => $activity_id, 'fund_source_id' => $fund_source_id]), 'class' => 'btn btn-success', 'id' => 'create-item-button']) ?></div>
     <div><?= Html::button('<i class="fa fa-times"></i> Close Form', ['class' => 'btn btn-danger', 'id' => 'close-item-form-button', 'style' => 'display: none;']) ?></div>
     <div><?php // Html::button('<i class="fa fa-edit"></i> Update Prices', ['value' => Url::to(['/v1/ppmp/update-price', 'id' => $model->id]), 'class' => 'btn btn-primary', 'style' => 'margin-left: 10px;']) ?></div>
 </div>

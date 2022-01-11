@@ -259,7 +259,7 @@ class Ppmp extends \yii\db\ActiveRecord
 
     public function getStatus()
     {
-        $status = Transaction::find()->where(['model' => 'Ris', 'model_id' => $this->id])->orderBy(['datetime' => SORT_DESC])->one();
+        $status = Transaction::find()->where(['model' => 'Ppmp', 'model_id' => $this->id])->orderBy(['datetime' => SORT_DESC])->one();
 
         return $status;
     }

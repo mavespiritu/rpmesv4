@@ -814,6 +814,38 @@ class PpmpController extends Controller
         }
     }
 
+    public function actionApprove($id)
+    {
+        $model = $this->findModel($id);
+
+        $status = new Transaction();
+        $status->actor = Yii::$app->user->identity->userinfo->EMP_N;
+        $status->model = 'Ppmp';
+        $status->model_id = $model->id;
+        $status->status = 'Approved';
+        if($status->save())
+        {
+            \Yii::$app->getSession()->setFlash('success', 'PPMP is approved successfully');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+    }
+
+    public function actionDisapprove($id)
+    {
+        $model = $this->findModel($id);
+
+        $status = new Transaction();
+        $status->actor = Yii::$app->user->identity->userinfo->EMP_N;
+        $status->model = 'Ppmp';
+        $status->model_id = $model->id;
+        $status->status = 'Disapproved';
+        if($status->save())
+        {
+            \Yii::$app->getSession()->setFlash('danger', 'PPMP is disapproved');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+    }
+
     /**
      * Finds the Ppmp model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

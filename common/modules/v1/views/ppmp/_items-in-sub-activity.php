@@ -73,15 +73,15 @@ use fedemotta\datatables\DataTables;
         [
             'format' => 'raw', 
             'headerOptions' => ['style' => 'width:100px'],
-            'value' => function($item) use ($subActivity){
-                return Html::button('Update', ['value' => Url::to(['/v1/ppmp/update-item', 'id' => $item->id]), 'class' => 'btn btn-primary btn-xs btn-block update-item-button-'.$subActivity->id]);
+            'value' => function($item) use ($subActivity, $model){
+                return $model->status ? $model->status->status != 'Approved' ? Html::button('Update', ['value' => Url::to(['/v1/ppmp/update-item', 'id' => $item->id]), 'class' => 'btn btn-primary btn-xs btn-block update-item-button-'.$subActivity->id]) : '' : Html::button('Update', ['value' => Url::to(['/v1/ppmp/update-item', 'id' => $item->id]), 'class' => 'btn btn-primary btn-xs btn-block update-item-button-'.$subActivity->id]);
             }
         ],
         [
             'format' => 'raw',
             'headerOptions' => ['style' => 'width:100px'],
-            'value' => function($item){
-                return Html::button('Delete', ['class' => 'btn btn-danger btn-xs btn-block', 'onClick' => 'deleteItem('.$item->id.')']);
+            'value' => function($item) use ($model){
+                return $model->status ? $model->status->status != 'Approved' ? Html::button('Delete', ['class' => 'btn btn-danger btn-xs btn-block', 'onClick' => 'deleteItem('.$item->id.')']) : '' : Html::button('Delete', ['class' => 'btn btn-danger btn-xs btn-block', 'onClick' => 'deleteItem('.$item->id.')']);
             }
         ],
     ],

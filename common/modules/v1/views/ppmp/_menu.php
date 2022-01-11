@@ -11,8 +11,31 @@ use yii\web\View;
         <?= Html::a('<i class="fa fa-angle-double-left"></i> Back to PPMP List', ['/v1/ppmp/'], ['class' => 'btn btn-app']) ?>
     </div>
     <div class="pull-right">
-        <?= Html::button('<i class="fa fa-edit"></i> Edit PPMP', ['value' => Url::to(['/v1/ppmp/update', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'update-button']) ?>
-        <?= Html::a('<i class="fa fa-trash"></i> Delete PPMP', ['delete', 'id' => $model->id], [
+        <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::a('<i class="fa fa-thumbs-o-up"></i> Approve', ['approve', 'id' => $model->id], [
+            'class' => 'btn btn-app',
+            'id' => 'approve-button',
+            'data' => [
+                'confirm' => 'Items cannot be modified after this action. Would you like to proceed?',
+                'method' => 'post',
+            ],
+        ]) : '' ?>
+        <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::a('<i class="fa fa-thumbs-o-down"></i> Disapprove', ['disapprove', 'id' => $model->id], [
+            'class' => 'btn btn-app',
+            'id' => 'disapprove-button',
+            'data' => [
+                'confirm' => 'Are you sure you want to disapprove PPMP. Would you like to proceed?',
+                'method' => 'post',
+            ],
+        ]) : '' ?>
+        <?= $model->status ? $model->status->status != 'Approved' ? Html::button('<i class="fa fa-edit"></i> Edit PPMP', ['value' => Url::to(['/v1/ppmp/update', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'update-button']) : '' : Html::button('<i class="fa fa-edit"></i> Edit PPMP', ['value' => Url::to(['/v1/ppmp/update', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'update-button']) ?>
+        <?= $model->status ? $model->status->status != 'Approved' ? Html::a('<i class="fa fa-trash"></i> Delete PPMP', ['delete', 'id' => $model->id], [
+            'class' => 'btn btn-app',
+            'data' => [
+                'confirm' => 'Deleting this PPMP will also delete all included items. Would you like to proceed?',
+                'method' => 'post',
+            ],
+        ]) : '' :
+        Html::a('<i class="fa fa-trash"></i> Delete PPMP', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-app',
             'data' => [
                 'confirm' => 'Deleting this PPMP will also delete all included items. Would you like to proceed?',

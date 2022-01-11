@@ -9,7 +9,7 @@ use yii\web\View;
 use yii\bootstrap\Modal;
 /* @var $model common\modules\v1\models\Ppmp */
 
-$this->title = $model->title;
+$this->title = $model->status ? $model->title.' ['.$model->status->status.']' : $model->title;
 $this->params['breadcrumbs'][] = ['label' => 'PPMPs', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
