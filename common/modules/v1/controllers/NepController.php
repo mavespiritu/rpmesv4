@@ -47,7 +47,7 @@ class NepController extends Controller
                     [
                         'actions' => ['index', 'create', 'copy', 'view', 'form', 'delete'],
                         'allow' => true,
-                        'roles' => ['Accounting', 'Administrator'],
+                        'roles' => ['AccountingStaff', 'Administrator'],
                     ],
                 ],
             ],

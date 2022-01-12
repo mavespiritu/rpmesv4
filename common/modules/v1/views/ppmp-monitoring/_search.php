@@ -73,7 +73,7 @@ $script = '
     {
         window.location.href = "'.Url::to(['/v1/ppmp-monitoring/']).'";
     }
-    $(document).ready(function() {
+    /* $(document).ready(function() {
         $("#ppmp-monitoring-form").on("beforeSubmit", function(e) {
             e.preventDefault();
             var form = $(this);
@@ -99,7 +99,7 @@ $script = '
     
             return false;
         });
-    });
+    }); */
 ';
 $this->registerJs($script, View::POS_END);
 ?>

@@ -505,7 +505,7 @@ class PpmpMonitoringController extends \yii\web\Controller
                 'months' => $months,
                 'quarters' => $quarters,
                 'postData' => $postData,
-                'type' => $type,
+                'type' => 'pdf',
                 'unAllowedIndexes' => $unAllowedIndexes
             ]);
 

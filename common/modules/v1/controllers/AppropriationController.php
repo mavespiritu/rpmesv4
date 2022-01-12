@@ -57,7 +57,7 @@ class AppropriationController extends \yii\web\Controller
                     [
                         'actions' => ['index'],
                         'allow' => true,
-                        'roles' => ['Accounting', 'Administrator'],
+                        'roles' => ['AccountingStaff', 'Administrator'],
                     ],
                 ],
             ],
