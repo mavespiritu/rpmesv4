@@ -498,50 +498,18 @@ class PpmpMonitoringController extends \yii\web\Controller
 
             $filename = 'PPMP Monitoring';
 
-            $content = $this->renderPartial('file', [
+            header("Content-type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename=".$filename.".xls");
+            return $this->renderPartial('file', [
                 'data' => $data,
                 'orders' => $orders,
                 'groups' => $groups,
                 'months' => $months,
                 'quarters' => $quarters,
                 'postData' => $postData,
-                'type' => 'pdf',
+                'type' => 'excel',
                 'unAllowedIndexes' => $unAllowedIndexes
             ]);
-
-            $pdf = new Pdf([
-                'mode' => Pdf::MODE_CORE,
-                'format' => Pdf::FORMAT_LEGAL, 
-                'orientation' => Pdf::ORIENT_LANDSCAPE, 
-                'destination' => Pdf::DEST_DOWNLOAD, 
-                'filename' => $filename.'.pdf', 
-                'content' => $content,  
-                'marginLeft' => 11.4,
-                'marginRight' => 11.4,
-                'cssInline' => 'table{
-                                    border-collapse: collapse;
-                                }
-                                thead{
-                                    font-size: 12px;
-                                    text-align: center;
-                                }
-                            
-                                td{
-                                    font-size: 12px;
-                                    border: 1px solid black;
-                                }
-                            
-                                th{
-                                    text-align: center;
-                                    border: 1px solid black;
-                                }', 
-                ]);
-        
-                $response = Yii::$app->response;
-                $response->format = \yii\web\Response::FORMAT_RAW;
-                $headers = Yii::$app->response->headers;
-                $headers->add('Content-Type', 'application/pdf');
-                return $pdf->render();
 
             /* return $this->renderAjax('view',[
                 'model' => $model,
