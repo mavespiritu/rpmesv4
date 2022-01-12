@@ -10,7 +10,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="row">
         <div class="col-md-2 col-xs-12">
             <div class="box box-primary">
-                <div class="box-header panel-title"><i class="fa fa-list"></i>Preview Report</div>
+                <div class="box-header panel-title"><i class="fa fa-download"></i>Generate Report</div>
                 <div class="box-body">
                 <?= $this->render('_search',[
                     'model' => $model,

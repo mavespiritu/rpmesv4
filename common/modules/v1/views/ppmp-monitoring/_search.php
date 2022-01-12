@@ -61,7 +61,7 @@ use kartik\sortinput\SortableInput;
     ?>
 
     <div class="form-group flex-center" style="margin-top: 25px;">
-        <?= Html::submitButton('Preview', ['class' => 'btn btn-primary btn-block']) ?>&nbsp;&nbsp;
+        <?= Html::submitButton('Generate', ['class' => 'btn btn-primary btn-block']) ?>&nbsp;&nbsp;
         <?= Html::resetButton('Clear', ['class' => 'btn btn-outline-secondary', 'onClick' => 'redirectPage()']) ?>
     </div>
 
@@ -90,7 +90,7 @@ $script = '
                     $("#items").empty();
                     $("#items").hide();
                     $("#items").fadeIn("slow");
-                    $("#items").html(data);
+                    $("#items").html("Report Generated.");
                 },
                 error: function (err) {
                     console.log(err);
