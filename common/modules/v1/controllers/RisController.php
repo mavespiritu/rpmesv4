@@ -894,7 +894,7 @@ class RisController extends Controller
             switch($type)
             {
                 case 'Original':
-                    return $this->redirect(['original', 'id' => $model->id]);
+                    return $this->redirect(['view', 'id' => $model->id]);
                     break;
                 case 'Supplemental':
                     return $this->redirect(['supplemental', 'id' => $model->id]);
@@ -943,7 +943,7 @@ class RisController extends Controller
         switch($type)
         {
             case 'Original':
-                return $this->redirect(['original', 'id' => $model->id]);
+                return $this->redirect(['view', 'id' => $model->id]);
                 break;
             case 'Supplemental':
                 return $this->redirect(['supplemental', 'id' => $model->id]);
