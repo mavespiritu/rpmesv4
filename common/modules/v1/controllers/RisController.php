@@ -891,7 +891,7 @@ class RisController extends Controller
                     if($type == 'Supplemental')
                     {
                         $itemBreakdownModel = ItemBreakdown::find()
-                                        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_item_breakdown.ppmp_item_id')
+                                        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ppmp_item_breakdown.ppmp_item_id')
                                         ->where([
                                             'ppmp_item_id' => $item->ppmp_item_id, 
                                             'month_id' => $item->month_id,
@@ -952,7 +952,7 @@ class RisController extends Controller
                 if($type == 'Supplemental')
                 {
                     $itemBreakdownModel = ItemBreakdown::find()
-                                        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_item_breakdown.ppmp_item_id')
+                                        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ppmp_item_breakdown.ppmp_item_id')
                                         ->where([
                                             'ppmp_item_id' => $item->ppmp_item_id, 
                                             'month_id' => $item->month_id,
