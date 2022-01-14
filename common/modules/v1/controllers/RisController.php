@@ -851,7 +851,7 @@ class RisController extends Controller
         
         $suppItems = ArrayHelper::map($suppItems, 'ppmp_item_id', 'ppmp_item_id');
 
-        $ppmpItems = PpmpItem::find()->where(['in', 'id', $ppmpItems])->all();
+        $ppmpItems = PpmpItem::find()->where(['in', 'id', $suppItems])->all();
         
         if($model->delete())
         {
