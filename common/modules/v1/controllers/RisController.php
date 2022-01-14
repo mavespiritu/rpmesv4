@@ -890,7 +890,14 @@ class RisController extends Controller
 
                     if($type == 'Supplemental')
                     {
-                        $itemBreakdownModel = ItemBreakdown::findOne(['ppmp_item_id' => $itemModel->ppmp_item_id, 'month_id' => $itemModel->month_id, 'type' => 'Supplemental']);
+                        $itemBreakdownModel = ItemBreakdown::find()
+                                        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_item_breakdown.ppmp_item_id')
+                                        ->where([
+                                            'ppmp_item_id' => $item->ppmp_item_id, 
+                                            'month_id' => $item->month_id,
+                                            'type' => 'Supplemental'
+                                        ])
+                                        ->one();
                         $itemBreakdownModel->quantity = $itemModel->quantity;
                         $itemBreakdownModel->save();
                     }
@@ -944,7 +951,14 @@ class RisController extends Controller
             {
                 if($type == 'Supplemental')
                 {
-                    $itemBreakdownModel = ItemBreakdown::findOne(['ppmp_item_id' => $item->ppmp_item_id, 'month_id' => $item->month_id, 'type' => 'Supplemental']);
+                    $itemBreakdownModel = ItemBreakdown::find()
+                                        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_item_breakdown.ppmp_item_id')
+                                        ->where([
+                                            'ppmp_item_id' => $item->ppmp_item_id, 
+                                            'month_id' => $item->month_id,
+                                            'type' => 'Supplemental'
+                                        ])
+                                        ->one();
                     $itemBreakdownModel->delete();
 
                     $ppmpItemModel = PpmpItem::findOne($item->ppmp_item_id);
