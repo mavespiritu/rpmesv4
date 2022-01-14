@@ -839,10 +839,31 @@ class RisController extends Controller
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
+
+        $suppItems = RisItem::find()
+                    ->select(['ppmp_item_id'])
+                    ->where([
+                        'ris_id' => $model->id,
+                        'type' => 'Supplemental'
+                    ])
+                    ->asArray()
+                    ->all();
+        
+        $suppItems = ArrayHelper::map($suppItems, 'ppmp_item_id', 'ppmp_item_id');
+
+        $ppmpItems = PpmpItem::find()->where(['in', 'id', $ppmpItems])->all();
         
         if($model->delete())
         {
             $statuses = Transaction::deleteAll(['model' => 'Ris', 'model_id' => $id]);
+
+            if($ppmpItems)
+            {
+                foreach($ppmpItems as $item)
+                {
+                    $item->delete();
+                }
+            }
 
             \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
             return $this->redirect(['index']);
