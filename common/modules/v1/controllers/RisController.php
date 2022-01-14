@@ -887,6 +887,13 @@ class RisController extends Controller
                     $risSourceModel = RisSource::findOne(['ris_item_id' => $itemModel->id, 'month_id' => $itemModel->month_id]);
                     $risSourceModel->quantity = $itemModel->quantity;
                     $risSourceModel->save();
+
+                    if($type == 'Supplemental')
+                    {
+                        $itemBreakdownModel = ItemBreakdown::findOne(['ppmp_item_id' => $itemModel->ppmp_item_id, 'month_id' => $itemModel->month_id, 'type' => 'Supplemental']);
+                        $itemBreakdownModel->quantity = $itemModel->quantity;
+                        $itemBreakdownModel->save();
+                    }
                 }
             }
 
@@ -935,6 +942,21 @@ class RisController extends Controller
         {
             foreach($items as $item)
             {
+                if($type == 'Supplemental')
+                {
+                    $itemBreakdownModel = ItemBreakdown::findOne(['ppmp_item_id' => $item->ppmp_item_id, 'month_id' => $item->month_id, 'type' => 'Supplemental']);
+                    $itemBreakdownModel->delete();
+
+                    $ppmpItemModel = PpmpItem::findOne($item->ppmp_item_id);
+                    if($ppmpItemModel)
+                    {
+                        if($ppmpItemModel->quantities == 0)
+                        {
+                            $ppmpItemModel->delete();
+                        }
+                    }
+                }
+
                 $item->delete();
             }
         }
