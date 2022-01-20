@@ -33,7 +33,7 @@ use yii\bootstrap\ButtonDropdown;
                 'method' => 'post',
             ],
         ]) : '' ?>
-        <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) && $model->status->status == 'For Approval' ? Html::button('<i class="fa fa-paper-plane"></i> Send For Revision', ['value' => Url::to(['/v1/ris/for-revision', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'revision-button']) : '' ?>
+        <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::button('<i class="fa fa-paper-plane"></i> Send For Revision', ['value' => Url::to(['/v1/ris/for-revision', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'revision-button']) : '' ?>
         <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::button('<i class="fa fa-thumbs-o-up"></i> Approve', ['value' => Url::to(['/v1/ris/approve', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'approve-button']) : '' ?>
         <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::button('<i class="fa fa-thumbs-o-down"></i> Disapprove', ['value' => Url::to(['/v1/ris/disapprove', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'disapprove-button']) : '' ?>
         <?= ($model->status->status == 'Draft' || $model->status->status == 'For Revision') || (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::button('<i class="fa fa-edit"></i> Edit RIS', ['value' => Url::to(['/v1/ris/update', 'id' => $model->id]), 'class' => 'btn btn-app', 'id' => 'update-button']) : '' ?>
