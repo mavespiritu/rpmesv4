@@ -438,7 +438,7 @@ class PpmpController extends Controller
                 ])
                 ->leftJoin('ppmp_object_item', 'ppmp_object_item.item_id = ppmp_item.id')
                 ->andWhere(['ppmp_object_item.obj_id' => $itemModel->obj_id])
-                ->andWhere(['not in', 'ppmp_item.id', $existingItems])
+                //->andWhere(['not in', 'ppmp_item.id', $existingItems])
                 ->asArray()
                 ->all();
 

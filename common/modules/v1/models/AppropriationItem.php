@@ -22,7 +22,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
     public $activity_id;
     public $office_id;
     public $sub_activity_id;
-    public $month_id;
+    public $item_id;
     public $stage;
     public $year;
     public $order;
@@ -45,7 +45,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
             [['stage', 'year'], 'required', 'on' => 'loadPpmpMonitoringUser'],
             [['stage', 'year'], 'required', 'on' => 'loadPpmpMonitoringAdmin'],
             [['activity_id', 'fund_source_id'], 'required', 'on' => 'loadItems'],
-            [['activity_id', 'sub_activity_id', 'fund_source_id', 'month_id'], 'required', 'on' => 'loadItemsInRis'],
+            [['activity_id', 'sub_activity_id', 'item_id'], 'required', 'on' => 'loadItemsInRis'],
             [['amount'], 'required'],
             [['appropriation_id', 'obj_id', 'pap_id', 'fund_source_id'], 'integer'],
             [['amount'], 'number'],
@@ -71,6 +71,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
             'year' => 'Year',
             'activity_id' => 'Activity',
             'sub_activity_id' => 'PPA',
+            'item_id' => 'Items',
             'fund_source_id' => 'Fund Source',
             'office_id' => 'Division',
             'amount' => 'Amount',

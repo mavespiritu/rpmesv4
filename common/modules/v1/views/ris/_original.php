@@ -11,6 +11,7 @@
     <thead>
         <tr>
             <th>Item</th>
+            <th>Specification</th>
             <th>Unit Cost</th>
             <th>Quantity</th>
             <td align=center><b>Total</b></td>
@@ -27,7 +28,8 @@
                 <?php foreach($origItems as $item){ ?>
                     <?= $this->render('_original-item', [
                         'model' => $model,
-                        'item' => $item
+                        'item' => $item,
+                        'specifications' => $specifications,
                     ]) ?>
                     <?php $total += ($item['cost'] * $item['total']); ?>
                 <?php } ?>

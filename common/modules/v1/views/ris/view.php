@@ -27,6 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'appropriationItemModel' => $appropriationItemModel,
                         'activities' => $activities,
                         'subActivities' => $subActivities,
+                        'items' => $items,
                     ]) ?>
                 </div>
             </div>

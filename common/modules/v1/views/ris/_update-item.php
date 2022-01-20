@@ -18,12 +18,25 @@ DisableButtonAsset::register($this);
         'id' => 'ris-update-form'
     ]); ?>
 
-    <h5>RIS No. <?= $model->ris_no ?></h5>
-    <h5><?= $activity->title ?> - <?= $model->fundSource->code ?> Funded</h5>
-    <table class="table table-bordered">
+    <table class="table table-condensed">
         <tr>
-            <th colspan=3><?= $item->title ?></th>
+            <th>RIS No.</th>
+            <td><?= $model->ris_no ?></td>
         </tr>
+        <tr>
+            <th>Activity</th>
+            <td><?= $activity->title ?> - <?= $model->fundSource->code ?> Funded</td>
+        </tr>
+        <tr>
+            <th>PPA</th>
+            <td><?= $subActivity->title ?></td>
+        </tr>
+        <tr>
+            <th>Item</th>
+            <td><?= $item->title ?></td>
+        </tr>
+    </table>
+    <table class="table table-bordered">
         <tr>
             <th>PAP</th>
             <th>Month</th>
@@ -36,7 +49,7 @@ DisableButtonAsset::register($this);
                     <td><?= $i->ppmpItem->subActivity->title ?></td>
                     <td><?= $i->month->month ?></td>
                     <td><?= number_format($i->ppmpItem->getRemainingQuantityPerMonth($i->month->id), 0) ?></td>
-                    <td><?= $form->field($data[$i->id], "[$i->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 1, 'max' => ($i->quantity + $i->ppmpItem->getRemainingQuantityPerMonth($i->month->id))])->label(false) ?></td>
+                    <td><?= $form->field($data[$i->id], "[$i->id]quantity")->textInput(['type' => 'number', 'maxlength' => true, 'min' => 0, 'max' => ($i->quantity + $i->ppmpItem->getRemainingQuantityPerMonth($i->month->id))])->label(false) ?></td>
                 </tr>
             <?php } ?>
         <?php } ?>

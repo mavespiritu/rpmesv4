@@ -44,7 +44,7 @@ class RisSearch extends Ris
      */
     public function search($params)
     {
-        $query = Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement') ? 
+        $query = Yii::$app->user->can('Administrator') || Yii::$app->user->can('ProcurementStaff') ? 
             Ris::find()
             ->joinWith('creator c')
             ->joinWith('requester r')

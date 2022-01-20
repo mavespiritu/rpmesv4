@@ -18,15 +18,6 @@ DisableButtonAsset::register($this);
         'id' => 'ris-approval-form'
     ]); ?>
 
-    <?= $form->field($model, 'approved_by')->widget(Select2::classname(), [
-        'data' => $signatories,
-        'options' => ['placeholder' => 'Select Approver','multiple' => false, 'class'=>'approved_by-select'],
-        'pluginOptions' => [
-            'allowClear' =>  true,
-        ],
-        ]);
-    ?>
-
     <?= $form->field($model, 'date_approved')->widget(DatePicker::classname(), [
         'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
         'clientOptions' => [

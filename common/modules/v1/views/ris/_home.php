@@ -6,6 +6,7 @@
             'appropriationItemModel' => $appropriationItemModel,
             'activities' => $activities,
             'subActivities' => $subActivities,
+            'items' => $items,
         ]) ?>
         <br>
         <p class="panel-title"><i class="fa fa-list"></i> Available PPMP Items</p><br>

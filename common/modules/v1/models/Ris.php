@@ -45,7 +45,7 @@ class Ris extends \yii\db\ActiveRecord
         return [
             [['office_id', 'ppmp_id', 'fund_source_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose', 'type'], 'required', 'on' => 'isAdmin'],
             [['ppmp_id', 'fund_source_id', 'fund_cluster_id', 'requested_by', 'date_required', 'purpose', 'type'], 'required', 'on' => 'isUser'],
-            [['approved_by', 'date_approved'], 'required', 'on' => 'Approve'],
+            [['date_approved'], 'required', 'on' => 'Approve'],
             [['disapproved_by', 'date_disapproved'], 'required', 'on' => 'Disapprove'],
             [['fund_cluster_id'], 'integer'],
             [['purpose', 'created_by', 'requested_by', 'approved_by', 'issued_by', 'received_by', 'office_id', 'section_id', 'unit_id'], 'string'],
@@ -248,7 +248,7 @@ class Ris extends \yii\db\ActiveRecord
     public function getItemsTotal($type)
     {
         $total = RisItem::find()
-                ->select(['COALESCE(sum(cost * quantity), 0) as total'])
+                ->select(['COALESCE(sum(ppmp_ris_item.cost * quantity), 0) as total'])
                 ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
                 ->where([
                     'ris_id' => $this->id,
@@ -263,7 +263,7 @@ class Ris extends \yii\db\ActiveRecord
     public function getItemSourceTotal($type)
     {
         $total = RisSource::find()
-                ->select(['COALESCE(sum(cost * ppmp_ris_source.quantity), 0) as total'])
+                ->select(['COALESCE(sum(ppmp_ris_item.cost * ppmp_ris_source.quantity), 0) as total'])
                 ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_ris_source.ris_item_id')
                 ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
                 ->where([

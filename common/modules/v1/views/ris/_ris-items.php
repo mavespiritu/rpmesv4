@@ -10,7 +10,7 @@ use common\modules\v1\models\PpmpItem;
 use fedemotta\datatables\DataTables;
 use yii\widgets\ListView;
 use yii\widgets\ActiveForm;
-
+use yii\widgets\MaskedInput;
 ?>
 
 <?php $form = ActiveForm::begin([
@@ -19,16 +19,13 @@ use yii\widgets\ActiveForm;
 ]); ?>
 
 <?php if($items){ ?>
-  <table class="table table-bordered">
+  <table class="table table-bordered" id="dttable">
     <thead>
       <tr>
-        <th rowspan=2 style="width: 20%;">Item</th>
-        <th rowspan=2>Unit</th>
-        <th rowspan=2>Cost</th>
-        <!-- <th colspan=12><center>Remaining Qty</center></th> -->
-        <th rowspan=2><center>Max Qty</center></th>
-        <th rowspan=2>Order</th>
-        <th rowspan=2>Total</th>
+        <th style="width: 20%;">Item</th>
+        <th>Unit Cost</th>
+        <th>Order</th>
+        <th>Total</th>
       </tr>
       <!-- <tr>
       <?php if($months){ ?>
@@ -41,26 +38,17 @@ use yii\widgets\ActiveForm;
     <tbody>
       <?php $quantityTotal = 0; ?>
       <?php foreach($items as $item){ ?>
-        <?php $total = 0; ?>
         <tr>
           <td><?= $item->item->title ?></td>
-          <td><?= $item->item->unit_of_measure ?></td>
           <td align=right><?= number_format($item->cost, 2) ?></td>
-          <!-- <?php if($months){ ?>
-            <?php foreach($months as $month){ ?>
-              <td align=center><?= number_format($item->getRemainingQuantityPerMonth($month->id), 0) ?></td>
-              <?php $total += $item->getRemainingQuantityPerMonth($month->id) ?>
-              <?php $quantityTotal += $total ?>
-            <?php } ?>
-          <?php } ?> -->
-          <td align=center><?= number_format($total, 0) ?></td>
           <?= Html::hiddenInput('total-'.$item->id.'-hidden', 0, ['id' => 'total-'.$item->id.'-hidden']) ?>
-          <td><?= $total > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 1, 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.', '.$item->cost.', '.json_encode($itemIDs).')'])->label(false) : '' ?></td>
+          <td><?= $item->remainingQuantity > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 1, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) : 'No remaining quantity' ?></td>
           <td align=right><p id="total-<?= $item->id ?>">0.00</p></td>
         </tr>
+        <?php $quantityTotal += $item->remainingQuantity ?>
       <?php } ?>
       <tr>
-        <td colspan=5 align=right><h4>Grand Total</h4></td>
+        <td colspan=3 align=right><h4>Grand Total</h4></td>
         <td align=right><h4 id="grand-total">0.00</h4></td>
         <?= Html::hiddenInput('grandtotal-hidden', 0, ['id' => 'grandtotal-hidden']) ?>
       </tr>
@@ -154,6 +142,7 @@ use yii\widgets\ActiveForm;
             id: '.$model->id.',
             activity_id: '.$activity->id.',
             sub_activity_id: '.$subActivity->id.',
+            item_id: JSON.stringify('.json_encode($selectedItems).'),
         },
         beforeSend: function(){
             $("#ris-item-list").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
@@ -181,15 +170,10 @@ use yii\widgets\ActiveForm;
           type: form.attr("method"),
           data: formData,
           success: function (data) {
-            if($("#grandtotal-hidden").val() > 0)
-            {
-              form.enableSubmitButtons();
-              alert("Record Saved");
-              loadItems();
-              loadOriginalItems();
-            }else{
-              alert("You need to enter quantity");
-            }
+            form.enableSubmitButtons();
+            alert("Record Saved");
+            loadItems();
+            loadOriginalItems();
           },
           error: function (err) {
               console.log(err);
