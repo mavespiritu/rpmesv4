@@ -7,9 +7,8 @@ use yii\web\View;
 <tr>
     <td><?= $item['itemTitle'] ?></td>
     <td>
-      <?php if($model->status->status == 'Draft' || $model->status->status == 'For Revision'){ ?>
-        <?php if(!isset($specifications[$item['id']])){ ?>
-          <?= Html::button('<i class="fa fa-plus"></i> Create Spec', ['value' => Url::to(['/v1/ris/create-specification', 'id' => $model->id, 'activity_id' => $item['activityId'], 'sub_activity_id' => $item['subActivityId'], 'item_id' => $item['stockNo'], 'cost' => $item['cost'], 'type' => 'Original']), 'class' => 'btn btn-info btn-xs', 'id' => 'create-specification-'.$item['id'].'-button']) ?>
+    <?php if(!isset($specifications[$item['id']])){ ?>
+        <?= Html::button('<i class="fa fa-plus"></i> Create Spec', ['value' => Url::to(['/v1/ris/create-specification', 'id' => $model->id, 'activity_id' => $item['activityId'], 'sub_activity_id' => $item['subActivityId'], 'item_id' => $item['stockNo'], 'cost' => $item['cost'], 'type' => 'Original']), 'class' => 'btn btn-info btn-xs', 'id' => 'create-specification-'.$item['id'].'-button']) ?>
         <?php }else{ ?>
           <?= $specifications[$item['id']]->risItemSpecValueString ?><br><br>
           <div class="row">
@@ -22,8 +21,7 @@ use yii\web\View;
                 ],
             ]) : '' ?>
           </div>
-        <?php } ?>  
-      <?php } ?>  
+        <?php } ?>    
     </td>
     <td align=right><?= number_format($item['cost'], 2) ?></td>
     <td><?= number_format($item['total'], 0) ?></td>
