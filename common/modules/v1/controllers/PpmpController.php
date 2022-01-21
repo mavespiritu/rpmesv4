@@ -846,6 +846,39 @@ class PpmpController extends Controller
         }
     }
 
+    public function actionItemCheck($id)
+    {
+        $model = $this->findModel($id);
+
+        $quantities = ItemBreakdown::find()->select(['ppmp_item_id', 'count(id) as total'])->groupBy(['ppmp_item_id'])->createCommand()->getRawSql();
+
+        $items = PpmpItem::find()
+            ->select([
+                'ppmp_ppmp_item.id as id',
+                'ppmp_activity.title as activity',
+                'ppmp_sub_activity.title as subactivity',
+                'ppmp_fund_source.code as fundSource',
+                'ppmp_item.title as item',
+                'ppmp_item.unit_of_measure as unitOfMeasure',
+                'ppmp_ppmp_item.cost as cost',
+                'quantities.total as total'
+            ])
+            ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+            ->leftJoin('ppmp_sub_activity', 'ppmp_sub_activity.id = ppmp_ppmp_item.sub_activity_id')
+            ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+            ->leftJoin('ppmp_fund_source', 'ppmp_fund_source.id = ppmp_ppmp_item.fund_source_id')
+            ->leftJoin(['quantities' => '('.$quantities.')'], 'quantities.ppmp_item_id = ppmp_ppmp_item.id')
+            ->andWhere(['ppmp_id' => $model->id])
+            ->andWhere(['>', 'quantities.total', 12])
+            ->asArray()
+            ->all();
+
+        return $this->render('item-check', [
+            'model' => $model,
+            'items' => $items,
+        ]);
+    }
+
     /**
      * Finds the Ppmp model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
