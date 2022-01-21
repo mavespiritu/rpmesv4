@@ -22,7 +22,20 @@ use fedemotta\datatables\DataTables;
             'class' => 'yii\grid\SerialColumn',
             'headerOptions' => ['style' => 'width: 3%;'],
         ],
-
+        [
+            'format' => 'raw', 
+            'headerOptions' => ['style' => 'width:100px'],
+            'value' => function($item) use ($subActivity, $model){
+                return $model->status ? $model->status->status != 'Approved' ? Html::button('Update', ['value' => Url::to(['/v1/ppmp/update-item', 'id' => $item->id]), 'class' => 'btn btn-primary btn-xs btn-block update-item-button-'.$subActivity->id]) : '' : Html::button('Update', ['value' => Url::to(['/v1/ppmp/update-item', 'id' => $item->id]), 'class' => 'btn btn-primary btn-xs btn-block update-item-button-'.$subActivity->id]);
+            }
+        ],
+        [
+            'format' => 'raw',
+            'headerOptions' => ['style' => 'width:100px'],
+            'value' => function($item) use ($model){
+                return $model->status ? $model->status->status != 'Approved' ? Html::button('Delete', ['class' => 'btn btn-danger btn-xs btn-block', 'onClick' => 'deleteItem('.$item->id.')']) : '' : Html::button('Delete', ['class' => 'btn btn-danger btn-xs btn-block', 'onClick' => 'deleteItem('.$item->id.')']);
+            }
+        ],
         [
             'header' => 'Type', 
             'attribute' => 'type',
@@ -43,10 +56,82 @@ use fedemotta\datatables\DataTables;
         ],
         'item.unit_of_measure',
         [
-            'header' => 'Quantity', 
+            'header' => 'Total Qty', 
             'attribute' => 'quantity',
             'value' => function($item){
                 return number_format($item->quantities, 0);
+            }
+        ],
+        [
+            'header' => 'J', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(1), 0);
+            }
+        ],
+        [
+            'header' => 'F', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(2), 0);
+            }
+        ],
+        [
+            'header' => 'M', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(3), 0);
+            }
+        ],
+        [
+            'header' => 'A', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(4), 0);
+            }
+        ],
+        [
+            'header' => 'M', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(5), 0);
+            }
+        ],
+        [
+            'header' => 'J', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(6), 0);
+            }
+        ],
+        [
+            'header' => 'J', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(7), 0);
+            }
+        ],
+        [
+            'header' => 'A', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(8), 0);
+            }
+        ],
+        [
+            'header' => 'S', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(9), 0);
+            }
+        ],
+        [
+            'header' => 'O', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(10), 0);
+            }
+        ],
+        [
+            'header' => 'N', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(11), 0);
+            }
+        ],
+        [
+            'header' => 'D', 
+            'value' => function($item){
+                return number_format($item->getQuantityPerMonth(12), 0);
             }
         ],
         [
@@ -69,20 +154,6 @@ use fedemotta\datatables\DataTables;
         [
             'header' => 'Remarks', 
             'attribute' => 'remarks',
-        ],
-        [
-            'format' => 'raw', 
-            'headerOptions' => ['style' => 'width:100px'],
-            'value' => function($item) use ($subActivity, $model){
-                return $model->status ? $model->status->status != 'Approved' ? Html::button('Update', ['value' => Url::to(['/v1/ppmp/update-item', 'id' => $item->id]), 'class' => 'btn btn-primary btn-xs btn-block update-item-button-'.$subActivity->id]) : '' : Html::button('Update', ['value' => Url::to(['/v1/ppmp/update-item', 'id' => $item->id]), 'class' => 'btn btn-primary btn-xs btn-block update-item-button-'.$subActivity->id]);
-            }
-        ],
-        [
-            'format' => 'raw',
-            'headerOptions' => ['style' => 'width:100px'],
-            'value' => function($item) use ($model){
-                return $model->status ? $model->status->status != 'Approved' ? Html::button('Delete', ['class' => 'btn btn-danger btn-xs btn-block', 'onClick' => 'deleteItem('.$item->id.')']) : '' : Html::button('Delete', ['class' => 'btn btn-danger btn-xs btn-block', 'onClick' => 'deleteItem('.$item->id.')']);
-            }
         ],
     ],
 ]) : '<p class="text-center">No items found</p>' ?>

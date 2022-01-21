@@ -93,15 +93,6 @@ class PpmpMonitoringController extends \yii\web\Controller
         if($model->load(Yii::$app->request->post()))
         {
             $postData = Yii::$app->request->post('AppropriationItem');
-            
-            $quantities = ItemBreakdown::find()
-            ->select([
-                'ppmp_item_id',
-                'month_id',
-                'quantity'
-            ])
-            ->createCommand()
-            ->getRawSql();
 
             $items = PpmpItem::find()
             ->select([
@@ -165,18 +156,19 @@ class PpmpMonitoringController extends \yii\web\Controller
             ->leftJoin('ppmp_program', 'ppmp_program.id = ppmp_pap.program_id')
             ->leftJoin('ppmp_organizational_outcome', 'ppmp_organizational_outcome.id = ppmp_pap.organizational_outcome_id')
             ->leftJoin('ppmp_cost_structure', 'ppmp_cost_structure.id = ppmp_pap.cost_structure_id')
-            ->leftJoin(['janQuantity' => '('.$quantities.')'], 'janQuantity.ppmp_item_id = ppmp_ppmp_item.id and janQuantity.month_id = "1"')
-            ->leftJoin(['febQuantity' => '('.$quantities.')'], 'febQuantity.ppmp_item_id = ppmp_ppmp_item.id and febQuantity.month_id = "2"')
-            ->leftJoin(['marQuantity' => '('.$quantities.')'], 'marQuantity.ppmp_item_id = ppmp_ppmp_item.id and marQuantity.month_id = "3"')
-            ->leftJoin(['aprQuantity' => '('.$quantities.')'], 'aprQuantity.ppmp_item_id = ppmp_ppmp_item.id and aprQuantity.month_id = "4"')
-            ->leftJoin(['mayQuantity' => '('.$quantities.')'], 'mayQuantity.ppmp_item_id = ppmp_ppmp_item.id and mayQuantity.month_id = "5"')
-            ->leftJoin(['junQuantity' => '('.$quantities.')'], 'junQuantity.ppmp_item_id = ppmp_ppmp_item.id and junQuantity.month_id = "6"')
-            ->leftJoin(['julQuantity' => '('.$quantities.')'], 'julQuantity.ppmp_item_id = ppmp_ppmp_item.id and julQuantity.month_id = "7"')
-            ->leftJoin(['augQuantity' => '('.$quantities.')'], 'augQuantity.ppmp_item_id = ppmp_ppmp_item.id and augQuantity.month_id = "8"')
-            ->leftJoin(['sepQuantity' => '('.$quantities.')'], 'sepQuantity.ppmp_item_id = ppmp_ppmp_item.id and sepQuantity.month_id = "9"')
-            ->leftJoin(['octQuantity' => '('.$quantities.')'], 'octQuantity.ppmp_item_id = ppmp_ppmp_item.id and octQuantity.month_id = "10"')
-            ->leftJoin(['novQuantity' => '('.$quantities.')'], 'novQuantity.ppmp_item_id = ppmp_ppmp_item.id and novQuantity.month_id = "11"')
-            ->leftJoin(['decQuantity' => '('.$quantities.')'], 'decQuantity.ppmp_item_id = ppmp_ppmp_item.id and decQuantity.month_id = "12"');
+            ->leftJoin(['janQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 1)'], 'janQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['febQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 2)'], 'febQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['marQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 3)'], 'marQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['aprQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 4)'], 'aprQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['mayQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 5)'], 'mayQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['junQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 6)'], 'junQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['julQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 7)'], 'julQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['augQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 8)'], 'augQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['sepQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 9)'], 'sepQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['octQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 10)'], 'octQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['novQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 11)'], 'novQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ->leftJoin(['decQuantity' => '(SELECT * from ppmp_ppmp_item_breakdown where month_id = 12)'], 'decQuantity.ppmp_item_id = ppmp_ppmp_item.id')
+            ;
 
             //$items = Yii::$app->user->can('Administrator') ? $items->andWhere(['ppmp_ppmp.office_id' => $postData['office_id']]) : $items->andWhere(['ppmp_ppmp.office_id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
             
