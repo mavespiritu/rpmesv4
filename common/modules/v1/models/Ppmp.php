@@ -95,9 +95,9 @@ class Ppmp extends \yii\db\ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getPpmpPpmpItems()
+    public function getPpmpItems()
     {
-        return $this->hasMany(PpmpPpmpItem::className(), ['ppmp_id' => 'id']);
+        return $this->hasMany(PpmpItem::className(), ['ppmp_id' => 'id']);
     }
 
     public function getOffice()
@@ -313,6 +313,7 @@ class Ppmp extends \yii\db\ActiveRecord
                         // retain cost
                          $items = PpmpItem::find()
                         ->select([
+                            'id',
                             'activity_id',
                             'fund_source_id',
                             'sub_activity_id',
@@ -327,39 +328,27 @@ class Ppmp extends \yii\db\ActiveRecord
                         ->createCommand()
                         ->getRawSql(); 
 
-                        $connection->createCommand('INSERT into ppmp_ppmp_item (activity_id, fund_source_id, sub_activity_id, obj_id, ppmp_id, item_id, cost, remarks, type) '.$items)->execute();
+                        $connection->createCommand('INSERT into ppmp_ppmp_item (source_id, activity_id, fund_source_id, sub_activity_id, obj_id, ppmp_id, item_id, cost, remarks, type) '.$items)->execute();
 
                         if($this->data == 2)
                         {
-                            $items = PpmpItem::find()
-                            ->where(['ppmp_id' => $model->id])
-                            ->all();
+                            $newItems = $model->ppmpItems;
 
-                            if($items)
+                            if($newItems)
                             {
-                                foreach($items as $item)
+                                foreach($newItems as $item)
                                 {
                                     $newItem = PpmpItem::findOne([
                                         'ppmp_id' => $this->id,
-                                        'activity_id' => $item->activity_id,
-                                        'fund_source_id' => $item->fund_source_id,
-                                        'sub_activity_id' => $item->sub_activity_id,
-                                        'obj_id' => $item->obj_id,
-                                        'item_id' => $item->item_id,
-                                        'type' => 'Original',
+                                        'source_id' => $item->id,
                                     ]);
 
-                                    $breakdown = ItemBreakdown::find()
-                                    ->select([
-                                        'concat("'.$newItem->id.'")',
-                                        'month_id',
-                                        'quantity',
-                                    ])
-                                    ->where(['ppmp_item_id' => $item->id])
-                                    ->createCommand()
-                                    ->getRawSql();
+                                    if($newItem)
+                                    {
+                                        $breakdown = $item->getItemBreakdowns()->select(['concat("'.$newItem->id.'")', 'month_id', 'quantity'])->createCommand()->getRawSql();
 
-                                    $connection->createCommand('INSERT into ppmp_ppmp_item_breakdown (ppmp_item_id, month_id, quantity) '.$breakdown)->execute();
+                                        $connection->createCommand('INSERT into ppmp_ppmp_item_breakdown (ppmp_item_id, month_id, quantity) '.$breakdown)->execute();
+                                    }
                                 }
                             }
                         }

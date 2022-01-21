@@ -64,6 +64,7 @@ class PpmpItem extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'appropriation_item_id' => 'Appropriation Item ID',
+            'source_id' => 'Source',
             'fund_source_id' => 'Fund Source',
             'activity_id' => 'Activity',
             'sub_activity_id' => 'PPA',
