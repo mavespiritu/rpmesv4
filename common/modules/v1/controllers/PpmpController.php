@@ -878,6 +878,17 @@ class PpmpController extends Controller
             'items' => $items,
         ]);
     }
+    
+    public function actionFixItem($id)
+    {
+        $model = PpmpItem::findOne($id);
+        $months = Month::find()->all();
+
+        return $this->renderAjax('_fix-item', [
+            'model' => $model,
+            'months' => $months,
+        ]);   
+    }
 
     /**
      * Finds the Ppmp model based on its primary key value.

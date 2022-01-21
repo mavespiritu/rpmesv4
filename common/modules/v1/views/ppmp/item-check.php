@@ -24,6 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <table class="table table-condensed table-responsive">
                 <thead>
                     <tr>
+                        <th>ID</th>
                         <th>Activity</th>
                         <th>PAP</th>
                         <th>Item</th>

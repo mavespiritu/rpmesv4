@@ -5,6 +5,7 @@ use yii\bootstrap\Modal;
 use yii\web\View;
 ?>
 <tr>
+    <td><?= $item['id'] ?></td>
     <td><?= $item['activity'] ?></td>
     <td><?= $item['subactivity'] ?></td>
     <td><?= $item['item'] ?></td>
@@ -13,7 +14,7 @@ use yii\web\View;
     <td><?= $item['total'] ?></td>
     <td><?= $item['fundSource'] ?></td>
     <td>
-    <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::button('<i class="fa fa-edit"></i> Fix Item', ['value' => Url::to(['/v1/ppmp/fix-item', 'id' => $item['id']]), 'class' => 'btn btn-primary btn-xs btn-block', 'id' => 'fix-'.$item['id'].'-button']) : '' ?>
+    <?php //(Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::button('<i class="fa fa-edit"></i> Fix Item', ['value' => Url::to(['/v1/ppmp/fix-item', 'id' => $item['id']]), 'class' => 'btn btn-primary btn-xs btn-block', 'id' => 'fix-'.$item['id'].'-button']) : '' ?>
     </td>
 </tr>
 <?php
