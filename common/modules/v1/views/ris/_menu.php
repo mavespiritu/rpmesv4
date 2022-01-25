@@ -135,7 +135,9 @@ use yii\bootstrap\ButtonDropdown;
           );
           printWindow.addEventListener("load", function() {
               printWindow.print();
-              printWindow.close();
+              setTimeout(function() {
+                printWindow.close();
+            }, 1);
           }, true);
         }
     ';
