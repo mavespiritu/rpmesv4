@@ -44,7 +44,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="box-body">
                     <?= GridView::widget([
                         'dataProvider' => $dataProvider,
-                        'tableOptions' => ['class' => 'table table-hover table-responsive'],
+                        'options' => ['class' => 'table table-hover table-responsive'],
                         'columns' => [
                             ['class' => 'yii\grid\SerialColumn'],
 
