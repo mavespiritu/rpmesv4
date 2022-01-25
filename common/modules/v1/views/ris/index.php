@@ -53,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'attribute' => 'purpose',
                                 'format' => 'raw',
-                                'contentOptions' => ['style' => 'width: 30%;'],
+                                'contentOptions' => ['style' => 'width: 20%;'],
                                 'value' => function($model){
                                     return $model->purpose;
                                 }
