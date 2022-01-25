@@ -321,6 +321,8 @@ class ItemController extends Controller
             $cost = new ItemCost();
             $cost->item_id = $model->id;
             $cost->cost = $model->cost_per_unit;
+            $cost->source_model = 'Item';
+            $cost->source_id = $model->id;
             $cost->save();
 
             \Yii::$app->getSession()->setFlash('success', 'Record Updated');

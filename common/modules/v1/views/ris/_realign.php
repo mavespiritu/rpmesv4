@@ -25,9 +25,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="box-body">
                     <center>
                         <p>Amount to Re-align:</p>
-                        <div class="flex-center" style="width: 50%;">
+                        <div class="flex-center" style="width: 100%;">
                             <div>Minimum:<h4><?= number_format($model->getRealignAmount(), 2) ?></h4></div>
-                            <div style="width: 80%"><hr style="border-top: dotted 2px; width: 80%; " /></div>
+                            <div style="width: 20%"><hr style="border-top: dotted 2px; width: 80%; " /></div>
+                            <div>Re-aligned:<h4><?= ($model->getItemsTotal('Realigned') >= $model->getRealignAmount()) && ($model->getItemsTotal('Realigned') <= $model->getRealignAmount() + ($model->getItemsTotal('Supplemental') * 0.20)) ? number_format($model->getItemsTotal('Realigned'), 2) : '<span style="color: red;">'.number_format($model->getItemsTotal('Realigned'), 2).'</span>' ?></h4></div>
+                            <div style="width: 20%"><hr style="border-top: dotted 2px; width: 80%; " /></div>
                             <div>Maximum:<h4><?= number_format($model->getRealignAmount() + ($model->getItemsTotal('Supplemental') * 0.20), 2) ?></h4></div>
                         </div>
                     </center>
@@ -38,6 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'appropriationItemModel' => $appropriationItemModel,
                                 'activities' => $activities,
                                 'subActivities' => $subActivities,
+                                'items' => $items,
                             ]) ?>
                             <br>
                             <p class="panel-title"><i class="fa fa-list"></i> Available PPMP Items</p><br>

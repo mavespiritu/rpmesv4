@@ -1,4 +1,9 @@
-<?php $i = 1; ?>
+<?php 
+use yii\web\View;
+
+$i = 1; 
+
+?>
 <h6 class="text-center"><b>REQUEST AND ISSUANCE SLIP</b></h6>
 <p><b>Entity Name: <u><?= $entityName ?></u></b><br>
 <b>Fund Cluster: <u><?= $fundClusterName ?></u></b></p>
@@ -46,7 +51,8 @@
                     <?= $this->render('_ris-item', [
                         'i' => $i,
                         'model' => $model,
-                        'item' => $item
+                        'item' => $item,
+                        'specifications' => $specifications
                     ]) ?>
                     <?php $total += ($item['total'] * $item['cost']); ?>
                     <?php $i++; ?>
@@ -150,4 +156,32 @@
         <?php } ?>
         </tbody>
     </table>
+<?php } ?>
+<?php if($action == 'print'){ ?>
+<style>
+    *{ font-family: "Tahoma"; }
+    h6{ text-align: center; } 
+    p{ font-size: 10px; font-family: "Tahoma";}
+    table{
+        font-family: "Tahoma";
+        border-collapse: collapse;
+    }
+    thead{
+        font-size: 12px;
+        text-align: center;
+    }
+
+    td{
+        font-size: 10px;
+        border: 1px solid black;
+        padding: 3px 3px;
+    }
+
+    th{
+        font-size: 10px;
+        text-align: center;
+        border: 1px solid black;
+        padding: 3px 3px;
+    }
+</style>
 <?php } ?>

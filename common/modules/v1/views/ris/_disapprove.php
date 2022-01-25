@@ -32,7 +32,6 @@ DisableButtonAsset::register($this);
         'clientOptions' => [
             'autoclose' => true,
             'format' => 'yyyy-mm-dd',
-            'startDate' => date("Y-m-d")
         ],
     ]) ?>
 

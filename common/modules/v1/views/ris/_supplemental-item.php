@@ -10,8 +10,8 @@ use yii\web\View;
     <td><?= number_format($item['total'], 0) ?></td>
     <td align=right><?= number_format($item['cost'] * $item['total'], 2) ?></td>
     <td>
-    <?= ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::button('<i class="fa fa-edit"></i> Edit', ['value' => Url::to(['/v1/ris/update-item', 'id' => $model->id, 'activity_id' => $item['activityId'], 'item_id' => $item['stockNo'], 'type' => 'Supplemental']), 'class' => 'btn btn-primary btn-xs btn-block', 'id' => 'update-'.$item['id'].'-button']) : '' ?>
-    <?= ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::a('<i class="fa fa-trash"></i> Delete', ['delete-item', 'id' => $model->id, 'activity_id' => $item['activityId'], 'item_id' => $item['stockNo'], 'type' => 'Supplemental'], [
+    <?= ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::button('<i class="fa fa-edit"></i> Edit', ['value' => Url::to(['/v1/ris/update-item', 'id' => $model->id, 'activity_id' => $item['activityId'], 'sub_activity_id' => $item['subActivityId'], 'item_id' => $item['stockNo'], 'cost' => $item['cost'], 'type' => 'Supplemental']), 'class' => 'btn btn-primary btn-xs btn-block', 'id' => 'update-'.$item['id'].'-button']) : '' ?>
+    <?= ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::a('<i class="fa fa-trash"></i> Delete', ['delete-item', 'id' => $model->id, 'activity_id' => $item['activityId'], 'sub_activity_id' => $item['subActivityId'], 'item_id' => $item['stockNo'], 'cost' => $item['cost'], 'type' => 'Supplemental'], [
         'class' => 'btn btn-xs btn-danger btn-block',
         'data' => [
             'confirm' => 'Are you sure you want to remove this item?',

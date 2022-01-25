@@ -12,7 +12,7 @@ use yii\widgets\ListView;
 use yii\widgets\ActiveForm;
 
 ?>
-
+<?php $quantityTotal = 0; ?>
 <?php $form = ActiveForm::begin([
     'options' => ['class' => 'disable-submit-buttons'],
     'id' => 'ris-realign-items-form',
@@ -25,43 +25,28 @@ use yii\widgets\ActiveForm;
         <th rowspan=2 style="width: 20%;">Item</th>
         <th rowspan=2>Unit</th>
         <th rowspan=2>Cost</th>
-        <!-- <th colspan=12><center>Remaining Qty</center></th> -->
-        <th rowspan=2><center>Max Qty</center></th>
+        <th rowspan=2>Remaining</th>
         <th rowspan=2>Order</th>
         <th rowspan=2>Total</th>
       </tr>
-      <!-- <tr>
-      <?php if($months){ ?>
-          <?php foreach($months as $month){ ?>
-            <th><center><?= substr($month->abbreviation, 0, 1) ?></center></th>
-          <?php } ?>
-        <?php } ?>
-      </tr> -->
     </thead>
     <tbody>
-      <?php $quantityTotal = 0; ?>
       <?php foreach($items as $item){ ?>
         <?php $total = 0; ?>
         <tr>
           <td><?= $item->item->title ?></td>
           <td><?= $item->item->unit_of_measure ?></td>
           <td align=right><?= number_format($item->cost, 2) ?></td>
-          <!-- <?php if($months){ ?>
-            <?php foreach($months as $month){ ?>
-              <td align=center><?= number_format($item->getRemainingQuantityPerMonth($month->id), 0) ?></td>
-              <?php $total += $item->getRemainingQuantityPerMonth($month->id) ?>
-              <?php $quantityTotal += $total ?>
-            <?php } ?>
-          <?php } ?> -->
-          <td align=center><?= number_format($total, 0) ?></td>
+          <td align=center><?= number_format($item->remainingQuantity, 0) ?></td>
           <?= Html::hiddenInput('total-'.$item->id.'-hidden', 0, ['id' => 'total-'.$item->id.'-hidden']) ?>
-          <td><?= $total > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.', '.$item->cost.', '.json_encode($itemIDs).')'])->label(false) : '' ?></td>
+          <td><?= $item->remainingQuantity > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'value' => 0, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) : $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'value' => 0, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'disabled' => true, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) ?></td>
           <td align=right><p id="total-<?= $item->id ?>">0.00</p></td>
         </tr>
+        <?php $quantityTotal += $item->remainingQuantity ?>
       <?php } ?>
       <tr>
         <td colspan=5 align=right><h4>Minimum</h4></td>
-        <td align=right><h4><?= number_format($model->getRealignAmount(), 2) ?></h4></td>
+        <td align=right><h4><?= number_format($model->getRealignAmount() - $model->getItemsTotal('Realigned'), 2) ?></h4></td>
       </tr>
       <tr>
         <td colspan=5 align=right><h4>Grand Total</h4></td>
@@ -70,12 +55,12 @@ use yii\widgets\ActiveForm;
       </tr>
       <tr>
         <td colspan=5 align=right><h4>Maximum</h4></td>
-        <td align=right><h4><?= number_format($model->getRealignAmount() + ($model->getItemsTotal('Supplemental') * 0.20), 2) ?></h4></td>
+        <td align=right><h4><?= number_format(($model->getRealignAmount() + ($model->getItemsTotal('Supplemental') * 0.20)) - $model->getItemsTotal('Realigned'), 2) ?></h4></td>
       </tr>
     </tbody>
   </table>
   <div class="form-group pull-right">
-  <?= $quantityTotal > 0 && ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::submitButton('Submit', ['class' => 'btn btn-success', 'id' => 'realign-submit-button', 'data' => ['disabled-text' => 'Please Wait'], 'disabled' => true]) : '' ?>
+  <?= ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::submitButton('Submit', ['class' => 'btn btn-success', 'id' => 'realign-submit-button', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
   </div>
 <?php }else{ ?>
   <p class="text-center">No items selected.</p>
@@ -154,7 +139,7 @@ use yii\widgets\ActiveForm;
       $("#grand-total").html(number_format(grandTotal, 2, ".", ","));  
       $("#grandtotal-hidden").val(grandTotal);
 
-      allowButton(grandTotal);
+      //allowButton(grandTotal);
     }
 
     function allowButton(tot)
@@ -180,6 +165,7 @@ use yii\widgets\ActiveForm;
             id: '.$model->id.',
             activity_id: '.$activity->id.',
             sub_activity_id: '.$subActivity->id.',
+            item_id: JSON.stringify('.json_encode($selectedItems).'),
         },
         beforeSend: function(){
             $("#ris-realign-item-list").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");

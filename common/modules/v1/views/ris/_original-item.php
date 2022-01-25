@@ -8,7 +8,7 @@ use yii\web\View;
     <td><?= $item['itemTitle'] ?></td>
     <td>
     <?php if(!isset($specifications[$item['id']])){ ?>
-        <?= Html::button('<i class="fa fa-plus"></i> Create Spec', ['value' => Url::to(['/v1/ris/create-specification', 'id' => $model->id, 'activity_id' => $item['activityId'], 'sub_activity_id' => $item['subActivityId'], 'item_id' => $item['stockNo'], 'cost' => $item['cost'], 'type' => 'Original']), 'class' => 'btn btn-info btn-xs', 'id' => 'create-specification-'.$item['id'].'-button']) ?>
+        <?= ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::button('<i class="fa fa-plus"></i> Create Spec', ['value' => Url::to(['/v1/ris/create-specification', 'id' => $model->id, 'activity_id' => $item['activityId'], 'sub_activity_id' => $item['subActivityId'], 'item_id' => $item['stockNo'], 'cost' => $item['cost'], 'type' => 'Original']), 'class' => 'btn btn-info btn-block btn-xs', 'id' => 'create-specification-'.$item['id'].'-button']) : '' ?>
         <?php }else{ ?>
           <?= $specifications[$item['id']]->risItemSpecValueString ?><br><br>
           <div class="row">

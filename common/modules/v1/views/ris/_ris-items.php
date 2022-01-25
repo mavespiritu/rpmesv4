@@ -24,16 +24,10 @@ use yii\widgets\MaskedInput;
       <tr>
         <th style="width: 20%;">Item</th>
         <th>Unit Cost</th>
+        <th>Remaining</th>
         <th>Order</th>
         <th>Total</th>
       </tr>
-      <!-- <tr>
-      <?php if($months){ ?>
-          <?php foreach($months as $month){ ?>
-            <th><center><?= substr($month->abbreviation, 0, 1) ?></center></th>
-          <?php } ?>
-        <?php } ?>
-      </tr> -->
     </thead>
     <tbody>
       <?php $quantityTotal = 0; ?>
@@ -42,13 +36,14 @@ use yii\widgets\MaskedInput;
           <td><?= $item->item->title ?></td>
           <td align=right><?= number_format($item->cost, 2) ?></td>
           <?= Html::hiddenInput('total-'.$item->id.'-hidden', 0, ['id' => 'total-'.$item->id.'-hidden']) ?>
-          <td><?= $item->remainingQuantity > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 1, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) : 'No remaining quantity' ?></td>
+          <td><?= number_format($item->remainingQuantity, 0) ?></td>
+          <td><?= $item->remainingQuantity > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'value' => 0, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) : $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'value' => 0, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'disabled' => true, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) ?></td>
           <td align=right><p id="total-<?= $item->id ?>">0.00</p></td>
         </tr>
         <?php $quantityTotal += $item->remainingQuantity ?>
       <?php } ?>
       <tr>
-        <td colspan=3 align=right><h4>Grand Total</h4></td>
+        <td colspan=4 align=right><h4>Grand Total</h4></td>
         <td align=right><h4 id="grand-total">0.00</h4></td>
         <?= Html::hiddenInput('grandtotal-hidden', 0, ['id' => 'grandtotal-hidden']) ?>
       </tr>

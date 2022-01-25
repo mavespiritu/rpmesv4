@@ -8,7 +8,10 @@ use yii\web\View;
     <td><?= $i ?></td>
     <td align=center><?= $item['stockNo'] ?></td>
     <td><?= $item['unitOfMeasure'] ?></td>
-    <td><?= $item['itemTitle'] ?></td>
+    <td>
+        <?= $item['itemTitle'] ?><br>
+        <i><?= isset($specifications[$item['id']]) ? $specifications[$item['id']]->risItemSpecValueString : '' ?></i>
+    </td>
     <td align=center><?= $item['total'] ?></td>
     <td align=right><?= number_format($item['total'] * $item['cost'], 2) ?></td>
     <td>&nbsp;</td>

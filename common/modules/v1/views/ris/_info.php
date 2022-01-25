@@ -76,7 +76,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?= $this->render('_ris-item', [
                                             'i' => $i,
                                             'model' => $model,
-                                            'item' => $item
+                                            'item' => $item,
+                                            'specifications' => $specifications
                                         ]) ?>
                                         <?php $total += ($item['total'] * $item['cost']); ?>
                                         <?php $i++; ?>

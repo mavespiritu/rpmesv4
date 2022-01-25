@@ -12,7 +12,7 @@ use yii\bootstrap\ButtonDropdown;
         <?= Html::a('<i class="fa fa-eye"></i> View Content', ['/v1/ris/info', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
         <?= Html::a('<i class="fa fa-plus"></i> Add Original', ['/v1/ris/view', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
         <?= Html::a('<i class="fa fa-plus"></i> Add Supplemental', ['/v1/ris/supplemental', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
-        <?= $model->getRealignAmount() > 0 ? Html::a('<span class="badge bg-red"><i class="fa fa-exclamation"></i></span> <i class="fa fa-mail-forward"></i> Re-align', ['/v1/ris/realign', 'id' => $model->id], ['class' => 'btn btn-app']) : Html::a('<i class="fa fa-mail-forward"></i> Re-align', ['/v1/ris/realign', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
+        <?= $model->getRealignedAmount() > 0 ? Html::a('<span class="badge bg-red"><i class="fa fa-exclamation"></i></span> <i class="fa fa-mail-forward"></i> Re-align', ['/v1/ris/realign', 'id' => $model->id], ['class' => 'btn btn-app']) : Html::a('<i class="fa fa-mail-forward"></i> Re-align', ['/v1/ris/realign', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
         &nbsp;&nbsp;
         <?= ButtonDropdown::widget([
           'label' => '<i class="fa fa-download"></i> Export',
@@ -24,6 +24,7 @@ use yii\bootstrap\ButtonDropdown;
               ],
           ],
         ]); ?>
+        <?= Html::button('<i class="fa fa-print"></i> Print', ['class' => 'btn btn-app', 'onclick' => 'printRis()']) ?>
     </div>
     <div class="pull-right">
         <?= $model->getRealignAmount('Supplemental') <= 0 && $model->risItems && ($model->status->status == 'Draft' || $model->status->status == 'For Revision') ? Html::a('<i class="fa fa-paper-plane"></i> Send For Approval', ['for-approval', 'id' => $model->id], [
@@ -119,6 +120,24 @@ use yii\bootstrap\ButtonDropdown;
             $("#disapprove-modal").modal("show").find("#disapprove-modal-content").load($(this).attr("value"));
         });
         });     
+
+        function printRis()
+        {
+          var printWindow = window.open(
+            "'.Url::to(['/v1/ris/print', 'id' => $model->id]).'", 
+            "Print",
+            "left=200", 
+            "top=200", 
+            "width=950", 
+            "height=500", 
+            "toolbar=0", 
+            "resizable=0"
+          );
+          printWindow.addEventListener("load", function() {
+              printWindow.print();
+              printWindow.close();
+          }, true);
+        }
     ';
 
     $this->registerJs($script, View::POS_END);

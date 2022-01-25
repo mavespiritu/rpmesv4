@@ -280,6 +280,13 @@ class Ris extends \yii\db\ActiveRecord
     public function getRealignAmount()
     {
         $supplementalTotal = $this->getItemsTotal('Supplemental');
+
+        return $supplementalTotal ? $supplementalTotal : 0;
+    }
+
+    public function getRealignedAmount()
+    {
+        $supplementalTotal = $this->getItemsTotal('Supplemental');
         $realignedSourceTotal = $this->getItemSourceTotal('Realigned');
 
         return $supplementalTotal - $realignedSourceTotal > 0 ? $supplementalTotal - $realignedSourceTotal : 0;

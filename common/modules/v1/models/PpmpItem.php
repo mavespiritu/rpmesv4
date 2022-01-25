@@ -41,10 +41,10 @@ class PpmpItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['activity_id', 'sub_activity_id', 'obj_id', 'item_id'], 'required', 'on' => 'Supplemental'],
+            [['activity_id', 'sub_activity_id', 'obj_id', 'item_id', 'cost'], 'required', 'on' => 'Supplemental'],
             [['sub_activity_id', 'obj_id', 'item_id'], 'required'],
             [['appropriation_item_id', 'activity_id', 'sub_activity_id', 'obj_id', 'ppmp_id', 'item_id', 'fund_source_id'], 'integer'],
-            [['cost'], 'number'],
+            [['cost'], 'safe'],
             [['remarks', 'type'], 'string'],
             [['activity_id'], 'exist', 'skipOnError' => true, 'targetClass' => Activity::className(), 'targetAttribute' => ['activity_id' => 'id']],
             [['appropriation_item_id'], 'exist', 'skipOnError' => true, 'targetClass' => AppropriationItem::className(), 'targetAttribute' => ['appropriation_item_id' => 'id']],
@@ -191,7 +191,7 @@ class PpmpItem extends \yii\db\ActiveRecord
 
     public function getQuantityUsedPerMonth($month_id)
     {
-        $total = RisSource::find()->select(['quantity'])->where(['ppmp_item_id' => $this->id, 'month_id' => $month_id])->asArray()->one();
+        $total = RisSource::find()->select(['sum(quantity) as quantity'])->where(['ppmp_item_id' => $this->id, 'month_id' => $month_id])->asArray()->one();
 
         return $total ? $total['quantity'] : 0;
     }

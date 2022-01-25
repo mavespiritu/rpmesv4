@@ -30,9 +30,9 @@ class ItemCost extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['item_id'], 'integer'],
+            [['item_id', 'source_id'], 'integer'],
             [['cost'], 'number'],
-            [['datetime'], 'safe'],
+            [['datetime', 'source_model'], 'safe'],
             [['item_id'], 'exist', 'skipOnError' => true, 'targetClass' => Item::className(), 'targetAttribute' => ['item_id' => 'id']],
         ];
     }
@@ -47,6 +47,8 @@ class ItemCost extends \yii\db\ActiveRecord
             'item_id' => 'Ppmp Item ID',
             'cost' => 'Cost',
             'datetime' => 'Datetime',
+            'source_model' => 'Source',
+            'source_id' => 'Source ID',
         ];
     }
 

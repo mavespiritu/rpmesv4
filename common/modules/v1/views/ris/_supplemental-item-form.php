@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
+use yii\widgets\MaskedInput;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 DisableButtonAsset::register($this);
 use yii\web\View;
@@ -125,8 +126,19 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
             </div>
             <div class="col-md-6 col-xs-12">
                 <div class="form-group">
-                    <label class="control-label">Cost Per Unit</label>
-                    <?= Html::textInput('cost_per_unit', $itemModel->isNewRecord ? '' : number_format($itemModel->item->cost_per_unit, 2), ['disabled' => 'disabled', 'class' => 'form-control', 'id' => 'ppmp-item_cost']); ?>
+                <?= $form->field($itemModel, 'cost')->widget(MaskedInput::classname(), [
+                    'options' => [
+                        'autocomplete' => 'off',
+                        'onchange' => 'getTotal()',
+                        'onkeyup' => 'getTotal()',
+                    ],
+                    'clientOptions' => [
+                        'alias' =>  'decimal',
+                        'removeMaskOnSubmit' => true,
+                        'groupSeparator' => ',',
+                        'autoGroup' => true
+                    ],
+                ])->label('Cost Per Unit') ?>
                 </div>
             </div>
         </div>
@@ -179,7 +191,9 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
   $script = '
     function getTotal()
     {
-        var cost_per_unit = parseInt($("#cost_per_unit").val());
+        $("#cost_per_unit").val($("#ppmpitem-cost").val());
+        var cost_per_unit = $("#cost_per_unit").val().split(",").join("");
+            cost_per_unit = parseFloat(cost_per_unit);
         var jan = parseInt($("#itembreakdown-1-quantity").val());
         var feb = parseInt($("#itembreakdown-2-quantity").val());
         var mar = parseInt($("#itembreakdown-3-quantity").val());
@@ -221,18 +235,7 @@ $item_id = $itemModel->isNewRecord ? 0 : $itemModel->item_id;
                     id: id,
                   }
         }).done(function(result) {
-            $("#ppmp-item_cost").empty();
-            $("#ppmp-item_cost").fadeIn("slow");
-            $("#ppmp-item_cost").val(result);
-        });
-
-        $.ajax({
-            url: "'.Url::to(['/v1/ppmp/cost-per-unit']).'",
-            data: {
-                    id: id,
-                  }
-        }).done(function(result) {
-            $("#cost_per_unit").empty();
+            $("#ppmpitem-cost").val(result);
             $("#cost_per_unit").val(result);
         });
 
