@@ -353,6 +353,7 @@ class RisController extends Controller
                 ->all() : ItemBreakdown::find()
                 ->select(['ppmp_item_id'])
                 ->leftJoin('ppmp_ppmp_item i', 'i.id = ppmp_ppmp_item_breakdown.ppmp_item_id')
+                ->leftJoin('ppmp_item', 'ppmp_item.id = i.item_id')
                 ->andWhere([
                     'i.ppmp_id' => $ppmp->id,
                     'i.activity_id' => $activity->id,
