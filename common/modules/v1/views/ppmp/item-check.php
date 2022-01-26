@@ -2,7 +2,7 @@
 
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\widgets\DetailView;
+use yii\grid\GridView;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 use yii\web\View;
@@ -19,33 +19,61 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model
     ]) ?>
     <div class="box box-primary">
-        <div class="box-header panel-title"><i class="fa fa-list"></i>Manage Items</div>
+        <div class="box-header panel-title"><i class="fa fa-list"></i>Item List</div>
         <div class="box-body">
-            <table class="table table-condensed table-responsive">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Activity</th>
-                        <th>PAP</th>
-                        <th>Item</th>
-                        <th>Unit of Measure</th>
-                        <th>Cost</th>
-                        <th>Quantity Entry Count</th>
-                        <th>Fund Source</th>
-                        <th>&nbsp;</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if(!empty($items)){ ?>
-                    <?php foreach($items as $item){ ?>
-                        <?= $this->render('_item-check', [
-                            'model' => $model,
-                            'item' => $item
-                        ]) ?>
-                    <?php } ?>
-                <?php } ?>
-                </tbody>
-            </table>
+        <?= $this->render('_item-check', [
+            'model' => $model,
+            'searchModel' => $searchModel,
+            'activities' => $activities,
+            'subActivities' => $subActivities,
+            'objects' => $objects,
+        ]) ?>
+        <?= GridView::widget([
+            'options' => [
+                'class' => 'table table-hover table-responsive',
+            ],
+            'dataProvider' => $dataProvider,
+            'showFooter' => true,
+            'columns' => [
+                ['class' => 'yii\grid\SerialColumn'],
+                'activityName',
+                'subActivityName',
+                'objName',
+                'itemName',
+                [
+                    'header' => 'Cost',
+                    'attribute' => 'cost',
+                    'format' => 'raw',
+                    'contentOptions' => ['style' => 'text-align: right;'],
+                    'value' => function($ppmp){
+                        return number_format($ppmp->cost, 2);
+                    }
+                ],
+                'janQty',
+                'febQty',
+                'marQty',
+                'aprQty',
+                'mayQty',
+                'junQty',
+                'julQty',
+                'augQty',
+                'sepQty',
+                'octQty',
+                'novQty',
+                'decQty',
+                'quantities',
+                [
+                    'header' => 'Total Cost',
+                    'format' => 'raw',
+                    'contentOptions' => ['style' => 'text-align: right;'],
+                    'value' => function($ppmp){
+                        return number_format($ppmp->cost * $ppmp->quantities, 2);
+                    }
+                ],
+                'fundSourceName',
+                'type'
+            ],
+        ]); ?>
         </div>
     </div>
 </div>

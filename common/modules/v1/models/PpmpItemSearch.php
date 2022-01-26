@@ -19,7 +19,7 @@ class PpmpItemSearch extends PpmpItem
         return [
             [['id', 'appropriation_item_id', 'activity_id', 'fund_source_id', 'sub_activity_id', 'obj_id', 'ppmp_id', 'item_id'], 'integer'],
             [['cost'], 'number'],
-            [['remarks'], 'safe'],
+            [['remarks', 'type'], 'safe'],
         ];
     }
 
@@ -42,6 +42,9 @@ class PpmpItemSearch extends PpmpItem
     public function search($params)
     {
         $query = PpmpItem::find()
+                ->joinWith('activity')
+                ->joinWith('subActivity')
+                ->joinWith('fundSource')
                 ->orderBy(['id' => SORT_DESC])
         ;
 
@@ -49,7 +52,6 @@ class PpmpItemSearch extends PpmpItem
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
-            'pagination' => false,
         ]);
 
         $this->load($params);
@@ -64,10 +66,10 @@ class PpmpItemSearch extends PpmpItem
         $query->andFilterWhere([
             'id' => $this->id,
             'appropriation_item_id' => $this->appropriation_item_id,
-            'activity_id' => $this->activity_id,
-            'fund_source_id' => $this->fund_source_id,
-            'sub_activity_id' => $this->sub_activity_id,
-            'obj_id' => $this->obj_id,
+            'ppmp_ppmp_item.activity_id' => $this->activity_id,
+            'ppmp_ppmp_item.fund_source_id' => $this->fund_source_id,
+            'ppmp_ppmp_item.sub_activity_id' => $this->sub_activity_id,
+            'ppmp_ppmp_item.obj_id' => $this->obj_id,
             'ppmp_id' => $this->ppmp_id,
             'item_id' => $this->item_id,
             'cost' => $this->cost,

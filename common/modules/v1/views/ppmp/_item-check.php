@@ -1,40 +1,99 @@
 <?php
+
 use yii\helpers\Html;
 use yii\helpers\Url;
-use yii\bootstrap\Modal;
+use yii\widgets\ActiveForm;
+use kartik\select2\Select2;
 use yii\web\View;
+/* @var $model common\modules\v1\models\PpmpSearch */
+/* @var $form yii\widgets\ActiveForm */
 ?>
-<tr>
-    <td><?= $item['id'] ?></td>
-    <td><?= $item['activity'] ?></td>
-    <td><?= $item['subactivity'] ?></td>
-    <td><?= $item['item'] ?></td>
-    <td><?= $item['unitOfMeasure'] ?></td>
-    <td><?= number_format($item['cost'], 2) ?></td>
-    <td><?= $item['total'] ?></td>
-    <td><?= $item['fundSource'] ?></td>
-    <td>
-    <?php //(Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::button('<i class="fa fa-edit"></i> Fix Item', ['value' => Url::to(['/v1/ppmp/fix-item', 'id' => $item['id']]), 'class' => 'btn btn-primary btn-xs btn-block', 'id' => 'fix-'.$item['id'].'-button']) : '' ?>
-    </td>
-</tr>
-<?php
-  Modal::begin([
-    'id' => 'fix-'.$item['id'].'-modal',
-    'size' => "modal-md",
-    'header' => '<div id="fix-'.$item['id'].'-modal-header"><h4>Fix item</h4></div>',
-    'options' => ['tabindex' => false],
-  ]);
-  echo '<div id="fix-'.$item['id'].'-modal-content"></div>';
-  Modal::end();
-?>
-<?php
-    $script = '
-        $(document).ready(function(){
-            $("#fix-'.$item['id'].'-button").click(function(){
-              $("#fix-'.$item['id'].'-modal").modal("show").find("#fix-'.$item['id'].'-modal-content").load($(this).attr("value"));
-            });
-        });     
-    ';
 
-    $this->registerJs($script, View::POS_END);
+<div class="ppmp-item-search">
+
+    <?php $form = ActiveForm::begin([
+        'method' => 'get',
+        'options' => [
+            'data-pjax' => 1
+        ],
+    ]); ?>
+
+    <div class="row">
+      <div class="col-md-3 col-xs-12">
+          <?php 
+              $subActivitiesUrl = \yii\helpers\Url::to(['/v1/ris/sub-activity-list']);
+              echo $form->field($searchModel, 'activity_id')->widget(Select2::classname(), [
+              'data' => $activities,
+              'options' => ['placeholder' => 'Select Activity','multiple' => false, 'class'=>'activity-select'],
+              'pluginOptions' => [
+                  'allowClear' =>  true,
+              ],
+              'pluginEvents'=>[
+                  'select2:select'=>'
+                      function(){
+                          $.ajax({
+                              url: "'.$subActivitiesUrl.'",
+                              data: {
+                                      id: this.value
+                                  }
+                              
+                          }).done(function(result) {
+                              $(".sub-activity-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select PPA", allowClear: true});
+                              $(".sub-activity-select").select2("val","");
+                          });
+                      }'
+
+              ]
+              ]);
+          ?>
+      </div>
+      <div class="col-md-3 col-xs-12">
+          <?= $form->field($searchModel, 'sub_activity_id')->widget(Select2::classname(), [
+                  'data' => $subActivities,
+                  'options' => ['placeholder' => 'Select PPA', 'multiple' => false, 'class' => 'sub-activity-select'],
+                  'pluginOptions' => [
+                      'allowClear' =>  true,
+                  ],
+                  
+              ]);
+          ?>
+      </div>
+      <div class="col-md-3 col-xs-12">
+        <?= $form->field($searchModel, 'obj_id')->widget(Select2::classname(), [
+                'data' => $objects,
+                'options' => ['placeholder' => 'Select Object', 'multiple' => false, 'class' => 'obj-select'],
+                'pluginOptions' => [
+                    'allowClear' => true
+                ],
+            ])->label('Object');
+        ?>
+      </div>
+      <div class="col-md-3 col-xs-12">
+        <?= $form->field($searchModel, 'type')->widget(Select2::classname(), [
+                'data' => ['Original' => 'Original', 'Supplemental' => 'Supplemental'],
+                'options' => ['placeholder' => 'Select Type', 'multiple' => false, 'class' => 'type-select'],
+                'pluginOptions' => [
+                    'allowClear' => true
+                ],
+            ])->label('Type');
+        ?>
+      </div>
+  </div>
+        
+  <div class="form-group pull-right">
+      <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
+      <?= Html::resetButton('Clear', ['class' => 'btn btn-outline-secondary', 'onClick' => 'redirectPage()']) ?>
+  </div>
+
+  <?php ActiveForm::end(); ?>
+
+</div>
+<?php
+$script = '
+    function redirectPage()
+    {
+        window.location.href = "'.Url::to(['/v1/ppmp/item-check', 'id' => $model->id]).'";
+    }
+';
+$this->registerJs($script, View::POS_END);
 ?>

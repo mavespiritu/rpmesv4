@@ -850,32 +850,91 @@ class PpmpController extends Controller
     {
         $model = $this->findModel($id);
 
-        $quantities = ItemBreakdown::find()->select(['ppmp_item_id', 'count(id) as total'])->groupBy(['ppmp_item_id'])->createCommand()->getRawSql();
+        $activities = Activity::find()
+        ->select([
+            'ppmp_activity.id as id',
+            'ppmp_activity.pap_id as pap_id',
+            'concat(
+               ppmp_cost_structure.code,"",
+               ppmp_organizational_outcome.code,"",
+               ppmp_program.code,"",
+               ppmp_sub_program.code,"",
+               ppmp_identifier.code,"",
+               ppmp_pap.code,"000-",
+               ppmp_activity.code," - ",
+               ppmp_activity.title
+           ) as text',
+            'p.title as groupTitle'
+        ])
+       ->leftJoin(['p' => '(
+           SELECT 
+           ppmp_pap.id as id, 
+           ppmp_pap.code as code, 
+           concat(
+               ppmp_cost_structure.code,"",
+               ppmp_organizational_outcome.code,"",
+               ppmp_program.code,"",
+               ppmp_sub_program.code,"",
+               ppmp_identifier.code,"",
+               ppmp_pap.code,"000 - ",
+               ppmp_pap.title
+           ) as title
+           from 
+           ppmp_pap
+           left join ppmp_identifier on ppmp_identifier.id = ppmp_pap.identifier_id
+           left join ppmp_sub_program on ppmp_sub_program.id = ppmp_pap.sub_program_id
+           left join ppmp_program on ppmp_program.id = ppmp_pap.program_id
+           left join ppmp_organizational_outcome on ppmp_organizational_outcome.id = ppmp_pap.organizational_outcome_id
+           left join ppmp_cost_structure on ppmp_cost_structure.id = ppmp_pap.cost_structure_id
+       )'], 'p.id = ppmp_activity.pap_id')
+       ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id')
+       ->leftJoin('ppmp_identifier', 'ppmp_identifier.id = ppmp_pap.identifier_id')
+       ->leftJoin('ppmp_sub_program', 'ppmp_sub_program.id = ppmp_pap.sub_program_id')
+       ->leftJoin('ppmp_program', 'ppmp_program.id = ppmp_pap.program_id')
+       ->leftJoin('ppmp_organizational_outcome', 'ppmp_organizational_outcome.id = ppmp_pap.organizational_outcome_id')
+       ->leftJoin('ppmp_cost_structure', 'ppmp_cost_structure.id = ppmp_pap.cost_structure_id')
+       ->asArray()
+       ->all();
 
-        $items = PpmpItem::find()
-            ->select([
-                'ppmp_ppmp_item.id as id',
-                'ppmp_activity.title as activity',
-                'ppmp_sub_activity.title as subactivity',
-                'ppmp_fund_source.code as fundSource',
-                'ppmp_item.title as item',
-                'ppmp_item.unit_of_measure as unitOfMeasure',
-                'ppmp_ppmp_item.cost as cost',
-                'quantities.total as total'
+        $params = Yii::$app->request->queryParams;
+
+        $activities = ArrayHelper::map($activities, 'id', 'text', 'groupTitle');
+        
+        $subActivities = [];
+
+        if(!empty($params))
+        {
+            $subActivities = isset($params['PpmpItemSearch']['activity_id']) ? SubActivity::find()->where(['activity_id' => $params['PpmpItemSearch']['activity_id']])->all() : [];
+        }
+
+        $subActivities = !empty($subActivities) ? ArrayHelper::map($subActivities, 'id', 'title') : [];
+
+        $objects = Obj::find()->select([
+            'ppmp_obj.id', 
+            'ppmp_obj.obj_id', 
+            'concat(ppmp_obj.code," - ",ppmp_obj.title) as text',
+            'p.title as groupTitle',
+            'ppmp_obj.active'
             ])
-            ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
-            ->leftJoin('ppmp_sub_activity', 'ppmp_sub_activity.id = ppmp_ppmp_item.sub_activity_id')
-            ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
-            ->leftJoin('ppmp_fund_source', 'ppmp_fund_source.id = ppmp_ppmp_item.fund_source_id')
-            ->leftJoin(['quantities' => '('.$quantities.')'], 'quantities.ppmp_item_id = ppmp_ppmp_item.id')
-            ->andWhere(['ppmp_id' => $model->id])
-            ->andWhere(['>', 'quantities.total', 12])
+            ->leftJoin(['p' => '(SELECT id, concat(code," - ",title) as title from ppmp_obj)'], 'p.id = ppmp_obj.obj_id')
             ->asArray()
             ->all();
+        
+        $objects = $this->lastnodes('obj_id', $objects);
+
+        $objects = ArrayHelper::map($objects, 'id', 'text', 'groupTitle');
+
+        $searchModel = new PpmpItemSearch();
+        $searchModel->ppmp_id = $model->id;
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('item-check', [
             'model' => $model,
-            'items' => $items,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'activities' => $activities,
+            'subActivities' => $subActivities,
+            'objects' => $objects,
         ]);
     }
     

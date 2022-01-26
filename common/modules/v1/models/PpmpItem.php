@@ -76,6 +76,25 @@ class PpmpItem extends \yii\db\ActiveRecord
             'cost' => 'Cost',
             'remarks' => 'Remarks',
             'type' => 'Type',
+            'papName' => 'PAP',
+            'activityName' => 'Activity',
+            'subActivityName' => 'PPA',
+            'objName' => 'Object',
+            'itemName' => 'Item',
+            'janQty' => 'J',
+            'febQty' => 'F',
+            'marQty' => 'M',
+            'aprQty' => 'A',
+            'mayQty' => 'M',
+            'junQty' => 'J',
+            'julQty' => 'J',
+            'augQty' => 'A',
+            'sepQty' => 'S',
+            'octQty' => 'O',
+            'novQty' => 'N',
+            'decQty' => 'D',
+            'fundSourceName' => 'Fund Source',
+            'quantities' => 'Total Qty'
         ];
     }
 
@@ -87,6 +106,12 @@ class PpmpItem extends \yii\db\ActiveRecord
     public function getActivity()
     {
         return $this->hasOne(Activity::className(), ['id' => 'activity_id']);
+    }
+
+
+    public function getActivityName()
+    {
+        return $this->activity ? $this->activity->pap->codeTitle.' - '.$this->activity->code.' - '.$this->activity->title : '';
     }
 
     /**
@@ -119,6 +144,11 @@ class PpmpItem extends \yii\db\ActiveRecord
         return $this->hasOne(Item::className(), ['id' => 'item_id']);
     }
 
+    public function getItemName()
+    {
+        return $this->item ? $this->item->title : '';
+    }
+
     /**
      * Gets query for [[Obj]].
      *
@@ -127,6 +157,11 @@ class PpmpItem extends \yii\db\ActiveRecord
     public function getObj()
     {
         return $this->hasOne(Obj::className(), ['id' => 'obj_id']);
+    }
+
+    public function getObjName()
+    {
+        return $this->obj ? $this->obj->objectTitle : '';
     }
 
     /**
@@ -139,6 +174,11 @@ class PpmpItem extends \yii\db\ActiveRecord
         return $this->hasOne(SubActivity::className(), ['id' => 'sub_activity_id']);
     }
 
+    public function getSubActivityName()
+    {
+        return $this->subActivity ? $this->subActivity->title : '';
+    }
+
     /**
      * Gets query for [[FundSource]].
      *
@@ -147,6 +187,11 @@ class PpmpItem extends \yii\db\ActiveRecord
     public function getFundSource()
     {
         return $this->hasOne(FundSource::className(), ['id' => 'fund_source_id']);
+    }
+
+    public function getFundSourceName()
+    {
+        return $this->fundSource ? $this->fundSource->code : '';
     }
 
     /**
@@ -209,6 +254,126 @@ class PpmpItem extends \yii\db\ActiveRecord
         $quantities = $this->getItemBreakdowns()->select(['sum(quantity) as total'])->where(['in', 'month_id', $months])->asArray()->one();
 
         return $quantities ? $quantities['total'] : 0;
+    }
+
+    public function getJanQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(1);
+    }
+
+    public function getFebQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(2);
+    }
+
+    public function getMarQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(3);
+    }
+
+    public function getAprQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(4);
+    }
+
+    public function getMayQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(5);
+    }
+
+    public function getJunQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(6);
+    }
+
+    public function getJulQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(7);
+    }
+
+    public function getAugQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(8);
+    }
+
+    public function getSepQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(9);
+    }
+
+    public function getOctQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(10);
+    }
+
+    public function getNovQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(11);
+    }
+
+    public function getDecQtyUsed()
+    {
+        return $this->getQuantityUsedPerMonth(12);
+    }
+
+    public function getJanQty()
+    {
+        return $this->getQuantityPerMonth(1);
+    }
+
+    public function getFebQty()
+    {
+        return $this->getQuantityPerMonth(2);
+    }
+
+    public function getMarQty()
+    {
+        return $this->getQuantityPerMonth(3);
+    }
+
+    public function getAprQty()
+    {
+        return $this->getQuantityPerMonth(4);
+    }
+
+    public function getMayQty()
+    {
+        return $this->getQuantityPerMonth(5);
+    }
+
+    public function getJunQty()
+    {
+        return $this->getQuantityPerMonth(6);
+    }
+
+    public function getJulQty()
+    {
+        return $this->getQuantityPerMonth(7);
+    }
+
+    public function getAugQty()
+    {
+        return $this->getQuantityPerMonth(8);
+    }
+
+    public function getSepQty()
+    {
+        return $this->getQuantityPerMonth(9);
+    }
+
+    public function getOctQty()
+    {
+        return $this->getQuantityPerMonth(10);
+    }
+
+    public function getNovQty()
+    {
+        return $this->getQuantityPerMonth(11);
+    }
+
+    public function getDecQty()
+    {
+        return $this->getQuantityPerMonth(12);
     }
 
     public function getRemainingQuantity()

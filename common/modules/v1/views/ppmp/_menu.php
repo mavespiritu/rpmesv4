@@ -9,7 +9,8 @@ use yii\web\View;
 <div>
     <div class="pull-left">
         <?= Html::a('<i class="fa fa-angle-double-left"></i> Back to PPMP List', ['/v1/ppmp/'], ['class' => 'btn btn-app']) ?>
-        <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::a('<i class="fa fa-check"></i> Item Check', ['/v1/ppmp/item-check', 'id' => $model->id], ['class' => 'btn btn-app']) : '' ?>
+        <?= Html::a('<i class="fa fa-eye"></i> View PPMP', ['/v1/ppmp/view', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
+        <?= Html::a('<i class="fa fa-list"></i> Item List', ['/v1/ppmp/item-check', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
     </div>
     <div class="pull-right">
         <?= (Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('Administrator')) ? Html::a('<i class="fa fa-thumbs-o-up"></i> Approve', ['approve', 'id' => $model->id], [
