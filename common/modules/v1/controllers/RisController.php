@@ -592,13 +592,13 @@ class RisController extends Controller
         {
             if(count($types) > 1)
             {
-                $comment = 'Some of the items indicated herein are NOT in the APP';
+                $comment = 2;
             }else{
                 if(in_array('Original', $types))
                 {
-                    $comment = 'All items indicated herein are in the APP';
+                    $comment = 1;
                 }else{
-                    $comment = 'All items indicated herein are NOT in the APP';
+                    $comment = 2;
                 }
             }
         }
@@ -750,13 +750,13 @@ class RisController extends Controller
         {
             if(count($types) > 1)
             {
-                $comment = 'Some of the items indicated herein are NOT in the APP';
+                $comment = 2;
             }else{
                 if(in_array('Original', $types))
                 {
-                    $comment = 'All items indicated herein are in the APP';
+                    $comment = 1;
                 }else{
-                    $comment = 'All items indicated herein are NOT in the APP';
+                    $comment = 2;
                 }
             }
         }
@@ -808,7 +808,8 @@ class RisController extends Controller
                                     text-align: center;
                                     border: 1px solid black;
                                     padding: 3px 3px;
-                                }', 
+                                }
+                                ', 
                 ]);
         
                 $response = Yii::$app->response;
@@ -955,13 +956,13 @@ class RisController extends Controller
         {
             if(count($types) > 1)
             {
-                $comment = 'Some of the items indicated herein are NOT in the APP';
+                $comment = 2;
             }else{
                 if(in_array('Original', $types))
                 {
-                    $comment = 'All items indicated herein are in the APP';
+                    $comment = 1;
                 }else{
-                    $comment = 'All items indicated herein are NOT in the APP';
+                    $comment = 2;
                 }
             }
         }
@@ -975,7 +976,7 @@ class RisController extends Controller
             'realignedItems' => $realignedItems,
             'months' => $months,
             'comment' => $comment,
-            'specifications' => $specifications
+            'specifications' => $specifications,
         ]);
 
     }
@@ -1600,9 +1601,12 @@ class RisController extends Controller
 
         $supplementalItems = [];
 
+        $specifications = [];
+
         $suppItems = RisItem::find()
                 ->select([
                     'ppmp_ris_item.id as id',
+                    'ppmp_ris_item.ris_id as ris_id',
                     'ppmp_item.id as stockNo',
                     'concat(
                         ppmp_cost_structure.code,"",
@@ -1620,8 +1624,9 @@ class RisController extends Controller
                     'ppmp_sub_activity.title as subActivityTitle',
                     'ppmp_item.title as itemTitle',
                     'ppmp_item.unit_of_measure as unitOfMeasure',
-                    'ppmp_ppmp_item.cost as cost',
-                    'sum(quantity) as total'
+                    'ppmp_ris_item.cost as cost',
+                    'sum(quantity) as total',
+                    'ppmp_ris_item.type'
                 ])
                 ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
                 ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
@@ -1646,6 +1651,29 @@ class RisController extends Controller
             foreach($suppItems as $item)
             {
                 $supplementalItems[$item['prexc'].' - '.$item['subActivityTitle']][] = $item;
+            }
+        }
+
+        if(!empty($supplementalItems))
+        {
+            foreach($supplementalItems as $suppItems)
+            {
+                foreach($suppItems as $item)
+                {
+                    $spec = RisItemSpec::findOne([
+                        'ris_id' => $item['ris_id'],
+                        'activity_id' => $item['activityId'],
+                        'sub_activity_id' => $item['subActivityId'],
+                        'item_id' => $item['stockNo'],
+                        'cost' => $item['cost'],
+                        'type' => $item['type'],
+                    ]);
+
+                    if($spec)
+                    {
+                        $specifications[$item['id']] = $spec;
+                    }
+                }
             }
         }
 
@@ -1707,6 +1735,7 @@ class RisController extends Controller
             'supplementalItems' => $supplementalItems,
             'months' => $months,
             'itemBreakdowns' => $itemBreakdowns,
+            'specifications' => $specifications
         ]);
     }
 
@@ -2010,7 +2039,7 @@ class RisController extends Controller
                     if ($flag) {
                         $transaction->commit();
                         \Yii::$app->getSession()->setFlash('success', 'Specification added successfully');
-                        return $this->redirect(['view', 'id' => $model->id]);
+                        return $type == 'Original' ? $this->redirect(['view', 'id' => $model->id]) : $this->redirect(['supplemental', 'id' => $model->id]);
                     }
                 } catch (Exception $e) {
                     $transaction->rollBack();
@@ -2084,7 +2113,7 @@ class RisController extends Controller
                     if ($flag) {
                         $transaction->commit();
                         \Yii::$app->getSession()->setFlash('success', 'Specification has been updated');
-                        return $this->redirect(['view', 'id' => $model->id]);
+                        return $type == 'Original' ? $this->redirect(['view', 'id' => $model->id]) : $this->redirect(['supplemental', 'id' => $model->id]);
                     }
                 } catch (Exception $e) {
                     $transaction->rollBack();
@@ -2121,7 +2150,7 @@ class RisController extends Controller
         if($spec->delete())
         {
             \Yii::$app->getSession()->setFlash('success', 'Specification has been deleted');
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $type == 'Original' ? $this->redirect(['view', 'id' => $model->id]) : $this->redirect(['supplemental', 'id' => $model->id]);
         }
     }
 

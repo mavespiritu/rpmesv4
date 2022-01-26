@@ -100,6 +100,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td style="width: 20%">&nbsp;</td>
                         </tr>
                     </table>
+                    <br>
                     <table style="width: 80%;">
                         <tr>
                             <td style="width: 10%;">Purpose:</td>
@@ -107,7 +108,26 @@ $this->params['breadcrumbs'][] = $this->title;
                         </tr>
                         <tr>
                             <td style="width: 10%; border: none">&nbsp;</td>
-                            <td style="width: 80%; border: none;"><?= $comment ?></td>
+                            <td style="width: 80%; border: none;"><br>
+                                <?php if($comment == 1){ 
+                                    echo '<input type="checkbox" checked >
+                                    &nbsp;&nbsp;&nbsp;
+                                    All items indicated herein are in the APP
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <input type="checkbox" >
+                                    &nbsp;&nbsp;&nbsp;
+                                    Some items indicated herein are NOT in the APP';
+                                }else{
+                                    echo '<input type="checkbox"  >
+                                    &nbsp;&nbsp;&nbsp;
+                                    All items indicated herein are in the APP
+                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <input type="checkbox" checked="checked" >
+                                    &nbsp;&nbsp;&nbsp;
+                                    Some items indicated herein are NOT in the APP';
+                                } 
+                                ?>
+                            </td>
                         </tr>
                     </table>
                     <br>
@@ -185,8 +205,3 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
-<!-- <style>
-    .table, .table tr, .table td, .table th{
-        border: 1px solid black !important;
-    }
-</style> -->

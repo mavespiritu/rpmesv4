@@ -47,6 +47,7 @@ $total = 0;
                         <thead>
                             <tr>
                                 <th>Item</th>
+                                <th>Specification</th>
                                 <th>Unit Cost</th>
                                 <th>Quantity</th>
                                 <td align=center><b>Total</b></td>
@@ -63,7 +64,8 @@ $total = 0;
                                     <?php foreach($suppItems as $item){ ?>
                                         <?= $this->render('_supplemental-item', [
                                             'model' => $model,
-                                            'item' => $item
+                                            'item' => $item,
+                                            'specifications' => $specifications
                                         ]) ?>
                                         <?php $total += ($item['cost'] * $item['total']); ?>
                                     <?php } ?>
@@ -71,23 +73,23 @@ $total = 0;
                             <?php } ?>
                         <?php }else{ ?>
                             <tr>
-                                <td colspan=7 align=center>No supplemental items included</td>
+                                <td colspan=6 align=center>No supplemental items included</td>
                             </tr>
                         <?php } ?>
                         <tr>
-                            <td colspan=2 align=right><b>Grand Total</b></td>
+                            <td colspan=3 align=right><b>Grand Total</b></td>
                             <td>&nbsp;</td>
                             <td align=right><b><?= number_format($total, 2) ?></b></td>
                             <td>&nbsp;</td>
                         </tr>
                         <tr>
-                            <td colspan=2 align=right><b>Realigned</b></td>
+                            <td colspan=3 align=right><b>Realigned</b></td>
                             <td>&nbsp;</td>
                             <td align=right><b><?= number_format($model->getItemsTotal('Realigned'), 2) ?></b></td>
                             <td>&nbsp;</td>
                         </tr>
                         <tr>
-                            <td colspan=2 align=right><b>Unused</b></td>
+                            <td colspan=3 align=right><b>Unused</b></td>
                             <td>&nbsp;</td>
                             <td align=right><b><?= number_format($model->getItemsTotal('Realigned') - $total, 2) ?></b></td>
                             <td>&nbsp;</td>

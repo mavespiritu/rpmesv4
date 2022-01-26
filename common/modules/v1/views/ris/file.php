@@ -1,3 +1,31 @@
+<?php if($action == 'print'){ ?>
+<style>
+    *{ font-family: "Tahoma"; }
+    h6{ text-align: center; } 
+    p{ font-size: 10px; font-family: "Tahoma";}
+    table{
+        font-family: "Tahoma";
+        border-collapse: collapse;
+    }
+    thead{
+        font-size: 12px;
+        text-align: center;
+    }
+
+    td{
+        font-size: 10px;
+        border: 1px solid black;
+        padding: 3px 3px;
+    }
+
+    th{
+        font-size: 10px;
+        text-align: center;
+        border: 1px solid black;
+        padding: 3px 3px;
+    }
+</style>
+<?php } ?>
 <?php 
 use yii\web\View;
 
@@ -84,7 +112,26 @@ $i = 1;
     </tr>
     <tr>
         <td style="width: 10%; border: none">&nbsp;</td>
-        <td style="width: 80%; border: none;"><?= $comment ?></td>
+        <td style="width: 80%; border: none;"><br>
+        <?php if($comment == 1){ 
+            echo '<input type="checkbox" checked >
+            &nbsp;&nbsp;&nbsp;
+            All items indicated herein are in the APP
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="checkbox" >
+            &nbsp;&nbsp;&nbsp;
+            Some items indicated herein are NOT in the APP';
+        }else{
+            echo '<input type="checkbox"  >
+            &nbsp;&nbsp;&nbsp;
+            All items indicated herein are in the APP
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <input type="checkbox" checked="checked" >
+            &nbsp;&nbsp;&nbsp;
+            Some items indicated herein are NOT in the APP';
+        } 
+        ?>
+        </td>
     </tr>
 </table>
 <br>
@@ -156,32 +203,4 @@ $i = 1;
         <?php } ?>
         </tbody>
     </table>
-<?php } ?>
-<?php if($action == 'print'){ ?>
-<style>
-    *{ font-family: "Tahoma"; }
-    h6{ text-align: center; } 
-    p{ font-size: 10px; font-family: "Tahoma";}
-    table{
-        font-family: "Tahoma";
-        border-collapse: collapse;
-    }
-    thead{
-        font-size: 12px;
-        text-align: center;
-    }
-
-    td{
-        font-size: 10px;
-        border: 1px solid black;
-        padding: 3px 3px;
-    }
-
-    th{
-        font-size: 10px;
-        text-align: center;
-        border: 1px solid black;
-        padding: 3px 3px;
-    }
-</style>
 <?php } ?>
