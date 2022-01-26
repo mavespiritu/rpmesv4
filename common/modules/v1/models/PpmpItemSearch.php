@@ -39,7 +39,7 @@ class PpmpItemSearch extends PpmpItem
      *
      * @return ActiveDataProvider
      */
-    public function search($params)
+    public function search($params, $pagination)
     {
         $query = PpmpItem::find()
                 ->joinWith('activity')
@@ -50,8 +50,11 @@ class PpmpItemSearch extends PpmpItem
 
         // add conditions that should always apply here
 
-        $dataProvider = new ActiveDataProvider([
+        $dataProvider = $pagination == '' ? new ActiveDataProvider([
             'query' => $query,
+        ]) : new ActiveDataProvider([
+            'query' => $query,
+            'pagination' => [ 'pageSize' => 0 ]
         ]);
 
         $this->load($params);

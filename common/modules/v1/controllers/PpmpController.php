@@ -543,7 +543,7 @@ class PpmpController extends Controller
         $searchModel->fund_source_id = $fundSource->id;
         $searchModel->sub_activity_id = $subActivity->id;
 
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams, 'true');
 
         return $this->renderAjax('_items-in-sub-activity', [
             'model' => $model,
@@ -926,7 +926,7 @@ class PpmpController extends Controller
 
         $searchModel = new PpmpItemSearch();
         $searchModel->ppmp_id = $model->id;
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams, '');
 
         return $this->render('item-check', [
             'model' => $model,
