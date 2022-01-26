@@ -36,7 +36,7 @@ DisableButtonAsset::register($this);
         ])->label('Type');
     ?>
 
-    <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')){ ?>
+    <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('ProcurementStaff')){ ?>
         <?php 
             $signatoryUrl = \yii\helpers\Url::to(['/v1/ris/signatory-list']);
             $ppmpUrl = \yii\helpers\Url::to(['/v1/ris/ppmp-list']);

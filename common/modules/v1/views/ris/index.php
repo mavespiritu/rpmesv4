@@ -78,6 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'header' => 'Status',
                                 'attribute' => 'status.status',
                             ],
+                            'type',
                             [
                                 'format' => 'raw', 
                                 'value' => function($model){
