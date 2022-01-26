@@ -49,6 +49,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             ['class' => 'yii\grid\SerialColumn'],
 
                             'ris_no',
+                            [
+                                'attribute' => 'type',
+                                'format' => 'raw',
+                                'value' => function($model){
+                                    return $model->type == 'Supply' ? 'Goods' : 'Service/Contract';
+                                }
+                            ],
                             'officeName',
                             [
                                 'attribute' => 'purpose',
@@ -78,7 +85,6 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'header' => 'Status',
                                 'attribute' => 'status.status',
                             ],
-                            'type',
                             [
                                 'format' => 'raw', 
                                 'value' => function($model){
