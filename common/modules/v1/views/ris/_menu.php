@@ -13,8 +13,7 @@ use yii\bootstrap\ButtonDropdown;
         <?= Html::a('<i class="fa fa-plus"></i> Add Original', ['/v1/ris/view', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
         <?= Html::a('<i class="fa fa-plus"></i> Add Supplemental', ['/v1/ris/supplemental', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
         <?= $model->getRealignedAmount() > 0 ? Html::a('<span class="badge bg-red"><i class="fa fa-exclamation"></i></span> <i class="fa fa-mail-forward"></i> Re-align', ['/v1/ris/realign', 'id' => $model->id], ['class' => 'btn btn-app']) : Html::a('<i class="fa fa-mail-forward"></i> Re-align', ['/v1/ris/realign', 'id' => $model->id], ['class' => 'btn btn-app']) ?>
-        &nbsp;&nbsp;
-        <?= ButtonDropdown::widget([
+        <?php /* ButtonDropdown::widget([
           'label' => '<i class="fa fa-download"></i> Export',
           'encodeLabel' => false,
           'options' => ['class' => 'btn btn-app'],
@@ -23,7 +22,7 @@ use yii\bootstrap\ButtonDropdown;
                   ['label' => 'PDF', 'url' => Url::to(['/v1/ris/download', 'type' => 'pdf', 'id' => $model->id])],
               ],
           ],
-        ]); ?>
+        ]); */ ?>
         <?= Html::button('<i class="fa fa-print"></i> Print', ['class' => 'btn btn-app', 'onclick' => 'printRis()']) ?>
     </div>
     <div class="pull-right">

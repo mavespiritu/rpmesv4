@@ -113,24 +113,45 @@ $i = 1;
     <tr>
         <td style="width: 10%; border: none">&nbsp;</td>
         <td style="width: 80%; border: none;"><br>
-        <?php if($comment == 1){ 
-            echo '<input type="checkbox" checked >
-            &nbsp;&nbsp;&nbsp;
-            All items indicated herein are in the APP
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <input type="checkbox" >
-            &nbsp;&nbsp;&nbsp;
-            Some items indicated herein are NOT in the APP';
-        }else{
-            echo '<input type="checkbox"  >
-            &nbsp;&nbsp;&nbsp;
-            All items indicated herein are in the APP
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <input type="checkbox" checked="checked" >
-            &nbsp;&nbsp;&nbsp;
-            Some items indicated herein are NOT in the APP';
-        } 
-        ?>
+        <?php if($action == 'print'){ ?>
+            <?php if($comment == 1){ 
+                echo '<input type="checkbox" checked >
+                &nbsp;&nbsp;&nbsp;
+                All items indicated herein are in the APP
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="checkbox" >
+                &nbsp;&nbsp;&nbsp;
+                Some items indicated herein are NOT in the APP';
+            }else{
+                echo '<input type="checkbox"  >
+                &nbsp;&nbsp;&nbsp;
+                All items indicated herein are in the APP
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <input type="checkbox" checked="checked" >
+                &nbsp;&nbsp;&nbsp;
+                Some items indicated herein are NOT in the APP';
+            } 
+            ?>
+        <?php }else{ ?>
+            <?php if($comment == 1){ 
+                echo '<i class="fa ">&#f14a;</i>
+                &nbsp;&nbsp;&nbsp;
+                All items indicated herein are in the APP
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <i class="fa ">&#f096</i>
+                &nbsp;&nbsp;&nbsp;
+                Some items indicated herein are NOT in the APP';
+            }else{
+                echo '<i class="fa ">&#f096</i>
+                &nbsp;&nbsp;&nbsp;
+                All items indicated herein are in the APP
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <i class="fa ">&#f14a;</i>
+                &nbsp;&nbsp;&nbsp;
+                Some items indicated herein are NOT in the APP';
+            } 
+            ?>
+        <?php } ?>
         </td>
     </tr>
 </table>
