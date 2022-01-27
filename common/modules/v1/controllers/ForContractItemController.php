@@ -36,7 +36,7 @@ class ForContractItemController extends Controller
                     [
                         'actions' => ['index', 'create', 'update', 'view', 'delete'],
                         'allow' => true,
-                        'roles' => ['Supply', 'Administrator'],
+                        'roles' => ['ProcurementStaff', 'Administrator'],
                     ],
                 ],
             ],
