@@ -210,6 +210,40 @@ class RisController extends Controller
         return $arr;
     }
 
+    public function actionRealignItemList($id, $activity_id, $sub_activity_id)
+    {
+        $model = $this->findModel($id);
+        $forContractItems = ForContractItem::find()->select(['item_id'])->asArray()->all();
+        $forContractItems = ArrayHelper::map($forContractItems, 'item_id', 'item_id');
+        
+        $items = Item::find()
+        ->select([
+            'ppmp_item.id as id',
+            'ppmp_item.title as text',
+        ])
+        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.item_id = ppmp_item.id')
+        ->leftJoin('ppmp_object_item', 'ppmp_object_item.item_id = ppmp_item.id')
+        ->andWhere(['ppmp_ppmp_item.ppmp_id' => $model->ppmp->id])
+        ->andWhere(['ppmp_ppmp_item.activity_id' => $activity_id])
+        ->andWhere(['ppmp_ppmp_item.sub_activity_id' => $sub_activity_id])
+        ->andWhere(['ppmp_ppmp_item.fund_source_id' => $model->fund_source_id])
+        ;
+
+        $items = $items
+                ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
+                ->orderBy(['ppmp_item.title' => SORT_ASC])
+                ->asArray()
+                ->all();
+        
+        $arr = [];
+        $arr[] = ['id'=>'','text'=>''];
+        foreach($items as $item){
+            $arr[] = ['id' => $item['id'], 'text' => $item['text']];
+        }
+        \Yii::$app->response->format = 'json';
+        return $arr;
+    }
+
     public function actionMaxValue($id, $month_id)
     {
         $max = ItemBreakdown::findOne(['ppmp_item_id' => $id, 'month_id' => $month_id]);

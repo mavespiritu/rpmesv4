@@ -22,7 +22,7 @@ use yii\web\View;
             <div class="col-md-12 col-xs-12">
                 <?php 
                     $subActivitiesUrl = \yii\helpers\Url::to(['/v1/ris/sub-activity-list']);
-                    $itemsUrl = \yii\helpers\Url::to(['/v1/ris/original-item-list']);
+                    $itemsUrl = \yii\helpers\Url::to(['/v1/ris/realign-item-list']);
                     echo $form->field($appropriationItemModel, 'activity_id')->widget(Select2::classname(), [
                     'data' => $activities,
                     'options' => ['placeholder' => 'Select Activity','multiple' => false, 'class'=>'activity-select'],
