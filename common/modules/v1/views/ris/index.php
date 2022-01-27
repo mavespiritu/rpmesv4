@@ -67,6 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 }
                             ],
                             'fundSourceName',
+                            'creatorName',
                             'requesterName',
                             'date_required',
                             [
