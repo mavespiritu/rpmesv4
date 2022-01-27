@@ -33,8 +33,8 @@
                     ['label' => 'MAIN MENU', 'options' => ['class' => 'header']],
                     ['label' => 'Dashboard', 'icon' => 'bar-chart-o', 'url' => ['/v1/dashboard']],
                     ['label' => 'Procurement Planning', 'options' => ['class' => 'header']],
-                    ['label' => 'NEP', 'icon' => 'folder', 'url' => ['/v1/nep'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
-                    ['label' => 'GAA', 'icon' => 'folder', 'url' => ['/v1/gaa'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
+                    ['label' => 'NEP', 'icon' => 'folder', 'url' => ['/v1/nep'], 'visible' => !Yii::$app->user->isGuest && (in_array('AccountingStaff', $userRoles) || in_array('Administrator', $userRoles))],
+                    ['label' => 'GAA', 'icon' => 'folder', 'url' => ['/v1/gaa'], 'visible' => !Yii::$app->user->isGuest && (in_array('AccountingStaff', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'PPMP', 'icon' => 'folder', 'url' => ['/v1/ppmp']],
                     ['label' => 'APP', 'icon' => 'folder', 'url' => ['/v1/app']],
                     [
@@ -47,8 +47,8 @@
                                 'icon' => 'folder', 
                                 'url' => '#', 
                                 'items' => [
-                                    ['label' => 'Appropriation', 'icon' => 'folder', 'url' => ['/v1/appropriation'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
-                                    ['label' => 'Budget', 'icon' => 'folder', 'url' => ['/v1/budget-monitoring'], 'visible' => !Yii::$app->user->isGuest && (in_array('Accounting', $userRoles) || in_array('Administrator', $userRoles))],
+                                    ['label' => 'Appropriation', 'icon' => 'folder', 'url' => ['/v1/appropriation'], 'visible' => !Yii::$app->user->isGuest && (in_array('AccountingStaff', $userRoles) || in_array('Administrator', $userRoles))],
+                                    ['label' => 'Budget', 'icon' => 'folder', 'url' => ['/v1/budget-monitoring'], 'visible' => !Yii::$app->user->isGuest && (in_array('AccountingStaff', $userRoles) || in_array('Administrator', $userRoles))],
                                     ['label' => 'PPMP', 'icon' => 'folder', 'url' => ['/v1/ppmp-monitoring'], 'visible' => !Yii::$app->user->isGuest],
                             ],
                         ],
@@ -58,9 +58,9 @@
                     ['label' => 'RIS', 'icon' => 'folder', 'url' => ['/v1/ris']],
                     ['label' => 'PR', 'icon' => 'folder', 'url' => ['/gii']],
 
-                    ['label' => 'Inventory', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))],
-                    ['label' => 'Items', 'icon' => 'folder', 'url' => ['/v1/item'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))], 
-                    ['label' => 'For Contract Items', 'icon' => 'folder', 'url' => ['/v1/for-contract-item'], 'visible' => !Yii::$app->user->isGuest && (in_array('Supply', $userRoles) || in_array('Administrator', $userRoles))], 
+                    ['label' => 'Inventory', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('SupplyStaff', $userRoles) || in_array('Administrator', $userRoles))],
+                    ['label' => 'Items', 'icon' => 'folder', 'url' => ['/v1/item'], 'visible' => !Yii::$app->user->isGuest && (in_array('SupplyStaff', $userRoles) || in_array('Administrator', $userRoles))], 
+                    ['label' => 'For Contract Items', 'icon' => 'folder', 'url' => ['/v1/for-contract-item'], 'visible' => !Yii::$app->user->isGuest && (in_array('ProcurementStaff', $userRoles) || in_array('Administrator', $userRoles))], 
                     ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('Administrator', $userRoles))],
                     [
                         'label' => 'Libraries',
