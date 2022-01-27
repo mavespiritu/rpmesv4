@@ -45,6 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= GridView::widget([
                         'dataProvider' => $dataProvider,
                         'options' => ['class' => 'table table-hover table-responsive'],
+                        'showFooter' => true,
                         'columns' => [
                             ['class' => 'yii\grid\SerialColumn'],
 
