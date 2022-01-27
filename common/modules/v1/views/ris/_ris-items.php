@@ -18,6 +18,7 @@ use yii\widgets\MaskedInput;
     'id' => 'ris-items-form',
 ]); ?>
 
+<p>Note: If you have selected months above, the system will load the quantities at the order input box. You may still adjust your order and the system will charge it to the months with available quantities.</p>
 <?php if($items){ ?>
   <table class="table table-bordered" id="dttable">
     <thead>
@@ -37,7 +38,7 @@ use yii\widgets\MaskedInput;
           <td align=right><?= number_format($item->cost, 2) ?></td>
           <?= Html::hiddenInput('total-'.$item->id.'-hidden', 0, ['id' => 'total-'.$item->id.'-hidden']) ?>
           <td><?= number_format($item->remainingQuantity, 0) ?></td>
-          <td><?= $item->remainingQuantity > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'value' => 0, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) : $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'value' => 0, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'disabled' => true, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) ?></td>
+          <td><?= $item->remainingQuantity > 0 ? $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) : $form->field($data[$item->id], "[$item->id]quantity")->textInput(['maxlength' => true, 'type' => 'number', 'min' => 0, 'value' => 0, 'placeholder' => 'Max: '.number_format($item->remainingQuantity, 0), 'max' => $item->remainingQuantity, 'disabled' => true, 'onkeyup' => 'getTotal('.$item->id.','.$item->cost.','.json_encode($itemIDs).')'])->label(false) ?></td>
           <td align=right><p id="total-<?= $item->id ?>">0.00</p></td>
         </tr>
         <?php $quantityTotal += $item->remainingQuantity ?>
@@ -138,6 +139,7 @@ use yii\widgets\MaskedInput;
             activity_id: '.$activity->id.',
             sub_activity_id: '.$subActivity->id.',
             item_id: JSON.stringify('.json_encode($selectedItems).'),
+            month_id: JSON.stringify('.json_encode($selectedMonths).'),
         },
         beforeSend: function(){
             $("#ris-item-list").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");

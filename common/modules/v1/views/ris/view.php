@@ -28,6 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'activities' => $activities,
                         'subActivities' => $subActivities,
                         'items' => $items,
+                        'months' => $months
                     ]) ?>
                 </div>
             </div>

@@ -349,22 +349,27 @@ class RisController extends Controller
 
         $items = [];
 
+        $months = Month::find()->all();
+        $months = ArrayHelper::map($months, 'id', 'month');
+
         return $this->render('view', [
             'model' => $model,
             'appropriationItemModel' => $appropriationItemModel,
             'activities' => $activities,
             'subActivities' => $subActivities,
             'items' => $items,
+            'months' => $months,
         ]);
     }
 
-    public function actionLoadItems($id, $activity_id, $sub_activity_id, $item_id)
+    public function actionLoadItems($id, $activity_id, $sub_activity_id, $item_id, $month_id)
     {
         $model = $this->findModel($id);
         $ppmp = $model->ppmp;
         $activity = Activity::findOne($activity_id);
         $subActivity = SubActivity::findOne($sub_activity_id);
         $selectedItems = json_decode($item_id, true);
+        $selectedMonths = json_decode($month_id, true);
         
         $forContractItems = ForContractItem::find()->select(['item_id'])->asArray()->all();
         $forContractItems = ArrayHelper::map($forContractItems, 'item_id', 'item_id');
@@ -383,8 +388,7 @@ class RisController extends Controller
                 ->andWhere(['>', 'quantity', 0])
                 ->andWhere(['not in', 'i.item_id', $forContractItems])
                 ->andWhere(['in', 'ppmp_item.id', $selectedItems])
-                ->asArray()
-                ->all() : ItemBreakdown::find()
+                 : ItemBreakdown::find()
                 ->select(['ppmp_item_id'])
                 ->leftJoin('ppmp_ppmp_item i', 'i.id = ppmp_ppmp_item_breakdown.ppmp_item_id')
                 ->leftJoin('ppmp_item', 'ppmp_item.id = i.item_id')
@@ -398,8 +402,13 @@ class RisController extends Controller
                 ->andWhere(['>', 'quantity', 0])
                 ->andWhere(['in', 'i.item_id', $forContractItems])
                 ->andWhere(['in', 'ppmp_item.id', $selectedItems])
-                ->asArray()
-                ->all();
+                ;
+
+        $itemIDs = !empty($selectedMonths) ? $itemIDs->andWhere(['in', 'ppmp_ppmp_item_breakdown.month_id', $selectedMonths]) : $itemIDs;
+
+        $itemIDs = $itemIDs
+                    ->asArray()
+                    ->all();
         
         $itemIDs = ArrayHelper::map($itemIDs, 'ppmp_item_id', 'ppmp_item_id');
 
@@ -409,9 +418,13 @@ class RisController extends Controller
         {
             foreach($itemIDs as $id)
             {
+                $ppmpItem = PpmpItem::findOne(['id' => $id]);
+                $quantity = $ppmpItem ? $ppmpItem->getRemainingQuantityPerMonths($selectedMonths) : 0;
+
                 $item = new RisItem();
                 $item->ppmp_item_id = $id;
                 $item->ris_id = $model->id;
+                $item->quantity = !empty($selectedMonths) ? $quantity : 0;
                 $item->type = 'Original';
 
                 $data[$id] = $item;
@@ -478,7 +491,8 @@ class RisController extends Controller
             'data' => $data,
             'months' => $months,
             'itemIDs' => $itemIDs,
-            'selectedItems' => $selectedItems
+            'selectedItems' => $selectedItems,
+            'selectedMonths' => $selectedMonths,
         ]);
     }
 

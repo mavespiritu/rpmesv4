@@ -386,7 +386,7 @@ class PpmpItem extends \yii\db\ActiveRecord
         $maxQuantity = $this->getQuantityPerMonth($month_id);
         $quantityUsed = $this->getQuantityUsedPerMonth($month_id);
 
-        return $maxQuantity - $quantityUsed;
+        return $maxQuantity - $quantityUsed > 0 ? $maxQuantity - $quantityUsed : 0;
     }
 
     public function getRemainingQuantityPerMonths($months)
@@ -394,7 +394,7 @@ class PpmpItem extends \yii\db\ActiveRecord
         $maxQuantity = $this->getQuantityPerMonths($months);
         $quantityUsed = $this->getQuantityUsedPerMonths($months);
 
-        return $maxQuantity - $quantityUsed;
+        return $maxQuantity - $quantityUsed > 0 ? $maxQuantity - $quantityUsed : 0;
     }
 
     public function getRemainingQuantityTotalCost()

@@ -7,6 +7,7 @@
             'activities' => $activities,
             'subActivities' => $subActivities,
             'items' => $items,
+            'months' => $months,
         ]) ?>
         <br>
         <p class="panel-title"><i class="fa fa-list"></i> Available PPMP Items</p><br>

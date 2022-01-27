@@ -26,6 +26,7 @@ class AppropriationItem extends \yii\db\ActiveRecord
     public $stage;
     public $year;
     public $order;
+    public $month_id;
     /**
      * {@inheritdoc}
      */

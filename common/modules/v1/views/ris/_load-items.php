@@ -98,6 +98,16 @@ use yii\web\View;
                     ]);
                 ?>
             </div>
+            <div class="col-md-12 col-xs-12">
+                <?= $form->field($appropriationItemModel, 'month_id')->widget(Select2::classname(), [
+                        'data' => $months,
+                        'options' => ['placeholder' => 'Select Month','multiple' => true, 'class'=>'month-select'],
+                        'pluginOptions' => [
+                            'allowClear' =>  true,
+                        ],
+                    ])->label('Months (For bulk orders)');
+                ?>
+            </div>
             <div class="col-md-4 col-xs-12">
                 <div class="form-group">
                     <?= Html::submitButton('<i class="fa fa-refresh"></i> Load Items', ['class' => 'btn btn-success btn-block']) ?>
@@ -119,6 +129,7 @@ use yii\web\View;
                 activity_id: $("#appropriationitem-activity_id").val(),
                 sub_activity_id: $("#appropriationitem-sub_activity_id").val(),
                 item_id: JSON.stringify($("#appropriationitem-item_id").val()),
+                month_id: JSON.stringify($("#appropriationitem-month_id").val()),
             },
             beforeSend: function(){
                 $("#ris-item-list").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
