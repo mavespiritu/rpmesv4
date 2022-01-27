@@ -1869,7 +1869,6 @@ class RisController extends Controller
                     'i.type' => 'Original'
                 ])
                 ->andWhere(['>', 'quantity', 0])
-                ->andWhere(['not in', 'i.item_id', $forContractItems])
                 ->andWhere(['in', 'ppmp_item.id', $selectedItems])
                 ->asArray()
                 ->all() : ItemBreakdown::find()
@@ -1884,7 +1883,6 @@ class RisController extends Controller
                     'i.type' => 'Original'
                 ])
                 ->andWhere(['>', 'quantity', 0])
-                ->andWhere(['in', 'i.item_id', $forContractItems])
                 ->andWhere(['in', 'ppmp_item.id', $selectedItems])
                 ->asArray()
                 ->all();
