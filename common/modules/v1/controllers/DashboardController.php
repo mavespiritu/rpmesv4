@@ -186,6 +186,7 @@ class DashboardController extends \yii\web\Controller
         }
 
         $items = $items
+        ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
         ->groupBy([
             'ppmp_activity.pap_id',
             'ppmp_ppmp_item.fund_source_id',
@@ -197,6 +198,7 @@ class DashboardController extends \yii\web\Controller
         ->all();
 
         $ppmpPaps = $ppmpPaps
+        ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
         ->asArray()
         ->all();
 
@@ -317,6 +319,7 @@ class DashboardController extends \yii\web\Controller
         }
 
         $items = $items
+        ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
         ->groupBy([
             'ppmp_activity.pap_id',
             'ppmp_ppmp_item.fund_source_id',
@@ -328,6 +331,7 @@ class DashboardController extends \yii\web\Controller
         ->all();
 
         $ppmpPaps = $ppmpPaps
+        ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
         ->asArray()
         ->all();
 
@@ -477,6 +481,7 @@ class DashboardController extends \yii\web\Controller
         }
 
         $items = $items
+        ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
         ->groupBy([
             'ppmp_activity.pap_id',
             'ppmp_ppmp.office_id',
@@ -491,6 +496,7 @@ class DashboardController extends \yii\web\Controller
         ->all();
 
         $ppmpPaps = $ppmpPaps
+        ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
         ->asArray()
         ->all();
 
@@ -665,6 +671,7 @@ class DashboardController extends \yii\web\Controller
         }
 
         $items = $items
+        ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
         ->groupBy([
             'ppmp_activity.pap_id',
             'ppmp_ppmp.office_id',
@@ -679,6 +686,7 @@ class DashboardController extends \yii\web\Controller
         ->all();
 
         $ppmpPaps = $ppmpPaps
+        ->andWhere(['ppmp_ppmp_item.type' => 'Original'])
         ->asArray()
         ->all();
 

@@ -56,7 +56,7 @@
                     ],],
                     ['label' => 'Actual Procurement', 'options' => ['class' => 'header']],
                     ['label' => 'RIS', 'icon' => 'folder', 'url' => ['/v1/ris']],
-                    ['label' => 'PR', 'icon' => 'folder', 'url' => ['/gii']],
+                    ['label' => 'PR', 'icon' => 'folder', 'url' => ['/v1/pr'], 'visible' => !Yii::$app->user->isGuest && (in_array('ProcurementStaff', $userRoles) || in_array('Administrator', $userRoles))],
 
                     ['label' => 'Inventory', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('SupplyStaff', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Items', 'icon' => 'folder', 'url' => ['/v1/item'], 'visible' => !Yii::$app->user->isGuest && (in_array('SupplyStaff', $userRoles) || in_array('Administrator', $userRoles))], 

@@ -84,7 +84,7 @@ DisableButtonAsset::register($this);
         ])->label('PPMP Year');
     ?>
 
-<?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
+    <?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
         'data' => $fundSources,
         'options' => ['placeholder' => 'Select Fund Source','multiple' => false, 'class'=>'fund-source-select'],
         'pluginOptions' => [
