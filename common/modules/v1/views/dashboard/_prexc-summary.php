@@ -25,7 +25,7 @@ use yii\bootstrap\Modal;
 </h5>
 <div class="clearfix"></div>
 <br>
-<div class="freeze-table" style="height: 800px;">
+<div class="freeze-table" style="height: 850px;">
     <table class="table table-condensed table-hover table-bordered table-responsive">
         <thead>
         <?php if(!empty($headers)){ ?>

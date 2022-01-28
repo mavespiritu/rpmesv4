@@ -37,7 +37,7 @@ class Pr extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['fund_source_id', 'fund_cluster_id'], 'required'],
+            [['type', 'office_id', 'year', 'fund_source_id', 'fund_cluster_id', 'purpose', 'date_requested', 'requested_by'], 'required'],
             [['fund_source_id', 'fund_cluster_id'], 'integer'],
             [['purpose', 'type'], 'string'],
             [['year'], 'integer'],
