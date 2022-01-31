@@ -56,7 +56,7 @@ class RisSearch extends Ris
             ->joinWith('requester r')
             ->joinWith('office')
             ->joinWith('fundSource')
-            ->andWhere(['r.office_id' => Yii::$app->user->identity->userinfo->office->abbreviation])
+            ->andWhere(['r.office_id' => Yii::$app->user->identity->userinfo->office->id])
             ->orderBy(['ris_no' => SORT_DESC]);
 
         // add conditions that should always apply here

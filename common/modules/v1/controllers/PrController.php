@@ -129,6 +129,8 @@ class PrController extends Controller
     {
         $model = $this->findModel($id);
 
+        
+
         return $this->renderAjax('_items', [
             'model' => $model,
         ]);
