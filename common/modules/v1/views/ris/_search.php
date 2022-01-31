@@ -23,7 +23,7 @@ use yii\web\View;
     <?= $form->field($model, 'ris_no') ?>
 
     <div class="row">
-        <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement') || Yii::$app->user->can('Accounting')){ ?>
+        <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('AccountingStaff')){ ?>
             <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
                 'data' => ['' => 'All Divisions'] + $offices,

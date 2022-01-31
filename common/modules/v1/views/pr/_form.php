@@ -29,6 +29,14 @@ DisableButtonAsset::register($this);
             'allowClear' =>  true,
         ],
         ])->label('Type') ?>
+
+    <?= $form->field($model, 'procurement_mode_id')->widget(Select2::classname(), [
+        'data' => $procurementModes,
+        'options' => ['placeholder' => 'Select Mode','multiple' => false, 'class'=>'procurement-mode-select'],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('Mode of Procurement') ?>
     
     <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
         'data' => $offices,

@@ -1086,8 +1086,8 @@ class RisController extends Controller
 
             $lastRis = Ris::find()->orderBy(['id' => SORT_DESC])->one();
             $userOffice = Office::findOne(['id' => Yii::$app->user->identity->userinfo->OFFICE_C]);
-            $lastNumber = intval(substr($lastRis->ris_no, -3));
-            $ris_no = $lastRis ? substr(date("Y"), -2).'-'.date("md").'-'.str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT) : substr(date("Y"), -2).'-'.date("md").'-001';
+            $lastNumber = $lastRis ? intval(substr($lastRis->ris_no, -3)) : '001';
+            $ris_no = $lastRis ? substr(date("Y"), -2).'-'.date("md").'-'.str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT) : substr(date("Y"), -2).'-'.date("md").$lastNumber;
             $model->ris_no = $ris_no;
             $model->office_id = (Yii::$app->user->can('Administrator') || Yii::$app->user->can('Procurement')) ? $model->office_id : $userOffice->abbreviation;
             $model->date_requested = date("Y-m-d"); 
@@ -1223,7 +1223,7 @@ class RisController extends Controller
 
         if ($model->load(Yii::$app->request->post()) && $model->save(false)) {
             \Yii::$app->getSession()->setFlash('success', 'Record Updated');
-            return $this->redirect(['view', 'id' => $model->id]);
+            return $this->redirect(['info', 'id' => $model->id]);
         }
 
         return $this->renderAjax('update', [

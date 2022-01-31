@@ -29,7 +29,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
                 <div class="box-body">
-                    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+                    <?= $this->render('_search', [
+                        'model' => $searchModel,
+                        'types' => $types,
+                        'fundSources' => $fundSources,
+                        'offices' => $offices,
+                        'procurementModes' => $procurementModes,
+                    ]); ?>
                 </div>
             </div>
         </div>
@@ -51,7 +57,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                     return $model->type == 'Supply' ? 'Goods' : 'Service/Contract';
                                 }
                             ],
-                            'office_id',
+                            'procurementModeName',
+                            'officeName',
                             [
                                 'attribute' => 'purpose',
                                 'format' => 'raw',
@@ -60,13 +67,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                     return $model->purpose;
                                 }
                             ],
-                            'fund_source_id',
-                            'created_by',
-                            'requested_by',
-                            'date_requested', 
-                            'status',
-
-                            ['class' => 'yii\grid\ActionColumn', 'template' => '{view}'],
+                            'fundSourceName',
+                            'creatorName',
+                            'requesterName',
+                            'date_requested',
+                            [
+                                'header' => 'Status',
+                                'attribute' => 'status.status',
+                            ],
+                            [
+                                'format' => 'raw', 
+                                'value' => function($model){
+                                    return Html::a('View', ['/v1/pr/view', 'id' => $model->id],['class' => 'btn btn-primary btn-xs btn-block']);
+                            }],
                         ],
                     ]); ?>
                 </div>

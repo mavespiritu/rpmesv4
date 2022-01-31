@@ -19,6 +19,7 @@ use common\modules\v1\models\ItemCost;
 use common\modules\v1\models\ItemBreakdown;
 use common\modules\v1\models\PpmpItemSearch;
 use common\modules\v1\models\FundCluster;
+use common\modules\v1\models\ProcurementMode;
 use common\modules\v1\models\Signatory;
 use common\modules\v1\models\RisItem;
 use common\modules\v1\models\RisItemSpec;
@@ -80,9 +81,27 @@ class PrController extends Controller
         $searchModel = new PrSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
+        $types = [
+            'Supply' => 'Goods',
+            'Service' => 'Service/Contract',
+        ];
+
+        $fundSources = FundSource::find()->all();
+        $fundSources = ArrayHelper::map($fundSources, 'id', 'code');
+
+        $offices = Office::find()->all();
+        $offices = ArrayHelper::map($offices, 'abbreviation', 'abbreviation');
+
+        $procurementModes = ProcurementMode::find()->all();
+        $procurementModes = ArrayHelper::map($procurementModes, 'id', 'title');
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'types' => $types,
+            'fundSources' => $fundSources,
+            'offices' => $offices,
+            'procurementModes' => $procurementModes,
         ]);
     }
 
@@ -96,6 +115,22 @@ class PrController extends Controller
     {
         return $this->render('view', [
             'model' => $this->findModel($id),
+        ]);
+    }
+
+    public function actionHome($id)
+    {
+        return $this->renderAjax('_home', [
+            'model' => $this->findModel($id),
+        ]);
+    }
+
+    public function actionItems($id)
+    {
+        $model = $this->findModel($id);
+
+        return $this->renderAjax('_items', [
+            'model' => $model,
         ]);
     }
 
@@ -126,6 +161,9 @@ class PrController extends Controller
         $years = Ppmp::find()->select(['distinct(year) as year'])->where(['stage' => 'Final'])->orderBy(['year' => SORT_DESC])->asArray()->all();
         $years = ArrayHelper::map($years, 'year', 'year');
 
+        $procurementModes = ProcurementMode::find()->all();
+        $procurementModes = ArrayHelper::map($procurementModes, 'id', 'title');
+
         $types = [
             'Supply' => 'Goods',
             'Service' => 'Service/Contract',
@@ -139,7 +177,8 @@ class PrController extends Controller
         if ($model->load(Yii::$app->request->post())) {
 
             $lastPr = Pr::find()->orderBy(['id' => SORT_DESC])->one();
-            $pr_no = $lastPr ? substr(date("Y"), -2).'-'.date("md").'-'.str_pad(substr($lastPr->pr_no, -1) + 1, 3, '0', STR_PAD_LEFT) : substr(date("Y"), -2).'-'.date("md").'-001';
+            $lastNumber = $lastPr ? intval(substr($lastPr->pr_no, -3)) : '001';
+            $pr_no = $lastPr ? substr(date("Y"), -2).'-'.date("md").'-'.str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT) : substr(date("Y"), -2).'-'.date("md").'-'.$lastNumber;
             $model->pr_no = $pr_no;
             $model->created_by = Yii::$app->user->identity->userinfo->EMP_N; 
             $model->date_created = date("Y-m-d"); 
@@ -156,7 +195,8 @@ class PrController extends Controller
             'fundClusters' => $fundClusters,
             'signatories' => $signatories,
             'types' => $types,
-            'years' => $years
+            'years' => $years,
+            'procurementModes' => $procurementModes
         ]);
     }
 
@@ -171,13 +211,48 @@ class PrController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            \Yii::$app->getSession()->setFlash('success', 'Record Updated');
-            return $this->redirect(['index']);
+        $offices = Office::find()->all();
+        $offices = ArrayHelper::map($offices, 'abbreviation', 'abbreviation');
+
+        $fundSources = FundSource::find()->all();
+        $fundSources = ArrayHelper::map($fundSources, 'id', 'code');
+
+        $fundClusters = FundCluster::find()->all();
+        $fundClusters = ArrayHelper::map($fundClusters, 'id', 'title');
+
+        $signatories = Signatory::find()->all();
+        $signatories = ArrayHelper::map($signatories, 'emp_id', 'name');
+
+        $years = Ppmp::find()->select(['distinct(year) as year'])->where(['stage' => 'Final'])->orderBy(['year' => SORT_DESC])->asArray()->all();
+        $years = ArrayHelper::map($years, 'year', 'year');
+
+        $procurementModes = ProcurementMode::find()->all();
+        $procurementModes = ArrayHelper::map($procurementModes, 'id', 'title');
+
+        $types = [
+            'Supply' => 'Goods',
+            'Service' => 'Service/Contract',
+        ];
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
         }
 
-        return $this->render('update', [
+        if ($model->load(Yii::$app->request->post()) && $model->save(false)) {
+            \Yii::$app->getSession()->setFlash('success', 'Record Updated');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->renderAjax('update', [
             'model' => $model,
+            'offices' => $offices,
+            'fundSources' => $fundSources,
+            'fundClusters' => $fundClusters,
+            'signatories' => $signatories,
+            'types' => $types,
+            'years' => $years,
+            'procurementModes' => $procurementModes
         ]);
     }
 
@@ -190,7 +265,13 @@ class PrController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+
+        if($model->delete())
+        {
+            $statuses = Transaction::deleteAll(['model' => 'Pr', 'model_id' => $id]);
+        }
+        
         \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
         return $this->redirect(['index']);
     }

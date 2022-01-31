@@ -1,10 +1,12 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\ActiveForm;
-
-/* @var $this yii\web\View */
-/* @var $model common\modules\v1\models\PrSearch */
+use kartik\select2\Select2;
+use dosamigos\datepicker\DatePicker;
+use yii\web\View;
+/* @var $model common\modules\v1\models\PpmpSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
@@ -13,39 +15,74 @@ use yii\widgets\ActiveForm;
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
+        'options' => [
+            'data-pjax' => 1
+        ],
     ]); ?>
-
-    <?= $form->field($model, 'id') ?>
-
+    
     <?= $form->field($model, 'pr_no') ?>
 
-    <?= $form->field($model, 'office_id') ?>
+    <div class="row">
+        <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('ProcurementStaff') || Yii::$app->user->can('AccountingStaff')){ ?>
+            <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'office_id')->widget(Select2::classname(), [
+                'data' => ['' => 'All Divisions'] + $offices,
+                'options' => ['multiple' => false, 'class'=>'office-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  false,
+                ],
+            ]);
+            ?>
+            </div>
+        <?php } ?>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'type')->widget(Select2::classname(), [
+                'data' => $types,
+                'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Type');
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
+                'data' => $fundSources,
+                'options' => ['placeholder' => 'Select Fund Source','multiple' => false, 'class'=>'fund-source-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
 
-    <?= $form->field($model, 'section_id') ?>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'date_requested')->widget(DatePicker::classname(), [
+                'options' => ['placeholder' => 'Enter date'],
+                'clientOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd'
+                ],
+            ]) ?>
+        </div>
+    </div>
 
-    <?= $form->field($model, 'unit_id') ?>
-
-    <?php // echo $form->field($model, 'fund_source_id') ?>
-
-    <?php // echo $form->field($model, 'fund_cluster_id') ?>
-
-    <?php // echo $form->field($model, 'purpose') ?>
-
-    <?php // echo $form->field($model, 'requested_by') ?>
-
-    <?php // echo $form->field($model, 'date_requested') ?>
-
-    <?php // echo $form->field($model, 'approved_by') ?>
-
-    <?php // echo $form->field($model, 'date_approved') ?>
-
-    <?php // echo $form->field($model, 'type') ?>
+    <?= $form->field($model, 'purpose')->textarea(['rows' => 3]) ?>
 
     <div class="form-group">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
-        <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>
+        <?= Html::resetButton('Clear', ['class' => 'btn btn-outline-secondary', 'onClick' => 'redirectPage()']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
 
 </div>
+<?php
+$script = '
+    function redirectPage()
+    {
+        window.location.href = "'.Url::to(['/v1/pr/']).'";
+    }
+';
+$this->registerJs($script, View::POS_END);
+?>

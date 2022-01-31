@@ -19,6 +19,7 @@ $this->params['breadcrumbs'][] = 'Update';
         'signatories' => $signatories,
         'types' => $types,
         'years' => $years,
+        'procurementModes' => $procurementModes
     ]) ?>
 
 </div>

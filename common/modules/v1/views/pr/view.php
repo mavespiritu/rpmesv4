@@ -2,47 +2,79 @@
 
 use yii\helpers\Html;
 use yii\widgets\DetailView;
-
-/* @var $this yii\web\View */
+use  yii\web\View;
 /* @var $model common\modules\v1\models\Pr */
 
-$this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Prs', 'url' => ['index']];
+$this->title = $model->status ? $model->pr_no.' ['.$model->status->status.']' : $model->pr_no;
+$this->params['breadcrumbs'][] = ['label' => 'PRs', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
 <div class="pr-view">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-
-    <p>
-        <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
-            ],
-        ]) ?>
-    </p>
-
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'id',
-            'pr_no',
-            'office_id',
-            'section_id',
-            'unit_id',
-            'fund_source_id',
-            'fund_cluster_id',
-            'purpose:ntext',
-            'requested_by',
-            'date_requested',
-            'approved_by',
-            'date_approved',
-            'type',
-        ],
+    <?= $this->render('_menu', [
+        'model' => $model
     ]) ?>
 
+    <div class="row">
+        <div class="col-md-2 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header panel-title"><i class="fa fa-list"></i> Main Navigation</div>
+                <div class="box-body">
+                <?= $this->render('_pr-menu', [
+                    'model' => $model
+                ]) ?>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 col-xs-12">
+            <div id="pr-main">
+            </div>
+        </div>
+        <div class="col-md-2 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header panel-title"><i class="fa fa-edit"></i> To Dos</div>
+                <div class="box-body">
+                    <ul style="font-size: 12px;">
+                        <li>Add Items</li>
+                        <li>Set DBM Available Items</li>
+                        <li>Generate RFQ</li>
+                        <li>Retrieve RFQs</li>
+                        <li>Set Suppliers</li>
+                        <li>Set Purchase Order</li>
+                        <li>Set Contract</li>
+                        <li>Inspect Items</li>
+                        <li>Issue Items</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="box box-primary">
+                <div class="box-header panel-title"><i class="fa fa-file-o"></i> Reports</div>
+                <div class="box-body">
+                    <ul style="font-size: 12px;">
+                        <li>Agency Purchase Request (APR)</li>
+                        <li>Purchase Request (PR)</li>
+                        <li>Request For Quotation (RFQ)</li>
+                        <li>Abstract of Quotation (AOQ)</li>
+                        <li>DBM Purchase Order (DBM-PO)</li>
+                        <li>Purchase Order (PO)</li>
+                        <li>Contract</li>
+                        <li>Notice to Proceed (NTP)</li>
+                        <li>Notice of Award (NOA)</li>
+                        <li>Obligation Request Status (ORS)</li>
+                        <li>Disbursement Voucher (DV)</li>
+                        <li>Inspection and Acceptance Report (IAR)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+<?php
+    $script = '
+        $(document).ready(function(){
+            home('.$model->id.');
+        });     
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>

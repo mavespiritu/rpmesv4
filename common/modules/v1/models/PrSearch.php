@@ -2,6 +2,7 @@
 
 namespace common\modules\v1\models;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use common\modules\v1\models\Pr;
@@ -11,6 +12,10 @@ use common\modules\v1\models\Pr;
  */
 class PrSearch extends Pr
 {
+    public $officeName;
+    public $procurementModeName;
+    public $creatorName;
+    public $requesterName;
     /**
      * {@inheritdoc}
      */
@@ -40,14 +45,57 @@ class PrSearch extends Pr
      */
     public function search($params)
     {
-        $query = Pr::find();
+        $query = Yii::$app->user->can('Administrator') || Yii::$app->user->can('ProcurementStaff') ? 
+            Pr::find()
+            ->joinWith('creator c')
+            ->joinWith('requester r')
+            ->joinWith('office')
+            ->joinWith('fundSource')
+             ->orderBy(['pr_no' => SORT_DESC]) :
+            Pr::find()
+            ->joinWith('creator c')
+            ->joinWith('requester r')
+            ->joinWith('office')
+            ->joinWith('fundSource')
+            ->andWhere(['ppmp_pr.office_id' => Yii::$app->user->identity->userinfo->office->abbreviation])
+            ->orderBy(['pr_no' => SORT_DESC]);
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort'=> ['defaultOrder' => ['id' => SORT_DESC]]
         ]);
 
+        $dataProvider->setSort([
+            'attributes' => [
+                'type',
+                'pr_no',
+                'procurementModeName' => [
+                    'asc' => ['ppmp_procurement_mode.title' => SORT_ASC],
+                    'desc' => ['ppmp_procurement_mode.title' => SORT_DESC],
+                ],
+                'officeName' => [
+                    'asc' => ['tbloffice.abbreviation' => SORT_ASC],
+                    'desc' => ['tbloffice.abbreviation' => SORT_DESC],
+                ],
+                'fundSourceName' => [
+                    'asc' => ['ppmp_fund_source.code' => SORT_ASC],
+                    'desc' => ['ppmp_fund_source.code' => SORT_DESC],
+                ],
+                'purpose',
+                'date_requested',
+                'creatorName' => [
+                    'asc' => ['concat(c.FIRST_M," ",c.LAST_M)' => SORT_ASC],
+                    'desc' => ['concat(c.FIRST_M," ",c.LAST_M)' => SORT_DESC],
+                ],
+                'date_created',
+                'requesterName' => [
+                    'asc' => ['concat(r.name)' => SORT_ASC],
+                    'desc' => ['concat(r.name)' => SORT_DESC],
+                ],
+            ]
+        ]);
         $this->load($params);
 
         if (!$this->validate()) {
@@ -59,20 +107,21 @@ class PrSearch extends Pr
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'ppmp_pr.office_id' => $this->office_id,
+            'ppmp_pr.section_id' => $this->section_id,
+            'ppmp_pr.unit_id' => $this->unit_id,
             'fund_source_id' => $this->fund_source_id,
             'fund_cluster_id' => $this->fund_cluster_id,
             'date_requested' => $this->date_requested,
             'date_approved' => $this->date_approved,
+            'requested_by' => $this->requested_by,
+            'approved_by' => $this->approved_by,
+            'type' => $this->type,
         ]);
 
         $query->andFilterWhere(['like', 'pr_no', $this->pr_no])
-            ->andFilterWhere(['like', 'office_id', $this->office_id])
-            ->andFilterWhere(['like', 'section_id', $this->section_id])
-            ->andFilterWhere(['like', 'unit_id', $this->unit_id])
             ->andFilterWhere(['like', 'purpose', $this->purpose])
-            ->andFilterWhere(['like', 'requested_by', $this->requested_by])
-            ->andFilterWhere(['like', 'approved_by', $this->approved_by])
-            ->andFilterWhere(['like', 'type', $this->type]);
+            ;
 
         return $dataProvider;
     }
