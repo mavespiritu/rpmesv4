@@ -8,7 +8,7 @@ use yii\bootstrap\ButtonDropdown;
 
 <ul class="navigation" type="none" style="line-height: 3rem;">
     <li><a href="javascript:void(0);" onclick="home(<?= $model->id?>);" class="home-link">Home</a></li>
-    <li><a href="javascript:void(0);" onclick="items(<?= $model->id?>);" class="items-link">Items</a></li>
+    <li><a href="javascript:void(0);" onclick="items(<?= $model->id?>);" class="items-link">Items (<?= $model->itemCount ?>)</a></li>
     <li><a href="javascript:void(0);" class="quotations-link">Quotations</a></li>
     <li><a href="javascript:void(0);" class="suppliers-link">Suppliers</a></li>
     <li><a href="javascript:void(0);" class="po-link">Purchase Orders</a></li>
@@ -87,21 +87,29 @@ use yii\bootstrap\ButtonDropdown;
     $this->registerJs($script, View::POS_END);
 ?>
 <style>
-    ul.navigation{
-        padding-left: 10px;
-        margin-left: 10px;
+    ul.navigation,
+    ul.todos,
+    ul.reports
+    {
+        padding-left: 5px;
+        margin-left: 5px;
     }
 
-    ul.navigation > li > a{
+    ul.navigation > li > a,
+    ul.todos > li > a,
+    ul.reports > li > a
+    {
         padding-left: 5px;
     }
 
-    ul.navigation > li > a.active{
+    ul.navigation > li > a.active
+    {
         font-weight: bolder;
         border-left: 3px solid #3C8DBC;
     }
 
-    ul.navigation > li > a:hover{
+    ul.navigation > li > a:hover
+    {
         font-weight: bolder;
         border-left: 3px solid #3C8DBC;
     }

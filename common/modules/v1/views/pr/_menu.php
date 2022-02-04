@@ -40,7 +40,7 @@ use yii\bootstrap\ButtonDropdown;
             });
         });     
 
-        function printRis()
+        function printPr()
         {
           var printWindow = window.open(
             "'.Url::to(['/v1/pr/print', 'id' => $model->id]).'", 

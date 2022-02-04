@@ -34,8 +34,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="box box-primary">
                 <div class="box-header panel-title"><i class="fa fa-edit"></i> To Dos</div>
                 <div class="box-body">
-                    <ul style="font-size: 12px;">
-                        <li>Add Items</li>
+                    <ul class="todos" style="font-size: 13px; line-height: 2rem;" type="none" >
+                        <li><a href="javascript:void(0);" onclick="items(<?= $model->id?>);">Add Items</a></li>
                         <li>Set DBM Available Items</li>
                         <li>Generate RFQ</li>
                         <li>Retrieve RFQs</li>
@@ -50,7 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="box box-primary">
                 <div class="box-header panel-title"><i class="fa fa-file-o"></i> Reports</div>
                 <div class="box-body">
-                    <ul style="font-size: 12px;">
+                    <ul class="reports" style="font-size: 13px; line-height: 2rem;" type="none">
                         <li>Agency Purchase Request (APR)</li>
                         <li>Purchase Request (PR)</li>
                         <li>Request For Quotation (RFQ)</li>

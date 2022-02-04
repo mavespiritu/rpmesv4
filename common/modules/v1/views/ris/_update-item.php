@@ -28,10 +28,6 @@ DisableButtonAsset::register($this);
             <td><?= $activity->title ?> - <?= $model->fundSource->code ?> Funded</td>
         </tr>
         <tr>
-            <th>PPA</th>
-            <td><?= $subActivity->title ?></td>
-        </tr>
-        <tr>
             <th>Item</th>
             <td><?= $item->title ?></td>
         </tr>

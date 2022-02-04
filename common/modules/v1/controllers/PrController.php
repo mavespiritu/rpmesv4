@@ -5,6 +5,12 @@ namespace common\modules\v1\controllers;
 use Yii;
 use common\modules\v1\models\Pr;
 use common\modules\v1\models\PrSearch;
+use common\modules\v1\models\PrItem;
+use common\modules\v1\models\PrItemSpec;
+use common\modules\v1\models\PrItemCost;
+use common\modules\v1\models\Supplier;
+use common\modules\v1\models\PrItemSpecValue;
+use common\modules\v1\models\PrItemSearch;
 use common\modules\v1\models\AppropriationItem;
 use common\modules\v1\models\Activity;
 use common\modules\v1\models\SubActivity;
@@ -128,11 +134,283 @@ class PrController extends Controller
     public function actionItems($id)
     {
         $model = $this->findModel($id);
+        $model->scenario = 'selectRis';
 
+        $statusIDs = Transaction::find()->select(['max(id) as id'])->where(['model' => 'Ris'])->groupBy(['model_id'])->asArray()->all();
+        $statusIDs = ArrayHelper::map($statusIDs, 'id', 'id');
+        $status = Transaction::find()->where(['in', 'id', $statusIDs])->createCommand()->getRawSql();
+
+        $rises = Ris::find()
+                ->select([
+                    'ppmp_ris.id as id',
+                    'concat("RIS No. ",ppmp_ris.ris_no," (",ppmp_ris.purpose,")") as title',
+                    'tbloffice.abbreviation as groupTitle'
+                ])
+                ->leftJoin(['status' => '('.$status.')'], 'status.model_id = ppmp_ris.id')
+                ->leftJoin('tbloffice', 'tbloffice.abbreviation = ppmp_ris.office_id')
+                ->andWhere(['status.status' => 'Approved'])
+                ->andWhere(['SUBSTRING(ppmp_ris.ris_no, 1, 2)' => substr($model->pr_no, 0, 2)])
+                ->asArray()
+                ->all();
         
+        $rises = ArrayHelper::map($rises, 'id', 'title', 'groupTitle');
 
         return $this->renderAjax('_items', [
             'model' => $model,
+            'rises' => $rises
+        ]);
+    }
+
+    public function actionLoadRisItems($id, $ris_id)
+    {
+        $model = $this->findModel($id);
+
+        $existingItems = PrItem::find()->where(['pr_id' => $model->id])->asArray()->all();
+        $existingItems = ArrayHelper::map($existingItems, 'ris_item_id', 'ris_item_id');
+
+        $ris = Ris::findOne($ris_id);
+        
+        $specifications = [];
+
+        $items = RisItem::find()
+                ->select([
+                    'ppmp_ris_item.id as id',
+                    'ppmp_ris_item.ris_id as ris_id',
+                    'ppmp_item.id as stockNo',
+                    'concat(
+                        ppmp_cost_structure.code,"",
+                        ppmp_organizational_outcome.code,"",
+                        ppmp_program.code,"",
+                        ppmp_sub_program.code,"",
+                        ppmp_identifier.code,"",
+                        ppmp_pap.code,"000-",
+                        ppmp_activity.code," - ",
+                        ppmp_activity.title," - ",
+                        ppmp_sub_activity.title
+                    ) as prexc',
+                    'ppmp_activity.id as activityId',
+                    'ppmp_activity.title as activityTitle',
+                    'ppmp_sub_activity.id as subActivityId',
+                    'ppmp_sub_activity.title as subActivityTitle',
+                    'ppmp_item.title as itemTitle',
+                    'ppmp_item.unit_of_measure as unitOfMeasure',
+                    'ppmp_ppmp_item.cost as cost',
+                    'sum(quantity) as total',
+                    'ppmp_ris_item.type'
+                ])
+                ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
+                ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+                ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+                ->leftJoin('ppmp_sub_activity', 'ppmp_sub_activity.id = ppmp_ppmp_item.sub_activity_id')
+                ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id')
+                ->leftJoin('ppmp_identifier', 'ppmp_identifier.id = ppmp_pap.identifier_id')
+                ->leftJoin('ppmp_sub_program', 'ppmp_sub_program.id = ppmp_pap.sub_program_id')
+                ->leftJoin('ppmp_program', 'ppmp_program.id = ppmp_pap.program_id')
+                ->leftJoin('ppmp_organizational_outcome', 'ppmp_organizational_outcome.id = ppmp_pap.organizational_outcome_id')
+                ->leftJoin('ppmp_cost_structure', 'ppmp_cost_structure.id = ppmp_pap.cost_structure_id')
+                ->andWhere([
+                    'ris_id' => $ris->id,
+                ])
+                ->andWhere(['in', 'ppmp_ris_item.type', ['Original', 'Supplemental']])
+                ->andWhere(['not in', 'ppmp_ris_item.id', $existingItems])
+                ->groupBy(['ppmp_item.id', 'ppmp_activity.id', 'ppmp_sub_activity.id', 'ppmp_ris_item.cost'])
+                ->asArray()
+                ->all();
+
+        $risItems = [];
+        $prItems = [];
+
+        if(!empty($items))
+        {
+            foreach($items as $item)
+            {
+                $risItems[$item['prexc']][] = $item;
+                $prItem = new PrItem();
+                $prItem->pr_id = $model->id;
+                $prItem->ris_id = $ris->id;
+                $prItem->item_id = $item['stockNo'];
+                $prItem->activity_id = $item['activityId'];
+                $prItem->sub_activity_id = $item['subActivityId'];
+                $prItem->cost = $item['cost'];
+                $prItem->type = $item['type'];
+                
+                $prItems[$item['id']] = $prItem;
+
+                $spec = RisItemSpec::findOne([
+                    'ris_id' => $item['ris_id'],
+                    'activity_id' => $item['activityId'],
+                    'sub_activity_id' => $item['subActivityId'],
+                    'item_id' => $item['stockNo'],
+                    'cost' => $item['cost'],
+                    'type' => $item['type'],
+                ]);
+
+                if($spec)
+                {
+                    $specifications[$item['id']] = $spec;
+                }
+            }
+        }
+
+        if(MultipleModel::loadMultiple($prItems, Yii::$app->request->post()))
+        {
+            if(!empty($prItems))
+            {
+                foreach($prItems as $prItem)
+                {
+                    $includedItems = RisItem::find()
+                        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
+                        ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+                        ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+                        ->leftJoin('ppmp_sub_activity', 'ppmp_sub_activity.id = ppmp_ppmp_item.sub_activity_id')
+                        ->where([
+                            'ppmp_ris_item.ris_id' => $ris->id,
+                            'ppmp_activity.id' => $prItem->activity_id,
+                            'ppmp_sub_activity.id' => $prItem->sub_activity_id,
+                            'ppmp_item.id' => $prItem->item_id,
+                            'ppmp_ris_item.cost' => $prItem->cost,
+                            'ppmp_ris_item.type' => $prItem->type,
+                        ])
+                        ->all();
+
+                    if($includedItems)
+                    {
+                        foreach($includedItems as $item)
+                        {
+                            $prItemModel = new PrItem();
+                            $prItemModel->pr_id = $model->id;
+                            $prItemModel->ris_id = $ris->id;
+                            $prItemModel->ris_item_id = $item->id;
+                            $prItemModel->ppmp_item_id = $item->ppmp_item_id;
+                            $prItemModel->month_id = $item->month_id;
+                            $prItemModel->cost = $item->cost;
+                            $prItemModel->quantity = $item->quantity;
+                            $prItemModel->type = $item->type;
+                            $prItemModel->save();
+                        }
+                    }
+                    
+                }
+            }
+        }
+
+        return $this->renderAjax('_items-ris_items', [
+            'model' => $model,
+            'risItems' => $risItems,
+            'prItems' => $prItems,
+            'specifications' => $specifications,
+            'ris' => $ris
+        ]);
+    }
+
+    public function actionPrItems($id)
+    {
+        $model = $this->findModel($id);
+        $prItems = [];
+        $specifications = [];
+        $items = PrItem::find()
+                ->select([
+                    'ppmp_pr_item.id as id',
+                    's.id as ris_item_spec_id',
+                    'ppmp_item.id as item_id',
+                    'ppmp_item.title as item',
+                    'ppmp_item.unit_of_measure as unit',
+                    'ppmp_pr_item.cost as cost',
+                    'sum(ppmp_pr_item.quantity) as total',
+                    'ppmp_supplier.business_name as supplier',
+                    'ppmp_pr_item_cost.cost as abc',
+                ])
+                ->leftJoin('ppmp_ris', 'ppmp_ris.id = ppmp_pr_item.ris_id')
+                ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_pr_item.ris_item_id')
+                ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
+                ->leftJoin('ppmp_ris_item_spec s', 's.ris_id = ppmp_ris.id and 
+                                                    s.activity_id = ppmp_ppmp_item.activity_id and 
+                                                    s.sub_activity_id = ppmp_ppmp_item.sub_activity_id and 
+                                                    s.item_id = ppmp_ppmp_item.item_id and 
+                                                    s.cost = ppmp_pr_item.cost and 
+                                                    s.type = ppmp_pr_item.type')
+                ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+                ->leftJoin('ppmp_pr_item_cost', 'ppmp_pr_item_cost.pr_item_id = ppmp_pr_item.id')
+                ->leftJoin('ppmp_supplier', 'ppmp_supplier.id = ppmp_pr_item_cost.supplier_id')
+                ->andWhere([
+                    'ppmp_pr_item.pr_id' => $model->id,
+                ])
+                ->groupBy(['ppmp_item.id', 's.id', 'ppmp_pr_item.cost'])
+                ->asArray()
+                ->all();
+
+        if(!empty($items))
+        {
+            foreach($items as $item)
+            {
+                $prItem = new PrItem();
+                $prItem->id = $item['id'];
+                $prItems[$item['id']] = $prItem;
+
+                $specs = RisItemSpec::findOne(['id' => $item['ris_item_spec_id']]);
+                $specifications[$item['id']] = $specs;
+            }
+        }
+
+        return $this->renderAjax('_items-pr_items', [
+            'model' => $model,
+            'items' => $items,
+            'prItems' => $prItems,
+            'specifications' => $specifications,
+        ]);
+    }
+
+    public function actionCreateSpecification($pr_id, $item_id, $cost)
+    {
+        $model = $this->findModel($pr_id);
+        $item = Item::findOne($item_id);
+
+        $spec = new PrItemSpec();
+        $spec->pr_id = $model->id;
+        $spec->item_id = $item->id;
+        $spec->cost = $cost;
+
+        $specValues = [new RisItemSpecValue];
+
+        $specs = RisItemSpec::find()->where(['item_id' => $item['item_id'], 'cost' => $item['cost']])->all();
+
+        if($spec->load(Yii::$app->request->post()))
+        {
+            $specValues = Model::createMultiple(PrItemSpecValue::className());
+            Model::loadMultiple($specValues, Yii::$app->request->post());
+
+            // validate all models
+            $valid = $spec->validate();
+            $valid = Model::validateMultiple($specValues) && $valid;
+
+            if ($valid) {
+                $transaction = \Yii::$app->db->beginTransaction();
+
+                try {
+                    if ($flag = $spec->save(false)) {
+                        foreach ($specValues as $specValue) {
+                            $specValue->pr_item_spec_id = $spec->id;
+                            if (! ($flag = $specValue->save(false))) {
+                                $transaction->rollBack();
+                                break;
+                            }
+                        }
+                    }
+
+                    if ($flag) {
+                        $transaction->commit();
+                    }
+                } catch (Exception $e) {
+                    $transaction->rollBack();
+                }
+            }
+        }
+
+        return $this->renderAjax('_specification-form', [
+            'model' => $model,
+            'item' => $item,
+            'specs' => $specs,
+            'specValues' => (empty($specValues)) ? [new RisItemSpecValue] : $specValues,
         ]);
     }
 

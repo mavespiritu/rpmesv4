@@ -26,6 +26,7 @@ use markavespiritu\user\models\UserInfo;
  */
 class Pr extends \yii\db\ActiveRecord
 {
+    public $ris_id;
     /**
      * {@inheritdoc}
      */
@@ -40,6 +41,7 @@ class Pr extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['ris_id'], 'required', 'on' => 'selectRis'],
             [['type', 'office_id', 'year', 'fund_source_id', 'fund_cluster_id', 'purpose', 'date_requested', 'requested_by', 'procurement_mode_id'], 'required'],
             [['fund_source_id', 'fund_cluster_id'], 'integer'],
             [['purpose', 'type'], 'string'],
@@ -85,7 +87,48 @@ class Pr extends \yii\db\ActiveRecord
             'type' => 'Type',
             'procurement_mode_id' => 'Mode of Procurement',
             'procurementModeName' => 'Mode of Procurement',
+            'ris_id' => 'Approved RIS'
         ];
+    }
+
+    public function getPrItems()
+    {
+        return $this->hasMany(PrItem::className(), ['ris_id' => 'id']);
+    }
+
+    public function getItemCount()
+    {
+        $items = PrItem::find()
+                ->leftJoin('ppmp_ris', 'ppmp_ris.id = ppmp_pr_item.ris_id')
+                ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_pr_item.ris_item_id')
+                ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
+                ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+                ->leftJoin('ppmp_ris_item_spec s', 's.ris_id = ppmp_ris.id and 
+                                                    s.activity_id = ppmp_ppmp_item.activity_id and 
+                                                    s.sub_activity_id = ppmp_ppmp_item.sub_activity_id and 
+                                                    s.item_id = ppmp_ppmp_item.item_id and 
+                                                    s.cost = ppmp_pr_item.cost and 
+                                                    s.type = ppmp_pr_item.type')
+                ->andWhere([
+                    'pr_id' => $this->id,
+                ])
+                ->groupBy(['ppmp_item.id', 's.id', 'ppmp_pr_item.cost'])
+                ->count();
+        
+        return $items;
+    }
+
+    public function getTotal()
+    {
+        $total = PrItem::find()
+                ->select(['COALESCE(sum(cost * quantity), 0) as total'])
+                ->where([
+                    'pr_id' => $this->id
+                ])
+                ->asArray()
+                ->one();
+        
+        return !empty($total) ? $total['total'] : 0;
     }
 
     public function getStatus()
@@ -193,6 +236,15 @@ class Pr extends \yii\db\ActiveRecord
     public function getDisapproverName()
     {
         return $this->disapprover ? $this->disapprover->name : '';
+    }
+
+    public static function pageQuantityTotal($provider, $fieldName)
+    {
+        $total = 0;
+        foreach($provider as $item){
+            $total+=$item[$fieldName];
+        }
+        return '<b>'.number_format($total, 2).'</b>';
     }
 
     public function afterSave($insert, $changedAttributes){

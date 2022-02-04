@@ -3,6 +3,7 @@ return [
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
+        '@file' => dirname(__DIR__),
     ],
     'vendorPath' => dirname(dirname(__DIR__)) . '/vendor',
     'components' => [
@@ -23,6 +24,16 @@ return [
         ],
         'v1' => [
             'class' => 'common\modules\v1\V1',
+        ],
+        'file' => [
+            'class' => 'file\FileModule',
+            'webDir' => 'files',
+            'tempPath' => '@frontend/web/temp',
+            'storePath' => '@frontend/web/store',
+            'rules' => [ // Правила для FileValidator
+                'maxFiles' => 20,
+                'maxSize' => 1024 * 1024 * 20 // 20 MB
+            ],
         ],
         'user' => [
             'class' => 'markavespiritu\user\Module',

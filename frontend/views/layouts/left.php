@@ -98,6 +98,7 @@
                         ],
                         
                     ],
+                    ['label' => 'Suppliers', 'icon' => 'folder', 'url' => ['/v1/supplier'], 'visible' => !Yii::$app->user->isGuest && (in_array('ProcurementStaff', $userRoles) || in_array('Administrator', $userRoles))], 
                     
                     ['label' => 'User Management', 'icon' => 'users', 'url' => ['/user/admin'], 'visible' => !Yii::$app->user->isGuest && (in_array('Administrator', $userRoles))],
                 ],

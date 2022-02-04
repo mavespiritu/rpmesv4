@@ -72,6 +72,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             'requesterName',
                             'date_requested',
                             [
+                                'header' => 'Total', 
+                                'attribute' => 'total',
+                                'contentOptions' => ['style' => 'text-align: right;'],
+                                'value' => function($model){
+                                    return number_format($model->total, 2);
+                                },
+                                'footerOptions' => ['style' => 'text-align: right;'],
+                                'value' => function($model){
+                                    return number_format($model->total, 2);
+                                },
+                                'footer' => Pr::pageQuantityTotal($dataProvider->models, 'total'),
+                            ],
+                            [
                                 'header' => 'Status',
                                 'attribute' => 'status.status',
                             ],

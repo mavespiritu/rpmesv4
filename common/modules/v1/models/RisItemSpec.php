@@ -39,6 +39,15 @@ class RisItemSpec extends \yii\db\ActiveRecord
         ];
     }
 
+    public function behaviors()
+    {
+        return [
+            'fileBehavior' => [
+                'class' => \file\behaviors\FileBehavior::className()
+            ]
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
