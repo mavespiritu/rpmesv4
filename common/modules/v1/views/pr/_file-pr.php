@@ -1,16 +1,29 @@
-<?php
+<style>
+    *{ font-family: "Tahoma"; }
+    h4{ text-align: center; } 
+    p{ font-size: 10px; font-family: "Tahoma";}
+    table{
+        font-family: "Tahoma";
+        border-collapse: collapse;
+        width: 100%;
+    }
+    thead{
+        font-size: 12px;
+    }
 
-use yii\helpers\Html;
-use yii\widgets\ActiveForm;
-use kartik\select2\Select2;
-use dosamigos\datepicker\DatePicker;
-use yii\helpers\Url;
-use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
-DisableButtonAsset::register($this);
-use yii\web\View;
-/* @var $model common\modules\v1\models\Pr */
-/* @var $form yii\widgets\ActiveForm */
-?>
+    td{
+        font-size: 10px;
+        border: 1px solid black;
+        padding: 3px 3px;
+    }
+
+    th{
+        font-size: 10px;
+        text-align: center;
+        border: 1px solid black;
+        padding: 3px 3px;
+    }
+</style>
 
 <h4 class="text-center"><b>PURCHASE REQUEST</b></h4>
 
@@ -76,22 +89,6 @@ use yii\web\View;
         <td>&nbsp;</td>
         <td>&nbsp;</td>
         <td>&nbsp;</td>
-        <td>&nbsp;</td>
-    </tr>
-    <tr>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-    </tr>
-    <tr>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
         <td align=right><b><?= number_format($total, 2) ?></b></td>
     </tr>
     <tr>
@@ -122,33 +119,3 @@ use yii\web\View;
     </tr>
     </tbody>
 </table>
-<br>
-<div class="pull-right">
-<?= Html::button('<i class="fa fa-print"></i> Print PR', ['class' => 'btn btn-success', 'onclick' => 'printPr()']) ?>
-</div>
-<div class="clearfix"></div>
-<?php
-    $script = '
-        function printPr()
-        {
-          var printWindow = window.open(
-            "'.Url::to(['/v1/pr/print-pr', 'id' => $model->id]).'", 
-            "Print",
-            "left=200", 
-            "top=200", 
-            "width=650", 
-            "height=500", 
-            "toolbar=0", 
-            "resizable=0"
-          );
-          printWindow.addEventListener("load", function() {
-              printWindow.print();
-              setTimeout(function() {
-                printWindow.close();
-            }, 1);
-          }, true);
-        }
-    ';
-
-    $this->registerJs($script, View::POS_END);
-?>
