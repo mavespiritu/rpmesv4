@@ -165,7 +165,7 @@ class PrController extends Controller
     {
         $model = $this->findModel($id);
 
-        $existingItems = PrItem::find()->where(['pr_id' => $model->id])->asArray()->all();
+        $existingItems = PrItem::find()->asArray()->all();
         $existingItems = ArrayHelper::map($existingItems, 'ris_item_id', 'ris_item_id');
 
         $ris = Ris::findOne($ris_id);
