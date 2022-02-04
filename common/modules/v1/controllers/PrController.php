@@ -150,6 +150,7 @@ class PrController extends Controller
                 ->leftJoin('tbloffice', 'tbloffice.abbreviation = ppmp_ris.office_id')
                 ->andWhere(['status.status' => 'Approved'])
                 ->andWhere(['SUBSTRING(ppmp_ris.ris_no, 1, 2)' => substr($model->pr_no, 0, 2)])
+                ->andWhere(['ppmp_ris.fund_source_id' => $model->fund_source_id])
                 ->asArray()
                 ->all();
         
