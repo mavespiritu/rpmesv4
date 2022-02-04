@@ -14,8 +14,9 @@ use yii\web\View;
     <td align=center><?= number_format($item['total'], 0) ?></td>
     <td align=right><?= number_format($item['cost'], 2) ?></td>
     <td align=right><?= number_format($item['total'] * $item['cost'], 2) ?></td>
-    <td><?= $item['supplier'] != '' ? $item['supplier'] : 'No set supplier' ?></td>
-    <td align=right><?= number_format($item['abc'], 2) ?></td>
+    <td align=center>
+        <?= $form->field($prItems[$item['id']], "[$id]id")->checkbox(['value' => $item['id'], 'class' => 'check-pr-item', 'label' => '', 'id' => 'check-pr-item-'.$item['id'], 'checked' => 'checked']) ?>
+    </td>
 </tr>
 <?php
   Modal::begin([

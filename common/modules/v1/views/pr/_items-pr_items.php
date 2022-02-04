@@ -23,10 +23,6 @@ use yii\web\View;
 <table class="table table-bordered table-responsive table-hover table-condensed">
     <thead>
         <tr>
-            <td colspan=7 align=center><b>PR Items</b></td>
-            <td colspan=2 align=center><b>Supplier Details</b></td>
-        </tr>
-        <tr>
             <th>#</th>
             <th>Unit</th>
             <th>Item</th>
@@ -34,8 +30,7 @@ use yii\web\View;
             <th>Quantity</th>
             <th>Unit Cost</th>
             <td align=center><b>Total Cost</b></td>
-            <th>Supplier</th>
-            <td align=center><b>Unit Cost</b></td>
+            <td align=center><input type=checkbox name="pr-items" class="check-pr-items" /></td>
         </tr>
     </thead>
     <tbody>
@@ -64,10 +59,59 @@ use yii\web\View;
     <tr>
         <td colspan=6 align=right><b>ABC:</b></td>
         <td align=right><b><?= number_format($total, 2) ?></b></td>
-        <td>&nbsp;</td>
-        <td>&nbsp;</td>
     </tr>
     </tbody>
 </table>
 
+<div class="form-group">
+    <?= Html::submitButton('Remove Selected', ['class' => 'btn btn-danger', 'id' => 'remove-pr-button', 'data' => ['disabled-text' => 'Please Wait'], 'disabled' => true]) ?>
+</div>
+
 <?php ActiveForm::end(); ?>
+<?php
+    $script = '
+    function enableRemoveButton()
+    {
+        $("#pr-items-form input:checkbox:checked").length > 0 ? $("#remove-pr-button").attr("disabled", false) : $("#remove-pr-button").attr("disabled", true);
+    }
+
+    $(".check-pr-items").click(function(){
+        $(".check-pr-item").not(this).prop("checked", this.checked);
+        enableRemoveButton();
+    });
+
+    $(".check-pr-item").click(function(){
+        enableRemoveButton();
+    });
+
+    $(document).ready(function(){
+        $(".check-pr-item").removeAttr("checked");
+        enableRemoveButton();
+    });
+
+    $("#pr-items-form").on("beforeSubmit", function(e) {
+        e.preventDefault();
+     
+        var form = $(this);
+        var formData = form.serialize();
+
+        $.ajax({
+            url: form.attr("action"),
+            type: form.attr("method"),
+            data: formData,
+            success: function (data) {
+                form.enableSubmitButtons();
+                alert("Items Removed");
+                prItems('.$model->id.');
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        });
+
+        return false;
+    });
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>

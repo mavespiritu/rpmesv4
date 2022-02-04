@@ -85,4 +85,9 @@ class PrItem extends \yii\db\ActiveRecord
     {
         return $this->hasOne(RisItem::className(), ['id' => 'ris_item_id']);
     }
+
+    public function getPpmpItem()
+    {
+        return $this->hasOne(PpmpItem::className(), ['id' => 'ppmp_item_id']);
+    }
 }

@@ -185,8 +185,7 @@ class PrController extends Controller
                         ppmp_identifier.code,"",
                         ppmp_pap.code,"000-",
                         ppmp_activity.code," - ",
-                        ppmp_activity.title," - ",
-                        ppmp_sub_activity.title
+                        ppmp_activity.title
                     ) as prexc',
                     'ppmp_activity.id as activityId',
                     'ppmp_activity.title as activityTitle',
@@ -213,7 +212,7 @@ class PrController extends Controller
                 ])
                 ->andWhere(['in', 'ppmp_ris_item.type', ['Original', 'Supplemental']])
                 ->andWhere(['not in', 'ppmp_ris_item.id', $existingItems])
-                ->groupBy(['ppmp_item.id', 'ppmp_activity.id', 'ppmp_sub_activity.id', 'ppmp_ris_item.cost'])
+                ->groupBy(['ppmp_item.id', 'ppmp_activity.id', 'ppmp_ris_item.cost'])
                 ->asArray()
                 ->all();
 
@@ -230,7 +229,6 @@ class PrController extends Controller
                 $prItem->ris_id = $ris->id;
                 $prItem->item_id = $item['stockNo'];
                 $prItem->activity_id = $item['activityId'];
-                $prItem->sub_activity_id = $item['subActivityId'];
                 $prItem->cost = $item['cost'];
                 $prItem->type = $item['type'];
                 
@@ -239,7 +237,6 @@ class PrController extends Controller
                 $spec = RisItemSpec::findOne([
                     'ris_id' => $item['ris_id'],
                     'activity_id' => $item['activityId'],
-                    'sub_activity_id' => $item['subActivityId'],
                     'item_id' => $item['stockNo'],
                     'cost' => $item['cost'],
                     'type' => $item['type'],
@@ -254,42 +251,47 @@ class PrController extends Controller
 
         if(MultipleModel::loadMultiple($prItems, Yii::$app->request->post()))
         {
-            if(!empty($prItems))
-            {
-                foreach($prItems as $prItem)
-                {
-                    $includedItems = RisItem::find()
-                        ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
-                        ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
-                        ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
-                        ->leftJoin('ppmp_sub_activity', 'ppmp_sub_activity.id = ppmp_ppmp_item.sub_activity_id')
-                        ->where([
-                            'ppmp_ris_item.ris_id' => $ris->id,
-                            'ppmp_activity.id' => $prItem->activity_id,
-                            'ppmp_sub_activity.id' => $prItem->sub_activity_id,
-                            'ppmp_item.id' => $prItem->item_id,
-                            'ppmp_ris_item.cost' => $prItem->cost,
-                            'ppmp_ris_item.type' => $prItem->type,
-                        ])
-                        ->all();
+            $risExistingItems = Yii::$app->request->post('PrItem');
 
-                    if($includedItems)
+            if(!empty($risExistingItems))
+            {
+                foreach($risExistingItems as $prItem)
+                {
+                    if($prItem['ris_item_id'] != 0)
                     {
-                        foreach($includedItems as $item)
+                        $risItem = RisItem::findOne($prItem['ris_item_id']);
+
+                        $includedItems = RisItem::find()
+                            ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
+                            ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+                            ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+                            ->leftJoin('ppmp_sub_activity', 'ppmp_sub_activity.id = ppmp_ppmp_item.sub_activity_id')
+                            ->where([
+                                'ppmp_ris_item.ris_id' => $risItem->ris_id,
+                                'ppmp_activity.id' => $risItem->ppmpItem->activity_id,
+                                'ppmp_item.id' => $risItem->ppmpItem->item_id,
+                                'ppmp_ris_item.cost' => $risItem->cost,
+                                'ppmp_ris_item.type' => $risItem->type,
+                            ])
+                            ->all();
+
+                        if($includedItems)
                         {
-                            $prItemModel = new PrItem();
-                            $prItemModel->pr_id = $model->id;
-                            $prItemModel->ris_id = $ris->id;
-                            $prItemModel->ris_item_id = $item->id;
-                            $prItemModel->ppmp_item_id = $item->ppmp_item_id;
-                            $prItemModel->month_id = $item->month_id;
-                            $prItemModel->cost = $item->cost;
-                            $prItemModel->quantity = $item->quantity;
-                            $prItemModel->type = $item->type;
-                            $prItemModel->save();
+                            foreach($includedItems as $item)
+                            {
+                                $prItemModel = new PrItem();
+                                $prItemModel->pr_id = $model->id;
+                                $prItemModel->ris_id = $ris->id;
+                                $prItemModel->ris_item_id = $item->id;
+                                $prItemModel->ppmp_item_id = $item->ppmp_item_id;
+                                $prItemModel->month_id = $item->month_id;
+                                $prItemModel->cost = $item->cost;
+                                $prItemModel->quantity = $item->quantity;
+                                $prItemModel->type = $item->type;
+                                $prItemModel->save();
+                            }
                         }
                     }
-                    
                 }
             }
         }
@@ -317,8 +319,6 @@ class PrController extends Controller
                     'ppmp_item.unit_of_measure as unit',
                     'ppmp_pr_item.cost as cost',
                     'sum(ppmp_pr_item.quantity) as total',
-                    'ppmp_supplier.business_name as supplier',
-                    'ppmp_pr_item_cost.cost as abc',
                 ])
                 ->leftJoin('ppmp_ris', 'ppmp_ris.id = ppmp_pr_item.ris_id')
                 ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_pr_item.ris_item_id')
@@ -329,8 +329,6 @@ class PrController extends Controller
                                                     s.cost = ppmp_pr_item.cost and 
                                                     s.type = ppmp_pr_item.type')
                 ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
-                ->leftJoin('ppmp_pr_item_cost', 'ppmp_pr_item_cost.pr_item_id = ppmp_pr_item.id')
-                ->leftJoin('ppmp_supplier', 'ppmp_supplier.id = ppmp_pr_item_cost.supplier_id')
                 ->andWhere([
                     'ppmp_pr_item.pr_id' => $model->id,
                 ])
@@ -342,12 +340,45 @@ class PrController extends Controller
         {
             foreach($items as $item)
             {
-                $prItem = new PrItem();
-                $prItem->id = $item['id'];
+                $prItem = PrItem::findOne($item['id']);
                 $prItems[$item['id']] = $prItem;
 
                 $specs = RisItemSpec::findOne(['id' => $item['ris_item_spec_id']]);
                 $specifications[$item['id']] = $specs;
+            }
+        }
+
+        if(MultipleModel::loadMultiple($prItems, Yii::$app->request->post()))
+        {
+            $prExistingItems = Yii::$app->request->post('PrItem');
+
+            $ids = [];
+             if(!empty($prExistingItems))
+            {
+                foreach($prExistingItems as $prItem)
+                {
+                    if($prItem['id'] != 0)
+                    {
+                        $item = PrItem::findOne($prItem['id']);
+  
+                        $includedItems = PrItem::find()
+                            ->select(['ppmp_pr_item.id as id'])
+                            ->leftJoin('ppmp_ris', 'ppmp_ris.id = ppmp_pr_item.ris_id')
+                            ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_pr_item.ris_item_id')
+                            ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
+                            ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+                            ->andWhere([
+                                'ppmp_pr_item.pr_id' => $item->pr_id,
+                                'ppmp_item.id' => $item->ppmpItem->item_id,
+                                'ppmp_pr_item.cost' => $item->cost,
+                            ])
+                            ->all();
+                        
+                        $includedItems = ArrayHelper::map($includedItems, 'id', 'id');
+
+                        PrItem::deleteAll(['in', 'id', $includedItems]);
+                    }
+                }
             }
         }
 
