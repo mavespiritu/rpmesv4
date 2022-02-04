@@ -665,7 +665,7 @@ class RisController extends Controller
     {
         $model = $this->findModel($id);
         $entityName = Settings::findOne(['title' => 'Entity Name']);
-        $fundCluster = FundCluster::find()->one();
+        $fundCluster = FundCluster::findOne($model->fund_cluster_id);
 
         $specifications = [];
 
@@ -868,7 +868,7 @@ class RisController extends Controller
     {
         $model = $this->findModel($id);
         $entityName = Settings::findOne(['title' => 'Entity Name']);
-        $fundCluster = FundCluster::find()->one();
+        $fundCluster = FundCluster::findOne($model->fund_cluster_id);
 
         $specifications = [];
 
@@ -2129,7 +2129,6 @@ class RisController extends Controller
             'spec' => $spec,
             'model' => $model,
             'activity' => $activity,
-            'subActivity' => $subActivity,
             'item' => $item,
         ]);
     }

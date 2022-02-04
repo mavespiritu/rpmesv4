@@ -105,7 +105,6 @@ class Pr extends \yii\db\ActiveRecord
                 ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
                 ->leftJoin('ppmp_ris_item_spec s', 's.ris_id = ppmp_ris.id and 
                                                     s.activity_id = ppmp_ppmp_item.activity_id and 
-                                                    s.sub_activity_id = ppmp_ppmp_item.sub_activity_id and 
                                                     s.item_id = ppmp_ppmp_item.item_id and 
                                                     s.cost = ppmp_pr_item.cost and 
                                                     s.type = ppmp_pr_item.type')

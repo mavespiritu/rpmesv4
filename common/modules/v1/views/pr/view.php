@@ -1,8 +1,10 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
-use  yii\web\View;
+use yii\web\View;
+use yii\bootstrap\Modal;
 /* @var $model common\modules\v1\models\Pr */
 
 $this->title = $model->status ? $model->pr_no.' ['.$model->status->status.']' : $model->pr_no;
@@ -36,7 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="box-body">
                     <ul class="todos" style="font-size: 13px; line-height: 2rem;" type="none" >
                         <li><a href="javascript:void(0);" onclick="items(<?= $model->id?>);">Add Items</a></li>
-                        <li>Set DBM Available Items</li>
+                        <li>Set DBM Items</li>
                         <li>Generate RFQ</li>
                         <li>Retrieve RFQs</li>
                         <li>Set Suppliers</li>
@@ -51,8 +53,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div class="box-header panel-title"><i class="fa fa-file-o"></i> Reports</div>
                 <div class="box-body">
                     <ul class="reports" style="font-size: 13px; line-height: 2rem;" type="none">
+                        <li><?= Html::button('Purchase Request (PR)', ['value' => Url::to(['/v1/pr/pr', 'id' => $model->id]), 'class' => 'button-link', 'id' => 'pr-button']) ?></li>
                         <li>Agency Purchase Request (APR)</li>
-                        <li>Purchase Request (PR)</li>
                         <li>Request For Quotation (RFQ)</li>
                         <li>Abstract of Quotation (AOQ)</li>
                         <li>DBM Purchase Order (DBM-PO)</li>
@@ -73,6 +75,37 @@ $this->params['breadcrumbs'][] = $this->title;
     $script = '
         $(document).ready(function(){
             home('.$model->id.');
+        });     
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>
+<style>
+    .button-link {
+        background: none!important;
+        border: none;
+        padding: 0!important;
+        color: #6192CD;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+<?php
+  Modal::begin([
+    'id' => 'pr-modal',
+    'size' => "modal-lg",
+    'header' => '<div id="pr-modal-header"><h4>Preview Report</h4></div>',
+    'options' => ['tabindex' => false],
+  ]);
+  echo '<div id="pr-modal-content"></div>';
+  Modal::end();
+?>
+<?php
+    $script = '
+        $(document).ready(function(){
+            $("#pr-button").click(function(){
+              $("#pr-modal").modal("show").find("#pr-modal-content").load($(this).attr("value"));
+            });
         });     
     ';
 

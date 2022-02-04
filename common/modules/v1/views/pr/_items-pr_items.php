@@ -16,6 +16,10 @@ use yii\web\View;
     'options' => ['class' => 'disable-submit-buttons'],
 ]); ?>
 
+<div class="pull-right">
+
+</div>
+
 <table class="table table-bordered table-responsive table-hover table-condensed">
     <thead>
         <tr>
@@ -29,7 +33,7 @@ use yii\web\View;
             <th>Specifications</th>
             <th>Quantity</th>
             <th>Unit Cost</th>
-            <td align=center><b>ABC</b></td>
+            <td align=center><b>Total Cost</b></td>
             <th>Supplier</th>
             <td align=center><b>Unit Cost</b></td>
         </tr>
@@ -58,7 +62,7 @@ use yii\web\View;
         </tr>
     <?php } ?>
     <tr>
-        <td colspan=6 align=right><b>Total ABC:</b></td>
+        <td colspan=6 align=right><b>ABC:</b></td>
         <td align=right><b><?= number_format($total, 2) ?></b></td>
         <td>&nbsp;</td>
         <td>&nbsp;</td>

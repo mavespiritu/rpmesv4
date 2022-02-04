@@ -325,7 +325,6 @@ class PrController extends Controller
                 ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
                 ->leftJoin('ppmp_ris_item_spec s', 's.ris_id = ppmp_ris.id and 
                                                     s.activity_id = ppmp_ppmp_item.activity_id and 
-                                                    s.sub_activity_id = ppmp_ppmp_item.sub_activity_id and 
                                                     s.item_id = ppmp_ppmp_item.item_id and 
                                                     s.cost = ppmp_pr_item.cost and 
                                                     s.type = ppmp_pr_item.type')
@@ -354,6 +353,90 @@ class PrController extends Controller
 
         return $this->renderAjax('_items-pr_items', [
             'model' => $model,
+            'items' => $items,
+            'prItems' => $prItems,
+            'specifications' => $specifications,
+        ]);
+    }
+
+    public function actionPr($id)
+    {
+        $model = $this->findModel($id);
+        $prItems = [];
+        $specifications = [];
+        $entityName = Settings::findOne(['title' => 'Entity Name']);
+        $fundCluster = FundCluster::findOne($model->fund_cluster_id);
+        $rccs = Pritem::find()
+                ->select(['concat(
+                    ppmp_cost_structure.code,"",
+                    ppmp_organizational_outcome.code,"",
+                    ppmp_program.code,"",
+                    ppmp_sub_program.code,"",
+                    ppmp_identifier.code,"",
+                    ppmp_pap.code,"000-",
+                    ppmp_activity.code
+                ) as prexc',])
+                ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
+                ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+                ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id')
+                ->leftJoin('ppmp_identifier', 'ppmp_identifier.id = ppmp_pap.identifier_id')
+                ->leftJoin('ppmp_sub_program', 'ppmp_sub_program.id = ppmp_pap.sub_program_id')
+                ->leftJoin('ppmp_program', 'ppmp_program.id = ppmp_pap.program_id')
+                ->leftJoin('ppmp_organizational_outcome', 'ppmp_organizational_outcome.id = ppmp_pap.organizational_outcome_id')
+                ->leftJoin('ppmp_cost_structure', 'ppmp_cost_structure.id = ppmp_pap.cost_structure_id')
+                ->andWhere([
+                    'ppmp_pr_item.pr_id' => $model->id,
+                ])
+                ->groupBy(['ppmp_activity.id'])
+                ->asArray()
+                ->all();
+        
+        $rccs = ArrayHelper::map($rccs, 'prexc', 'prexc');
+        
+        $items = PrItem::find()
+                ->select([
+                    'ppmp_pr_item.id as id',
+                    's.id as ris_item_spec_id',
+                    'ppmp_item.id as item_id',
+                    'ppmp_item.title as item',
+                    'ppmp_item.unit_of_measure as unit',
+                    'ppmp_pr_item.cost as cost',
+                    'sum(ppmp_pr_item.quantity) as total'
+                ])
+                ->leftJoin('ppmp_ris', 'ppmp_ris.id = ppmp_pr_item.ris_id')
+                ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_pr_item.ris_item_id')
+                ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
+                ->leftJoin('ppmp_ris_item_spec s', 's.ris_id = ppmp_ris.id and 
+                                                    s.activity_id = ppmp_ppmp_item.activity_id and 
+                                                    s.item_id = ppmp_ppmp_item.item_id and 
+                                                    s.cost = ppmp_pr_item.cost and 
+                                                    s.type = ppmp_pr_item.type')
+                ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+                ->andWhere([
+                    'ppmp_pr_item.pr_id' => $model->id,
+                ])
+                ->groupBy(['ppmp_item.id', 's.id', 'ppmp_pr_item.cost'])
+                ->asArray()
+                ->all();
+        
+        if(!empty($items))
+        {
+            foreach($items as $item)
+            {
+                $prItem = new PrItem();
+                $prItem->id = $item['id'];
+                $prItems[$item['id']] = $prItem;
+
+                $specs = RisItemSpec::findOne(['id' => $item['ris_item_spec_id']]);
+                $specifications[$item['id']] = $specs;
+            }
+        }
+
+        return $this->renderAjax('_pr', [
+            'model' => $model,
+            'entityName' => $entityName,
+            'fundCluster' => $fundCluster,
+            'rccs' => $rccs,
             'items' => $items,
             'prItems' => $prItems,
             'specifications' => $specifications,
