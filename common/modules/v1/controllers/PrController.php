@@ -345,7 +345,7 @@ class PrController extends Controller
                 $prItems[$item['id']] = $prItem;
 
                 $specs = RisItemSpec::findOne(['id' => $item['ris_item_spec_id']]);
-                $specifications[$item['id']] = $specs;
+                if($specs){ $specifications[$item['id']] = $specs; }
             }
         }
 

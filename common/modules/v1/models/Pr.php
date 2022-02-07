@@ -93,7 +93,7 @@ class Pr extends \yii\db\ActiveRecord
 
     public function getPrItems()
     {
-        return $this->hasMany(PrItem::className(), ['ris_id' => 'id']);
+        return $this->hasMany(PrItem::className(), ['pr_id' => 'id']);
     }
 
     public function getItemCount()

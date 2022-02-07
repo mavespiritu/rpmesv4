@@ -64,7 +64,10 @@ use yii\web\View;
 </table>
 
 <div class="form-group">
-    <?= Html::submitButton('Remove Selected', ['class' => 'btn btn-danger', 'id' => 'remove-pr-button', 'data' => ['disabled-text' => 'Please Wait'], 'disabled' => true]) ?>
+    <?= Html::submitButton('Remove Selected', ['class' => 'btn btn-danger', 'id' => 'remove-pr-button', 'data' => ['disabled-text' => 'Please Wait'], 'data' => [
+                'confirm' => 'Are you sure you want to remove this item?',
+                'method' => 'post',
+            ], 'disabled' => true]) ?>
 </div>
 
 <?php ActiveForm::end(); ?>

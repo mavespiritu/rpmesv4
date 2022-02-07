@@ -22,13 +22,20 @@ DisableButtonAsset::register($this);
 
     <p>Reminder: RIS must be approved to include items.</p>
 
-    <?= $form->field($model, 'type')->widget(Select2::classname(), [
+    <?= $model->prItems ? $form->field($model, 'type')->widget(Select2::classname(), [
+        'data' => $types,
+        'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select', 'disabled' => true],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('Type') : $form->field($model, 'type')->widget(Select2::classname(), [
         'data' => $types,
         'options' => ['placeholder' => 'Select Type','multiple' => false, 'class'=>'type-select'],
         'pluginOptions' => [
             'allowClear' =>  true,
         ],
-        ])->label('Type') ?>
+        ])->label('Type');
+    ?>
 
     <?= $form->field($model, 'procurement_mode_id')->widget(Select2::classname(), [
         'data' => $procurementModes,
