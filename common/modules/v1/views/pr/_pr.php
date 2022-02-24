@@ -22,8 +22,16 @@ use yii\web\View;
         </tr>
         <tr>
             <td colspan=2 rowspan=2><b>Division: <?= $model->officeName ?></b></td>
-            <td colspan=2><b>PR No.: <?= $model->pr_no?></b></td>
-            <td colspan=2 rowspan=2><b>Date: <?= date("F j, Y") ?></b></td>
+            <td colspan=2><b>PR No.: <?= $model->pr_no ?></b></td>
+            <td colspan=2 rowspan=2><b>Date: <?= DatePicker::widget([
+                'name' => 'date_prepared',
+                'id' => 'pr-date_prepared',
+                'template' => '{addon}{input}',
+                    'clientOptions' => [
+                        'autoclose' => true,
+                        'format' => 'yyyy-mm-dd'
+                    ]
+            ]);?></b></td>
         </tr>
         <tr>
             <td colspan=2><b>Responsibility Center Code: <?= implode(",", $rccs ); ?></b></td>
@@ -131,8 +139,9 @@ use yii\web\View;
     $script = '
         function printPr()
         {
+          var date_prepared = $("#pr-date_prepared").val();
           var printWindow = window.open(
-            "'.Url::to(['/v1/pr/print-pr', 'id' => $model->id]).'", 
+            "'.Url::to(['/v1/pr/print-pr']).'?id='.$model->id.'&date_prepared=" + date_prepared, 
             "Print",
             "left=200", 
             "top=200", 

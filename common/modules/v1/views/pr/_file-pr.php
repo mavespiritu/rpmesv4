@@ -36,7 +36,7 @@
         <tr>
             <td colspan=2 rowspan=2><b>Division: <?= $model->officeName ?></b></td>
             <td colspan=2><b>PR No.: <?= $model->pr_no?></b></td>
-            <td colspan=2 rowspan=2><b>Date: <?= date("F j, Y") ?></b></td>
+            <td colspan=2 rowspan=2><b>Date: <?= date("F j, Y", strtotime($date_prepared)) ?></b></td>
         </tr>
         <tr>
             <td colspan=2><b>Responsibility Center Code: <?= implode(",", $rccs ); ?></b></td>

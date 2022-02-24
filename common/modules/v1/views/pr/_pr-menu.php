@@ -9,8 +9,10 @@ use yii\bootstrap\ButtonDropdown;
 <ul class="navigation" type="none" style="line-height: 3rem;">
     <li><a href="javascript:void(0);" onclick="home(<?= $model->id?>);" class="home-link">Home</a></li>
     <li><a href="javascript:void(0);" onclick="items(<?= $model->id?>);" class="items-link">Items (<?= $model->itemCount ?>)</a></li>
-    <li><a href="javascript:void(0);" class="quotations-link">Quotations</a></li>
-    <li><a href="javascript:void(0);" class="suppliers-link">Suppliers</a></li>
+    <li><a href="javascript:void(0);" onclick="dbmItems(<?= $model->id?>);" class="dbm-link">Item Grouping</a></li>
+    <li><a href="javascript:void(0);" onclick="dbmPricing(<?= $model->id?>);" class="dbm-price-link">DBM-PS Pricing</a></li>
+    <li><a href="javascript:void(0);" onclick="quotations(<?= $model->id?>);" class="quotations-link">Set Quotations (<?= $model->rfqCount ?>)</a></li>
+    <li><a href="javascript:void(0);" onclick="retrieveQuotations(<?= $model->id?>);" class="retrieve-quotation-link">Retrieve Quotations</a></li>
     <li><a href="javascript:void(0);" class="po-link">Purchase Orders</a></li>
     <li><a href="javascript:void(0);" class="contracts-link">Contracts</a></li>
     <li><a href="javascript:void(0);" class="inspection-link">Inspection</a></li>
@@ -70,6 +72,90 @@ use yii\bootstrap\ButtonDropdown;
                     $("#pr-main").fadeIn("slow");
                     $("#pr-main").html(data);
                     updateNavigation("items-link");
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+        function dbmItems(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/pr/dbm-items']).'?id=" + id,
+                beforeSend: function(){
+                    $("#pr-main").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+                },
+                success: function (data) {
+                    console.log(this.data);
+                    $("#pr-main").empty();
+                    $("#pr-main").hide();
+                    $("#pr-main").fadeIn("slow");
+                    $("#pr-main").html(data);
+                    updateNavigation("dbm-link");
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+        function dbmPricing(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/pr/dbm-pricing']).'?id=" + id,
+                beforeSend: function(){
+                    $("#pr-main").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+                },
+                success: function (data) {
+                    console.log(this.data);
+                    $("#pr-main").empty();
+                    $("#pr-main").hide();
+                    $("#pr-main").fadeIn("slow");
+                    $("#pr-main").html(data);
+                    updateNavigation("dbm-price-link");
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+        function quotations(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/pr/quotation']).'?id=" + id,
+                beforeSend: function(){
+                    $("#pr-main").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+                },
+                success: function (data) {
+                    console.log(this.data);
+                    $("#pr-main").empty();
+                    $("#pr-main").hide();
+                    $("#pr-main").fadeIn("slow");
+                    $("#pr-main").html(data);
+                    updateNavigation("quotations-link");
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+        function retrieveQuotations(id)
+        {
+            $.ajax({
+                url: "'.Url::to(['/v1/pr/retrieve-quotation']).'?id=" + id,
+                beforeSend: function(){
+                    $("#pr-main").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+                },
+                success: function (data) {
+                    console.log(this.data);
+                    $("#pr-main").empty();
+                    $("#pr-main").hide();
+                    $("#pr-main").fadeIn("slow");
+                    $("#pr-main").html(data);
+                    updateNavigation("retrieve-quotation-link");
                 },
                 error: function (err) {
                     console.log(err);

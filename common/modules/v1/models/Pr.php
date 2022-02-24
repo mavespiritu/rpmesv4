@@ -7,6 +7,7 @@ use markavespiritu\user\models\Office;
 use markavespiritu\user\models\Section;
 use markavespiritu\user\models\Unit;
 use markavespiritu\user\models\UserInfo;
+use yii\helpers\ArrayHelper;
 /**
  * This is the model class for table "ppmp_pr".
  *
@@ -96,6 +97,18 @@ class Pr extends \yii\db\ActiveRecord
         return $this->hasMany(PrItem::className(), ['pr_id' => 'id']);
     }
 
+    public function getRfqs()
+    {
+        return $this->hasMany(Rfq::className(), ['pr_id' => 'id']);
+    }
+
+    public function getRfqCount()
+    {
+        $total = Rfq::find()->where(['pr_id' => $this->id])->count();
+
+        return $total;
+    }
+
     public function getItemCount()
     {
         $items = PrItem::find()
@@ -135,6 +148,93 @@ class Pr extends \yii\db\ActiveRecord
         $status = Transaction::find()->where(['model' => 'Pr', 'model_id' => $this->id])->orderBy(['datetime' => SORT_DESC])->one();
 
         return $status;
+    }
+
+    public function getApr()
+    {
+        return $this->hasOne(Apr::className(), ['pr_id' => 'id']);
+    }
+
+    public function getAprItems()
+    {
+        $aprItemIDs = AprItem::find()
+                    ->select(['pr_item_id'])
+                    ->leftJoin('ppmp_apr', 'ppmp_apr.id = ppmp_apr_item.apr_id')
+                    ->where(['pr_id' => $this->id])
+                    ->asArray()
+                    ->all();
+
+        $aprItemIDs = ArrayHelper::map($aprItemIDs, 'pr_item_id', 'pr_item_id');
+
+        $aprItems = PrItem::find()
+            ->select([
+                'ppmp_pr_item.id as id',
+                's.id as ris_item_spec_id',
+                'ppmp_item.id as item_id',
+                'ppmp_item.title as item',
+                'ppmp_item.unit_of_measure as unit',
+                'ppmp_pr_item.cost as cost',
+                'sum(ppmp_pr_item.quantity) as total'
+            ])
+            ->leftJoin('ppmp_ris', 'ppmp_ris.id = ppmp_pr_item.ris_id')
+            ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_pr_item.ris_item_id')
+            ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
+            ->leftJoin('ppmp_ris_item_spec s', 's.ris_id = ppmp_ris.id and 
+                                                s.activity_id = ppmp_ppmp_item.activity_id and 
+                                                s.item_id = ppmp_ppmp_item.item_id and 
+                                                s.cost = ppmp_pr_item.cost and 
+                                                s.type = ppmp_pr_item.type')
+            ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+            ->andWhere([
+                'ppmp_pr_item.pr_id' => $this->id,
+            ])
+            ->andWhere(['in', 'ppmp_pr_item.id', $aprItemIDs])
+            ->groupBy(['ppmp_item.id', 's.id', 'ppmp_pr_item.cost'])
+            ->asArray()
+            ->all();
+        
+        return $aprItems;
+    }
+
+    public function getRfqItems()
+    {
+        $aprItemIDs = AprItem::find()
+                    ->select(['pr_item_id'])
+                    ->leftJoin('ppmp_apr', 'ppmp_apr.id = ppmp_apr_item.apr_id')
+                    ->where(['pr_id' => $this->id])
+                    ->asArray()
+                    ->all();
+
+        $aprItemIDs = ArrayHelper::map($aprItemIDs, 'pr_item_id', 'pr_item_id');
+
+        $rfqItems = PrItem::find()
+            ->select([
+                'ppmp_pr_item.id as id',
+                's.id as ris_item_spec_id',
+                'ppmp_item.id as item_id',
+                'ppmp_item.title as item',
+                'ppmp_item.unit_of_measure as unit',
+                'ppmp_pr_item.cost as cost',
+                'sum(ppmp_pr_item.quantity) as total'
+            ])
+            ->leftJoin('ppmp_ris', 'ppmp_ris.id = ppmp_pr_item.ris_id')
+            ->leftJoin('ppmp_ris_item', 'ppmp_ris_item.id = ppmp_pr_item.ris_item_id')
+            ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
+            ->leftJoin('ppmp_ris_item_spec s', 's.ris_id = ppmp_ris.id and 
+                                                s.activity_id = ppmp_ppmp_item.activity_id and 
+                                                s.item_id = ppmp_ppmp_item.item_id and 
+                                                s.cost = ppmp_pr_item.cost and 
+                                                s.type = ppmp_pr_item.type')
+            ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
+            ->andWhere([
+                'ppmp_pr_item.pr_id' => $this->id,
+            ])
+            ->andWhere(['not in', 'ppmp_pr_item.id', $aprItemIDs])
+            ->groupBy(['ppmp_item.id', 's.id', 'ppmp_pr_item.cost'])
+            ->asArray()
+            ->all();
+        
+        return $rfqItems;
     }
 
     public function getFundSource()

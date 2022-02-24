@@ -9,8 +9,7 @@ use yii\web\View;
 <tr>
     <td><?= $i ?></td>
     <td><?= $item['unit'] ?></td>
-    <td style="width: 20%;"><?= $item['item'] ?></td>
-    <td style="width: 15%;"><?= !empty($specifications[$item['id']]) ? \file\components\AttachmentsTable::widget(['model' => $specifications[$item['id']]]) : '' ?></td>
+    <td style="width: 20%;"><?= $item['item'] ?><br><?= !empty($specifications[$item['id']]) ? \file\components\AttachmentsTable::widget(['model' => $specifications[$item['id']]]) : '' ?></td>
     <td align=center><?= number_format($item['total'], 0) ?></td>
     <td align=right><?= number_format($item['cost'], 2) ?></td>
     <td align=right><?= number_format($item['total'] * $item['cost'], 2) ?></td>

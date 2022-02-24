@@ -1,5 +1,5 @@
-<?php
 
+<?php
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
@@ -12,8 +12,9 @@ use yii\bootstrap\Modal;
 /* @var $model common\modules\v1\models\Pr */
 /* @var $form yii\widgets\ActiveForm */
 ?>
+
 <?php $form = ActiveForm::begin([
-    'id' => 'pr-items-form',
+    'id' => 'rfq-items-form',
     'options' => ['class' => 'disable-submit-buttons'],
 ]); ?>
 
@@ -26,21 +27,21 @@ use yii\bootstrap\Modal;
             <th>Quantity</th>
             <th>Unit Cost</th>
             <td align=center><b>Total Cost</b></td>
-            <td align=center><input type=checkbox name="pr-items" class="check-pr-items" /></td>
+            <td align=center><input type=checkbox name="rfq-items" class="check-rfq-items" /></td>
         </tr>
     </thead>
     <tbody>
     <?php $i = 1; ?>
     <?php $total = 0; ?>
-    <?php if(!empty($items)){ ?>
-        <?php foreach($items as $item){ ?>
+    <?php if(!empty($forRfqs)){ ?>
+        <?php foreach($forRfqs as $item){ ?>
             <?php $id = $item['id'] ?>
-            <?= $this->render('_items-pr_item', [
+            <?= $this->render('_rfq-item', [
                 'i' => $i,
                 'id' => $id,
                 'model' => $model,
                 'item' => $item,
-                'prItems' => $prItems,
+                'rfqItems' => $rfqItems,
                 'specifications' => $specifications,
                 'form' => $form,
             ]) ?>
@@ -49,55 +50,55 @@ use yii\bootstrap\Modal;
         <?php } ?>
     <?php }else{ ?>
         <tr>
-            <td colspan=8 align=center>No items included</td>
+            <td colspan=9 align=center>No items included</td>
         </tr>
     <?php } ?>
     <tr>
-        <td colspan=5 align=right><b>ABC:</b></td>
+        <td colspan=6 align=right><b>ABC:</b></td>
         <td align=right><b><?= number_format($total, 2) ?></b></td>
     </tr>
     </tbody>
 </table>
 
 <div class="form-group pull-right"> 
-    <?= Html::submitButton('Remove Selected', ['class' => 'btn btn-danger', 'id' => 'remove-pr-button', 'data' => ['disabled-text' => 'Please Wait'], 'data' => [
+    <?= !empty($forRfqs) ? Html::submitButton('Add to APR', ['class' => 'btn btn-success', 'id' => 'remove-rfq-button', 'data' => ['disabled-text' => 'Please Wait'], 'data' => [
         'method' => 'post',
-    ], 'disabled' => true]) ?>
+    ], 'disabled' => true]) : '' ?>
 </div>
 
 <?php ActiveForm::end(); ?>
 
 <?php
     $script = '
-    function enableRemoveButton()
+    function enableRfqRemoveButton()
     {
-        $("#pr-items-form input:checkbox:checked").length > 0 ? $("#remove-pr-button").attr("disabled", false) : $("#remove-pr-button").attr("disabled", true);
-        $("#pr-items-form input:checkbox:checked").length > 0 ? $("#add-apr-button").attr("disabled", false) : $("#add-apr-button").attr("disabled", true);
+        $("#rfq-items-form input:checkbox:checked").length > 0 ? $("#remove-rfq-button").attr("disabled", false) : $("#remove-rfq-button").attr("disabled", true);
+        $("#rfq-items-form input:checkbox:checked").length > 0 ? $("#add-rfq-button").attr("disabled", false) : $("#add-rfq-button").attr("disabled", true);
     }
 
-    $(".check-pr-items").click(function(){
-        $(".check-pr-item").not(this).prop("checked", this.checked);
-        enableRemoveButton();
+    $(".check-rfq-items").click(function(){
+        $(".check-rfq-item").not(this).prop("checked", this.checked);
+        enableRfqRemoveButton();
     });
 
-    $(".check-pr-item").click(function(){
-        enableRemoveButton();
+    $(".check-rfq-item").click(function(){
+        enableRfqRemoveButton();
     });
 
     $(document).ready(function(){
-        $(".check-pr-item").removeAttr("checked");
-        enableRemoveButton();
+        $(".check-rfq-item").removeAttr("checked");
+        enableRfqRemoveButton();
     });
 
-    $("#remove-pr-button").on("click", function(e) {
+    $("#remove-rfq-button").on("click", function(e) {
         e.preventDefault();
 
-        var con = confirm("Are you sure you want to remove this item?");
+        var con = confirm("Are you sure you want to add these items to APR?");
         if(con == true)
         {
             
 
-            var form = $("#pr-items-form");
+            var form = $("#rfq-items-form");
             var formData = form.serialize();
 
             $.ajax({
@@ -106,8 +107,9 @@ use yii\bootstrap\Modal;
                 data: formData,
                 success: function (data) {
                     form.enableSubmitButtons();
-                    alert("Items Removed");
-                    prItems('.$model->id.');
+                    alert("Items added to APR");
+                    aprItems('.$model->id.');
+                    rfqItems('.$model->id.');
                 },
                 error: function (err) {
                     console.log(err);
