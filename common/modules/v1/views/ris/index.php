@@ -51,14 +51,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             'ris_no',
                             [
-                                'header' => 'PREXC',
-                                'attribute' => 'prexc',
-                                'format' => 'raw',
-                                'value' => function($model){
-                                    return $model->prexcs;
-                                }
-                            ],
-                            [
                                 'attribute' => 'type',
                                 'format' => 'raw',
                                 'value' => function($model){
@@ -94,6 +86,22 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'header' => 'Status',
                                 'attribute' => 'status.status',
+                            ],
+                            [
+                                'header' => 'Included',
+                                'attribute' => 'prexc',
+                                'format' => 'raw',
+                                'value' => function($model){
+                                    return $model->prexcs;
+                                }
+                            ],
+                            [
+                                'header' => 'Realigned',
+                                'attribute' => 'realignedPrexc',
+                                'format' => 'raw',
+                                'value' => function($model){
+                                    return $model->realignedPrexcs;
+                                }
                             ],
                             [
                                 'format' => 'raw', 

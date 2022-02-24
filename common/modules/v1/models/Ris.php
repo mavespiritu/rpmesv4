@@ -331,6 +331,38 @@ class Ris extends \yii\db\ActiveRecord
 
         return implode('<br>', $items);
     }
+    
+    public function getRealignedPrexcs()
+    {
+        $items = RisItem::find()
+                ->select([
+                    'concat(
+                        ppmp_cost_structure.code,"",
+                        ppmp_organizational_outcome.code,"",
+                        ppmp_program.code,"",
+                        ppmp_sub_program.code,"",
+                        ppmp_identifier.code,"",
+                        ppmp_pap.code,"000-",
+                        ppmp_activity.code
+                    ) as prexc'
+                ])
+                ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_ris_item.ppmp_item_id')
+                ->leftJoin('ppmp_activity', 'ppmp_activity.id = ppmp_ppmp_item.activity_id')
+                ->leftJoin('ppmp_pap', 'ppmp_pap.id = ppmp_activity.pap_id')
+                ->leftJoin('ppmp_identifier', 'ppmp_identifier.id = ppmp_pap.identifier_id')
+                ->leftJoin('ppmp_sub_program', 'ppmp_sub_program.id = ppmp_pap.sub_program_id')
+                ->leftJoin('ppmp_program', 'ppmp_program.id = ppmp_pap.program_id')
+                ->leftJoin('ppmp_organizational_outcome', 'ppmp_organizational_outcome.id = ppmp_pap.organizational_outcome_id')
+                ->leftJoin('ppmp_cost_structure', 'ppmp_cost_structure.id = ppmp_pap.cost_structure_id')
+                ->andWhere(['ris_id' => $this->id])
+                ->andWhere(['in', 'ppmp_ris_item.type', ['Realigned']])
+                ->asArray()
+                ->all();
+        
+        $items = ArrayHelper::map($items, 'prexc', 'prexc');
+
+        return implode('<br>', $items);
+    }
 
     public static function pageQuantityTotal($provider, $fieldName)
     {
