@@ -71,6 +71,22 @@ $this->params['breadcrumbs'][] = $this->title;
                             'requesterName',
                             'date_required',
                             [
+                                'header' => 'Included',
+                                'attribute' => 'prexc',
+                                'format' => 'raw',
+                                'value' => function($model){
+                                    return $model->prexcs;
+                                }
+                            ],
+                            [
+                                'header' => 'Realigned',
+                                'attribute' => 'realignedPrexc',
+                                'format' => 'raw',
+                                'value' => function($model){
+                                    return $model->realignedPrexcs;
+                                }
+                            ],
+                            [
                                 'header' => 'Total', 
                                 'attribute' => 'total',
                                 'contentOptions' => ['style' => 'text-align: right;'],
@@ -86,22 +102,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'header' => 'Status',
                                 'attribute' => 'status.status',
-                            ],
-                            [
-                                'header' => 'Included',
-                                'attribute' => 'prexc',
-                                'format' => 'raw',
-                                'value' => function($model){
-                                    return $model->prexcs;
-                                }
-                            ],
-                            [
-                                'header' => 'Realigned',
-                                'attribute' => 'realignedPrexc',
-                                'format' => 'raw',
-                                'value' => function($model){
-                                    return $model->realignedPrexcs;
-                                }
                             ],
                             [
                                 'format' => 'raw', 
