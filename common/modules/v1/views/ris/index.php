@@ -51,6 +51,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             'ris_no',
                             [
+                                'header' => 'PREXC',
+                                'attribute' => 'prexc',
+                                'format' => 'raw',
+                                'value' => function($model){
+                                    return $model->prexcs;
+                                }
+                            ],
+                            [
                                 'attribute' => 'type',
                                 'format' => 'raw',
                                 'value' => function($model){
