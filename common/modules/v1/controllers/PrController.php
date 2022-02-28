@@ -665,7 +665,7 @@ class PrController extends Controller
                         ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
                         ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
                         ->andWhere([
-                            'ppmp_pr_item.pr_id' => $item->pr_id,
+                            'ppmp_pr_item.pr_id' => $costModel->pr_id,
                             'ppmp_item.id' => $item->ppmpItem->item_id,
                             'ppmp_pr_item.cost' => $item->cost,
                         ])
@@ -686,12 +686,12 @@ class PrController extends Controller
                         }
                     }
 
-                    $itemCost = ItemCost::findOne(['source_model' => 'PrItemCost', 'source_id' => $cost->id]) ? ItemCost::findOne(['source_model' => 'PrItemCost', 'source_id' => $cost->id]) : new ItemCost();
+                    /* $itemCost = ItemCost::findOne(['source_model' => 'PrItemCost', 'source_id' => $costModel->pr_item_id]) ? ItemCost::findOne(['source_model' => 'PrItemCost', 'source_id' => $costModel->pr_item_id]) : new ItemCost();
                     $itemCost->item_id = $item->ppmpItem->item_id;
-                    $itemCost->cost = $cost->cost;
+                    $itemCost->cost = $costModel->cost;
                     $itemCost->source_model = 'PrItemCost';
-                    $itemCost->source_id = $costModel->id;
-                    $itemCost->save();
+                    $itemCost->source_id = $costModel->pr_item_id;
+                    $itemCost->save(); */
                 }
             }
         }
@@ -1619,7 +1619,7 @@ class PrController extends Controller
                             ->leftJoin('ppmp_ppmp_item', 'ppmp_ppmp_item.id = ppmp_pr_item.ppmp_item_id')
                             ->leftJoin('ppmp_item', 'ppmp_item.id = ppmp_ppmp_item.item_id')
                             ->andWhere([
-                                'ppmp_pr_item.pr_id' => $item->pr_id,
+                                'ppmp_pr_item.pr_id' => $costModel->pr_id,
                                 'ppmp_item.id' => $item->ppmpItem->item_id,
                                 'ppmp_pr_item.cost' => $item->cost,
                             ])
@@ -1637,16 +1637,16 @@ class PrController extends Controller
                                 $cost->supplier_id = $rfqInfoModel->supplier_id;
                                 $cost->rfq_id = $rfqInfoModel->rfq_id;
                                 $cost->cost = $costModel->cost;
-                                $cost->save();
+                                $cost->save(false);
                             }
                         }
 
-                        $itemCost = ItemCost::findOne(['source_model' => 'PrItemCost', 'source_id' => $cost->id]) ? ItemCost::findOne(['source_model' => 'PrItemCost', 'source_id' => $cost->id]) : new ItemCost();
+                        /* $itemCost = ItemCost::findOne(['source_model' => 'PrItemCost', 'source_id' => $costModel->pr_item_id]) ? ItemCost::findOne(['source_model' => 'PrItemCost', 'source_id' => $costModel->pr_item_id]) : new ItemCost();
                         $itemCost->item_id = $item->ppmpItem->item_id;
-                        $itemCost->cost = $cost->cost;
+                        $itemCost->cost = $costModel->cost;
                         $itemCost->source_model = 'PrItemCost';
-                        $itemCost->source_id = $costModel->id;
-                        $itemCost->save();
+                        $itemCost->source_id = $costModel->pr_item_id;
+                        $itemCost->save(); */
                     }
                 }
             }

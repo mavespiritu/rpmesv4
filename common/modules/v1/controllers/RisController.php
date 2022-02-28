@@ -1718,13 +1718,13 @@ class RisController extends Controller
         {
             if($itemModel->save())
             {
-                $cost = new ItemCost();
+                /* $cost = new ItemCost();
                 $cost->item_id = $itemModel->item_id;
                 $cost->cost = $itemModel->cost;
                 $cost->datetime = date("Y-m-d H:i:s");
                 $cost->source_model = 'RisItem';
                 $cost->source_id = $itemModel->id;
-                $cost->save();
+                $cost->save(); */
 
                 if($itemBreakdowns)
                 {
