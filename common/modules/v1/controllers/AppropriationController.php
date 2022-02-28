@@ -346,6 +346,9 @@ class AppropriationController extends \yii\web\Controller
                 $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.stage' => $model->stage]);
             }
 
+            $items = $items->andWhere(['ppmp_ppmp_item.type' => 'Original']);
+            $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp_item.type' => 'Original']);
+
             $items = $items
             ->groupBy([
                 'ppmp_activity.pap_id',
@@ -714,6 +717,9 @@ class AppropriationController extends \yii\web\Controller
             $items = $items->andWhere(['ppmp_ppmp.stage' => $postData['stage']]);
             $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp.stage' => $postData['stage']]);
         }
+
+        $items = $items->andWhere(['ppmp_ppmp_item.type' => 'Original']);
+        $ppmpPaps = $ppmpPaps->andWhere(['ppmp_ppmp_item.type' => 'Original']);
 
         $items = $items
         ->groupBy([
