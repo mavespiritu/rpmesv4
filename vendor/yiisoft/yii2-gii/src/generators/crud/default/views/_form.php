@@ -18,6 +18,9 @@ echo "<?php\n";
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use kartik\select2\Select2;
+use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
+DisableButtonAsset::register($this);
 
 /* @var $this yii\web\View */
 /* @var $model <?= ltrim($generator->modelClass, '\\') ?> */

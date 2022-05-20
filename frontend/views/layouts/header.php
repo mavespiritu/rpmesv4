@@ -12,7 +12,7 @@ use yii\helpers\Html;
     <nav class="navbar navbar-static-top" role="navigation">
         <?php if(Yii::$app->user->isGuest){ ?>
             <div class="navbar-header">
-                <a href="#" class="navbar-brand">ePS</a>
+                <a href="#" class="navbar-brand">eRPMES</a>
             </div>
         <?php } ?>
         <?php if(!Yii::$app->user->isGuest){ ?>
@@ -34,8 +34,9 @@ use yii\helpers\Html;
                             <img src="<?= $directoryAsset ?>/img/user2-160x160.jpg" class="img-circle"
                                  alt="User Image"/>
 
-                            <p>
-                                <?= Yii::$app->user->identity->userinfo->fullName ?>
+                            <p style="font-size: 12px;">
+                                <?= Yii::$app->user->identity->userinfo->fullName ?><br>
+                                <?= Yii::$app->user->identity->userinfo->agency->title ?>
                             </p>
                         </li>   
                         <!-- Menu Footer-->
@@ -54,8 +55,9 @@ use yii\helpers\Html;
                     </ul>
                 </li>
             <?php }else{ ?>
-                <li><?= Html::a('Login', ['/user/login']) ?></li>
-                <li><?= Html::a('Register', ['/user/register']) ?></li>
+                <li class="text-white"><?= Html::a('HOME', ['/']) ?></li>
+                <li class="text-white"><?= Html::a('LOGIN', ['/user/login']) ?></li>
+                <li class="text-white"><?= Html::a('SIGNUP', ['/user/register']) ?></li>
             <?php } ?>
             </ul>
         </div>

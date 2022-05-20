@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="<?= Inflector::camel2id(StringHelper::basename($generator->modelClass)) ?>-index">
 
     <p>
-        <?= "<?= " ?>Html::a(<?= $generator->generateString('<i class="fa fa-plus"></i> Create') ?>, ['create'], ['class' => 'btn btn-app']) ?>
+        <?= "<?= " ?>Html::a(<?= $generator->generateString('<i class="fa fa-plus"></i> Add New') ?>, ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
 <?= $generator->enablePjax ? "    <?php Pjax::begin(); ?>\n" : '' ?>

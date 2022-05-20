@@ -10,20 +10,10 @@ return [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
-        'view' => [
-         'theme' => [
-             'pathMap' => [
-                '@frontend/views' => '@common/modules/procurement/views/layouts'
-             ],
-         ],
-        ],
     ],
     'modules' => [
-        'procurement' => [
-            'class' => 'common\modules\procurement\Procurement',
-        ],
-        'v1' => [
-            'class' => 'common\modules\v1\V1',
+        'rpmes' => [
+            'class' => 'common\modules\rpmes\Rpmes',
         ],
         'file' => [
             'class' => 'file\FileModule',
@@ -31,7 +21,7 @@ return [
             'tempPath' => '@frontend/web/temp',
             'storePath' => '@frontend/web/store',
             'rules' => [ // Правила для FileValidator
-                'maxFiles' => 20,
+                'maxFiles' => 1,
                 'maxSize' => 1024 * 1024 * 20 // 20 MB
             ],
         ],
@@ -49,7 +39,7 @@ return [
                         'rules' => [
                             [
                                 'allow' => true,
-                                'roles' => ['Administrator'],
+                                'roles' => ['SuperAdministrator','Administrator'],
                             ],
                         ],
                     ],

@@ -10,11 +10,11 @@ use \yii\web\Request;
 $baseUrl = str_replace('/frontend/web', '', (new Request)->getBaseUrl());
 
 return [
-    'name' => 'OPMS',
+    'name' => 'eRPMES',
     'id' => 'app-frontend',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
-    'defaultRoute' => '/v1/ppmp/',
+    //'defaultRoute' => '/v1/ppmp/',
     'controllerNamespace' => 'frontend\controllers',
     'timeZone' => 'Asia/Manila',
     'components' => [
@@ -38,7 +38,7 @@ return [
         'view' => [
          'theme' => [
              'pathMap' => [
-                '@frontend/views' => '@common/modules/procurement/views/layouts'
+                '@frontend/views' => '@frontend/views/layouts'
              ],
          ],
         ],

@@ -15,10 +15,12 @@ class AppAsset extends AssetBundle
         //'css/site.css',
         'https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css',
         'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css',
-        'https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css'
+        'https://cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css',
+        'jquery.growl/stylesheets/jquery.growl.css',
     ];
     public $js = [
         'js/freeze-table/dist/js/freeze-table.js',
+        'jquery.growl/javascripts/jquery.growl.js',
         'https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js'
     ];
     public $depends = [

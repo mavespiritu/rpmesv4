@@ -321,4 +321,13 @@ return array (
       '@fedemotta/datatables' => $vendorDir . '/fedemotta/yii2-widget-datatables',
     ),
   ),
+  '2amigos/yii2-switchery-widget' => 
+  array (
+    'name' => '2amigos/yii2-switchery-widget',
+    'version' => '1.0.2.0',
+    'alias' => 
+    array (
+      '@dosamigos/switchery' => $vendorDir . '/2amigos/yii2-switchery-widget/src',
+    ),
+  ),
 );

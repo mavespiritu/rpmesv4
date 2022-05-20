@@ -9,7 +9,7 @@ use yii\helpers\StringHelper;
 $urlParams = $generator->generateUrlParams();
 $modelClassName = Inflector::camel2words(StringHelper::basename($generator->modelClass));
 $nameAttributeTemplate = '$model->' . $generator->getNameAttribute();
-$titleTemplate = $generator->generateString('Update ' . $modelClassName , ['name' => '{nameAttribute}']);
+$titleTemplate = $generator->generateString('Update Record' , ['name' => '{nameAttribute}']);
 if ($generator->enableI18N) {
     $title = strtr($titleTemplate, ['\'{nameAttribute}\'' => $nameAttributeTemplate]);
 } else {
@@ -29,9 +29,11 @@ $this->params['breadcrumbs'][] = ['label' => <?= $generator->generateString(Infl
 $this->params['breadcrumbs'][] = <?= $generator->generateString('Update') ?>;
 ?>
 <div class="<?= Inflector::camel2id(StringHelper::basename($generator->modelClass)) ?>-update">
-
-    <?= '<?= ' ?>$this->render('_form', [
-        'model' => $model,
-    ]) ?>
-
+    <div class="row">
+        <div class="col-md-6 col-xs-12">
+            <?= "<?= " ?>$this->render('_form', [
+                'model' => $model,
+            ]) ?>
+        </div>
+    </div>
 </div>
