@@ -32,7 +32,6 @@ class SubSectorPerSector extends \yii\db\ActiveRecord
         return [
             [['sector_id', 'sub_sector_id'], 'required'],
             [['sector_id', 'sub_sector_id'], 'integer'],
-            ['sub_sector_id', 'unique', 'targetAttribute' => 'sector_id', 'message' => 'The sub-sector has been included in the sector already'],
             [['sector_id'], 'exist', 'skipOnError' => true, 'targetClass' => Sector::className(), 'targetAttribute' => ['sector_id' => 'id']],
             [['sub_sector_id'], 'exist', 'skipOnError' => true, 'targetClass' => SubSector::className(), 'targetAttribute' => ['sub_sector_id' => 'id']],
         ];
