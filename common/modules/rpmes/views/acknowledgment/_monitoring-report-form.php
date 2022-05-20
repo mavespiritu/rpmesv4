@@ -18,7 +18,7 @@ DisableButtonAsset::register($this);
 
 
 <p class="text-center">
-    <b>CORRESPONDING ACKNOWLEDGMENT</b> <br>
+    <b>CORRESPONDENCE ACKNOWLEDGMENT</b> <br>
     <b>ONLINE REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM</b> <br>
     <b><?= $officeTitle ? $officeTitle->value : '' ?></b> <br>
     <?= $officeAddress ? $officeAddress->value : '' ?>

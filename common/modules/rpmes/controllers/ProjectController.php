@@ -67,7 +67,7 @@ class ProjectController extends Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index'],
+                'only' => ['create', 'update', 'draft', 'carry-over'],
                 'rules' => [
                     [
                         'actions' => ['create', 'update', 'draft', 'carry-over'],
@@ -77,6 +77,14 @@ class ProjectController extends Controller
                 ],
             ],
         ];
+    }
+
+    function removeMask($figure)
+    {
+        $figure = explode(",",$figure);
+        $number = implode("", $figure);
+
+        return $number;
     }
 
     public function actionSubSectorList($id)
@@ -416,6 +424,7 @@ class ProjectController extends Controller
         $targets[3] = $femaleEmployedTargetModel;
 
         $beneficiaryTargetModel = new ProjectTarget();
+        $beneficiaryTargetModel->scenario = 'physicalTarget';
         $beneficiaryTargetModel->target_type = 'Beneficiaries';
 
         $targets[4] = $beneficiaryTargetModel;
@@ -964,10 +973,10 @@ class ProjectController extends Controller
                             $targetModel->year = $model->year;
                             $targetModel->target_type = $targetTypes[$i];
                             $targetModel->indicator = isset($target['indicator']) ? $target['indicator'] : '';
-                            $targetModel->q1 = isset($target['q1']) ? $targetTypes[$i] == 'Financial' ? implode("",explode(",", $target['q1'])) : $target['q1'] : 0;
-                            $targetModel->q2 = isset($target['q2']) ? $targetTypes[$i] == 'Financial' ? implode("",explode(",", $target['q2'])) : $target['q2'] : 0;
-                            $targetModel->q3 = isset($target['q3']) ? $targetTypes[$i] == 'Financial' ? implode("",explode(",", $target['q3'])) : $target['q3'] : 0;
-                            $targetModel->q4 = isset($target['q4']) ? $targetTypes[$i] == 'Financial' ? implode("",explode(",", $target['q4'])) : $target['q4'] : 0;
+                            $targetModel->q1 = isset($target['q1']) ? $this->removeMask($target['q1']) : 0;
+                            $targetModel->q2 = isset($target['q2']) ? $this->removeMask($target['q2']) : 0;
+                            $targetModel->q3 = isset($target['q3']) ? $this->removeMask($target['q3']) : 0;
+                            $targetModel->q4 = isset($target['q4']) ? $this->removeMask($target['q4']) : 0;
                             if (! ($flag = $targetModel->save(false))) {
                                 $transaction->rollBack();
                                 break;

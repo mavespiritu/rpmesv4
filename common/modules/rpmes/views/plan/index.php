@@ -31,28 +31,11 @@ function renderSummary($page)
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Monitoring Plan Submission</h3>
+                    <h3 class="box-title">Monitoring Plan</h3>
                 </div>
                 <div class="box-body">
                 <div class="alert alert-<?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'info' : 'danger' : '' ?>"><i class="fa fa-exclamation-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' to go before the deadline of submission of monitoring plan. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) 
                 : 'Submission of monitoring plan has ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) : '' ?></div>
-                <?= $this->render('_submit', [
-                        'submissionModel' => $submissionModel,
-                        'agencies' => $agencies,
-                        'projectCount' => $projectCount
-                    ]) ?>
-                </div>
-            </div>
-        </div>
-    </div>
-    <br>
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Monitoring Plan</h3>
-                </div>
-                <div class="box-body">
                 <?= $this->render('_search', [
                     'model' => $model,
                     'regionModel' => $regionModel,
@@ -155,6 +138,7 @@ function renderSummary($page)
                                     'model' => $model,
                                     'form' => $form,
                                     'projectIds' => $projectIds,
+                                    'dueDate' => $dueDate
                                 ]) ?>
                                 <?php $idx++ ?>
                             <?php } ?>
@@ -165,9 +149,9 @@ function renderSummary($page)
                 <br>
                 <div class="pull-left"><?= LinkPager::widget(['pagination' => $projectsPages]); ?></div>
                 <div class="pull-right"> 
-                    <?= Html::submitButton('Delete Selected', ['class' => 'btn btn-danger', 'id' => 'delete-selected-monitoring-project-button', 'data' => ['disabled-text' => 'Please Wait'], 'data' => [
+                    <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Delete Selected', ['class' => 'btn btn-danger', 'id' => 'delete-selected-monitoring-project-button', 'data' => ['disabled-text' => 'Please Wait'], 'data' => [
                         'method' => 'get',
-                    ], 'disabled' => true]) ?>
+                    ], 'disabled' => true]) : '' : '' ?>
                 </div>
                 <div class="clearfix"></div>
                 <?php ActiveForm::end(); ?>
@@ -175,6 +159,26 @@ function renderSummary($page)
             </div>
         </div>
     </div>
+    <?php if(Yii::$app->user->can('AgencyUser')){ ?>
+    <br>
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Monitoring Plan Submission</h3>
+                </div>
+                <div class="box-body">
+                <?= $this->render('_submit', [
+                        'submissionModel' => $submissionModel,
+                        'agencies' => $agencies,
+                        'projectCount' => $projectCount,
+                        'dueDate' => $dueDate
+                    ]) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php } ?>
 </div>
 <?php
     $script = '

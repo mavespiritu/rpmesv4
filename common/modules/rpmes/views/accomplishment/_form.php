@@ -338,7 +338,7 @@ function renderSummary($page)
     $("#accomplishment-submit-button").on("click", function(e) {
         e.preventDefault();
 
-        var con = confirm("Are you sure you want to submit accomplishment for '.$getData['quarter'].' '.$getData['year'].'?");
+        var con = confirm("The data I encoded had been duly approved by my agency head. I am providing my name and designation in the appropriate fields as an attestation of my submission\'s data integrity. Proceed?");
         if(con == true)
         {
             $.ajax({

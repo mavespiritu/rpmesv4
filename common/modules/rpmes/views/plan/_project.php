@@ -10,15 +10,15 @@ use yii\web\View;
         <?= $form->field($projectIds[$model->id], 'id[]')->checkbox(['value' => $model->id, 'class' => 'check-monitoring-project', 'label' => '', 'id' => 'check-monitoring-project-'.$model->id, 'checked' => 'checked']) ?>
     </td>
     <td align=center>
-        <?= $model->year < date("Y") ?  Html::a('<i class="fa fa-arrow-up"></i> Carry-Over', ['/rpmes/project/carry-over', 'id' => $model->id], ['class' => 'btn btn-success btn-xs btn-block', 'id' => 'carry-over-monitoring-project'.$model->id.'-button']) : '' ?>
-        <?= Html::a('<i class="fa fa-edit"></i> Edit', ['/rpmes/project/update', 'id' => $model->id], ['class' => 'btn btn-primary btn-xs btn-block', 'id' => 'update-monitoring-project'.$model->id.'-button']) ?>
-        <?= Html::a('<i class="fa fa-trash"></i> Delete', ['/rpmes/project/delete', 'id' => $model->id], [
+        <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $model->year < date("Y") ?  Html::a('<i class="fa fa-arrow-up"></i> Carry-Over', ['/rpmes/project/carry-over', 'id' => $model->id], ['class' => 'btn btn-success btn-xs btn-block', 'id' => 'carry-over-monitoring-project'.$model->id.'-button']) : '' : '' : '' ?>
+        <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::a('<i class="fa fa-edit"></i> Edit', ['/rpmes/project/update', 'id' => $model->id], ['class' => 'btn btn-primary btn-xs btn-block', 'id' => 'update-monitoring-project'.$model->id.'-button']) : '' : '' ?>
+        <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::a('<i class="fa fa-trash"></i> Delete', ['/rpmes/project/delete', 'id' => $model->id], [
         'class' => 'btn btn-xs btn-danger btn-block',
         'data' => [
             'confirm' => 'Are you sure you want to remove this item?',
             'method' => 'post',
         ],
-    ]) ?>
+    ]) : '' : '' ?>
     </td>
     <td><?= $idx + 1 ?></td>
     <td>

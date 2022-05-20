@@ -34,7 +34,6 @@ class ProjectOutcome extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['outcome', 'performance_indicator', 'target', 'timeline',], 'required'],
             [['project_id', 'year'], 'integer'],
             [['outcome', 'performance_indicator', 'target', 'timeline', 'remarks'], 'string'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],

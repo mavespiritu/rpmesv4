@@ -127,7 +127,7 @@ $this->registerJs($js);
                                     id: this.value,
                                     }
                             }).done(function(result) {
-                                $(".kra-select").html("").select2({ data:result, multiple: true, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
+                                $(".kra-select").html("").select2({ data:result, multiple: false, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
                                 $(".kra-select").select2("val","");
                             });
                         }'
@@ -482,10 +482,10 @@ $this->registerJs($js);
                 <thead>
                     <tr>
                         <td align=center><b>#</b></td>
-                        <td align=center><b>Outcome *</b></td>
-                        <td align=center><b>Performance Indicator *</b></td>
-                        <td align=center><b>Target *</b></td>
-                        <td align=center><b>Timeline *</b></td>
+                        <td align=center><b>Outcome</b></td>
+                        <td align=center><b>Performance Indicator</b></td>
+                        <td align=center><b>Target</b></td>
+                        <td align=center><b>Timeline</b></td>
                         <td align=center><b>Remarks</b></td>
                         <td><button type="button" class="pull-right add-outcome-item btn btn-success btn-xs"><i class="fa fa-plus"></i></button></td>
                     </tr>
@@ -803,7 +803,15 @@ $this->registerJs($js);
                     </tr>
                     <tr>
                         <td colspan=2 align=right>No. of Beneficiaries</td>
-                        <td>&nbsp;</td>
+                        <td><?= $form->field($targets[4], "[4]indicator")->widget(Select2::classname(), [
+                                'data' => ['Individual' => 'Individual', 'Group' => 'Group'],
+                                'options' => ['multiple' => false, 'placeholder' => 'Select one'],
+                                'pluginOptions' => [
+                                    'allowClear' =>  true,
+                                ],
+                                ])->label(false);
+                            ?>
+                        </td>
                         <td align=center>
                             <?= $form->field($targets[4], "[4]q1")->widget(MaskedInput::classname(), [
                                 'options' => [

@@ -21,7 +21,6 @@ use common\components\helpers\HtmlHelper;
 class Submission extends \yii\db\ActiveRecord
 {
     public $grouping;
-    public $quarter;
     public $fund_source_id;
     public $region_id;
     public $province_id;

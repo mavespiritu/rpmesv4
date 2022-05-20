@@ -153,37 +153,37 @@ function renderSummary($page)
     <p><i class="fa fa-exclamation-circle"></i> Make sure to complete project exceptions for <?= $getData['quarter'] ?> <?= $getData['year'] ?> before clicking the button below. Once submitted, action cannot be reverted.</p>
     <?= !empty($exceptions) ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? !$submissionModel->isNewRecord ? 'Project Exceptions for '.$submissionModel->quarter.' '.$submissionModel->year.' has been submitted by '.$submissionModel->submitter.' last '.date("F j, Y H:i:s", strtotime($submissionModel->date_submitted)) : Html::button('Submit Project Exception '.$getData['quarter'].' '.$getData['year'],['class' => 'btn btn-success', 'id' => 'project-exception-submit-button']) : '' : '' : '' ?>
     <?php
-    $script = '
-    $("#project-exception-submit-button").on("click", function(e) {
-        e.preventDefault();
+        $script = '
+        $("#project-exception-submit-button").on("click", function(e) {
+            e.preventDefault();
 
-        var con = confirm("Are you sure you want to submit project exceptions for '.$getData['quarter'].' '.$getData['year'].'?");
-        if(con == true)
-        {
-            var form = $("#project-exception-form");
-            var formData = form.serialize();
+            var con = confirm("The data I encoded had been duly approved by my agency head. I am providing my name and designation in the appropriate fields as an attestation of my submission\'s data integrity. Proceed?");
+            if(con == true)
+            {
+                var form = $("#project-exception-form");
+                var formData = form.serialize();
 
-            $.ajax({
-                type: "POST",
-                url: "'.Url::to(['/rpmes/project-exception/submit']).'",
-                data: {
-                    year: "'.$getData['year'].'",
-                    quarter: "'.$getData['quarter'].'",
-                    agency_id: "'.$agency_id.'"
-                },
-                success: function (data) {
-                    console.log(data);
-                    $.growl.notice({ title: "Success!", message: "Project Exception has been submitted" });
-                },
-                error: function (err) {
-                    console.log(err);
-                }
-            }); 
-        }
+                $.ajax({
+                    type: "POST",
+                    url: "'.Url::to(['/rpmes/project-exception/submit']).'",
+                    data: {
+                        year: "'.$getData['year'].'",
+                        quarter: "'.$getData['quarter'].'",
+                        agency_id: "'.$agency_id.'"
+                    },
+                    success: function (data) {
+                        console.log(data);
+                        $.growl.notice({ title: "Success!", message: "Project Exception has been submitted" });
+                    },
+                    error: function (err) {
+                        console.log(err);
+                    }
+                }); 
+            }
 
-        return false;
-    });
-    ';
+            return false;
+        });
+        ';
 
-    $this->registerJs($script, View::POS_END);
-?>
+        $this->registerJs($script, View::POS_END);
+    ?>

@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
+use yii\web\View;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 DisableButtonAsset::register($this);
 /* @var $this yii\web\View */
@@ -16,12 +17,13 @@ DisableButtonAsset::register($this);
     <?php $form = ActiveForm::begin([
         'action' => Url::to(['/rpmes/plan/submit']),
         'method' => 'post',
+        'id' => 'monitoring-plan-submission-form',
     	'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
 
     <div class="row">
         <div class="col-md-3 col-xs-12">
-            <?= Yii::$app->user->can('Administrator') || Yii::$app->user->can('SuperAdministrator') ? $form->field($submissionModel, 'agency_id')->widget(Select2::classname(), [
+            <?php /* Yii::$app->user->can('Administrator') || Yii::$app->user->can('SuperAdministrator') ? $form->field($submissionModel, 'agency_id')->widget(Select2::classname(), [
                     'data' => $agencies,
                     'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'agency-select'],
                     'pluginOptions' => [
@@ -76,7 +78,7 @@ DisableButtonAsset::register($this);
                             })
                         }'
                     ]
-                ]) : '';
+                ]) : ''; */
             ?>
             <h5>No. of projects enrolled: <br>
                 <h3 id="number_of_projects_enrolled"><?= number_format($projectCount, 0) ?></h3>
@@ -86,11 +88,42 @@ DisableButtonAsset::register($this);
     <div class="pull-left">
         <p id="submission-p"><?= !$submissionModel->isNewRecord ? 'Monitoring plan has been submitted last '.date("F j, Y H:i:s", strtotime($submissionModel->date_submitted)).' by '.$submissionModel->submitter : '' ?></p>
         <div id="submit-plan-div">
-            <?= $projectCount > 0 ? Html::submitButton('Submit Monitoring Plan '.date("Y"), ['class' => 'btn btn-success', 'id' => 'submit-monitoring-plan-button', 'data' => [
+            <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $submissionModel->isNewRecord ? $projectCount > 0 ? Html::submitButton('Submit Monitoring Plan '.date("Y"), ['class' => 'btn btn-success', 'id' => 'submit-monitoring-plan-button', 'data' => [
             'method' => 'post',
-        ]]) : 'Please enroll projects in the monitoring plan. '.Html::a('Click here',['/rpmes/project/create']); ?>
+        ]]) : 'Please enroll projects in the monitoring plan. '.Html::a('Click here',['/rpmes/project/create']) : '' : '' : '' ?>
         </div>
     </div>
     <?php ActiveForm::end(); ?>
 
 </div>
+<?php
+        $script = '
+        $("#submit-monitoring-plan-button").on("click", function(e) {
+            e.preventDefault();
+
+            var con = confirm("The data I encoded had been duly approved by my agency head. I am providing my name and designation in the appropriate fields as an attestation of my submission\'s data integrity. Proceed?");
+            if(con == true)
+            {
+                var form = $("#monitoring-plan-submission-form");
+                var formData = form.serialize();
+
+                $.ajax({
+                    url: form.attr("action"),
+                    type: form.attr("method"),
+                    data: formData,
+                    success: function (data) {
+                        console.log(data);
+                        $.growl.notice({ title: "Success!", message: "Monitoring Plan has been submitted" });
+                    },
+                    error: function (err) {
+                        console.log(err);
+                    }
+                }); 
+            }
+
+            return false;
+        });
+        ';
+
+        $this->registerJs($script, View::POS_END);
+    ?>

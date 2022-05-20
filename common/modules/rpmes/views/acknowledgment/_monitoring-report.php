@@ -4,7 +4,7 @@
     td{ border: 1px solid black; padding: 10px;}
 </style>
 <p style="text-align: center;">
-    <b>CORRESPONDING ACKNOWLEDGMENT</b> <br>
+    <b>CORRESPONDENCE ACKNOWLEDGMENT</b> <br>
     <b>ONLINE REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM</b> <br>
     <b><?= $officeTitle ? $officeTitle->value : '' ?></b> <br>
     <?= $officeAddress ? $officeAddress->value : '' ?>
