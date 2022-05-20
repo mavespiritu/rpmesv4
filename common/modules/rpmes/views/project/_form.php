@@ -114,7 +114,7 @@ $this->registerJs($js);
 
             <?= $form->field($categoryModel, 'category_id')->widget(Select2::classname(), [
                 'data' => $categories,
-                'options' => ['multiple' => true, 'placeholder' => 'Select one or more', 'class'=>'category-select'],
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
                 'pluginOptions' => [
                     'allowClear' =>  false,
                 ],
@@ -124,10 +124,10 @@ $this->registerJs($js);
                             $.ajax({
                                 url: "'.Url::to(['/rpmes/project/kra-list']).'",
                                 data: {
-                                    id: JSON.stringify($("#projectcategory-category_id").select2("data")),
+                                    id: this.value,
                                     }
                             }).done(function(result) {
-                                $(".kra-select").html("").select2({ data:result, multiple: true, theme:"krajee", width:"100%",placeholder:"Select one or more", allowClear: true});
+                                $(".kra-select").html("").select2({ data:result, multiple: true, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
                                 $(".kra-select").select2("val","");
                             });
                         }'
@@ -138,7 +138,7 @@ $this->registerJs($js);
 
             <?= $form->field($kraModel, 'key_result_area_id')->widget(Select2::classname(), [
                 'data' => $kras,
-                'options' => ['multiple' => true, 'placeholder' => 'Select one or more', 'class'=>'kra-select'],
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'kra-select'],
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],

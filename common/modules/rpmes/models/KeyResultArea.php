@@ -33,7 +33,7 @@ class KeyResultArea extends \yii\db\ActiveRecord
         return [
             [['category_id', 'kra_no', 'title'], 'required'],
             [['category_id', 'kra_no'], 'integer'],
-            [['kra_no'], 'unique', 'message' => 'The number has been used already'],
+            ['kra_no', 'unique', 'targetAttribute' => 'category_id', 'message' => 'The number has been included in the category already'],
             [['title'], 'unique', 'message' => 'The title has been used already'],
             [['description'], 'string'],
             [['title'], 'string', 'max' => 100],

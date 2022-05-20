@@ -99,13 +99,10 @@ class ProjectController extends Controller
 
     public function actionKraList($id)
     {
-        $ids = json_decode($id, true);
-        $ids = ArrayHelper::map($ids, 'id', 'id');
-
         $kras = KeyResultArea::find()
                     ->select(['key_result_area.id', 'concat("KRA/Cluster #",kra_no,": ",key_result_area.title) as title'])
                     ->leftJoin('category', 'category.id = key_result_area.category_id')
-                    ->where(['in', 'key_result_area.category_id', $ids])
+                    ->where(['key_result_area.category_id' => $id])
                     ->orderBy(['key_result_area.kra_no' => SORT_ASC, 'key_result_area.title' => SORT_ASC])
                     ->asArray()
                     ->all();
