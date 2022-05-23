@@ -182,20 +182,16 @@ class Project extends \yii\db\ActiveRecord
     public function getAllocationTotal()
     {
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Financial', 'year' => $this->year]);
-        $allocations = [$allocation->q1, $allocation->q2, $allocation->q3, $allocation->q4];
+        $allocations = $allocation ? [$allocation->q1, $allocation->q2, $allocation->q3, $allocation->q4] : [0];
         rsort($allocations);
         $value = 0;
         
         switch($this->data_type){
             case 'Default':
             case 'Maintained':
-                     if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : 0; }
-                else if($quarter == 'Q2'){ $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) : 0; }
-                else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) : 0; }
-                else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) + floatval($allocation->q4) : 0; }
-                break;
+                $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) + floatval($allocation->q4) : 0;
             case 'Cumulative':
-                     $value = floatval($allocations[0]);
+                     $value = $allocation ? floatval($allocations[0]) : 0;
                 break;
         }
 
@@ -326,25 +322,19 @@ class Project extends \yii\db\ActiveRecord
     public function getPhysicalTotal()
     {
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Physical', 'year' => $this->year]);
-        $allocations = [$allocation->q1, $allocation->q2, $allocation->q3, $allocation->q4];
+        $allocations = $allocation ? [$allocation->q1, $allocation->q2, $allocation->q3, $allocation->q4] : [0];
         rsort($allocations);
         $value = 0;
         
         switch($this->data_type){
             case 'Default':
-                     if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
-                else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) : 0; }
-                else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) : 0; }
-                else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0; }
+                $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0;
                 break;
             case 'Cumulative':
                 $value = intval($allocations[0]);
                 break;
             case 'Maintained':
-                     if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
-                else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q2) : 0; }
-                else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q3) : 0; }
-                else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q4) : 0; }
+                $value = $allocation ? intval($allocation->q4) : 0;
                 break;
         }
 
