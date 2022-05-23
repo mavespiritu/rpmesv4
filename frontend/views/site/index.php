@@ -54,6 +54,11 @@ $this->title = 'eRPMES';
         </div>
         <div class="row">
             <div class="col-lg-4">
+                <h3 style="color: #3C8DBC;">Yehlen Yangat</h3>
+
+                <p>Email: yiyangat@neda.gov.ph</p>
+            </div>
+            <div class="col-lg-4">
                 <h3 style="color: #3C8DBC;">John Chester Erestingcol</h3>
 
                 <p>Email: jeerestingcol@neda.gov.ph</p>
@@ -63,6 +68,8 @@ $this->title = 'eRPMES';
 
                 <p>Email: acbanaga@neda.gov.ph</p>
             </div>
+        </div>
+        <div class="row">
             <div class="col-lg-4">
                 <h3 style="color: #3C8DBC;">Andrew Valmores</h3>
 
