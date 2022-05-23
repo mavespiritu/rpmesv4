@@ -72,12 +72,12 @@ class SummaryController extends \yii\web\Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index'],
+                'only' => ['monitoring-plan', 'download-monitoring-plan', 'print-monitoring-plan', 'monitoring-report', 'download-monitoring-report', 'print-monitoring-report'],
                 'rules' => [
                     [
                         'actions' => ['monitoring-plan', 'download-monitoring-plan', 'print-monitoring-plan', 'monitoring-report', 'download-monitoring-report', 'print-monitoring-report'],
                         'allow' => true,
-                        'roles' => ['Administrator', 'SuperAdministrator'],
+                        'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
                     ],
                 ],
             ],
@@ -251,6 +251,11 @@ class SummaryController extends \yii\web\Controller
             if($model->grouping == '_sdg_goal_by_category_by_sector_by_agency'){ $projects = $projects->groupBy(['sdg_goal.id', 'category.id', 'sector.id', 'agency.id']); }
             if($model->grouping == '_agency_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'agency.id']); }
             if($model->grouping == '_sector_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'sector.id']); }
+
+            if(Yii::$app->user->can('AgencyUser'))
+            {
+                $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+            }
 
             $projects = $projects->asArray()->all();
             
@@ -2038,6 +2043,11 @@ class SummaryController extends \yii\web\Controller
         if($grouping == '_sdg_goal_by_category_by_sector_by_agency'){ $projects = $projects->groupBy(['sdg_goal.id', 'category.id', 'sector.id', 'agency.id']); }
         if($grouping == '_agency_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'agency.id']); }
         if($grouping == '_sector_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'sector.id']); }
+
+        if(Yii::$app->user->can('AgencyUser'))
+        {
+            $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        }
 
         $projects = $projects->asArray()->all();
         
@@ -3872,6 +3882,11 @@ class SummaryController extends \yii\web\Controller
         if($grouping == '_sdg_goal_by_category_by_sector_by_agency'){ $projects = $projects->groupBy(['sdg_goal.id', 'category.id', 'sector.id', 'agency.id']); }
         if($grouping == '_agency_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'agency.id']); }
         if($grouping == '_sector_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'sector.id']); }
+
+        if(Yii::$app->user->can('AgencyUser'))
+        {
+            $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        }
 
         $projects = $projects->asArray()->all();
         

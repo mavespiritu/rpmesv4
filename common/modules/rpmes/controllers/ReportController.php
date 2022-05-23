@@ -178,6 +178,11 @@ class ReportController extends \yii\web\Controller
             $projects = $projects->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id');
             $projects = $projects->andWhere(['project.draft' => 'No']);
 
+            if(Yii::$app->user->can('AgencyUser'))
+            {
+                $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+            }
+
             if($model->year != '')
             {
                 $projects = $projects->andWhere(['project.year' => $model->year]);
@@ -314,6 +319,11 @@ class ReportController extends \yii\web\Controller
         $projects = $projects->leftJoin('project_citymun', 'project_citymun.project_id = project.id and project_citymun.year = project.year');
         $projects = $projects->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id');
         $projects = $projects->andWhere(['project.draft' => 'No']);
+
+        if(Yii::$app->user->can('AgencyUser'))
+        {
+            $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        }
 
         if($model['year'] != '')
         {

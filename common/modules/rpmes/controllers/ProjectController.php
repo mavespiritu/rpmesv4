@@ -491,7 +491,31 @@ class ProjectController extends Controller
                             }
                         }
 
+                        // function for single category and kra
                         if(!empty($categoryModel->category_id))
+                        {
+                            $category = new ProjectCategory();
+                            $category->project_id = $model->id;
+                            $category->year = $model->year;
+                            $category->category_id = $categoryModel->category_id;
+                            if (! ($flag = $category->save())) {
+                                $transaction->rollBack();
+                            }
+                        }
+
+                        if(!empty($kraModel->key_result_area_id))
+                        {
+                            $kra = new ProjectKra();
+                            $kra->project_id = $model->id;
+                            $kra->year = $model->year;
+                            $kra->key_result_area_id = $kraModel->key_result_area_id;
+                            if (! ($flag = $kra->save())) {
+                                $transaction->rollBack();
+                            }
+                        }
+
+                        // function for multiple category and kra
+                        /* if(!empty($categoryModel->category_id))
                         {
                             foreach($categoryModel->category_id as $id)
                             {
@@ -519,7 +543,7 @@ class ProjectController extends Controller
                                     break;
                                 }
                             }
-                        }
+                        } */
 
                         if(!empty($sdgModel->sdg_goal_id))
                         {
@@ -784,37 +808,30 @@ class ProjectController extends Controller
                         }
                     }
 
+                    // function for single category and kra
                     $category = $postData['ProjectCategory'];
                     if(!empty($category['category_id']))
                     {
-                        foreach($category['category_id'] as $id)
-                        {
-                            $categoryModel = ProjectCategory::findOne(['project_id' => $model->id, 'year' => $model->year, 'category_id' => $id]) ? 
-                            ProjectCategory::findOne(['project_id' => $model->id, 'year' => $model->year, 'category_id' => $id]) : new ProjectCategory();
-                            $categoryModel->project_id = $model->id;
-                            $categoryModel->year = $model->year;
-                            $categoryModel->category_id = $id;
-                            if (! ($flag = $categoryModel->save(false))) {
-                                $transaction->rollBack();
-                                break;
-                            }
+                        $categoryModel = ProjectCategory::findOne(['project_id' => $model->id, 'year' => $model->year, 'category_id' => $category['category_id']]) ? 
+                        ProjectCategory::findOne(['project_id' => $model->id, 'year' => $model->year, 'category_id' => $category['category_id']]) : new ProjectCategory();
+                        $categoryModel->project_id = $model->id;
+                        $categoryModel->year = $model->year;
+                        $categoryModel->category_id = $category['category_id'];
+                        if (! ($flag = $categoryModel->save(false))) {
+                            $transaction->rollBack();
                         }
                     }
 
                     $kra = $postData['ProjectKra'];
                     if(!empty($kra['key_result_area_id']))
                     {
-                        foreach($kra['key_result_area_id'] as $id)
-                        {
-                            $kraModel = ProjectKra::findOne(['project_id' => $model->id, 'year' => $model->year, 'key_result_area_id' => $id]) ? 
-                            ProjectKra::findOne(['project_id' => $model->id, 'year' => $model->year, 'key_result_area_id' => $id]) : new ProjectKra();
-                            $kraModel->project_id = $model->id;
-                            $kraModel->year = $model->year;
-                            $kraModel->key_result_area_id = $id;
-                            if (! ($flag = $kraModel->save(false))) {
-                                $transaction->rollBack();
-                                break;
-                            }
+                        $kraModel = ProjectKra::findOne(['project_id' => $model->id, 'year' => $model->year, 'key_result_area_id' => $kra['key_result_area_id']]) ? 
+                        ProjectKra::findOne(['project_id' => $model->id, 'year' => $model->year, 'key_result_area_id' => $kra['key_result_area_id']]) : new ProjectKra();
+                        $kraModel->project_id = $model->id;
+                        $kraModel->year = $model->year;
+                        $kraModel->key_result_area_id = $kra['key_result_area_id'];
+                        if (! ($flag = $kraModel->save(false))) {
+                            $transaction->rollBack();
                         }
                     }
 
@@ -1109,13 +1126,13 @@ class ProjectController extends Controller
         $projectBarangays = $model->projectBarangays;
         $barangayModel->barangay_id = array_values(ArrayHelper::map($projectBarangays, 'barangayId', 'barangayId'));
         
-        $categoryModel = new ProjectCategory();
-        $projectCategories = $model->projectCategories;
-        $categoryModel->category_id = array_values(ArrayHelper::map($projectCategories, 'category_id', 'category_id'));
+        $categoryModel = ProjectCategory::findOne(['project_id' => $model->id, 'year' => $model->year]) ? ProjectCategory::findOne(['project_id' => $model->id, 'year' => $model->year]) : new ProjectCategory();
+        $categoryModel->project_id = $model->id;
+        $categoryModel->year = $model->year;
 
-        $kraModel = new ProjectKra();
-        $projectKras = $model->projectKras;
-        $kraModel->key_result_area_id = array_values(ArrayHelper::map($projectKras, 'key_result_area_id', 'key_result_area_id'));
+        $kraModel = ProjectKra::findOne(['project_id' => $model->id, 'year' => $model->year]) ? ProjectKra::findOne(['project_id' => $model->id, 'year' => $model->year]) : new ProjectKra();
+        $kraModel->project_id = $model->id;
+        $kraModel->year = $model->year;
         
         $sdgModel = new ProjectSdgGoal();
         $projectSdgGoals = $model->projectSdgGoals;
@@ -1311,8 +1328,8 @@ class ProjectController extends Controller
             $oldProvinceIDs = array_values(ArrayHelper::map($projectProvinces, 'province_id', 'province_id'));
             $oldCitymunIDs = array_values(ArrayHelper::map($projectCitymuns, 'citymunId', 'citymunId'));
             $oldBarangayIDs = array_values(ArrayHelper::map($projectBarangays, 'barangayId', 'barangayId'));
-            $oldCategoryIDs = array_values(ArrayHelper::map($projectCategories, 'category_id', 'category_id'));
-            $oldKraIDs = array_values(ArrayHelper::map($projectKras, 'key_result_area_id', 'key_result_area_id'));
+            //$oldCategoryIDs = array_values(ArrayHelper::map($projectCategories, 'category_id', 'category_id'));
+            //$oldKraIDs = array_values(ArrayHelper::map($projectKras, 'key_result_area_id', 'key_result_area_id'));
             $oldSdgGoalIDs = array_values(ArrayHelper::map($projectSdgGoals, 'sdg_goal_id', 'sdg_goal_id'));
             $oldRdpChapterIDs = array_values(ArrayHelper::map($projectRdpChapters, 'rdp_chapter_id', 'rdp_chapter_id'));
             $oldRdpChapterOutcomeIDs = array_values(ArrayHelper::map($projectRdpChapterOutcomes, 'rdp_chapter_outcome_id', 'rdp_chapter_outcome_id'));
@@ -1330,8 +1347,8 @@ class ProjectController extends Controller
             $deletedProvinceIDs = $provinceModel->province_id != '' ? array_diff($oldProvinceIDs, array_filter($provinceModel->province_id)) : array_diff($oldProvinceIDs, []);
             $deletedCitymunIDs = $citymunModel->citymun_id != '' ? array_diff($oldCitymunIDs, array_filter($citymunModel->citymun_id)) : array_diff($oldCitymunIDs, []);
             $deletedBarangayIDs = $barangayModel->barangay_id != '' ? array_diff($oldBarangayIDs, array_filter($barangayModel->barangay_id)) : array_diff($oldBarangayIDs, []);
-            $deletedCategoryIDs = $categoryModel->category_id != '' ? array_diff($oldCategoryIDs, array_filter($categoryModel->category_id)) : array_diff($oldCategoryIDs, []);
-            $deletedKraIDs = $kraModel->key_result_area_id != '' ? array_diff($oldKraIDs, array_filter($kraModel->key_result_area_id)) : array_diff($oldKraIDs, []);
+            //$deletedCategoryIDs = $categoryModel->category_id != '' ? array_diff($oldCategoryIDs, array_filter($categoryModel->category_id)) : array_diff($oldCategoryIDs, []);
+            //$deletedKraIDs = $kraModel->key_result_area_id != '' ? array_diff($oldKraIDs, array_filter($kraModel->key_result_area_id)) : array_diff($oldKraIDs, []);
             $deletedSdgGoalIDs = $sdgModel->sdg_goal_id != '' ? array_diff($oldSdgGoalIDs, array_filter($sdgModel->sdg_goal_id)) : array_diff($oldSdgGoalIDs, []);
             $deletedRdpChapterIDs = $rdpChapterModel->rdp_chapter_id != '' ? array_diff($oldRdpChapterIDs, array_filter($rdpChapterModel->rdp_chapter_id)) : array_diff($oldRdpChapterIDs, []);
             $deletedRdpChapterOutcomeIDs = $rdpChapterOutcomeModel->rdp_chapter_outcome_id != '' ? array_diff($oldRdpChapterOutcomeIDs, array_filter($rdpChapterOutcomeModel->rdp_chapter_outcome_id)) : array_diff($oldRdpChapterOutcomeIDs, []);
@@ -1386,8 +1403,19 @@ class ProjectController extends Controller
                                 break;
                             }
                         }
+                        // function for single category and kra
 
-                        if(!empty($deletedCategoryIDs))
+                        if(! ($flag = $categoryModel->save(false))) {
+                            $transaction->rollBack();
+                        }
+
+                        if (! ($flag = $kraModel->save(false))) {
+                            $transaction->rollBack();
+                        }
+
+                        // functions for multiple category and kra
+
+                        /* if(!empty($deletedCategoryIDs))
                         {
                             foreach($deletedCategoryIDs as $id)
                             {
@@ -1448,7 +1476,7 @@ class ProjectController extends Controller
                                 }
                             }
                         }
-
+ */
                         if(!empty($deletedSdgGoalIDs))
                         {
                             ProjectSdgGoal::deleteAll(['project_id' => $model->id, 'year' => $model->year, 'sdg_goal_id' => $deletedSdgGoalIDs]);
