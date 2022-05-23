@@ -179,9 +179,33 @@ class Project extends \yii\db\ActiveRecord
         return $con;
     }
 
+    public function getAllocationTotal()
+    {
+        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Financial', 'year' => $this->year]);
+        $allocations = [$allocation->q1, $allocation->q2, $allocation->q3, $allocation->q4];
+        rsort($allocations);
+        $value = 0;
+        
+        switch($this->data_type){
+            case 'Default':
+            case 'Maintained':
+                     if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : 0; }
+                else if($quarter == 'Q2'){ $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) : 0; }
+                else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) : 0; }
+                else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) + floatval($allocation->q4) : 0; }
+                break;
+            case 'Cumulative':
+                     $value = floatval($allocations[0]);
+                break;
+        }
+
+        return $value;
+    }
+
     public function getAllocationAsOfReportingPeriod($quarter)
     {
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Financial', 'year' => $this->year]);
+        rsort($allocations);
         $value = 0;
         
         switch($this->data_type){

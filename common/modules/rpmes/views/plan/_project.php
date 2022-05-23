@@ -40,7 +40,7 @@ use yii\web\View;
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q2, 2) : '0.00' ?></td>
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q3, 2) : '0.00' ?></td>
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q4, 2) : '0.00' ?></td>
-    <td align=right><b><?= number_format($model->getAllocationAsOfReportingPeriod('Q4'), 2) ?></b></td>
+    <td align=right><b><?= number_format($model->getAllocationTotal(), 2) ?></b></td>
     <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q1, 0) : '0' ?></td>
     <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q2, 0) : '0' ?></td>
     <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q3, 0) : '0' ?></td>
