@@ -205,7 +205,6 @@ class Project extends \yii\db\ActiveRecord
     public function getAllocationAsOfReportingPeriod($quarter)
     {
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Financial', 'year' => $this->year]);
-        rsort($allocations);
         $value = 0;
         
         switch($this->data_type){
@@ -318,6 +317,34 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q2'){ $value = floatval($q2); }
                 else if($quarter == 'Q3'){ $value = floatval($q3); }
                 else if($quarter == 'Q4'){ $value = floatval($q4); }
+                break;
+        }
+
+        return $value;
+    }
+
+    public function getPhysicalTotal()
+    {
+        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Physical', 'year' => $this->year]);
+        $allocations = [$allocation->q1, $allocation->q2, $allocation->q3, $allocation->q4];
+        rsort($allocations);
+        $value = 0;
+        
+        switch($this->data_type){
+            case 'Default':
+                     if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
+                else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) : 0; }
+                else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) : 0; }
+                else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0; }
+                break;
+            case 'Cumulative':
+                $value = intval($allocations[0]);
+                break;
+            case 'Maintained':
+                     if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
+                else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q2) : 0; }
+                else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q3) : 0; }
+                else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q4) : 0; }
                 break;
         }
 

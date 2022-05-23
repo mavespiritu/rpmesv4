@@ -45,7 +45,7 @@ use yii\web\View;
     <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q2, 0) : '0' ?></td>
     <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q3, 0) : '0' ?></td>
     <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q4, 0) : '0' ?></td>
-    <td align=right><b><?= number_format($model->getPhysicalTargetAsOfReportingPeriod('Q4'), 2) ?></b></td>
+    <td align=right><b><?= number_format($model->getPhysicalTotal(), 2) ?></b></td>
     <td align=right><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q1, 0) : '0' ?></td>
     <td align=right><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q1, 0) : '0' ?></td>
     <td align=right><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q2, 0) : '0' ?></td>
