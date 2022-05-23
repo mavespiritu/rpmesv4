@@ -37,6 +37,7 @@ class PhysicalAccomplishment extends \yii\db\ActiveRecord
             [['quarter', 'remarks'], 'string'],
             [['value'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
+            
         ];
     }
 

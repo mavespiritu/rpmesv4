@@ -48,6 +48,8 @@ use yii\helpers\ArrayHelper;
 use yii\db\Query;
 use yii\helpers\Json;
 use yii\data\Pagination;
+use yii\web\Response;
+use yii\widgets\ActiveForm;
 /**
  * ProjectController implements the CRUD actions for Project model.
  */
@@ -429,10 +431,25 @@ class ProjectController extends Controller
         $targets[4] = $beneficiaryTargetModel;
 
         $groupTargetModel = new ProjectTarget();
-        $groupTargetModel->scenario = 'physicalTarget';
-        $groupTargetModel->target_type = 'Group';
+        $groupTargetModel->target_type = 'Group Beneficiaries';
 
         $targets[5] = $groupTargetModel;
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())  &&
+            $regionModel->load(Yii::$app->request->post()) &&
+            $provinceModel->load(Yii::$app->request->post()) &&
+            $citymunModel->load(Yii::$app->request->post()) &&
+            $barangayModel->load(Yii::$app->request->post()) &&
+            $categoryModel->load(Yii::$app->request->post()) &&
+            $kraModel->load(Yii::$app->request->post()) &&
+            $sdgModel->load(Yii::$app->request->post()) &&
+            $rdpChapterModel->load(Yii::$app->request->post()) &&
+            $rdpChapterOutcomeModel->load(Yii::$app->request->post()) &&
+            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post()) &&
+            MultipleModel::loadMultiple($targets, Yii::$app->request->post()) ) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ActiveForm::validateMultiple($targets);
+            }
 
         if (
             $model->load(Yii::$app->request->post()) &&
@@ -984,7 +1001,7 @@ class ProjectController extends Controller
                     }
 
                     $targets = $postData['ProjectTarget'];
-                    $targetTypes = ['Physical', 'Financial', 'Male Employed', 'Female Employed', 'Beneficiaries'];
+                    $targetTypes = ['Physical', 'Financial', 'Male Employed', 'Female Employed', 'Beneficiaries', 'Group Beneficiaries'];
                     if(!empty($targets))
                     {
                         foreach($targets as $i => $target)
@@ -1114,6 +1131,7 @@ class ProjectController extends Controller
         $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
 
         $model = $this->findModel($id);
+        $model->scenario = Yii::$app->user->can('AgencyUser') ? 'projectCreateUser' : 'projectCreateAdmin';
 
         $regionModel = new ProjectRegion();
         $projectRegions = $model->projectRegions;
@@ -1288,8 +1306,6 @@ class ProjectController extends Controller
 
         $targets[1] = $financialTargetModel;
 
-        
-
         $maleEmployedTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Male Employed']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Male Employed']) : new ProjectTarget();
         $maleEmployedTargetModel->project_id = $model->id;
         $maleEmployedTargetModel->year = $model->year;
@@ -1311,13 +1327,28 @@ class ProjectController extends Controller
 
         $targets[4] = $beneficiaryTargetModel;
 
-        $groupTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Group']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Group']) : new ProjectTarget();
-        $groupTargetModel->scenario = 'physicalTarget';
+        $groupTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Group Beneficiaries']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Group Beneficiaries']) : new ProjectTarget();
         $groupTargetModel->project_id = $model->id;
         $groupTargetModel->year = $model->year;
-        $groupTargetModel->target_type = 'Group';
+        $groupTargetModel->target_type = 'Group Beneficiaries';
 
         $targets[5] = $groupTargetModel;
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())  &&
+            $regionModel->load(Yii::$app->request->post()) &&
+            $provinceModel->load(Yii::$app->request->post()) &&
+            $citymunModel->load(Yii::$app->request->post()) &&
+            $barangayModel->load(Yii::$app->request->post()) &&
+            $categoryModel->load(Yii::$app->request->post()) &&
+            $kraModel->load(Yii::$app->request->post()) &&
+            $sdgModel->load(Yii::$app->request->post()) &&
+            $rdpChapterModel->load(Yii::$app->request->post()) &&
+            $rdpChapterOutcomeModel->load(Yii::$app->request->post()) &&
+            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post()) &&
+            MultipleModel::loadMultiple($targets, Yii::$app->request->post()) ) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ActiveForm::validateMultiple($targets);
+            }
 
         if (
             $model->load(Yii::$app->request->post()) &&
@@ -1334,7 +1365,7 @@ class ProjectController extends Controller
             MultipleModel::loadMultiple($targets, Yii::$app->request->post()) 
             ) 
             {
-            
+
             //echo "<pre>"; print_r(Yii::$app->request->post()); exit;
 
             $oldExpectedOutputIDs = ArrayHelper::map($expectedOutputModels, 'id', 'id');
@@ -1371,7 +1402,7 @@ class ProjectController extends Controller
 
             // validate all models
             $valid = $model->validate();
-            $valid = Model::validateMultiple($expectedOutputModels) && Model::validateMultiple($outcomeModels) && $valid;
+            $valid = Model::validateMultiple($expectedOutputModels) && Model::validateMultiple($outcomeModels) && Model::validateMultiple($targets) && $valid;
 
             if ($valid) {
                 $transaction = \Yii::$app->db->beginTransaction();
@@ -1689,16 +1720,16 @@ class ProjectController extends Controller
                             }
                         }
 
+                        //$targetTypes = ['Physical', 'Financial', 'Male Employed', 'Female Employed', 'Beneficiaries', 'Group Beneficiaries'];
+
                         if(!empty($targets))
                         {
                             foreach($targets as $target)
                             {
-                                $target->project_id = $model->id;
-                                $target->year = $model->year;
                                 if (! ($flag = $target->save())) {
                                     $transaction->rollBack();
                                     break;
-                                }
+                                }   
                             }
                         }
                     }

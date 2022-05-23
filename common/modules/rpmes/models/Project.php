@@ -515,7 +515,7 @@ class Project extends \yii\db\ActiveRecord
 
     public function getGroupsTarget($quarter)
     {
-        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Group', 'year' => $this->year]);
+        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Group Beneficiaries', 'year' => $this->year]);
         $value = 0;
         
              if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
@@ -891,7 +891,7 @@ class Project extends \yii\db\ActiveRecord
 
     public function getGroupTarget()
     {
-        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Group']);
+        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Group Beneficiaries']);
 
         return $target;
     }

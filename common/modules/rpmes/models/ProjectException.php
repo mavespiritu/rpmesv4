@@ -35,7 +35,7 @@ class ProjectException extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['findings', 'causes', 'recommendations'], 'required'],
+            [['causes', 'recommendations'], 'required'],
             [['project_id', 'year', 'submitted_by'], 'integer'],
             [['quarter', 'findings', 'causes', 'recommendations'], 'string'],
             [['date_submitted'], 'safe'],

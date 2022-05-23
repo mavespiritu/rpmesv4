@@ -52,6 +52,7 @@ $this->registerJs($js);
     <?php $form = ActiveForm::begin([
     	'options' => ['id' => 'project-form', 'class' => 'disable-submit-buttons', 'enctype' => 'multipart/form-data'],
         'layout' => 'horizontal',
+        'enableAjaxValidation' => true,
         'fieldConfig' => [
             'horizontalCssClasses' => [
                 'wrapper' => 'col-sm-9',
@@ -959,7 +960,7 @@ $this->registerJs($js);
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
-                <?= $model->draft == 'Yes' ? Html::button('Save Project', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
+                <?= $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save Project', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
                 <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Submit to Monitoring Plan', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' ?>
             </div>
         </div>

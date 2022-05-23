@@ -52,5 +52,9 @@ return [
         'rbac' => [
             'class' => 'markavespiritu\rbac\RbacWebModule',
         ],
+        'audit' => [
+            'class' => 'bedezign\yii2\audit\Audit',
+            'accessRoles' => ['SuperAdministrator'],
+        ],
     ]
 ];

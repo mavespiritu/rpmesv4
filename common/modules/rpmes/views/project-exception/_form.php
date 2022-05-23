@@ -40,7 +40,7 @@ function renderSummary($page)
             <table class="table table-condensed table-responsive table-hover table-striped table-bordered">
                 <thead>
                     <tr>
-                        <td>#</td>
+                        <td style="width: 2%">#</td>
                         <td style="width: 20%;">
                             <b>
                             (a) Project ID <br>
@@ -52,7 +52,6 @@ function renderSummary($page)
                         </td>
                         <td align=center style="width: 10%;"><b>Implementation Status</b></td>
                         <td align=center style="width: 8%;"><b>% Slippage</b></td>
-                        <td align=center style="width: 20%;"><b>Findings</b></td>
                         <td align=center style="width: 20%;"><b>Possible Reasons/Causes</b></td>
                         <td align=center style="width: 20%;"><b>Recommendations</b></td>
                     </tr>
@@ -112,12 +111,6 @@ function renderSummary($page)
                                 </td>
                                 <td align=center><?= $model->getImplementationStatus($getData['quarter']) ?></td>
                                 <td align=center><?= number_format($model->getPhysicalSlippage($getData['quarter']), 2) ?>%</td>
-                                <td align=center>
-                                    <?= $form->field($exceptions[$model->id], "[$model->id]findings")->widget(CKEditor::className(), [
-                                        'options' => ['id' => 'project-eception-findings-'.$model->id, 'rows' => 6, 'style' => 'resize: none;'],
-                                        'preset' => 'basic'
-                                    ])->label(false) ?>
-                                </td>
                                 <td align=center>
                                     <?= $form->field($exceptions[$model->id], "[$model->id]causes")->widget(CKEditor::className(), [
                                         'options' => ['id' => 'project-eception-causes-'.$model->id, 'rows' => 6, 'style' => 'resize: none;'],
