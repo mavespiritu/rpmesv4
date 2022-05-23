@@ -190,8 +190,9 @@ class Project extends \yii\db\ActiveRecord
             case 'Default':
             case 'Maintained':
                 $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) + floatval($allocation->q4) : 0;
+                break;
             case 'Cumulative':
-                     $value = $allocation ? floatval($allocations[0]) : 0;
+                $value = $allocation ? floatval($allocations[0]) : 0;
                 break;
         }
 
@@ -201,6 +202,14 @@ class Project extends \yii\db\ActiveRecord
     public function getAllocationAsOfReportingPeriod($quarter)
     {
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Financial', 'year' => $this->year]);
+        $allocationsQ1 = $allocation ? [$allocation->q1] : [0];
+        $allocationsQ2 = $allocation ? [$allocation->q1, $allocation->q2] : [0];
+        $allocationsQ3 = $allocation ? [$allocation->q1, $allocation->q2, $allocation->q3] : [0];
+        $allocationsQ4 = $allocation ? [$allocation->q1, $allocation->q2, $allocation->q3, $allocation->q4] : [0];
+        rsort($allocationsQ1);
+        rsort($allocationsQ2);
+        rsort($allocationsQ3);
+        rsort($allocationsQ4);
         $value = 0;
         
         switch($this->data_type){
@@ -212,10 +221,10 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) + floatval($allocation->q4) : 0; }
                 break;
             case 'Cumulative':
-                     if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : 0; }
-                else if($quarter == 'Q2'){ $value = $allocation ? floatval($allocation->q2) : 0; }
-                else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q3) : 0; }
-                else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q4) : 0; }
+                     if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : $allocationsQ1; }
+                else if($quarter == 'Q2'){ $value = $allocation ? floatval($allocation->q2) : $allocationsQ2; }
+                else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q3) : $allocationsQ3; }
+                else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q4) : $allocationsQ4; }
                 break;
         }
 
@@ -344,6 +353,14 @@ class Project extends \yii\db\ActiveRecord
     public function getPhysicalTargetAsOfReportingPeriod($quarter)
     {
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Physical', 'year' => $this->year]);
+        $allocationsQ1 = $allocation ? [$allocation->q1] : [0];
+        $allocationsQ2 = $allocation ? [$allocation->q1, $allocation->q2] : [0];
+        $allocationsQ3 = $allocation ? [$allocation->q1, $allocation->q2, $allocation->q3] : [0];
+        $allocationsQ4 = $allocation ? [$allocation->q1, $allocation->q2, $allocation->q3, $allocation->q4] : [0];
+        rsort($allocationsQ1);
+        rsort($allocationsQ2);
+        rsort($allocationsQ3);
+        rsort($allocationsQ4);
         $value = 0;
         
         switch($this->data_type){
@@ -354,6 +371,11 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0; }
                 break;
             case 'Cumulative':
+                     if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : $allocationsQ1; }
+                else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q2) : $allocationsQ2; }
+                else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q3) : $allocationsQ3; }
+                else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q4) : $allocationsQ4; }
+                break;
             case 'Maintained':
                      if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
                 else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q2) : 0; }
@@ -413,10 +435,10 @@ class Project extends \yii\db\ActiveRecord
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Male Employed', 'year' => $this->year]);
         $value = 0;
         
-        if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : 0; }
-        else if($quarter == 'Q2'){ $value = $allocation ? floatval($allocation->q2) : 0; }
-        else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q3) : 0; }
-        else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q4) : 0; }
+        if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
+        else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) : 0; }
+        else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) : 0; }
+        else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0; }
 
         return $value;
     }
@@ -426,10 +448,10 @@ class Project extends \yii\db\ActiveRecord
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Female Employed', 'year' => $this->year]);
         $value = 0;
         
-        if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : 0; }
-        else if($quarter == 'Q2'){ $value = $allocation ? floatval($allocation->q2) : 0; }
-        else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q3) : 0; }
-        else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q4) : 0; }
+        if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
+        else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) : 0; }
+        else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) : 0; }
+        else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0; }
 
         return $value;
     }
@@ -483,10 +505,23 @@ class Project extends \yii\db\ActiveRecord
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Beneficiaries', 'year' => $this->year]);
         $value = 0;
         
-        if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : 0; }
-        else if($quarter == 'Q2'){ $value = $allocation ? floatval($allocation->q2) : 0; }
-        else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q3) : 0; }
-        else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q4) : 0; }
+             if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
+        else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) : 0; }
+        else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) : 0; }
+        else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0; }
+
+        return $value;
+    }
+
+    public function getGroupsTarget($quarter)
+    {
+        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Group', 'year' => $this->year]);
+        $value = 0;
+        
+             if($quarter == 'Q1'){ $value = $allocation ? intval($allocation->q1) : 0; }
+        else if($quarter == 'Q2'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) : 0; }
+        else if($quarter == 'Q3'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) : 0; }
+        else if($quarter == 'Q4'){ $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0; }
 
         return $value;
     }
@@ -528,6 +563,23 @@ class Project extends \yii\db\ActiveRecord
     public function getBeneficiariesActual($quarter)
     {
         return $this->getMaleBeneficiariesActual($quarter) + $this->getFemaleBeneficiariesActual($quarter);
+    }
+
+    public function getGroupsActual($quarter)
+    {
+        $q1 = GroupAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $this->year]) ? GroupAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $this->year])->value : 0;
+        $q2 = GroupAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $this->year]) ? GroupAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $this->year])->value : 0;
+        $q3 = GroupAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $this->year]) ? GroupAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $this->year])->value : 0;
+        $q4 = GroupAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $this->year]) ? GroupAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $this->year])->value : 0;
+
+        $value = 0;
+        
+             if($quarter == 'Q1'){ $value = intval($q1); }
+        else if($quarter == 'Q2'){ $value = intval($q1) + intval($q2); }
+        else if($quarter == 'Q3'){ $value = intval($q1) + intval($q2) + intval($q3); }
+        else if($quarter == 'Q4'){ $value = intval($q1) + intval($q2) + intval($q3) + intval($q4); }
+
+        return $value;
     }
 
     public function getPhysicalSlippage($quarter)

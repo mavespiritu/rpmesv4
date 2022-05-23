@@ -52,7 +52,7 @@ function renderSummary($page)
                         <td rowspan=3 align=center><b>Output Indicator</b></td>
                         <td colspan=4 align=center><b>Physical Status</b></td>
                         <td colspan=6 align=center><b>No. of Persons Employed</b></td>
-                        <td colspan=4 align=center><b>No. of Beneficiaries</b></td>
+                        <td colspan=7 align=center><b>No. of Beneficiaries</b></td>
                         <td rowspan=3 align=center><b>Remarks</b></td>
                         <td rowspan=3 align=center><b>Action</b></td>
                     </tr>
@@ -67,8 +67,8 @@ function renderSummary($page)
                         <td rowspan=2 align=center><b>Actual for the Qtr</b></td>
                         <td colspan=3 align=center><b>Target</b></td>
                         <td colspan=3 align=center><b>Actual</b></td>
-                        <td align=center><b>Target</b></td>
-                        <td colspan=3 align=center><b>Actual</b></td>
+                        <td colspan=2 align=center><b>Target</b></td>
+                        <td colspan=5 align=center><b>Actual</b></td>
                     </tr>
                     <tr>
                         <td align=center><b>As of Reporting Period</b></td>
@@ -91,12 +91,15 @@ function renderSummary($page)
                             <?php } ?>
                         <?php } ?>
                         <td align=center><b>Total</b></td>
-                        <td align=center><b>Total</b></td>
+                        <td align=center><b>Individual</b></td>
+                        <td align=center><b>Group</b></td>
                         <?php if(!empty($genders)){ ?>
                             <?php foreach($genders as $gender){ ?>
                                 <td align=center><b><?= $gender ?></b></td>
                             <?php } ?>
                         <?php } ?>
+                        <td align=center><b>Total</b></td>
+                        <td align=center><b>Group</b></td>
                         <td align=center><b>Total</b></td>
                     </tr>
                 </thead>
@@ -116,7 +119,7 @@ function renderSummary($page)
                                     (e) <?= $model->fundSourceTitle ?> <br>
                                 </td>
                                 <td align=right><?= number_format($model->getAllocationAsOfReportingPeriod($getData['quarter']), 2) ?></td>
-                                <td align=right><?= number_format($model->getAllocationForQuarter($getData['quarter']), 2) ?></td>
+                                <td align=right><b><?= number_format($model->getAllocationForQuarter($getData['quarter']), 2) ?></b></td>
                                 <td align=right><?= number_format($model->getReleasesAsOfReportingPeriod($getData['quarter']), 2) ?></td>
                                 <td align=center>
                                     <?= $form->field($financial[$model->id], "[$model->id]releases")->widget(MaskedInput::classname(), [
@@ -171,7 +174,7 @@ function renderSummary($page)
                                 <td><?= $model->data_type != "" ? $model->unitOfMeasure.' ('.$model->data_type.')' : $model->unitOfMeasure ?></td>
                                 <td align=center><?= $model->indicatorUnitOfMeasure == true ? number_format($model->getPhysicalTargetAsOfReportingPeriod($getData['quarter']), 2).'%' : number_format($model->getPhysicalTargetAsOfReportingPeriod($getData['quarter']), 0) ?></td>
                                 <td align=center><?= $model->indicatorUnitOfMeasure == true ? number_format($model->getPhysicalTargetForQuarter($getData['quarter']), 2).'%' : number_format($model->getPhysicalTargetForQuarter($getData['quarter']), 0) ?></td>
-                                <td align=center><?= $model->indicatorUnitOfMeasure == true ? number_format($model->getPhysicalActualToDate($getData['quarter']), 2).'%' : number_format($model->getPhysicalActualToDate($getData['quarter']), 0) ?></td>
+                                <td align=center><b><?= $model->indicatorUnitOfMeasure == true ? number_format($model->getPhysicalActualToDate($getData['quarter']), 2).'%' : number_format($model->getPhysicalActualToDate($getData['quarter']), 0) ?></b></td>
                                 <td align=center>
                                     <?= $form->field($physical[$model->id], "[$model->id]value")->widget(MaskedInput::classname(), [
                                         'options' => [
@@ -190,7 +193,7 @@ function renderSummary($page)
                                 </td>
                                 <td align=center><?= number_format($model->getMalesEmployedTarget($getData['quarter']), 0) ?></td>
                                 <td align=center><?= number_format($model->getFemalesEmployedTarget($getData['quarter']), 0) ?></td>
-                                <td align=center><?= number_format($model->getEmployedTarget($getData['quarter']), 0) ?></td>
+                                <td align=center><b><?= number_format($model->getEmployedTarget($getData['quarter']), 0) ?></b></td>
                                 <td align=center>
                                     <?= $form->field($personEmployed[$model->id], "[$model->id]male")->widget(MaskedInput::classname(), [
                                         'options' => [
@@ -223,8 +226,9 @@ function renderSummary($page)
                                         ],
                                     ])->label(false) ?>
                                 </td>
-                                <td align=center><?= number_format($model->getEmployedActual($getData['quarter']), 0) ?></td>
+                                <td align=center><b><?= number_format($model->getEmployedActual($getData['quarter']), 0) ?></b></td>
                                 <td align=center><?= number_format($model->getBeneficiariesTarget($getData['quarter']), 0 ) ?></td>
+                                <td align=center><?= number_format($model->getGroupsTarget($getData['quarter']), 0 ) ?></td>
                                 <td align=center>
                                     <?= $form->field($beneficiaries[$model->id], "[$model->id]male")->widget(MaskedInput::classname(), [
                                         'options' => [
@@ -257,7 +261,24 @@ function renderSummary($page)
                                         ],
                                     ])->label(false) ?>
                                 </td>
-                                <td align=center><?= number_format($model->getBeneficiariesActual($getData['quarter']), 0 ) ?></td>
+                                <td align=center><b><?= number_format($model->getBeneficiariesActual($getData['quarter']), 0 ) ?></b></td>
+                                <td align=center>
+                                    <?= $form->field($groups[$model->id], "[$model->id]value")->widget(MaskedInput::classname(), [
+                                        'options' => [
+                                            'autocomplete' => 'off',
+                                            'value' => $groups[$model->id]['value'] != '' ? $groups[$model->id]['value'] : 0,
+                                            'onKeyup' => 'updateAccomplishmentTable()',
+                                            'disabled' => $model->isCompleted == true ? true : false
+                                        ],
+                                        'clientOptions' => [
+                                            'alias' =>  'decimal',
+                                            'removeMaskOnSubmit' => true,
+                                            'groupSeparator' => ',',
+                                            'autoGroup' => true
+                                        ],
+                                    ])->label(false) ?>
+                                </td>
+                                <td align=center><b><?= number_format($model->getGroupsActual($getData['quarter']), 0 ) ?></b></td>
                                 <td align=center>
                                     <?= $form->field($accomplishment[$model->id], "[$model->id]remarks")->textArea(['rows' => '3', 'style' => 'resize: none;',
                                             'disabled' => $model->isCompleted == true ? true : false])->label(false) ?>

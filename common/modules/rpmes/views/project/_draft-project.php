@@ -38,50 +38,50 @@ use yii\web\View;
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q2, 2) : '0.00' ?></td>
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q3, 2) : '0.00' ?></td>
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q4, 2) : '0.00' ?></td>
-    <td align=right><?= $model->financialTarget ? number_format(
-        $model->financialTarget->q1 +
-        $model->financialTarget->q2 +
-        $model->financialTarget->q3 +
-        $model->financialTarget->q4 
-    , 2) : '0.00' ?></td>
-    <td align=center><?= $model->physicalTarget ? number_format($model->physicalTarget->q1, 0) : '0' ?></td>
-    <td align=center><?= $model->physicalTarget ? number_format($model->physicalTarget->q2, 0) : '0' ?></td>
-    <td align=center><?= $model->physicalTarget ? number_format($model->physicalTarget->q3, 0) : '0' ?></td>
-    <td align=center><?= $model->physicalTarget ? number_format($model->physicalTarget->q4, 0) : '0' ?></td>
-    <td align=center><?= $model->physicalTarget ? number_format(
-        $model->physicalTarget->q1 +
-        $model->physicalTarget->q2 +
-        $model->physicalTarget->q3 +
-        $model->physicalTarget->q4 
-    , 0) : '0' ?></td>
-    <td align=center><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q1, 0) : '0' ?></td>
-    <td align=center><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q1, 0) : '0' ?></td>
-    <td align=center><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q2, 0) : '0' ?></td>
-    <td align=center><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q2, 0) : '0' ?></td>
-    <td align=center><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q3, 0) : '0' ?></td>
-    <td align=center><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q3, 0) : '0' ?></td>
-    <td align=center><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q4, 0) : '0' ?></td>
-    <td align=center><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q4, 0) : '0' ?></td>
-    <td align=center><?= $model->maleEmployedTarget ? number_format(
+    <td align=right><b><?= number_format($model->getAllocationTotal(), 2) ?></b></td>
+    <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q1, 0) : '0' ?></td>
+    <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q2, 0) : '0' ?></td>
+    <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q3, 0) : '0' ?></td>
+    <td align=right><?= $model->physicalTarget ? number_format($model->physicalTarget->q4, 0) : '0' ?></td>
+    <td align=right><b><?= number_format($model->getPhysicalTotal(), 2) ?></b></td>
+    <td align=right><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q1, 0) : '0' ?></td>
+    <td align=right><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q1, 0) : '0' ?></td>
+    <td align=right><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q2, 0) : '0' ?></td>
+    <td align=right><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q2, 0) : '0' ?></td>
+    <td align=right><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q3, 0) : '0' ?></td>
+    <td align=right><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q3, 0) : '0' ?></td>
+    <td align=right><?= $model->maleEmployedTarget ? number_format($model->maleEmployedTarget->q4, 0) : '0' ?></td>
+    <td align=right><?= $model->femaleEmployedTarget ? number_format($model->femaleEmployedTarget->q4, 0) : '0' ?></td>
+    <td align=right><b><?= $model->maleEmployedTarget ? number_format(
         $model->maleEmployedTarget->q1 +
         $model->maleEmployedTarget->q2 +
         $model->maleEmployedTarget->q3 +
         $model->maleEmployedTarget->q4 
-    , 0) : '0' ?></td>
-    <td align=center><?= $model->femaleEmployedTarget ? number_format(
+    , 0) : '0' ?></b></td>
+    <td align=right><b><?= $model->femaleEmployedTarget ? number_format(
         $model->femaleEmployedTarget->q1 +
         $model->femaleEmployedTarget->q2 +
         $model->femaleEmployedTarget->q3 +
         $model->femaleEmployedTarget->q4 
-    , 0) : '0' ?></td>
-    <td align=center><?= $model->beneficiaryTarget ? number_format($model->beneficiaryTarget->q1, 0) : '0' ?></td>
-    <td align=center><?= $model->beneficiaryTarget ? number_format($model->beneficiaryTarget->q2, 0) : '0' ?></td>
-    <td align=center><?= $model->beneficiaryTarget ? number_format($model->beneficiaryTarget->q3, 0) : '0' ?></td>
-    <td align=center><?= $model->beneficiaryTarget ? number_format($model->beneficiaryTarget->q4, 0) : '0' ?></td>
-    <td align=center><?= $model->beneficiaryTarget ? number_format(
+    , 0) : '0' ?></b></td>
+    <td align=right><?= $model->beneficiaryTarget ? number_format($model->beneficiaryTarget->q1, 0) : '0' ?></td>
+    <td align=right><?= $model->groupTarget ? number_format($model->groupTarget->q1, 0) : '0' ?></td>
+    <td align=right><?= $model->beneficiaryTarget ? number_format($model->beneficiaryTarget->q2, 0) : '0' ?></td>
+    <td align=right><?= $model->groupTarget ? number_format($model->groupTarget->q2, 0) : '0' ?></td>
+    <td align=right><?= $model->beneficiaryTarget ? number_format($model->beneficiaryTarget->q3, 0) : '0' ?></td>
+    <td align=right><?= $model->groupTarget ? number_format($model->groupTarget->q3, 0) : '0' ?></td>
+    <td align=right><?= $model->beneficiaryTarget ? number_format($model->beneficiaryTarget->q4, 0) : '0' ?></td>
+    <td align=right><?= $model->groupTarget ? number_format($model->groupTarget->q4, 0) : '0' ?></td>
+    <td align=right><b><?= $model->beneficiaryTarget ? number_format(
         $model->beneficiaryTarget->q1 +
         $model->beneficiaryTarget->q2 +
         $model->beneficiaryTarget->q3 +
         $model->beneficiaryTarget->q4 
-    , 0) : '0' ?></td>
+    , 0) : '0' ?></b></td>
+    <td align=right><b><?= $model->groupTarget ? number_format(
+        $model->groupTarget->q1 +
+        $model->groupTarget->q2 +
+        $model->groupTarget->q3 +
+        $model->groupTarget->q4 
+    , 0) : '0' ?></b></td>
 </tr>

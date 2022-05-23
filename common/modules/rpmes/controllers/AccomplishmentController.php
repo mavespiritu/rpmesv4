@@ -44,6 +44,7 @@ use common\modules\rpmes\models\PhysicalAccomplishment;
 use common\modules\rpmes\models\FinancialAccomplishment;
 use common\modules\rpmes\models\PersonEmployedAccomplishment;
 use common\modules\rpmes\models\BeneficiariesAccomplishment;
+use common\modules\rpmes\models\GroupAccomplishment;
 use common\modules\rpmes\models\Accomplishment;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -97,6 +98,7 @@ class AccomplishmentController extends \yii\web\Controller
         $financial = [];
         $personEmployed = [];
         $beneficiaries = [];
+        $groups = [];
         $accomplishment = [];
 
         $getData = [];
@@ -217,6 +219,15 @@ class AccomplishmentController extends \yii\web\Controller
 
                     $beneficiaries[$project->project_id] = $beneficiariesAccomp;
 
+                    $groupsAccomp = GroupAccomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) ?
+                    GroupAccomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) : new GroupAccomplishment();
+
+                    $groupsAccomp->project_id = $project->project_id;
+                    $groupsAccomp->year = $project->year;
+                    $groupsAccomp->quarter = $model->quarter;
+
+                    $groups[$project->project_id] = $groupsAccomp;
+
                     $accomplishmentAccomp = Accomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) ?
                     Accomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) : new Accomplishment();
 
@@ -235,6 +246,7 @@ class AccomplishmentController extends \yii\web\Controller
             MultipleModel::loadMultiple($financial, Yii::$app->request->post()) &&
             MultipleModel::loadMultiple($personEmployed, Yii::$app->request->post()) &&
             MultipleModel::loadMultiple($beneficiaries, Yii::$app->request->post()) &&
+            MultipleModel::loadMultiple($groups, Yii::$app->request->post()) &&
             MultipleModel::loadMultiple($accomplishment, Yii::$app->request->post())
         )
         {
@@ -294,6 +306,18 @@ class AccomplishmentController extends \yii\web\Controller
                     }
                 }
 
+                if(!empty($groups))
+                {
+                    foreach($groups as $groupsAccomp)
+                    {
+                        $groupsAccomp->value = $this->removeMask($groupsAccomp->value);
+                        if(!($flag = $groupsAccomp->save())){
+                            $transaction->rollBack();
+                            break;
+                        }
+                    }
+                }
+
                 if(!empty($accomplishment))
                 {
                     foreach($accomplishment as $accomplishmentAccomp)
@@ -339,6 +363,7 @@ class AccomplishmentController extends \yii\web\Controller
             'personEmployed' => $personEmployed,
             'accomplishment' => $accomplishment,
             'beneficiaries' => $beneficiaries,
+            'groups' => $groups,
             'projectsModels' => $projectsModels,
             'projectsPages' => $projectsPages,
             'getData' => $getData,

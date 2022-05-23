@@ -38,6 +38,7 @@
                             'personEmployed' => $personEmployed,
                             'accomplishment' => $accomplishment,
                             'beneficiaries' => $beneficiaries,
+                            'groups' => $groups,
                             'projectsModels' => $projectsModels,
                             'projectsPages' => $projectsPages,
                             'projects' => $projects,

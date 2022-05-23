@@ -46,6 +46,9 @@ return [
                 ],
             ],
         ],
+        'utility' => [
+            'class' => 'c006\utility\migration\Module',
+        ],
         'rbac' => [
             'class' => 'markavespiritu\rbac\RbacWebModule',
         ],

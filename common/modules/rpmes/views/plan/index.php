@@ -64,7 +64,7 @@ function renderSummary($page)
                 ]); ?>
                 <div class="summary"><?= renderSummary($projectsPages) ?></div>
                 <div class="monitoring-project-table" style="height: 800px;">
-                    <table class="table table-condensed table-striped table-responsive table-bordered" cellspacing="0" style="min-width: 3 000px;">
+                    <table class="table table-condensed table-striped table-hover table-responsive table-bordered" cellspacing="0" style="min-width: 3 000px;">
                         <thead>
                             <tr>
                                 <td rowspan=3 align=center style="vertical-align: bottom;"><input type=checkbox name="monitoring-projects" class="check-monitoring-projects" /></td>
