@@ -64,7 +64,7 @@ function renderSummary($page)
                 ]); ?>
                 <div class="summary"><?= renderSummary($projectsPages) ?></div>
                 <div class="monitoring-project-table" style="height: 800px;">
-                    <table class="table table-condensed table-striped table-responsive table-bordered" cellspacing="0" style="min-width: 2000px;">
+                    <table class="table table-condensed table-striped table-responsive table-bordered" cellspacing="0" style="min-width: 3 000px;">
                         <thead>
                             <tr>
                                 <td rowspan=3 align=center style="vertical-align: bottom;"><input type=checkbox name="monitoring-projects" class="check-monitoring-projects" /></td>
@@ -84,7 +84,7 @@ function renderSummary($page)
                                 <td colspan=<?= count($quarters) + 1?> align=center><b>Financial Requirements</b></td>
                                 <td colspan=<?= count($quarters) + 1?> align=center><b>Physical Targets</b></td>
                                 <td colspan=<?= (count($quarters) * count($genders)) + 2?> align=center><b>Employment Generated</b></td>
-                                <td colspan=<?= count($quarters) + 1?> align=center><b>Target Beneficiaries</b></td>
+                                <td colspan=<?= (count($quarters) + 1) * 2 ?> align=center><b>Target Beneficiaries</b></td>
                             </tr>
                             <tr>
                                 <?php if($quarters){ ?>
@@ -107,10 +107,10 @@ function renderSummary($page)
                                 <td align=center colspan=2><b>Total</b></td>
                                 <?php if($quarters){ ?>
                                     <?php foreach($quarters as $q => $quarter){ ?>
-                                        <td align=center rowspan=2><b><?= $q ?></b></td>
+                                        <td align=center colspan=2><b><?= $q ?></b></td>
                                     <?php } ?>
                                 <?php } ?>
-                                <td align=center rowspan=2><b>Total</b></td>
+                                <td align=center colspan=2><b>Total</b></td>
                             </tr>
                             <tr>
                                 <?php if($quarters){ ?>
@@ -127,6 +127,14 @@ function renderSummary($page)
                                         <td align=center><b><?= $g ?></b></td>
                                     <?php } ?>
                                 <?php } ?>
+                                <?php if($quarters){ ?>
+                                    <?php foreach($quarters as $quarter){ ?>
+                                        <td align=center><b>I</b></td>
+                                        <td align=center><b>G</b></td>
+                                    <?php } ?>
+                                <?php } ?>
+                                <td align=center><b>I</b></td>
+                                <td align=center><b>G</b></td>
                             </tr>
                         </thead>
                         <tbody>

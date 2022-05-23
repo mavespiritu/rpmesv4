@@ -428,6 +428,12 @@ class ProjectController extends Controller
 
         $targets[4] = $beneficiaryTargetModel;
 
+        $groupTargetModel = new ProjectTarget();
+        $groupTargetModel->scenario = 'physicalTarget';
+        $groupTargetModel->target_type = 'Group';
+
+        $targets[5] = $groupTargetModel;
+
         if (
             $model->load(Yii::$app->request->post()) &&
             $regionModel->load(Yii::$app->request->post()) &&
@@ -1304,6 +1310,14 @@ class ProjectController extends Controller
         $beneficiaryTargetModel->target_type = 'Beneficiaries';
 
         $targets[4] = $beneficiaryTargetModel;
+
+        $groupTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Group']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Group']) : new ProjectTarget();
+        $groupTargetModel->scenario = 'physicalTarget';
+        $groupTargetModel->project_id = $model->id;
+        $groupTargetModel->year = $model->year;
+        $groupTargetModel->target_type = 'Group';
+
+        $targets[5] = $groupTargetModel;
 
         if (
             $model->load(Yii::$app->request->post()) &&

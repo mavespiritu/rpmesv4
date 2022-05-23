@@ -1,5 +1,8 @@
 <?php
 use yii\helpers\Html;
+use frontend\assets\AppAsset;
+
+$appAsset = frontend\assets\AppAsset::register($this);
 /* @var $this yii\web\View */
 
 $this->title = 'eRPMES';
@@ -37,44 +40,52 @@ $this->title = 'eRPMES';
         <h2 class="text-center">Our Technical Team</h2>
         <div class="row">
             <div class="col-lg-4">
-                <h3 style="color: #3C8DBC;">Rey Ferreria</h3>
+                <h4 style="color: #3C8DBC;"><?php /* Html::img($appAsset->baseUrl.'/images/_MG_9221.jpg', ['class' => 'profile-image']) */ ?>Rey Ferreria</h4>
 
                 <p>Email: rbferreria@neda.gov.ph</p>
             </div>
             <div class="col-lg-4">
-                <h3 style="color: #3C8DBC;">Jeremiah Chor Miranda</h3>
+                <h4 style="color: #3C8DBC;">Jeremiah Chor Miranda</h4>
 
                 <p>Email: jdmiranda@neda.gov.ph</p>
             </div>
             <div class="col-lg-4">
-                <h3 style="color: #3C8DBC;">Mary Ann Virtudes</h3>
+                <h4 style="color: #3C8DBC;">Mary Ann Virtudes</h4>
 
                 <p>Email: mdvirtudes@neda.gov.ph</p>
             </div>
         </div>
         <div class="row">
             <div class="col-lg-4">
-                <h3 style="color: #3C8DBC;">Yehlen Yangat</h3>
+                <h4 style="color: #3C8DBC;">Yehlen Yangat</h4>
 
                 <p>Email: yiyangat@neda.gov.ph</p>
             </div>
             <div class="col-lg-4">
-                <h3 style="color: #3C8DBC;">John Chester Erestingcol</h3>
+                <h4 style="color: #3C8DBC;">John Chester Erestingcol</h4>
 
                 <p>Email: jeerestingcol@neda.gov.ph</p>
             </div>
             <div class="col-lg-4">
-                <h3 style="color: #3C8DBC;">Arleah Joice Banaga</h3>
+                <h4 style="color: #3C8DBC;">Arleah Joice Banaga</h4>
 
                 <p>Email: acbanaga@neda.gov.ph</p>
             </div>
         </div>
         <div class="row">
             <div class="col-lg-4">
-                <h3 style="color: #3C8DBC;">Andrew Valmores</h3>
+                <h4 style="color: #3C8DBC;">Andrew Valmores</h4>
 
                 <p>Email: TBA</p>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .profile-image{
+        border-radius: 50%;
+        height: 20%;
+        width: 20%;
+    }
+</style>

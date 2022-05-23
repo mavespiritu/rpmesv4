@@ -796,6 +796,13 @@ class Project extends \yii\db\ActiveRecord
         return $target;
     }
 
+    public function getGroupTarget()
+    {
+        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Group']);
+
+        return $target;
+    }
+
     public function getLocation()
     {
         $barangays = ProjectBarangay::findAll(['project_id' => $this->id, 'year' => $this->year]);

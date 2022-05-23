@@ -7656,11 +7656,12 @@ class SummaryController extends \yii\web\Controller
         ]);
     }
 
-    public function actionDownloadMonitoringReport($type, $year, $agency_id, $model)
+    public function actionDownloadMonitoringReport($type, $year, $agency_id, $quarter, $model)
     {
         $model = json_decode($model, true);
         $model['year'] = $year;
         $model['agency_id'] = $agency_id;
+        $model['quarter'] = $quarter;
 
         $data = [];
 

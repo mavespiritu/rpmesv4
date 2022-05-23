@@ -802,9 +802,9 @@ $this->registerJs($js);
                         </td>
                     </tr>
                     <tr>
-                        <td colspan=2 align=right>No. of Beneficiaries</td>
-                        <td>&nbsp;
-                        </td>
+                        <td rowspan=2 align=right>No. of Beneficiaries</td>
+                        <td align=right>Individual</td>
+                        <td>&nbsp;</td>
                         <td align=center>
                             <?= $form->field($targets[4], "[4]q1")->widget(MaskedInput::classname(), [
                                 'options' => [
@@ -866,6 +866,70 @@ $this->registerJs($js);
                             ])->label(false) ?>
                         </td>
                     </tr>
+                    <tr>
+                        <td align=right>Group</td>
+                        <td><?= $form->field($targets[5], "[5]indicator")->textInput(['type' => 'text'])->label(false) ?></td>
+                        <td align=center>
+                            <?= $form->field($targets[5], "[5]q1")->widget(MaskedInput::classname(), [
+                                'options' => [
+                                    'id' => 'q1-group-input',
+                                    'autocomplete' => 'off',
+                                    'value' => $targets[5]['q1'] != '' ? $targets[5]['q1'] : 0,
+                                ],
+                                'clientOptions' => [
+                                    'alias' =>  'decimal',
+                                    'removeMaskOnSubmit' => true,
+                                    'groupSeparator' => ',',
+                                    'autoGroup' => true
+                                ],
+                            ])->label(false) ?>
+                        </td>
+                        <td align=center>
+                            <?= $form->field($targets[5], "[5]q2")->widget(MaskedInput::classname(), [
+                                'options' => [
+                                    'id' => 'q2-group-input',
+                                    'autocomplete' => 'off',
+                                    'value' => $targets[5]['q2'] != '' ? $targets[5]['q2'] : 0,
+                                ],
+                                'clientOptions' => [
+                                    'alias' =>  'decimal',
+                                    'removeMaskOnSubmit' => true,
+                                    'groupSeparator' => ',',
+                                    'autoGroup' => true
+                                ],
+                            ])->label(false) ?>
+                        </td>
+                        <td align=center>
+                            <?= $form->field($targets[5], "[5]q3")->widget(MaskedInput::classname(), [
+                                'options' => [
+                                    'id' => 'q3-group-input',
+                                    'autocomplete' => 'off',
+                                    'value' => $targets[5]['q3'] != '' ? $targets[5]['q3'] : 0,
+                                ],
+                                'clientOptions' => [
+                                    'alias' =>  'decimal',
+                                    'removeMaskOnSubmit' => true,
+                                    'groupSeparator' => ',',
+                                    'autoGroup' => true
+                                ],
+                            ])->label(false) ?>
+                        </td>
+                        <td align=center>
+                            <?= $form->field($targets[5], "[5]q4")->widget(MaskedInput::classname(), [
+                                'options' => [
+                                    'id' => 'q4-group-input',
+                                    'autocomplete' => 'off',
+                                    'value' => $targets[5]['q4'] != '' ? $targets[5]['q4'] : 0,
+                                ],
+                                'clientOptions' => [
+                                    'alias' =>  'decimal',
+                                    'removeMaskOnSubmit' => true,
+                                    'groupSeparator' => ',',
+                                    'autoGroup' => true
+                                ],
+                            ])->label(false) ?>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 
@@ -895,7 +959,7 @@ $this->registerJs($js);
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
-                <?= Html::button('Save Project', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+                <?= $model->draft == 'Yes' ? Html::button('Save Project', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
                 <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Submit to Monitoring Plan', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' ?>
             </div>
         </div>

@@ -13,18 +13,9 @@ DisableButtonAsset::register($this);
 /* @var $form yii\widgets\ActiveForm */
 ?>
 <div class="pull-left">
-    <?= ButtonDropdown::widget([
-        'label' => '<i class="fa fa-download"></i> Export',
-        'encodeLabel' => false,
-        'options' => ['class' => 'btn btn-success btn-sm'],
-        'dropdown' => [
-            'items' => [
-                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-report', 'type' => 'excel', 'year' => $model->year, 'agency_id' => $model->agency_id, 'model' => json_encode($model)])],
-                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-report', 'type' => 'pdf', 'year' => $model->year, 'agency_id' => $model->agency_id, 'model' => json_encode($model)])],
-            ],
-        ],
-    ]); ?>
-    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummaryReport("'.$model->year.'","'.$model->quarter.'","'.$model->fund_source_id.'","'.$model->agency_id.'","'.$model->region_id.'","'.$model->province_id.'","'.$model->citymun_id.'","'.$model->sector_id.'","'.$model->grouping.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+    <?= $this->render('_menu', [
+        'model' => $model
+    ]) ?>
 </div>
 <div class="clearfix"></div>
 <br>
