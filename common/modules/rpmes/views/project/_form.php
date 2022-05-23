@@ -885,11 +885,12 @@ $this->registerJs($js);
                         'model' => $model,
                         'options' => [ 
                             'multiple' => false, 
+                            'accept' => '.pdf',
                         ],
                         'pluginOptions' => [ 
-                            'maxFileCount' => 1, 
                             'showPreview' => false,
-                            'showUpload' => false
+                            'showUpload' => false,
+                            'maxFileCount' => 1
                         ]
                     ]) ?>
                     <?= \file\components\AttachmentsTable::widget(['model' => $model]) ?>

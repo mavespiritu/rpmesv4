@@ -350,13 +350,13 @@ class Project extends \yii\db\ActiveRecord
         
         switch($this->data_type){
             case 'Default':
-            case 'Maintained':
                      if($quarter == 'Q1'){ $value = $target->indicatorUnitOfMeasure == true ? floatval($q1) : intval($q1); }
                 else if($quarter == 'Q2'){ $value = $target->indicatorUnitOfMeasure == true ? floatval($q1) + floatval($q2) : intval($q1) + intval($q2); }
                 else if($quarter == 'Q3'){ $value = $target->indicatorUnitOfMeasure == true ? floatval($q1) + floatval($q2) + floatval($q3) : intval($q1) + intval($q2) + intval($q3); }
                 else if($quarter == 'Q4'){ $value = $target->indicatorUnitOfMeasure == true ? floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4) : intval($q1) + intval($q2) + intval($q3) + intval($q4); }
                 break;
             case 'Cumulative':
+            case 'Maintained':
                      if($quarter == 'Q1'){ $value = $target->indicatorUnitOfMeasure == true ? floatval($q1) : intval($q1); }
                 else if($quarter == 'Q2'){ $value = $target->indicatorUnitOfMeasure == true ? floatval($q2) : intval($q2); }
                 else if($quarter == 'Q3'){ $value = $target->indicatorUnitOfMeasure == true ? floatval($q3) : intval($q3); }

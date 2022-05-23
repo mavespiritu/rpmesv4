@@ -20,9 +20,9 @@ return [
             'webDir' => 'files',
             'tempPath' => '@frontend/web/temp',
             'storePath' => '@frontend/web/store',
-            'rules' => [ // Правила для FileValidator
-                'maxFiles' => 1,
-                'maxSize' => 1024 * 1024 * 20 // 20 MB
+            'rules' => [
+                'maxFiles' => 10,
+                'maxSize' => 1024 * 1024 * 2 // 2 MB
             ],
         ],
         'user' => [

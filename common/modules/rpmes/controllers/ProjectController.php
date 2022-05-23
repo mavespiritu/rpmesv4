@@ -1321,6 +1321,8 @@ class ProjectController extends Controller
             MultipleModel::loadMultiple($targets, Yii::$app->request->post()) 
             ) 
             {
+            
+            //echo "<pre>"; print_r(Yii::$app->request->post()); exit;
 
             $oldExpectedOutputIDs = ArrayHelper::map($expectedOutputModels, 'id', 'id');
             $oldOutcomeIDs = ArrayHelper::map($outcomeModels, 'id', 'id');
