@@ -22,7 +22,8 @@ return [
             'storePath' => '@frontend/web/store',
             'rules' => [
                 'maxFiles' => 10,
-                'maxSize' => 1024 * 1024 * 2 // 2 MB
+                'maxSize' => 1024 * 1024 * 2, // 2 MB
+                'mimeTypes' => 'application/pdf'
             ],
         ],
         'user' => [

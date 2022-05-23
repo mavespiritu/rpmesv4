@@ -934,21 +934,21 @@ $this->registerJs($js);
                 </tbody>
             </table>
 
-            <h4>Attachment</h4>
+            <h4>Attach Project Profile</h4>
             <hr>
             <div class="row" style="margin-left: 1%;">
                 <div class="col-md-3 col-xs-12">
                     <?= AttachmentsInput::widget([
-                        'id' => 'project-attachment-input', // Optional
+                        'id' => 'file-input', // Optional
                         'model' => $model,
                         'options' => [ 
                             'multiple' => false, 
-                            'accept' => '.pdf',
+                            'required' => 'required'
                         ],
                         'pluginOptions' => [ 
                             'showPreview' => false,
                             'showUpload' => false,
-                            'maxFileCount' => 1
+                            'maxFileCount' => 1,
                         ]
                     ]) ?>
                     <?= \file\components\AttachmentsTable::widget(['model' => $model]) ?>
@@ -961,7 +961,7 @@ $this->registerJs($js);
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
                 <?= $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save Project', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
-                <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Submit to Monitoring Plan', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' ?>
+                <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Submit to Monitoring Plan', ['class' => 'btn btn-success', 'onclick' => '$("#file-input").fileinput("upload");', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' ?>
             </div>
         </div>
     </div>
