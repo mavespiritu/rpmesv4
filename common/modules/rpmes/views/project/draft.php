@@ -44,7 +44,7 @@ function renderSummary($page)
                         <tr>
                             <td rowspan=3 align=center style="vertical-align: bottom;"><input type=checkbox name="draft-projects" class="check-draft-projects" /></td>
                             <td rowspan=3>&nbsp;</td>
-                            <td rowspan=3 colspan=2 style="width: 20%;">
+                            <td rowspan=3 colspan=2 style="width: 15%;">
                                 <b>
                                 (a) Name of Project <br>
                                 (b) Location <br>
@@ -54,7 +54,7 @@ function renderSummary($page)
                                 (f) Project Schedule
                                 </b>
                             </td>
-                            <td rowspan=3 align=center style="width: 10%;"><b>Unit of Measure</b></td>
+                            <td rowspan=3 align=center style="width: 5%;"><b>Unit of Measure</b></td>
                             <td colspan=<?= count($quarters) + 1?> align=center><b>Financial Requirements</b></td>
                             <td colspan=<?= count($quarters) + 1?> align=center><b>Physical Targets</b></td>
                             <td colspan=<?= (count($quarters) * count($genders)) + 2?> align=center><b>Employment Generated</b></td>

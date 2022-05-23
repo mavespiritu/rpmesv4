@@ -2025,6 +2025,33 @@ class ProjectController extends Controller
 
         $targets[4] = $beneficiaryTargetModel;
 
+        $projectGroupTargetModel = ProjectTarget::findOne(['project_id' => $project->id, 'year' => $project->year, 'target_type' => 'Group Beneficiaries']);
+        $groupTargetModel = new ProjectTarget();
+        $groupTargetModel->year = $model->year;
+        $groupTargetModel->q1 = $projectGroupTargetModel ? $projectGroupTargetModel->q1 : 0;
+        $groupTargetModel->q2 = $projectGroupTargetModel ? $projectGroupTargetModel->q2 : 0;
+        $groupTargetModel->q3 = $projectGroupTargetModel ? $projectGroupTargetModel->q3 : 0;
+        $groupTargetModel->q4 = $projectGroupTargetModel ? $projectGroupTargetModel->q4 : 0;
+        $groupTargetModel->target_type = 'Groupn Beneficiaries';
+
+        $targets[5] = $beneficiaryTargetModel;
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())  &&
+            $regionModel->load(Yii::$app->request->post()) &&
+            $provinceModel->load(Yii::$app->request->post()) &&
+            $citymunModel->load(Yii::$app->request->post()) &&
+            $barangayModel->load(Yii::$app->request->post()) &&
+            $categoryModel->load(Yii::$app->request->post()) &&
+            $kraModel->load(Yii::$app->request->post()) &&
+            $sdgModel->load(Yii::$app->request->post()) &&
+            $rdpChapterModel->load(Yii::$app->request->post()) &&
+            $rdpChapterOutcomeModel->load(Yii::$app->request->post()) &&
+            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post()) &&
+            MultipleModel::loadMultiple($targets, Yii::$app->request->post()) ) {
+                Yii::$app->response->format = Response::FORMAT_JSON;
+                return ActiveForm::validateMultiple($targets);
+            }
+
         if (
             $model->load(Yii::$app->request->post()) &&
             $regionModel->load(Yii::$app->request->post()) &&

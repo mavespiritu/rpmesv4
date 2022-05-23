@@ -951,6 +951,7 @@ $this->registerJs($js);
                             'maxFileCount' => 1,
                         ]
                     ]) ?>
+                    <p>Allowed file types: pdf (max 2MB)</p>
                     <?= \file\components\AttachmentsTable::widget(['model' => $model]) ?>
                     <?= $form->field($model, 'id')->hiddenInput(['value' => $model->id])->label(false) ?>
                 </div>
@@ -960,7 +961,7 @@ $this->registerJs($js);
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
-                <?= $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save Project', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
+                <?= $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save Project', ['class' => 'btn btn-primary', 'onclick' => '$("#file-input").fileinput("upload");', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
                 <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Submit to Monitoring Plan', ['class' => 'btn btn-success', 'onclick' => '$("#file-input").fileinput("upload");', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' ?>
             </div>
         </div>
@@ -1032,7 +1033,7 @@ $this->registerJs($js);
            url: "'.Url::to(['/rpmes/project/save-draft']).'",
            data: formData,
            success: function (data) {
-            $.growl.notice({ title: "Success!", message: "The project has been saved as draft." });
+            
           },
           error: function (err) {
               console.log(err);

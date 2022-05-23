@@ -176,6 +176,7 @@ class PlanController extends \yii\web\Controller
         
         $projectsModels = $projectsPaging->offset($projectsPages->offset)
             ->limit($projectsPages->limit)
+            ->orderBy(['id' => SORT_DESC])
             ->all();
         
         if(Yii::$app->request->get())
