@@ -7,7 +7,7 @@ use yii\helpers\Html;
 
 <header class="main-header">
 
-    <?= !Yii::$app->user->isGuest ? Html::a('<span class="logo-mini">APP</span><span class="logo-lg">' . Yii::$app->name . '</span>', Yii::$app->homeUrl, ['class' => 'logo']) : '' ?>
+    <?= !Yii::$app->user->isGuest ? Html::a('<span class="logo-mini">eRPMES</span><span class="logo-lg">' . Yii::$app->name . '</span>', Yii::$app->homeUrl, ['class' => 'logo']) : '' ?>
 
     <nav class="navbar navbar-static-top" role="navigation">
         <?php if(Yii::$app->user->isGuest){ ?>
@@ -55,7 +55,7 @@ use yii\helpers\Html;
                     </ul>
                 </li>
             <?php }else{ ?>
-                <li class="text-white"><?= Html::a('HOME', ['/']) ?></li>
+                <li class="text-white"><?= Html::a('HOME', ['/site/index']) ?></li>
                 <li class="text-white"><?= Html::a('LOGIN', ['/user/login']) ?></li>
                 <li class="text-white"><?= Html::a('SIGNUP', ['/user/register']) ?></li>
             <?php } ?>

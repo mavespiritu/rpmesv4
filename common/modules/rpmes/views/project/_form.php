@@ -803,14 +803,7 @@ $this->registerJs($js);
                     </tr>
                     <tr>
                         <td colspan=2 align=right>No. of Beneficiaries</td>
-                        <td><?= $form->field($targets[4], "[4]indicator")->widget(Select2::classname(), [
-                                'data' => ['Individual' => 'Individual', 'Group' => 'Group'],
-                                'options' => ['multiple' => false, 'placeholder' => 'Select one'],
-                                'pluginOptions' => [
-                                    'allowClear' =>  true,
-                                ],
-                                ])->label(false);
-                            ?>
+                        <td>&nbsp;
                         </td>
                         <td align=center>
                             <?= $form->field($targets[4], "[4]q1")->widget(MaskedInput::classname(), [

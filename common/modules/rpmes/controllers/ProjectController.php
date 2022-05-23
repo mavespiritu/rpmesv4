@@ -424,7 +424,6 @@ class ProjectController extends Controller
         $targets[3] = $femaleEmployedTargetModel;
 
         $beneficiaryTargetModel = new ProjectTarget();
-        $beneficiaryTargetModel->scenario = 'physicalTarget';
         $beneficiaryTargetModel->target_type = 'Beneficiaries';
 
         $targets[4] = $beneficiaryTargetModel;
