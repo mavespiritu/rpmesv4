@@ -74,12 +74,6 @@ function renderSummary($page)
                                 <td align=center><?= $model->getImplementationStatus($getData['quarter']) ?></td>
                                 <td align=center><?= number_format($model->getPhysicalSlippage($getData['quarter']), 2) ?>%</td>
                                 <td align=center>
-                                    <?= $form->field($exceptions[$model->id], "[$model->id]findings")->widget(CKEditor::className(), [
-                                        'options' => ['rows' => 6, 'style' => 'resize: none;'],
-                                        'preset' => 'basic'
-                                    ])->label(false) ?>
-                                </td>
-                                <td align=center>
                                     <?= $form->field($exceptions[$model->id], "[$model->id]causes")->widget(CKEditor::className(), [
                                         'options' => ['rows' => 6, 'style' => 'resize: none;'],
                                         'preset' => 'basic'
@@ -104,10 +98,11 @@ function renderSummary($page)
                             <tr>
                                 <td align=center><?= $i ?></td>
                                 <td>
-                                    (a) <?= $model->title ?> <br>
-                                    (b) <?= $model->startDate ?> to <?= $model->completionDate ?> <br>
-                                    (c) <?= $model->location ?> <br>
-                                    (d) <?= $model->fundSourceTitle ?> <br>
+                                    (a) <?= $model->project_no ?> <br>
+                                    (b) <?= $model->title ?> <br>
+                                    (c) <?= $model->startDate ?> to <?= $model->completionDate ?> <br>
+                                    (d) <?= $model->location ?> <br>
+                                    (e) <?= $model->fundSourceTitle ?> <br>
                                 </td>
                                 <td align=center><?= $model->getImplementationStatus($getData['quarter']) ?></td>
                                 <td align=center><?= number_format($model->getPhysicalSlippage($getData['quarter']), 2) ?>%</td>

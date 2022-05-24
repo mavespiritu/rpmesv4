@@ -142,14 +142,6 @@ class ProjectExceptionController extends \yii\web\Controller
                         ->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'id', 'id');
 
-            $projectsPaging = Project::find();
-            $projectsPaging->andWhere(['id' => $projectIDs]);
-            $countProjects = clone $projectsPaging;
-            $projectsPages = new Pagination(['totalCount' => $countProjects->count()]);
-            $projectsModels = $projectsPaging->offset($projectsPages->offset)
-                ->limit($projectsPages->limit)
-                ->all();
-
             $projects = Yii::$app->user->can('AgencyUser') ? Plan::find()
                         ->leftJoin('project', 'project.id = plan.project_id')
                         ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year])
@@ -158,6 +150,8 @@ class ProjectExceptionController extends \yii\web\Controller
                         ->leftJoin('project', 'project.id = plan.project_id')
                         ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year])
                         ->all();
+
+            $selectedIDs = [];
             
             if($model->status != '')
             {
@@ -174,6 +168,7 @@ class ProjectExceptionController extends \yii\web\Controller
                             $exceptionModel->quarter = $model->quarter;
                             $exceptionModel->submitted_by = Yii::$app->user->id;
                             $exceptions[$project->project_id] = $exceptionModel;
+                            $selectedIDs[] = $project->project_id;
                         }
                     }
                 }
@@ -191,10 +186,20 @@ class ProjectExceptionController extends \yii\web\Controller
                             $exceptionModel->quarter = $model->quarter;
                             $exceptionModel->submitted_by = Yii::$app->user->id;
                             $exceptions[$project->project_id] = $exceptionModel;
+                            $selectedIDs[] = $project->project_id;
                         }
                     }
                 }
             }
+
+            $projectsPaging = Project::find();
+            $projectsPaging->andWhere(['id' => $selectedIDs]);
+            $countProjects = clone $projectsPaging;
+            $projectsPages = new Pagination(['totalCount' => $countProjects->count()]);
+            $projectsModels = $projectsPaging->offset($projectsPages->offset)
+                ->limit($projectsPages->limit)
+                ->orderBy(['id' => SORT_DESC])
+                ->all();
         }
 
         if(
