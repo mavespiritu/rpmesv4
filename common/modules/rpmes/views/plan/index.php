@@ -140,7 +140,7 @@ function renderSummary($page)
                         <tbody>
                         <?php if($projectsModels){ ?>
                             <?php $idx = $projectsPages->offset; ?>
-                            <?php foreach($projectsModels as $idx => $model){ ?>
+                            <?php foreach($projectsModels as $model){ ?>
                                 <?= $this->render('_project', [
                                     'idx' => $idx,
                                     'model' => $model,
