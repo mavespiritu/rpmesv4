@@ -181,12 +181,14 @@ class PlanController extends \yii\web\Controller
         
         if(Yii::$app->request->get())
         {
-            $ids = Yii::$app->request->get('id');
-            $ids = explode(",", $ids);
-                
-            Project::deleteAll(['in', 'id', $ids]);
-            if(!empty($ids)){ \Yii::$app->getSession()->setFlash('success', 'Selected projects has been deleted successfully'); }
-            return $this->redirect(['/rpmes/plan']);
+            if(!empty($ids)){ 
+                $ids = Yii::$app->request->get('id');
+                $ids = explode(",", $ids);
+                    
+                Project::deleteAll(['in', 'id', $ids]);
+                \Yii::$app->getSession()->setFlash('success', 'Selected projects has been deleted successfully'); 
+                return $this->redirect(['/rpmes/plan']);
+            }       
         }
 
         if(
