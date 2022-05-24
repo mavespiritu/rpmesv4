@@ -185,7 +185,7 @@ class PlanController extends \yii\web\Controller
             $ids = explode(",", $ids);
                 
             Project::deleteAll(['in', 'id', $ids]);
-            \Yii::$app->getSession()->setFlash('success', 'Selected projects has been deleted successfully');
+            if(!empty($ids)){ \Yii::$app->getSession()->setFlash('success', 'Selected projects has been deleted successfully'); }
             return $this->redirect(['/rpmes/plan']);
         }
 
