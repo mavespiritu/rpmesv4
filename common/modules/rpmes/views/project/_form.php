@@ -938,12 +938,23 @@ $this->registerJs($js);
             <hr>
             <div class="row" style="margin-left: 1%;">
                 <div class="col-md-3 col-xs-12">
-                    <?= AttachmentsInput::widget([
+                    <?= Yii::$app->controller->action->id != 'update' ? AttachmentsInput::widget([
                         'id' => 'file-input', // Optional
                         'model' => $model,
                         'options' => [ 
                             'multiple' => false, 
                             'required' => 'required'
+                        ],
+                        'pluginOptions' => [ 
+                            'showPreview' => false,
+                            'showUpload' => false,
+                            'maxFileCount' => 1,
+                        ]
+                    ]) : AttachmentsInput::widget([
+                        'id' => 'file-input', // Optional
+                        'model' => $model,
+                        'options' => [ 
+                            'multiple' => false, 
                         ],
                         'pluginOptions' => [ 
                             'showPreview' => false,
