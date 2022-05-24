@@ -1065,6 +1065,7 @@ class ProjectController extends Controller
         $projectsPages = new Pagination(['totalCount' => $countProjects->count()]);
         $projectsModels = $projectsPaging->offset($projectsPages->offset)
             ->limit($projectsPages->limit)
+            ->orderBy(['id' => SORT_DESC])
             ->all();
 
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
