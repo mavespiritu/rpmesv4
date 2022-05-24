@@ -1409,7 +1409,7 @@ class ProjectController extends Controller
                 $transaction = \Yii::$app->db->beginTransaction();
                 $agency = Agency::findOne(['id' => $model->agency_id]);
                 $lastProject = Project::find()->where(['agency_id' => $model->agency_id, 'year' => $model->year])->orderBy(['id' => SORT_DESC])->one();
-                $lastNumber = $lastProject ? intval(substr($lastProject->project_no, -4)): '0001';
+                $lastNumber = $lastProject ? intval(substr($lastProject->project_no, -4)): '0000';
                 $project_no = $agency->code.'-'.substr($model->year, -2).'-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
                 $model->project_no = $model->project_no != '' ? $model->project_no : $project_no;
                 $model->submitted_by = Yii::$app->user->id;
