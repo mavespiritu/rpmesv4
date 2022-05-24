@@ -338,6 +338,7 @@ function renderSummary($page)
             $("#personemployedaccomplishment-"+id+"-female").prop("disabled", true);
             $("#beneficiariesaccomplishment-"+id+"-male").prop("disabled", true);
             $("#beneficiariesaccomplishment-"+id+"-female").prop("disabled", true);
+            $("#groupaccomplishment-"+id+"-value").prop("disabled", true);
             $("#accomplishment-"+id+"-remarks").prop("disabled", true);
         }else{
             $("#financialaccomplishment-"+id+"-releases").prop("disabled", false);
@@ -348,6 +349,7 @@ function renderSummary($page)
             $("#personemployedaccomplishment-"+id+"-female").prop("disabled", false);
             $("#beneficiariesaccomplishment-"+id+"-male").prop("disabled", false);
             $("#beneficiariesaccomplishment-"+id+"-female").prop("disabled", false);
+            $("#groupaccomplishment-"+id+"-value").prop("disabled", false);
             $("#accomplishment-"+id+"-remarks").prop("disabled", false);
         }
     }

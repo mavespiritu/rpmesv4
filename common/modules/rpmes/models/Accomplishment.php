@@ -33,8 +33,8 @@ class Accomplishment extends \yii\db\ActiveRecord
     {
         return [
             [['project_id', 'year'], 'integer'],
-            [['quarter', 'remarks'], 'string'],
-            [['action'], 'safe'],
+            [['quarter'], 'string'],
+            [['remarks', 'action'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
         ];
     }
