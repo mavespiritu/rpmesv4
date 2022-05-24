@@ -79,7 +79,7 @@ class AgencySearch extends Agency
             'agency_type_id' => $this->agency_type_id,
         ]);
 
-        $query->andFilterWhere(['like', 'code', $this->code])
+        $query->andFilterWhere(['like', 'agency.code', $this->code])
             ->andFilterWhere(['like', 'agency_type.title', $this->agencyTypeTitle])
             ->andFilterWhere(['like', 'title', $this->title])
             ->andFilterWhere(['like', 'head', $this->head])
