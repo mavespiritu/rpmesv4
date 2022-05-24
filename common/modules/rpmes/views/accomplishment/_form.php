@@ -280,7 +280,7 @@ function renderSummary($page)
                                 </td>
                                 <td align=center><b><?= number_format($model->getGroupsActual($getData['quarter']), 0 ) ?></b></td>
                                 <td align=center>
-                                    <?= $form->field($accomplishment[$model->id], "[$model->id]remarks")->textArea(['rows' => '3', 'style' => 'resize: none;',
+                                    <?= $form->field($accomplishment[$model->id], "[$model->id]remarks")->textArea(['rows' => '3',  'onKeyup' => 'updateAccomplishmentTable()', 'style' => 'resize: none;',
                                             'disabled' => $model->isCompleted == true ? true : false])->label(false) ?>
                                 </td>
                                 <td align=center>
