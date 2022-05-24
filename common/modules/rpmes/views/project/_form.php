@@ -938,7 +938,7 @@ $this->registerJs($js);
             <hr>
             <div class="row" style="margin-left: 1%;">
                 <div class="col-md-3 col-xs-12">
-                    <?= Yii::$app->controller->action->id != 'update' ? AttachmentsInput::widget([
+                    <?= $model->draft == 'Yes' || $model->draft == '' ? AttachmentsInput::widget([
                         'id' => 'file-input', // Optional
                         'model' => $model,
                         'options' => [ 
