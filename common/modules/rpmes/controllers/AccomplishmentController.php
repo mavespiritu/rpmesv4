@@ -250,8 +250,7 @@ class AccomplishmentController extends \yii\web\Controller
             MultipleModel::loadMultiple($accomplishment, Yii::$app->request->post())
         )
         {
-            //echo "<pre>"; print_r($accomplishment); exit;
-
+        
             $transaction = \Yii::$app->db->beginTransaction();
             $getData = Yii::$app->request->get('Project');
 
