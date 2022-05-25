@@ -13,7 +13,7 @@ $HtmlHelper = new HtmlHelper();
         <div class="box-title"><?= $quarters[$quarter] ?></div>
     </div>
     <div class="box-header box-body">
-        <h3 class="text-center"><?= $dueDate ? date("W, F j, Y", strtotime($dueDate->due_date)) : 'No due date set' ?></h3>
+        <h3 class="text-center"><?= $dueDate ? date("D, F j, Y", strtotime($dueDate->due_date)) : 'No due date set' ?></h3>
         <p class="text-center"><?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' to go' : 'Ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago' : '' ?></p>
     </div>
     <div class="box-footer">
