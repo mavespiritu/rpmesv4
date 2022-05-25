@@ -1012,10 +1012,10 @@ class ProjectController extends Controller
                             $targetModel->year = $model->year;
                             $targetModel->target_type = $targetTypes[$i];
                             $targetModel->indicator = isset($target['indicator']) ? $target['indicator'] : '';
-                            $targetModel->q1 = isset($target['q1']) ? $this->removeMask($target['q1']) : 0;
-                            $targetModel->q2 = isset($target['q2']) ? $this->removeMask($target['q2']) : 0;
-                            $targetModel->q3 = isset($target['q3']) ? $this->removeMask($target['q3']) : 0;
-                            $targetModel->q4 = isset($target['q4']) ? $this->removeMask($target['q4']) : 0;
+                            $targetModel->q1 = isset($target['q1']) ? $target['q1'] != '' ? $this->removeMask($target['q1']) : 0 : 0;
+                            $targetModel->q2 = isset($target['q2']) ? $target['q2'] != '' ? $this->removeMask($target['q2']) : 0 : 0;
+                            $targetModel->q3 = isset($target['q3']) ? $target['q3'] != '' ? $this->removeMask($target['q3']) : 0 : 0;
+                            $targetModel->q4 = isset($target['q4']) ? $target['q4'] != '' ? $this->removeMask($target['q4']) : 0 : 0;
                             if (! ($flag = $targetModel->save(false))) {
                                 $transaction->rollBack();
                                 break;
