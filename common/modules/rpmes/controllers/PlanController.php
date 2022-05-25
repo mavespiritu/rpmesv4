@@ -352,6 +352,7 @@ class PlanController extends \yii\web\Controller
             $projectsPages = new Pagination(['totalCount' => $countProjects->count()]);
             $projectsModels = $projectsPaging->offset($projectsPages->offset)
                 ->limit($projectsPages->limit)
+                ->orderBy(['id' => SORT_DESC])
                 ->all();
 
             return $this->render('index', [
