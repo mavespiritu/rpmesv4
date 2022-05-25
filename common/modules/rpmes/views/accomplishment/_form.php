@@ -35,7 +35,7 @@ function renderSummary($page)
         <div class="alert alert-<?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'info' : 'danger' : '' ?>"><i class="fa fa-exclamation-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' to go before the deadline of submission of '.$getData['quarter'].' Accomplishment. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) 
                 : 'Submission of '.$getData['quarter'].' Accomplishment has ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) : 'No due date set' ?></div>
         <div class="summary"><?= renderSummary($projectsPages) ?></div>
-        <div class="accomplishment-form accomplishment-table" style="min-height: 600px;">
+        <div class="accomplishment-form accomplishment-table" style="height: 600px;">
             <table id="accomplishment-table" class="table table-bordered table-hover table-striped" cellspacing="0" style="min-width: 4000px;">
                 <thead>
                     <tr>
