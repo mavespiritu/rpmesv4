@@ -81,7 +81,7 @@
                             <tr>
                                 <td>Project Exception</td>
                                 <td>4th Quarter</td>
-                                <td><?= $exceptionQ4 ? date("F j, Y", strtotime($exceptionQ3->due_date)) : 'Not set' ?></td>
+                                <td><?= $exceptionQ4 ? date("F j, Y", strtotime($exceptionQ4->due_date)) : 'Not set' ?></td>
                                 <td><?= $exceptionQ4 ? strtotime(date("Y-m-d")) <= strtotime($exceptionQ4->due_date) ? $HtmlHelper->time_elapsed_string($exceptionQ4->due_date).' to go' : 'Ended '.$HtmlHelper->time_elapsed_string($exceptionQ4->due_date).' ago' : 'Not set' ?></td>
                             </tr>
                         </tbody>
