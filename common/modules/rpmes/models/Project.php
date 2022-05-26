@@ -912,15 +912,13 @@ class Project extends \yii\db\ActiveRecord
         $citymuns = ProjectCitymun::findAll(['project_id' => $this->id, 'year' => $this->year]);
         $provinces = ProjectProvince::findAll(['project_id' => $this->id, 'year' => $this->year]);
         $regions = ProjectRegion::findAll(['project_id' => $this->id, 'year' => $this->year]);
-        $location = '';
+        $locations = [];
         if(count($regions) > 1)
         {
-            $location = '<ul>';
             foreach($regions as $region)
             {
-                $location .= '<li>'.$region->regionName.'</li>';
+                $locations[] = $region->regionName;
             }
-            $location .= '</ul>';
 
             if(count($provinces) > 1)
             {
@@ -963,17 +961,17 @@ class Project extends \yii\db\ActiveRecord
             }else{
                 foreach($provinces as $province)
                 {
-                    $location = $province->provinceName;
+                    $locations[] = $province->provinceName;
                 }
             }
         }else{
             foreach($regions as $region)
             {
-                $location = $region->regionName;
+                $locations[] = $region->regionName;
             }
         }
 
-        return $location != '' ? $location : 'No location <br>';
+        return !empty($locations) ? implode(",", $locations) : 'No location';
     }
     
 }

@@ -25,12 +25,7 @@ use yii\web\View;
     <td>
         (a) <?= $model->project_no ?><br>
         (b) <?= $model->title ?><br>
-        <table>
-            <tr>
-                <td style="vertical-align: top;">(c)</td>
-                <td><?= $model->location ?></td>
-            </tr>
-        </table>
+        (c) <?= $model->location ?><br>
         (d) <?= $model->sectorTitle.'/'.$model->subSectorTitle ?><br>
         (e) <?= $model->fundSourceTitle ?><br>
         (f) <?= $model->modeOfImplementationTitle ?><br>

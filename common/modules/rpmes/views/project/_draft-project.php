@@ -22,12 +22,7 @@ use yii\web\View;
     <td><?= $idx + 1 ?></td>
     <td>
         (a) <?= $model->title ?><br>
-        <table>
-            <tr>
-                <td style="vertical-align: top;">(b)&nbsp;</td>
-                <td><?= $model->location ?></td>
-            </tr>
-        </table>
+        (b) <?= $model->location ?><br>
         (c) <?= $model->sectorTitle.'/'.$model->subSectorTitle ?><br>
         (d) <?= $model->fundSourceTitle ?><br>
         (e) <?= $model->modeOfImplementationTitle ?><br>
