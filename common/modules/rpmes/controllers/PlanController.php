@@ -300,6 +300,12 @@ class PlanController extends \yii\web\Controller
                 $model->title = $project['title'];
             }
 
+            if(!empty($project['project_no']))
+            {
+                $projectsPaging = $projectsPaging->andWhere(['like', 'project.project_no', '%'.$project['project_no'].'%', false]);
+                $model->title = $project['title'];
+            }
+
             if(!empty($projectCitymun['citymun_id']))
             {
                 $citymunIDs = $citymunIDs->andWhere(['concat(region_id,"-",province_id,"-",citymun_id)' => $projectCitymun['citymun_id']]);
