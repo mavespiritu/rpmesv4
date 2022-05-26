@@ -43,7 +43,7 @@ use yii\web\View;
             (h) No Attachment <br>
         <?php } ?>
     </td>
-    <td><?= $model->data_type != "" ? $model->unitOfMeasure.' ('.$model->data_type.')' : $model->unitOfMeasure ?></td>
+    <td><?= $model->data_type != "" ? $model->unitOfMeasure.' ('.$model->data_type.')' : $model->unitOfMeasure.' ('.$model->data_type.')' ?></td>
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q1, 2) : '0.00' ?></td>
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q2, 2) : '0.00' ?></td>
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q3, 2) : '0.00' ?></td>
