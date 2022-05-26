@@ -938,7 +938,7 @@ $this->registerJs($js);
             <hr>
             <div class="row" style="margin-left: 1%;">
                 <div class="col-md-3 col-xs-12">
-                    <?= $model->draft == 'Yes' || $model->draft == '' ? AttachmentsInput::widget([
+                    <?= empty($model->files) ? AttachmentsInput::widget([
                         'id' => 'file-input', // Optional
                         'model' => $model,
                         'options' => [ 
