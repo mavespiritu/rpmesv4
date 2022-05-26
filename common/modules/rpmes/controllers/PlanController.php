@@ -451,7 +451,7 @@ class PlanController extends \yii\web\Controller
 
     public function actionCount($agency_id)
     {
-        $count = Plan::find()->leftJoin('project', 'project.id = plan.project_id')
+        $count = Plan::find()->select(['distinct(project.id) as id'])->leftJoin('project', 'project.id = plan.project_id')
         ->andWhere(['project.agency_id' => $agency_id])
         ->count();
 

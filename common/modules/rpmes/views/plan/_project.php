@@ -6,7 +6,7 @@ use yii\web\View;
 ?>
 
 <tr>
-    <td align=right>
+    <td align=center>
         <?= $form->field($projectIds[$model->id], 'id[]')->checkbox(['value' => $model->id, 'class' => 'check-monitoring-project', 'label' => '', 'id' => 'check-monitoring-project-'.$model->id, 'checked' => 'checked']) ?>
     </td>
     <td align=right>
@@ -34,8 +34,8 @@ use yii\web\View;
         (e) <?= $model->fundSourceTitle ?><br>
         (f) <?= $model->modeOfImplementationTitle ?><br>
         (g) <?= $model->startDate ?> to <?= $model->completionDate ?><br>
-        (h)
         <?php if($model->files){ ?>
+            (h)
             <?php foreach($model->files as $file){ ?>
                  <?= Html::a($file->name.'.'.$file->type, ['/file/file/download', 'id' => $file->id]) ?> <br>
             <?php } ?>

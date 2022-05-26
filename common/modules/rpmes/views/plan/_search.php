@@ -169,6 +169,9 @@ DisableButtonAsset::register($this);
     </div>
     <div class="row">
         <div class="col-md-6 col-xs-12">
+            <?= $form->field($model, 'project_no')->textInput() ?>
+        </div>
+        <div class="col-md-6 col-xs-12">
             <?= $form->field($model, 'title')->textInput() ?>
         </div>
     </div>

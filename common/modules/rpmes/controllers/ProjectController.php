@@ -42,6 +42,7 @@ use common\modules\rpmes\models\Model;
 use common\modules\rpmes\models\MultipleModel;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\helpers\ArrayHelper;
@@ -1132,6 +1133,17 @@ class ProjectController extends Controller
         $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
 
         $model = $this->findModel($id);
+
+        if($model->draft == 'No')
+        {
+            if($dueDate)
+            {
+                if(strtotime(date("Y-m-d")) > strtotime($dueDate->due_date)){
+                    throw new ForbiddenHttpException('Not allowed after due date');
+                }
+            }
+        }
+
         $model->scenario = Yii::$app->user->can('AgencyUser') ? 'projectCreateUser' : 'projectCreateAdmin';
 
         $regionModel = new ProjectRegion();
