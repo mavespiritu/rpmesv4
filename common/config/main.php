@@ -42,6 +42,11 @@ return [
                                 'allow' => true,
                                 'roles' => ['SuperAdministrator','Administrator'],
                             ],
+                            [
+                                'actions' => ['switch'],
+                                'allow' => true,
+                                'roles' => ['SuperAdministrator'],
+                            ],
                         ],
                     ],
                 ],
