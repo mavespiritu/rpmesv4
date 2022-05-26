@@ -88,8 +88,8 @@ function renderSummary($page)
                         <thead>
                             <tr>
                                 <td rowspan=3 align=center style="vertical-align: bottom;"><input type=checkbox name="monitoring-projects" class="check-monitoring-projects" /></td>
-                                <td rowspan=3>&nbsp;</td>
-                                <td rowspan=3 colspan=2 style="width: 20%;">
+                                <td rowspan=3 style="width: 5%;">&nbsp;</td>
+                                <td rowspan=3 colspan=2 style="width: 10%;">
                                     <b>
                                     (a) Project ID <br>
                                     (b) Name of Project <br>
@@ -101,7 +101,7 @@ function renderSummary($page)
                                     (h) Project Profile
                                     </b>
                                 </td>
-                                <td rowspan=3 align=center style="width: 10%;"><b>Unit of Measure</b></td>
+                                <td rowspan=3 align=center style="width: 5%;"><b>Unit of Measure</b></td>
                                 <td colspan=<?= count($quarters) + 1?> align=center><b>Financial Requirements</b></td>
                                 <td colspan=<?= count($quarters) + 1?> align=center><b>Physical Targets</b></td>
                                 <td colspan=<?= (count($quarters) * count($genders)) + 2?> align=center><b>Employment Generated</b></td>

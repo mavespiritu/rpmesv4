@@ -43,8 +43,8 @@ function renderSummary($page)
                     <thead>
                         <tr>
                             <td rowspan=3 align=center style="vertical-align: bottom;"><input type=checkbox name="draft-projects" class="check-draft-projects" /></td>
-                            <td rowspan=3>&nbsp;</td>
-                            <td rowspan=3 colspan=2 style="width: 15%;">
+                            <td rowspan=3 style="width: 3%;">&nbsp;</td>
+                            <td rowspan=3 colspan=2 style="width: 10%;">
                                 <b>
                                 (a) Name of Project <br>
                                 (b) Location <br>

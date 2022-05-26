@@ -3,7 +3,7 @@
 namespace common\modules\rpmes\models;
 
 use Yii;
-
+use markavespiritu\user\models\UserInfo;
 /**
  * This is the model class for table "project".
  *
@@ -894,6 +894,16 @@ class Project extends \yii\db\ActiveRecord
         $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Group Beneficiaries']);
 
         return $target;
+    }
+
+    public function getSubmitter()
+    {
+        return $this->hasOne(UserInfo::className(), ['user_id' => 'submitted_by']);
+    }
+
+    public function getSubmitterName()
+    {
+        return $this->submitter ? $this->submitter->fullName : '';
     }
 
     public function getLocation()
