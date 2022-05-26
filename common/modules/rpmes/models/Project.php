@@ -913,65 +913,39 @@ class Project extends \yii\db\ActiveRecord
         $provinces = ProjectProvince::findAll(['project_id' => $this->id, 'year' => $this->year]);
         $regions = ProjectRegion::findAll(['project_id' => $this->id, 'year' => $this->year]);
         $locations = [];
-        if(count($regions) > 1)
+        if($regions)
         {
-            foreach($regions as $region)
+            if($provinces)
             {
-                $locations[] = $region->regionName;
-            }
-
-            if(count($provinces) > 1)
-            {
-                $location = '<ul>';
-                foreach($provinces as $province)
+                if($citymuns)
                 {
-                    $location .= '<li>'.$province->provinceName.'</li>';
-                }
-                $location .= '</ul>';
-
-                if(count($citymuns) > 1)
-                {
-                    $location = '<ul>';
-                    foreach($citymuns as $citymun)
+                    if($barangays)
                     {
-                        $location .= '<li>'.$citymun->citymunName.', '.$citymun->provinceName.'</li>';
-                    }
-                    $location .= '</ul>';
-
-                    if(count($barangays) > 1)
-                    {
-                        $location = '<ul>';
                         foreach($barangays as $barangay)
                         {
-                            $location .= '<li>'.$barangay->barangayName.', '.$barangay->citymunName.', '.$barangay->provinceName.'</li>';
+                            $locations[] = $barangay->barangayName.', '.$barangay->citymunName.', '.$barangay->provinceName;
                         }
-                        $location .= '</ul>';
                     }else{
-                        foreach($barangays as $barangay)
+                        foreach($citymuns as $citymun)
                         {
-                            $location = $barangay->barangayName.', '.$barangay->citymunName.', '.$barangay->provinceName;
+                            $locations[] = $citymun->citymunName.', '.$citymun->provinceName;
                         }
                     }
                 }else{
-                    foreach($citymuns as $citymun)
+                    foreach($provinces as $province)
                     {
-                        $location = $citymun->citymun->citymunName.', '.$citymun->citymun->provinceName;
+                        $locations[] = $province->provinceName;
                     }
                 }
             }else{
-                foreach($provinces as $province)
+                foreach($regions as $region)
                 {
-                    $locations[] = $province->provinceName;
+                    $locations[] = $region->regionName;
                 }
-            }
-        }else{
-            foreach($regions as $region)
-            {
-                $locations[] = $region->regionName;
             }
         }
 
-        return !empty($locations) ? implode(",", $locations) : 'No location';
+        return !empty($locations) ? implode(" &#8226; ", $locations) : 'No location';
     }
     
 }
