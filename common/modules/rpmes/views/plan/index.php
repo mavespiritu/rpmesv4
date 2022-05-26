@@ -27,6 +27,28 @@ function renderSummary($page)
 }
 ?>
 <div class="plan-index">
+    <div class="alert alert-<?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'info' : 'danger' : '' ?>"><i class="fa fa-exclamation-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' to go before the deadline of submission of monitoring plan. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) 
+    : 'Submission of monitoring plan has ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) : '' ?></div>
+    <?php if(Yii::$app->user->can('AgencyUser')){ ?>
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Monitoring Plan Submission</h3>
+                </div>
+                <div class="box-body">
+                <?= $this->render('_submit', [
+                        'submissionModel' => $submissionModel,
+                        'agencies' => $agencies,
+                        'projectCount' => $projectCount,
+                        'dueDate' => $dueDate
+                    ]) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <?php } ?>
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
@@ -34,8 +56,6 @@ function renderSummary($page)
                     <h3 class="box-title">Monitoring Plan</h3>
                 </div>
                 <div class="box-body">
-                <div class="alert alert-<?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'info' : 'danger' : '' ?>"><i class="fa fa-exclamation-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' to go before the deadline of submission of monitoring plan. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) 
-                : 'Submission of monitoring plan has ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) : '' ?></div>
                 <?= $this->render('_search', [
                     'model' => $model,
                     'regionModel' => $regionModel,
@@ -168,26 +188,6 @@ function renderSummary($page)
             </div>
         </div>
     </div>
-    <?php if(Yii::$app->user->can('AgencyUser')){ ?>
-    <br>
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Monitoring Plan Submission</h3>
-                </div>
-                <div class="box-body">
-                <?= $this->render('_submit', [
-                        'submissionModel' => $submissionModel,
-                        'agencies' => $agencies,
-                        'projectCount' => $projectCount,
-                        'dueDate' => $dueDate
-                    ]) ?>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php } ?>
 </div>
 <?php
     $script = '
