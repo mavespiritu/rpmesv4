@@ -39,6 +39,7 @@ use common\modules\rpmes\models\RdpChapterOutcome;
 use common\modules\rpmes\models\RdpSubChapterOutcome;
 use common\modules\rpmes\models\ProjectSearch;
 use common\modules\rpmes\models\Model;
+use common\modules\rpmes\models\Submission;
 use common\modules\rpmes\models\MultipleModel;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -476,6 +477,13 @@ class ProjectController extends Controller
             // validate all models
             $valid = $model->validate();
             $valid = Model::validateMultiple($expectedOutputModels) && Model::validateMultiple($outcomeModels) && $valid;
+
+            $monitoringPlanSubmission = Submission::findOne(['report' => 'Monitoring Plan', 'agency_id' => $model->agency_id, 'year' => $model->year]);
+            if($monitoringPlanSubmission)
+            {
+                $monitoringPlanSubmission->date_submitted = strtotime($monitoringPlanSubmission->date_submitted) < strtotime(date("Y-m-d H:i:s")) ? date("Y-m-d H:i:s") : $monitoringPlanSubmission->date_submitted;
+                $monitoringPlanSubmission->save();
+            }
 
             if ($valid) {
                 $transaction = \Yii::$app->db->beginTransaction();
@@ -1133,6 +1141,7 @@ class ProjectController extends Controller
         $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
 
         $model = $this->findModel($id);
+        $draft = $model->draft;
 
         if($model->draft == 'No')
         {
@@ -1434,6 +1443,16 @@ class ProjectController extends Controller
                         $plan->date_submitted = date("Y-m-d H:i:s");
                         $plan->submitted_by = Yii::$app->user->id;
                         $plan->save(false);
+
+                        if($draft == 'Yes')
+                        {
+                            $monitoringPlanSubmission = Submission::findOne(['report' => 'Monitoring Plan', 'agency_id' => $model->agency_id, 'year' => $model->year]);
+                            if($monitoringPlanSubmission)
+                            {
+                                $monitoringPlanSubmission->date_submitted = strtotime($monitoringPlanSubmission->date_submitted) < strtotime(date("Y-m-d H:i:s")) ? date("Y-m-d H:i:s") : $monitoringPlanSubmission->date_submitted;
+                                $monitoringPlanSubmission->save();
+                            }
+                        }
 
                         if(!empty($deletedExpectedOutputIDs))
                         {
@@ -2107,6 +2126,13 @@ class ProjectController extends Controller
                         $plan->date_submitted = date("Y-m-d H:i:s");
                         $plan->submitted_by = Yii::$app->user->id;
                         $plan->save(false);
+
+                        $monitoringPlanSubmission = Submission::findOne(['report' => 'Monitoring Plan', 'agency_id' => $model->agency_id, 'year' => $model->year]);
+                        if($monitoringPlanSubmission)
+                        {
+                            $monitoringPlanSubmission->date_submitted = strtotime($monitoringPlanSubmission->date_submitted) < strtotime(date("Y-m-d H:i:s")) ? date("Y-m-d H:i:s") : $monitoringPlanSubmission->date_submitted;
+                            $monitoringPlanSubmission->save();
+                        }
                         
                         foreach ($expectedOutputModels as $expectedOutputModel) {
                             $expectedOutputModel->project_id = $model->id;
