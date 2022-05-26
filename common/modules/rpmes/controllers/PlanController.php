@@ -303,7 +303,7 @@ class PlanController extends \yii\web\Controller
             if(!empty($project['project_no']))
             {
                 $projectsPaging = $projectsPaging->andWhere(['like', 'project.project_no', '%'.$project['project_no'].'%', false]);
-                $model->title = $project['title'];
+                $model->project_no = $project['project_no'];
             }
 
             if(!empty($projectCitymun['citymun_id']))
