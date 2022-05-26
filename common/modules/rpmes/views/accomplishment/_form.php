@@ -60,7 +60,7 @@ function renderSummary($page)
                         <td colspan=2 align=center><b>Allocation</b></td>
                         <td colspan=2 align=center><b>Releases</b></td>
                         <td colspan=2 align=center><b>Obligation</b></td>
-                        <td colspan=2 align=center><b>Expenditures</b></td>
+                        <td colspan=2 align=center><b>Disbursements</b></td>
                         <td rowspan=2 align=center><b>Target to Date</b></td>
                         <td rowspan=2 align=center><b>Target for the Qtr</b></td>
                         <td rowspan=2 align=center><b>Actual to Date</b></td>
