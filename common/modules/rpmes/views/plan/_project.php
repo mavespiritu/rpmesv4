@@ -34,6 +34,14 @@ use yii\web\View;
         (e) <?= $model->fundSourceTitle ?><br>
         (f) <?= $model->modeOfImplementationTitle ?><br>
         (g) <?= $model->startDate ?> to <?= $model->completionDate ?><br>
+        (h)
+        <?php if($model->files){ ?>
+            <?php foreach($model->files as $file){ ?>
+                 <?= Html::a($file->name.'.'.$file->type, ['/file/file/download', 'id' => $file->id]) ?> <br>
+            <?php } ?>
+        <?php }else{ ?>
+            (h) No Attachment <br>
+        <?php } ?>
     </td>
     <td><?= $model->data_type != "" ? $model->unitOfMeasure.' ('.$model->data_type.')' : $model->unitOfMeasure ?></td>
     <td align=right><?= $model->financialTarget ? number_format($model->financialTarget->q1, 2) : '0.00' ?></td>

@@ -77,7 +77,8 @@ function renderSummary($page)
                                     (d) Sector/Sub-Sector <br>
                                     (e) Funding Source <br>
                                     (f) Mode of Implementation <br>
-                                    (g) Project Schedule
+                                    (g) Project Schedule <br>
+                                    (h) Project Profile
                                     </b>
                                 </td>
                                 <td rowspan=3 align=center style="width: 10%;"><b>Unit of Measure</b></td>
