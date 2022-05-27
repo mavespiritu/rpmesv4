@@ -16,6 +16,10 @@ use yii\web\View;
         <?= $agency->getMonitoringPlanSubmission($getData['year']) ? Html::button('<i class="fa fa-edit"></i> Acknowledge', ['value' => Url::to(['/rpmes/acknowledgment/acknowledge-monitoring-plan', 'id' => $agency->getMonitoringPlanSubmission($getData['year'])->id]), 'class' => 'btn btn-success btn-xs btn-block', 'id' => 'acknowledge-monitoring-plan-'.$agency->id.'-button']) : '' ?>
         <?= $agency->getMonitoringPlanAcknowledgment($getData['year']) ? Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printAcknowledgmentMonitoringPlan('.$agency->getMonitoringPlanAcknowledgment($getData['year'])->id.')', 'class' => 'btn btn-danger btn-xs btn-block']) : '' ?>
     </td>
+    <td><?= $agency->getMonitoringPlanSubmission($getData['year']) ? Html::a('<i class="fa fa-trash"></i>', ['/rpmes/acknowledgment/delete-submission', 'id' => $agency->getMonitoringPlanSubmission($getData['year'])->id, 'report' => 'Monitoring Plan'], ['class' => 'btn btn-danger btn-xs btn-block', 'id' => 'delete-monitoring-plan-'.$agency->id.'-button', 'data' => [
+            'confirm' => 'Are you sure you want to remove submission of this agency?',
+            'method' => 'post',
+        ],]) : '' ?></td>
 </tr>
 
 <?php

@@ -32,7 +32,7 @@ DisableButtonAsset::register($this);
                 <td align=center><b>Date Submitted</b></td>
                 <td align=center><b>Acknowledged By</b></td>
                 <td align=center><b>Date Acknowledged</b></td>
-                <td align=center><b>Actions</b></td>
+                <td align=center colspan=2><b>Actions</b></td>
             </tr>
         </thead>
         <tbody>

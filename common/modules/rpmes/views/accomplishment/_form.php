@@ -39,7 +39,7 @@ function renderSummary($page)
             <table id="accomplishment-table" class="table table-bordered table-hover table-striped" cellspacing="0" style="min-width: 4000px;">
                 <thead>
                     <tr>
-                        <td rowspan=4 colspan=2>
+                        <td rowspan=4 colspan=2 style="width: 10%;">
                             <b>
                             (a) Project ID <br>
                             (b) Name of Project <br>

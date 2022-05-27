@@ -290,4 +290,15 @@ class AcknowledgmentController extends \yii\web\Controller
             'officeTitleShort' => $officeTitleShort,
         ]);
     }
+
+    public function actionDeleteSubmission($id, $report)
+    {
+        $model = Submission::findOne(['id' => $id, 'report' => $report]);
+        $submission = $model;
+        if($model->delete())
+        {
+            \Yii::$app->getSession()->setFlash('success', 'Submission has been deleted successfully');
+            return $report == 'Monitoring Plan' ? $this->redirect(['/rpmes/acknowledgment/monitoring-plan', 'Submission[year]' => $submission->year]) : $this->redirect(['/rpmes/acknowledgment/monitoring-report', 'Submission[year]' => $submission->year]);
+        }
+    }
 }
