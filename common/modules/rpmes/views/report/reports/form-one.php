@@ -1,5 +1,8 @@
 <?php if($type != 'pdf'){ ?>
     <style>
+    *{
+        font-family: "Arial";
+    }
     table{
         font-family: "Arial";
         border-collapse: collapse;
@@ -21,12 +24,25 @@
         border: 1px solid black;
         padding: 5px;
     }
+    h1,h2,h3,h4,h5,h6{
+        text-align: center;
+        font-weight: bolder;
+    }
 </style>
 <?php } ?>
-<table class="table table-condensed table-bordered table-striped table-condensed table-responsive" cellspacing="0" style="min-width: 2000px;">
+<?php if($type != 'pdf'){ ?>
+    <h5>REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+RPMES Form 1: INITIAL PROJECT REPORT (Physical and Financial Targets for Ongoing Programs and Projects)
+</h5>
+<?php }else{ ?>
+    <h6>REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+RPMES Form 1: INITIAL PROJECT REPORT (Physical and Financial Targets for Ongoing Programs and Projects)
+</h6>
+<?php } ?>
+<table class="table table-condensed table-bordered table-striped table-condensed table-responsive" cellspacing="0">
     <thead>
         <tr>
-            <td rowspan=3 colspan=2 style="width: 15%;" align=left>
+            <td rowspan=3 colspan=2 style="width: 10%;" align=left>
                 <b>
                 (a) Name of Project <br>
                 (b) Location <br>
@@ -36,7 +52,7 @@
                 (f) Project Schedule
                 </b>
             </td>
-            <td rowspan=3 align=center><b>Unit of Measure</b></td>
+            <td rowspan=3 align=center style="width: 5%;"><b>Unit of Measure</b></td>
             <td colspan=<?= count($quarters) + 1?> align=center><b>Financial Requirements</b></td>
             <td colspan=<?= count($quarters) + 1?> align=center><b>Physical Targets</b></td>
             <td colspan=<?= (count($quarters) * count($genders)) + 2?> align=center><b>Employment Generated</b></td>

@@ -12,6 +12,9 @@ DisableButtonAsset::register($this);
 /* @var $model common\modules\rpmes\models\DueDateSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
+<h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+RPMES Form 1: INITIAL PROJECT REPORT (Physical and Financial Targets for Ongoing Programs and Projects)
+</h5>
 <div class="pull-left">
     <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
         'label' => '<i class="fa fa-download"></i> Export',
@@ -19,8 +22,8 @@ DisableButtonAsset::register($this);
         'options' => ['class' => 'btn btn-success btn-sm'],
         'dropdown' => [
             'items' => [
-                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/report/download-form-one', 'type' => 'excel', 'model' => $model])],
-                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-form-one', 'type' => 'pdf', 'model' => $model])],
+                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/report/download-form-one', 'type' => 'excel', 'year' => $model->year, 'agency_id' => $model->agency_id, 'model' => json_encode($model)])],
+                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/report/download-form-one', 'type' => 'pdf', 'year' => $model->year, 'agency_id' => $model->agency_id, 'model' => json_encode($model)])],
             ],
         ],
     ]) : '' ?>

@@ -44,6 +44,7 @@ class Submission extends \yii\db\ActiveRecord
             [['agency_id'], 'required', 'on' => 'monitoringPlanAdmin'],
             [['year'], 'required', 'on' => 'acknowledgmentMonitoringPlan'],
             [['year'], 'required', 'on' => 'acknowledgmentMonitoringReport'],
+            [['year'], 'required', 'on' => 'generateFormOne'],
             [['year', 'grouping'], 'required', 'on' => 'summaryMonitoringPlan'],
             [['year', 'quarter', 'grouping'], 'required', 'on' => 'summaryMonitoringReport'],
             [['agency_id', 'year', 'submitted_by', 'fund_source_id', 'sector_id', 'sub_sector_id'], 'integer'],
