@@ -28,7 +28,7 @@ DisableButtonAsset::register($this);
 </div>
 <div class="clearfix"></div>
 <br>
-<div class="form-one-report-table" style="min-height: 600px;">
+<div class="form-one-report-table" style="height: 600px;">
     <table class="table table-condensed table-bordered table-striped table-condensed table-responsive" cellspacing="0" style="min-width: 2000px;">
         <thead>
             <tr>

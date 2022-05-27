@@ -252,7 +252,7 @@ class ReportController extends \yii\web\Controller
                 $projects = $projects->andWhere(['sub_sector.id' => $model->sub_sector_id]);
             }
 
-            $projects = $projects->asArray()->all();
+            $projects = $projects->orderBy(['project.title' => SORT_ASC])->asArray()->all();
 
             return $this->renderAjax('_form-one', [
                 'model' => $model,
@@ -425,7 +425,7 @@ class ReportController extends \yii\web\Controller
             $projects = $projects->andWhere(['sub_sector.id' => $model['sub_sector_id']]);
         }
 
-        $projects = $projects->asArray()->all();
+        $projects = $projects->orderBy(['project.title' => SORT_ASC])->asArray()->all();
 
         return $this->renderAjax('reports/form-one', [
             'model' => $model,
