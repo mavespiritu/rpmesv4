@@ -32,7 +32,7 @@ DisableButtonAsset::register($this);
     <table class="table table-condensed table-bordered table-striped table-condensed table-responsive" cellspacing="0" style="min-width: 2000px;">
         <thead>
             <tr>
-                <td rowspan=3 colspan=2 style="width: 15%;">
+                <td rowspan=3 colspan=2 style="width: 10%;">
                     <b>
                     (a) Name of Project <br>
                     (b) Location <br>
@@ -42,7 +42,7 @@ DisableButtonAsset::register($this);
                     (f) Project Schedule
                     </b>
                 </td>
-                <td rowspan=3 align=center><b>Unit of Measure</b></td>
+                <td rowspan=3 align=center style="width: 5%;"><b>Unit of Measure</b></td>
                 <td colspan=<?= count($quarters) + 1?> align=center><b>Financial Requirements</b></td>
                 <td colspan=<?= count($quarters) + 1?> align=center><b>Physical Targets</b></td>
                 <td colspan=<?= (count($quarters) * count($genders)) + 2?> align=center><b>Employment Generated</b></td>

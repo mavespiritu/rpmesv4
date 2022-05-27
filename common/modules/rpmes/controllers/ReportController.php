@@ -124,7 +124,41 @@ class ReportController extends \yii\web\Controller
             $maleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Male Employed'])->createCommand()->getRawSql();
             $femaleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Female Employed'])->createCommand()->getRawSql();
             $beneficiariesTargets = ProjectTarget::find()->where(['target_type' => 'Beneficiaries'])->createCommand()->getRawSql();
+            $regionTitles = ProjectRegion::find()
+                        ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
+                        ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
+                        ->leftJoin('project', 'project.id = project_region.project_id')
+                        ->where(['project.draft' => 'No'])
+                        ->groupBy(['project_region.project_id'])
+                        ->createCommand()->getRawSql();
 
+            $provinceTitles = ProjectProvince::find()
+                        ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                        ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
+                        ->leftJoin('project', 'project.id = project_province.project_id')
+                        ->where(['project.draft' => 'No'])
+                        ->groupBy(['project_province.project_id'])
+                        ->createCommand()->getRawSql();
+
+            $citymunTitles = ProjectCitymun::find()
+                        ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                        ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
+                        ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                        ->leftJoin('project', 'project.id = project_citymun.project_id')
+                        ->where(['project.draft' => 'No'])
+                        ->groupBy(['project_citymun.project_id'])
+                        ->createCommand()->getRawSql();
+            
+            $barangayTitles = ProjectBarangay::find()
+                        ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                        ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
+                        ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
+                        ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                        ->leftJoin('project', 'project.id = project_barangay.project_id')
+                        ->where(['project.draft' => 'No'])
+                        ->groupBy(['project_barangay.project_id'])
+                        ->createCommand()->getRawSql();
+    
             $projects = Project::find()
                         ->select([
                             'mode_of_implementation.title as modeOfImplementationTitle',
@@ -132,13 +166,10 @@ class ReportController extends \yii\web\Controller
                             'sector.title as sectorTitle',
                             'sub_sector.title as subSectorTitle',
                             'fund_source.title as fundSourceTitle',
-                            'IF(tblprovince.province_c is not null, 
-                                IF(tblcitymun.citymun_m is not null, concat(tblcitymun.citymun_m,", ",tblprovince.province_m), tblprovince.province_m)
-                            , tblregion.abbreviation)
-                            as locationTitle',
+                            'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
                             'project.start_date as startDate',
                             'project.completion_date as completionDate',
-                            'concat(physicalTargets.indicator, " (",project.data_type,")") as unitOfMeasure',
+                            'IF(project.data_type <> "", concat(physicalTargets.indicator, " (",project.data_type,")"), concat(physicalTargets.indicator, " (No Data Type)")) as unitOfMeasure',
                             'financialTargets.q1 as financialQ1',
                             'financialTargets.q2 as financialQ2',
                             'financialTargets.q3 as financialQ3',
@@ -165,17 +196,15 @@ class ReportController extends \yii\web\Controller
             $projects = $projects->leftJoin(['maleEmployedTargets' => '('.$maleEmployedTargets.')'], 'maleEmployedTargets.project_id = project.id');
             $projects = $projects->leftJoin(['femaleEmployedTargets' => '('.$femaleEmployedTargets.')'], 'femaleEmployedTargets.project_id = project.id');
             $projects = $projects->leftJoin(['beneficiariesTargets' => '('.$beneficiariesTargets.')'], 'beneficiariesTargets.project_id = project.id');
+            $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
             $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
             $projects = $projects->leftJoin('mode_of_implementation', 'mode_of_implementation.id = project.mode_of_implementation_id');
             $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
             $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
             $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-            $projects = $projects->leftJoin('project_region', 'project_region.project_id = project.id and project_region.year = project.year');
-            $projects = $projects->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id');
-            $projects = $projects->leftJoin('project_province', 'project_province.project_id = project.id and project_province.year = project.year');
-            $projects = $projects->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id');
-            $projects = $projects->leftJoin('project_citymun', 'project_citymun.project_id = project.id and project_citymun.year = project.year');
-            $projects = $projects->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id');
             $projects = $projects->andWhere(['project.draft' => 'No']);
 
             if(Yii::$app->user->can('AgencyUser'))
@@ -267,6 +296,41 @@ class ReportController extends \yii\web\Controller
         $femaleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Female Employed'])->createCommand()->getRawSql();
         $beneficiariesTargets = ProjectTarget::find()->where(['target_type' => 'Beneficiaries'])->createCommand()->getRawSql();
 
+        $regionTitles = ProjectRegion::find()
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
+                    ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
+                    ->leftJoin('project', 'project.id = project_region.project_id')
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['project_region.project_id'])
+                    ->createCommand()->getRawSql();
+
+        $provinceTitles = ProjectProvince::find()
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                    ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
+                    ->leftJoin('project', 'project.id = project_province.project_id')
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['project_province.project_id'])
+                    ->createCommand()->getRawSql();
+
+        $citymunTitles = ProjectCitymun::find()
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                    ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
+                    ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                    ->leftJoin('project', 'project.id = project_citymun.project_id')
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['project_citymun.project_id'])
+                    ->createCommand()->getRawSql();
+        
+        $barangayTitles = ProjectBarangay::find()
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                    ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
+                    ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
+                    ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                    ->leftJoin('project', 'project.id = project_barangay.project_id')
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['project_barangay.project_id'])
+                    ->createCommand()->getRawSql();
+
         $projects = Project::find()
                     ->select([
                         'mode_of_implementation.title as modeOfImplementationTitle',
@@ -274,13 +338,10 @@ class ReportController extends \yii\web\Controller
                         'sector.title as sectorTitle',
                         'sub_sector.title as subSectorTitle',
                         'fund_source.title as fundSourceTitle',
-                        'IF(tblprovince.province_c is not null, 
-                            IF(tblcitymun.citymun_m is not null, concat(tblcitymun.citymun_m,", ",tblprovince.province_m), tblprovince.province_m)
-                        , tblregion.abbreviation)
-                        as locationTitle',
+                        'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
                         'project.start_date as startDate',
                         'project.completion_date as completionDate',
-                        'concat(physicalTargets.indicator, " (",project.data_type,")") as unitOfMeasure',
+                        'IF(project.data_type <> "", concat(physicalTargets.indicator, " (",project.data_type,")"), concat(physicalTargets.indicator, " (No Data Type)")) as unitOfMeasure',
                         'financialTargets.q1 as financialQ1',
                         'financialTargets.q2 as financialQ2',
                         'financialTargets.q3 as financialQ3',
@@ -307,18 +368,17 @@ class ReportController extends \yii\web\Controller
         $projects = $projects->leftJoin(['maleEmployedTargets' => '('.$maleEmployedTargets.')'], 'maleEmployedTargets.project_id = project.id');
         $projects = $projects->leftJoin(['femaleEmployedTargets' => '('.$femaleEmployedTargets.')'], 'femaleEmployedTargets.project_id = project.id');
         $projects = $projects->leftJoin(['beneficiariesTargets' => '('.$beneficiariesTargets.')'], 'beneficiariesTargets.project_id = project.id');
+        $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
         $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
         $projects = $projects->leftJoin('mode_of_implementation', 'mode_of_implementation.id = project.mode_of_implementation_id');
         $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
         $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
         $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-        $projects = $projects->leftJoin('project_region', 'project_region.project_id = project.id and project_region.year = project.year');
-        $projects = $projects->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id');
-        $projects = $projects->leftJoin('project_province', 'project_province.project_id = project.id and project_province.year = project.year');
-        $projects = $projects->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id');
-        $projects = $projects->leftJoin('project_citymun', 'project_citymun.project_id = project.id and project_citymun.year = project.year');
-        $projects = $projects->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id');
         $projects = $projects->andWhere(['project.draft' => 'No']);
+        
 
         if(Yii::$app->user->can('AgencyUser'))
         {
