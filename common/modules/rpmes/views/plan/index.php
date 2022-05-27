@@ -157,6 +157,41 @@ function renderSummary($page)
                                 <td align=center><b>I</b></td>
                                 <td align=center><b>G</b></td>
                             </tr>
+                            <?php $financialTotal = 0; ?>
+                            <?php $physicalTotal = 0; ?>
+                            <?php $maleEmployedTotal = 0; ?>
+                            <?php $femaleEmployedTotal = 0; ?>
+                            <?php $beneficiaryTotal = 0; ?>
+                            <?php $groupTotal = 0; ?>
+                            <tr>
+                                <td colspan=5 align=right><b>Grand Total</b></td>
+                                <?php foreach($quarters as $quarter => $q){ ?>
+                                    <td align=right><b><?= number_format($totals['financials'][$quarter], 2) ?></b></td>
+                                    <?php $financialTotal += $totals['financials'][$quarter]; ?>
+                                <?php } ?>
+                                <td align=right><b><?= number_format($financialTotal, 2) ?></b></td>
+                                <?php foreach($quarters as $quarter => $q){ ?>
+                                    <td align=right><b><?= number_format($totals['physicals'][$quarter], 0) ?></b></td>
+                                    <?php $physicalTotal += $totals['physicals'][$quarter]; ?>
+                                <?php } ?>
+                                <td align=right><b><?= number_format($physicalTotal, 0) ?></b></td>
+                                <?php foreach($quarters as $quarter => $q){ ?>
+                                    <td align=right><b><?= number_format($totals['maleEmployed'][$quarter], 0) ?></b></td>
+                                    <td align=right><b><?= number_format($totals['femaleEmployed'][$quarter], 0) ?></b></td>
+                                    <?php $maleEmployedTotal += $totals['maleEmployed'][$quarter]; ?>
+                                    <?php $femaleEmployedTotal += $totals['femaleEmployed'][$quarter]; ?>
+                                <?php } ?>
+                                <td align=right><b><?= number_format($maleEmployedTotal, 0) ?></b></td>
+                                <td align=right><b><?= number_format($femaleEmployedTotal, 0) ?></b></td>
+                                <?php foreach($quarters as $quarter => $q){ ?>
+                                    <td align=right><b><?= number_format($totals['beneficiaries'][$quarter], 0) ?></b></td>
+                                    <td align=right><b><?= number_format($totals['groupBeneficiaries'][$quarter], 0) ?></b></td>
+                                    <?php $beneficiaryTotal += $totals['beneficiaries'][$quarter]; ?>
+                                    <?php $groupTotal += $totals['groupBeneficiaries'][$quarter]; ?>
+                                <?php } ?>
+                                <td align=right><b><?= number_format($beneficiaryTotal, 0) ?></b></td>
+                                <td align=right><b><?= number_format($groupTotal, 0) ?></b></td>
+                            </tr>
                         </thead>
                         <tbody>
                         <?php if($projectsModels){ ?>
@@ -172,41 +207,6 @@ function renderSummary($page)
                                 <?php $idx++ ?>
                             <?php } ?>
                         <?php } ?>
-                        <?php $financialTotal = 0; ?>
-                        <?php $physicalTotal = 0; ?>
-                        <?php $maleEmployedTotal = 0; ?>
-                        <?php $femaleEmployedTotal = 0; ?>
-                        <?php $beneficiaryTotal = 0; ?>
-                        <?php $groupTotal = 0; ?>
-                        <tr>
-                            <td colspan=5 align=right><b>Total</b></td>
-                            <?php foreach($quarters as $quarter => $q){ ?>
-                                <td align=right><b><?= number_format($totals['financials'][$quarter], 2) ?></b></td>
-                                <?php $financialTotal += $totals['financials'][$quarter]; ?>
-                            <?php } ?>
-                            <td align=right><b><?= number_format($financialTotal, 2) ?></b></td>
-                            <?php foreach($quarters as $quarter => $q){ ?>
-                                <td align=right><b><?= number_format($totals['physicals'][$quarter], 0) ?></b></td>
-                                <?php $physicalTotal += $totals['physicals'][$quarter]; ?>
-                            <?php } ?>
-                            <td align=right><b><?= number_format($physicalTotal, 0) ?></b></td>
-                            <?php foreach($quarters as $quarter => $q){ ?>
-                                <td align=right><b><?= number_format($totals['maleEmployed'][$quarter], 0) ?></b></td>
-                                <td align=right><b><?= number_format($totals['femaleEmployed'][$quarter], 0) ?></b></td>
-                                <?php $maleEmployedTotal += $totals['maleEmployed'][$quarter]; ?>
-                                <?php $femaleEmployedTotal += $totals['femaleEmployed'][$quarter]; ?>
-                            <?php } ?>
-                            <td align=right><b><?= number_format($maleEmployedTotal, 0) ?></b></td>
-                            <td align=right><b><?= number_format($femaleEmployedTotal, 0) ?></b></td>
-                            <?php foreach($quarters as $quarter => $q){ ?>
-                                <td align=right><b><?= number_format($totals['beneficiaries'][$quarter], 0) ?></b></td>
-                                <td align=right><b><?= number_format($totals['groupBeneficiaries'][$quarter], 0) ?></b></td>
-                                <?php $beneficiaryTotal += $totals['beneficiaries'][$quarter]; ?>
-                                <?php $groupTotal += $totals['groupBeneficiaries'][$quarter]; ?>
-                            <?php } ?>
-                            <td align=right><b><?= number_format($beneficiaryTotal, 0) ?></b></td>
-                            <td align=right><b><?= number_format($groupTotal, 0) ?></b></td>
-                        </tr>
                         </tbody>
                     </table>
                 </div>
