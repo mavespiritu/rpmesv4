@@ -74,7 +74,7 @@ class HtmlHelper{
 
     public function time_elapsed_string($datetime, $full = false) {
         $now = new \DateTime;
-        $ago = new \DateTime($datetime);
+        $ago = new \DateTime($datetime.' 23:59:59');
         $diff = $now->diff($ago);
 
         $diff->w = floor($diff->d / 7);
