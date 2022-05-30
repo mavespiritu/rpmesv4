@@ -906,6 +906,22 @@ class Project extends \yii\db\ActiveRecord
         return $this->submitter ? $this->submitter->fullName : '';
     }
 
+    public function getAccomplishmentSubmitter($quarter)
+    {
+        $accomplishment = Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => $quarter]);
+        $submitter = $accomplishment ? !is_null($accomplishment->submitted_by) ? UserInfo::findOne(['user_id' => $accomplishment->submitted_by])->fullName : 'No submitter name' : 'No submitter name';
+
+        return $submitter;
+    }
+
+    public function getAccomplishmentDateSubmitted($quarter)
+    {
+        $accomplishment = Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => $quarter]);
+        $dateSubmitted = $accomplishment ? date("F j, Y H:i:s", strtotime($accomplishment->date_submitted)) : 'No submission date';
+
+        return $dateSubmitted;
+    }
+
     public function getLocation()
     {
         $barangays = ProjectBarangay::findAll(['project_id' => $this->id, 'year' => $this->year]);

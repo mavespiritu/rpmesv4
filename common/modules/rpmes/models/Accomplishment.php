@@ -51,6 +51,8 @@ class Accomplishment extends \yii\db\ActiveRecord
             'quarter' => 'Quarter',
             'remarks' => 'Remarks',
             'action' => 'Action',
+            'submitted_by' => 'Submitted By',
+            'date_submitted' => 'Date Submitted'
         ];
     }
 

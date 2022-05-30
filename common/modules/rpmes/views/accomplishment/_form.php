@@ -39,7 +39,8 @@ function renderSummary($page)
             <table id="accomplishment-table" class="table table-bordered table-hover table-striped" cellspacing="0" style="min-width: 4000px;">
                 <thead>
                     <tr>
-                        <td rowspan=4 colspan=2 style="width: 10%;">
+                        <td rowspan=4 style="width: 3%;">&nbsp;</td>
+                        <td rowspan=4 colspan=2 style="width: 7%;">
                             <b>
                             (a) Project ID <br>
                             (b) Name of Project <br>
@@ -110,6 +111,7 @@ function renderSummary($page)
                         <?php foreach($projectsModels as $model){ ?>
                             <?php $con = $model->isCompleted ? 'true' : 'false' ?>
                             <tr>
+                                <td>Submitted by: <br><?= $model->getAccomplishmentSubmitter($getData['quarter']) ?> at <?= $model->getAccomplishmentDateSubmitted($getData['quarter']) ?></td>
                                 <td align=center><?= $i ?></td>
                                 <td>
                                     (a) <?= $model->project_no ?> <br>
@@ -356,6 +358,7 @@ function renderSummary($page)
     $(document).ready(function(){
         $(".accomplishment-table").freezeTable({
             "scrollable": true,
+            "columnNum": 2
         });
     });
     $("#accomplishment-submit-button").on("click", function(e) {
