@@ -234,7 +234,6 @@ class PlanController extends \yii\web\Controller
         if(Yii::$app->request->get())
         {
             $ids = Yii::$app->request->get('id');
-            
 
             if(isset($ids))
             {
