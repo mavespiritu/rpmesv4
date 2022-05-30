@@ -972,7 +972,7 @@ $this->registerJs($js);
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
-                <?= $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save Project', ['class' => 'btn btn-primary', 'onclick' => '$("#file-input").fileinput("upload");', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
+                <?= $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save Project', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
                 <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Add to Monitoring Plan', ['class' => 'btn btn-success', 'onclick' => '$("#file-input").fileinput("upload");', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' ?>
             </div>
         </div>

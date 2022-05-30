@@ -1388,8 +1388,6 @@ class ProjectController extends Controller
             ) 
             {
 
-            //echo "<pre>"; print_r(Yii::$app->request->post()); exit;
-
             $oldExpectedOutputIDs = ArrayHelper::map($expectedOutputModels, 'id', 'id');
             $oldOutcomeIDs = ArrayHelper::map($outcomeModels, 'id', 'id');
             $oldRegionIDs = array_values(ArrayHelper::map($projectRegions, 'region_id', 'region_id'));
