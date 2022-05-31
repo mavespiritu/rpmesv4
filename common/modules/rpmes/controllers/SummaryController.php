@@ -16,6 +16,7 @@ use common\modules\rpmes\models\ProjectProvince;
 use common\modules\rpmes\models\ProjectCitymun;
 use common\modules\rpmes\models\ProjectBarangay;
 use common\modules\rpmes\models\ProjectCategory;
+use common\modules\rpmes\models\ProjectKra;
 use common\modules\rpmes\models\ProjectSdgGoal;
 use common\modules\rpmes\models\ProjectRdpChapter;
 use common\modules\rpmes\models\ProjectRdpChapterOutcome;
@@ -154,6 +155,25 @@ class SummaryController extends \yii\web\Controller
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
 
+        $agencies = Agency::find()->select(['id', 'code as title']);
+        $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
+        $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        $categories = Category::find()->all();
+        $categories = ArrayHelper::map($categories, 'id', 'title');
+
+        $sectors = Sector::find()->all();
+        $sectors = ArrayHelper::map($sectors, 'id', 'title');
+
+        $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->asArray()->all();
+        $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
+
+        $locations = Province::find()->orderBy(['province_m' => SORT_ASC])->asArray()->all();
+        $locations = ArrayHelper::map($locations, 'province_c', 'province_m');
+
+        $periods = ['Current Year' => 'Current Year', 'Carry-Over' => 'Carry-Over'];
+        
         if($model->load(Yii::$app->request->post()))
         {
             $physicals = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
@@ -165,6 +185,92 @@ class SummaryController extends \yii\web\Controller
             $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
 
+            $categoryTitles = ProjectCategory::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
+                ->leftJoin('category', 'category.id = project_category.category_id')
+                ->leftJoin('project', 'project.id = project_category.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_category.project_id'])
+                ->createCommand()->getRawSql();
+
+            $kraTitles = ProjectKra::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT key_result_area.title ORDER BY key_result_area.title ASC SEPARATOR ", ") as title'])
+                ->leftJoin('key_result_area', 'key_result_area.id = project_kra.key_result_area_id')
+                ->leftJoin('project', 'project.id = project_kra.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_kra.project_id'])
+                ->createCommand()->getRawSql();
+
+            $sdgGoalTitles = ProjectSdgGoal::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat("SDG #",sdg_goal.sdg_no,": ",sdg_goal.title) ORDER BY sdg_goal.sdg_no ASC SEPARATOR ", ") as title'])
+                ->leftJoin('sdg_goal', 'sdg_goal.id = project_sdg_goal.sdg_goal_id')
+                ->leftJoin('project', 'project.id = project_sdg_goal.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_sdg_goal.project_id'])
+                ->createCommand()->getRawSql();
+
+            $rdpChapterTitles = ProjectRdpChapter::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat("Chapter ",rdp_chapter.chapter_no,": ", rdp_chapter.title) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter.title ASC SEPARATOR ", ") as title'])
+                ->leftJoin('rdp_chapter', 'rdp_chapter.id = project_rdp_chapter.rdp_chapter_id')
+                ->leftJoin('project', 'project.id = project_rdp_chapter.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_rdp_chapter.project_id'])
+                ->createCommand()->getRawSql();
+            
+            $rdpChapterOutcomeTitles = ProjectRdpChapterOutcome::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat("Chapter Outcome ",rdp_chapter.chapter_no,".",rdp_chapter_outcome.level,": ", rdp_chapter_outcome.title) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter_outcome.level ASC, rdp_chapter_outcome.title ASC SEPARATOR ", ") as title'])
+                ->leftJoin('rdp_chapter_outcome', 'rdp_chapter_outcome.id = project_rdp_chapter_outcome.rdp_chapter_outcome_id')
+                ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_chapter_outcome.rdp_chapter_id')
+                ->leftJoin('project', 'project.id = project_rdp_chapter_outcome.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_rdp_chapter_outcome.project_id'])
+                ->createCommand()->getRawSql();
+            
+            $rdpSubChapterOutcomeTitles = ProjectRdpSubChapterOutcome::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT IF(rdp_chapter.id is null, concat("Sub-Chapter Outcome ",rdp_chapter.chapter_no,".0.",rdp_sub_chapter_outcome.level,": ", rdp_sub_chapter_outcome.title), concat("Sub-Chapter Outcome ",rdp_chapter.chapter_no,".",rdp_chapter_outcome.level,".",rdp_sub_chapter_outcome.level,": ", rdp_sub_chapter_outcome.title)) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter_outcome.level ASC, rdp_sub_chapter_outcome.level ASC SEPARATOR ", ") as title'])
+                ->leftJoin('rdp_sub_chapter_outcome', 'rdp_sub_chapter_outcome.id = project_rdp_sub_chapter_outcome.rdp_sub_chapter_outcome_id')
+                ->leftJoin('rdp_chapter_outcome', 'rdp_chapter_outcome.id = rdp_sub_chapter_outcome.rdp_chapter_outcome_id')
+                ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_chapter_outcome.rdp_chapter_id')
+                ->leftJoin('project', 'project.id = project_rdp_chapter_outcome.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_rdp_sub_chapter_outcome.project_id'])
+                ->createCommand()->getRawSql();
+
+            $regionTitles = ProjectRegion::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
+                ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
+                ->leftJoin('project', 'project.id = project_region.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_region.project_id'])
+                ->createCommand()->getRawSql();
+
+            $provinceTitles = ProjectProvince::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
+                ->leftJoin('project', 'project.id = project_province.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_province.project_id'])
+                ->createCommand()->getRawSql();
+
+            $citymunTitles = ProjectCitymun::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
+                ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                ->leftJoin('project', 'project.id = project_citymun.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_citymun.project_id'])
+                ->createCommand()->getRawSql();
+            
+            $barangayTitles = ProjectBarangay::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
+                ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
+                ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                ->leftJoin('project', 'project.id = project_barangay.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_barangay.project_id'])
+                ->createCommand()->getRawSql();
+
             $projects = Project::find()
                         ->select([
                             'project.id',
@@ -175,12 +281,7 @@ class SummaryController extends \yii\web\Controller
                             'project.title as projectTitle',
                             'sector.title as sectorTitle',
                             'sub_sector.title as subSectorTitle',
-                            'concat("SDG #",sdg_goal.sdg_no,": ",sdg_goal.title) as sdgGoalTitle',
-                            'concat("Chapter ",rdp_chapter.chapter_no,": ",rdp_chapter.title) as chapterTitle',
-                            'IF(rdp_chapter_outcome.id is not null, concat("Chapter Outcome ",rdp_chapter_outcome.level,": ",rdp_chapter_outcome.title), "No Chapter Outcome") as chapterOutcomeTitle',
-                            'IF(rdp_sub_chapter_outcome.id is not null, concat("Sub-Chapter Outcome ",rdp_sub_chapter_outcome.level,": ",rdp_sub_chapter_outcome.title), "No Sub-Chapter Outcome") as subChapterOutcomeTitle',
-                            'tblregion.abbreviation as regionTitle',
-                            'IF(tblprovince.province_c is not null, tblprovince.province_m, "Region-wide") as provinceTitle',
+                            'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
                             'SUM(financials.q1) as q1financial',
                             'SUM(financials.q2) as q2financial',
                             'SUM(financials.q3) as q3financial',
@@ -218,6 +319,7 @@ class SummaryController extends \yii\web\Controller
             $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
             $projects = $projects->leftJoin('program', 'program.id = project.program_id');
             $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
+            $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
             $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
             $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id and project_category.year = project.year');
             $projects = $projects->leftJoin('category', 'category.id = project_category.category_id');
@@ -235,6 +337,16 @@ class SummaryController extends \yii\web\Controller
             $projects = $projects->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id');
             $projects = $projects->leftJoin('project_province', 'project_province.project_id = project.id and project_province.year = project.year');
             $projects = $projects->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id');
+            $projects = $projects->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['kraTitles' => '('.$kraTitles.')'], 'kraTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['sdgGoalTitles' => '('.$sdgGoalTitles.')'], 'sdgGoalTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['rdpChapterTitles' => '('.$rdpChapterTitles.')'], 'rdpChapterTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['rdpChapterOutcomeTitles' => '('.$rdpChapterOutcomeTitles.')'], 'rdpChapterOutcomeTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['rdpSubChapterOutcomeTitles' => '('.$rdpSubChapterOutcomeTitles.')'], 'rdpSubChapterOutcomeTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
             $projects = $projects->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
             $projects = $projects->andWhere(['project.id' => $projectIDs]);
 
@@ -257,9 +369,39 @@ class SummaryController extends \yii\web\Controller
                 $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
             }
 
+            if($model->agency_id != '')
+            {
+                $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
+            }
+
+            if($model->category_id != '')
+            {
+                $projects = $projects->andWhere(['category.id' => $model->category_id]);
+            }
+
+            if($model->sector_id != '')
+            {
+                $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
+            }
+
+            if($model->province_id != '')
+            {
+                $projects = $projects->andWhere(['tblprovince.province_c' => $model->province_id]);
+            }
+
+            if($model->fund_source_id != '')
+            {
+                $projects = $projects->andWhere(['fund_source.id' => $model->fund_source_id]);
+            }
+
+            if($model->period != '')
+            {
+                $projects = $projects->andWhere(['project.period' => $model->period]);
+            }
+
             $projects = $projects->asArray()->all();
             
-            //echo "<pre>"; print_r($projects); exit; 
+            echo "<pre>"; print_r($projects); exit; 
 
             $bigCaps = range('A', 'Z');
             $smallCaps = range('a', 'z');
@@ -1931,6 +2073,12 @@ class SummaryController extends \yii\web\Controller
                 'numbers' => $numbers,
                 'quarters' => $quarters,
                 'genders' => $genders,
+                'agencies' => $agencies,
+                'sectors' => $sectors,
+                'categories' => $categories,
+                'locations' => $locations,
+                'fundSources' => $fundSources,
+                'periods' => $periods
             ]);
         }
 
@@ -1940,6 +2088,12 @@ class SummaryController extends \yii\web\Controller
             'genders' => $genders,
             'years' => $years,
             'sorts' => $sorts,
+            'agencies' => $agencies,
+            'sectors' => $sectors,
+            'categories' => $categories,
+            'locations' => $locations,
+            'fundSources' => $fundSources,
+            'periods' => $periods
         ]);
     }
 
@@ -2047,6 +2201,36 @@ class SummaryController extends \yii\web\Controller
         if(Yii::$app->user->can('AgencyUser'))
         {
             $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        }
+
+        if($model->agency_id != '')
+        {
+            $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
+        }
+
+        if($model->category_id != '')
+        {
+            $projects = $projects->andWhere(['category.id' => $model->category_id]);
+        }
+
+        if($model->sector_id != '')
+        {
+            $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
+        }
+
+        if($model->province_id != '')
+        {
+            $projects = $projects->andWhere(['tblprovince.province_c' => $model->province_id]);
+        }
+
+        if($model->fund_source_id != '')
+        {
+            $projects = $projects->andWhere(['fund_source.id' => $model->fund_source_id]);
+        }
+
+        if($model->period != '')
+        {
+            $projects = $projects->andWhere(['project.period' => $model->period]);
         }
 
         $projects = $projects->asArray()->all();
@@ -3886,6 +4070,36 @@ class SummaryController extends \yii\web\Controller
         if(Yii::$app->user->can('AgencyUser'))
         {
             $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        }
+
+        if($model->agency_id != '')
+        {
+            $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
+        }
+
+        if($model->category_id != '')
+        {
+            $projects = $projects->andWhere(['category.id' => $model->category_id]);
+        }
+
+        if($model->sector_id != '')
+        {
+            $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
+        }
+
+        if($model->province_id != '')
+        {
+            $projects = $projects->andWhere(['tblprovince.province_c' => $model->province_id]);
+        }
+
+        if($model->fund_source_id != '')
+        {
+            $projects = $projects->andWhere(['fund_source.id' => $model->fund_source_id]);
+        }
+
+        if($model->period != '')
+        {
+            $projects = $projects->andWhere(['project.period' => $model->period]);
         }
 
         $projects = $projects->asArray()->all();

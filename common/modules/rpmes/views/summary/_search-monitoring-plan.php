@@ -30,6 +30,68 @@ DisableButtonAsset::register($this);
             ?>
         </div>
         <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
+                'data' => $agencies,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'agency-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
+                'data' => $categories,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
+                'data' => $sectors,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'province_id')->widget(Select2::classname(), [
+                'data' => $locations,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'province-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
+                'data' => $fundSources,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'fund-source-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'period')->widget(Select2::classname(), [
+                'data' => $periods,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'period-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'grouping')->widget(Select2::classname(), [
                     'data' => $sorts,
                     'options' => ['multiple' => false, 'placeholder' => 'Select Grouping', 'class'=>'grouping-select'],
@@ -39,14 +101,12 @@ DisableButtonAsset::register($this);
                 ]);
             ?>
         </div>
-        <div class="col-md-3 col-xs-12">
-            <br>
-            <label for="">&nbsp;</label>
-            <?= Html::submitButton('Generate Data', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;']) ?>
-        </div>
     </div>
+    <div class="form-group pull-right">
+        <?= Html::submitButton('Generate Data', ['class' => 'btn btn-primary']) ?>
+    </div>
+    <div class="clearfix"></div>
     <?php ActiveForm::end(); ?>
-
 </div>
 <?php
     $script = '

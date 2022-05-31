@@ -166,26 +166,26 @@ function renderSummary($page)
                             <tr>
                                 <td colspan=5 align=right><b>Grand Total</b></td>
                                 <?php foreach($quarters as $quarter => $q){ ?>
-                                    <td align=right><b><?= number_format($totals['financials'][$quarter], 2) ?></b></td>
-                                    <?php $financialTotal += $totals['financials'][$quarter]; ?>
+                                    <td align=right><b><?= isset($totals['financials'][$quarter]) ? number_format($totals['financials'][$quarter], 2) : number_format(0, 2) ?></b></td>
+                                    <?php $financialTotal += isset($totals['financials'][$quarter]) ? $totals['financials'][$quarter] : 0; ?>
                                 <?php } ?>
                                 <td align=right><b><?= number_format($financialTotal, 2) ?></b></td>
                                 <?php foreach($quarters as $quarter => $q){ ?>
-                                    <td align=right><b><?= number_format($totals['physicals'][$quarter], 0) ?></b></td>
-                                    <?php $physicalTotal += $totals['physicals'][$quarter]; ?>
+                                    <td align=right><b><?= isset($totals['physicals'][$quarter]) ? number_format($totals['physicals'][$quarter], 0) : 0 ?></b></td>
+                                    <?php $physicalTotal += isset($totals['physicals'][$quarter]) ? $totals['physicals'][$quarter] : 0; ?>
                                 <?php } ?>
                                 <td align=right><b><?= number_format($physicalTotal, 0) ?></b></td>
                                 <?php foreach($quarters as $quarter => $q){ ?>
-                                    <td align=right><b><?= number_format($totals['maleEmployed'][$quarter], 0) ?></b></td>
-                                    <td align=right><b><?= number_format($totals['femaleEmployed'][$quarter], 0) ?></b></td>
+                                    <td align=right><b><?= isset($totals['maleEmployed'][$quarter]) ? number_format($totals['maleEmployed'][$quarter], 0) : 0 ?></b></td>
+                                    <td align=right><b><?= isset($totals['femaleEmployed'][$quarter]) ? number_format($totals['femaleEmployed'][$quarter], 0) : 0 ?></b></td>
                                     <?php $maleEmployedTotal += $totals['maleEmployed'][$quarter]; ?>
                                     <?php $femaleEmployedTotal += $totals['femaleEmployed'][$quarter]; ?>
                                 <?php } ?>
                                 <td align=right><b><?= number_format($maleEmployedTotal, 0) ?></b></td>
                                 <td align=right><b><?= number_format($femaleEmployedTotal, 0) ?></b></td>
                                 <?php foreach($quarters as $quarter => $q){ ?>
-                                    <td align=right><b><?= number_format($totals['beneficiaries'][$quarter], 0) ?></b></td>
-                                    <td align=right><b><?= number_format($totals['groupBeneficiaries'][$quarter], 0) ?></b></td>
+                                    <td align=right><b><?= isset($totals['beneficiaries'][$quarter]) ? number_format($totals['beneficiaries'][$quarter], 0) : 0 ?></b></td>
+                                    <td align=right><b><?= isset($totals['groupBeneficiaries'][$quarter]) ? number_format($totals['groupBeneficiaries'][$quarter], 0) : 0 ?></b></td>
                                     <?php $beneficiaryTotal += $totals['beneficiaries'][$quarter]; ?>
                                     <?php $groupTotal += $totals['groupBeneficiaries'][$quarter]; ?>
                                 <?php } ?>

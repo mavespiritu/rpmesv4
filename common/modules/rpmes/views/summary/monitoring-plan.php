@@ -24,6 +24,12 @@
                         'model' => $model,
                         'years' => $years,
                         'sorts' => $sorts,
+                        'agencies' => $agencies,
+                        'sectors' => $sectors,
+                        'categories' => $categories,
+                        'locations' => $locations,
+                        'fundSources' => $fundSources,
+                        'periods' => $periods
                     ]) ?>
                     <hr>
                     <div id="summary-monitoring-plan-table"></div>

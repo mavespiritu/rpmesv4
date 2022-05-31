@@ -134,9 +134,10 @@ class ProjectController extends Controller
         $ids = ArrayHelper::map($ids, 'id', 'id');
 
         $outcomes = RdpChapterOutcome::find()
-                    ->select(['id', 'concat("Chapter Outcome ",level,": ",title) as title'])
+                    ->select(['rdp_chapter_outcome.id', 'concat("Chapter Outcome ",rdp_chapter.chapter_no,".",rdp_chapter_outcome.level,": ",rdp_chapter_outcome.title) as title'])
+                    ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_chapter_outcome.rdp_chapter_id')
                     ->where(['in', 'rdp_chapter_id', $ids])
-                    ->orderBy(['level' => SORT_ASC, 'title' => SORT_ASC])
+                    ->orderBy(['rdp_chapter_outcome.level' => SORT_ASC, 'rdp_chapter_outcome.title' => SORT_ASC])
                     ->asArray()
                     ->all();
 
@@ -155,10 +156,11 @@ class ProjectController extends Controller
         $ids = ArrayHelper::map($ids, 'id', 'id');
 
         $outcomes = RdpSubChapterOutcome::find()
-                    ->select(['id', 'concat("Sub-Chapter Outcome ",level,": ",title) as title'])
+                    ->select(['rdp_sub_chapter_outcome.id', 'concat("Sub-Chapter Outcome ",rdp_chapter.chapter_no,".0.",rdp_sub_chapter_outcome.level,": ",rdp_sub_chapter_outcome.title) as title'])
+                    ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_sub_chapter_outcome.rdp_chapter_id')
                     ->where(['in', 'rdp_chapter_id', $ids])
                     ->andWhere(['is', 'rdp_chapter_outcome_id', null])
-                    ->orderBy(['level' => SORT_ASC, 'title' => SORT_ASC])
+                    ->orderBy(['rdp_chapter.chapter_no' => SORT_ASC, 'rdp_sub_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.title' => SORT_ASC])
                     ->asArray()
                     ->all();
 
@@ -177,10 +179,11 @@ class ProjectController extends Controller
         $ids = ArrayHelper::map($ids, 'id', 'id');
 
         $outcomes = RdpSubChapterOutcome::find()
-                    ->select(['rdp_sub_chapter_outcome.id as id', 'concat("Sub-Chapter Outcome ",rdp_chapter_outcome.level,".",rdp_sub_chapter_outcome.level,": ",rdp_sub_chapter_outcome.title) as title'])
+                    ->select(['rdp_sub_chapter_outcome.id as id', 'concat("Sub-Chapter Outcome ",rdp_chapter.chapter_no,".",rdp_chapter_outcome.level,".",rdp_sub_chapter_outcome.level,": ",rdp_sub_chapter_outcome.title) as title'])
                     ->leftJoin('rdp_chapter_outcome', 'rdp_chapter_outcome.id = rdp_sub_chapter_outcome.rdp_chapter_outcome_id')
+                    ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_chapter_outcome.rdp_chapter_id')
                     ->where(['in', 'rdp_sub_chapter_outcome.rdp_chapter_outcome_id', $ids])
-                    ->orderBy(['rdp_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.title' => SORT_ASC])
+                    ->orderBy(['rdp_chapter.chapter_no' => SORT_ASC, 'rdp_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.title' => SORT_ASC])
                     ->asArray()
                     ->all();
 
@@ -1300,10 +1303,11 @@ class ProjectController extends Controller
         $chapterOutcomes = ArrayHelper::map($chapterOutcomes, 'id', 'title');
 
         $subChapterOutcomes = RdpSubChapterOutcome::find()
-                    ->select(['rdp_sub_chapter_outcome.id as id', 'concat("Sub-Chapter Outcome ",rdp_chapter_outcome.level,".",rdp_sub_chapter_outcome.level,": ",rdp_sub_chapter_outcome.title) as title'])
+                    ->select(['rdp_sub_chapter_outcome.id as id', 'concat("Sub-Chapter Outcome ",rdp_chapter.chapter_no,".",rdp_chapter_outcome.level,".",rdp_sub_chapter_outcome.level,": ",rdp_sub_chapter_outcome.title) as title'])
                     ->leftJoin('rdp_chapter_outcome', 'rdp_chapter_outcome.id = rdp_sub_chapter_outcome.rdp_chapter_outcome_id')
+                    ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_chapter_outcome.rdp_chapter_id')
                     ->where(['in', 'rdp_sub_chapter_outcome.rdp_chapter_outcome_id', $chapterOutcomeIDs])
-                    ->orderBy(['rdp_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.title' => SORT_ASC])
+                    ->orderBy(['rdp_chapter.chapter_no' => SORT_ASC, 'rdp_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.level' => SORT_ASC, 'rdp_sub_chapter_outcome.title' => SORT_ASC])
                     ->asArray()
                     ->all();
         $subChapterOutcomes = ArrayHelper::map($subChapterOutcomes, 'id', 'title');
