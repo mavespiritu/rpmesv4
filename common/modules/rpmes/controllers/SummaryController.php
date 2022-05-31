@@ -531,31 +531,6 @@ class SummaryController extends \yii\web\Controller
 
                     foreach($projects as $project)
                     {
-                        $totals['q1financial'] += $project['q1financial'];
-                        $totals['q2financial'] += $project['q2financial'];
-                        $totals['q3financial'] += $project['q3financial'];
-                        $totals['q4financial'] += $project['q4financial'];
-                        $totals['q1physical'] += $project['q1physical'];
-                        $totals['q2physical'] += $project['q2physical'];
-                        $totals['q3physical'] += $project['q3physical'];
-                        $totals['q4physical'] += $project['q4physical'];
-                        $totals['q1maleEmployed'] += $project['q1maleEmployed'];
-                        $totals['q2maleEmployed'] += $project['q2maleEmployed'];
-                        $totals['q3maleEmployed'] += $project['q3maleEmployed'];
-                        $totals['q4maleEmployed'] += $project['q4maleEmployed'];
-                        $totals['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                        $totals['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                        $totals['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                        $totals['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                        $totals['q1beneficiary'] += $project['q1beneficiary'];
-                        $totals['q2beneficiary'] += $project['q2beneficiary'];
-                        $totals['q3beneficiary'] += $project['q3beneficiary'];
-                        $totals['q4beneficiary'] += $project['q4beneficiary'];
-                        $totals['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
-                        $totals['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
-                        $totals['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
-                        $totals['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
-
                         $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
                         $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
                         $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
