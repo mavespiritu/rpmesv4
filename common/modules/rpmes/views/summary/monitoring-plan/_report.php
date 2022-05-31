@@ -81,6 +81,75 @@ DisableButtonAsset::register($this);
             </tr>
         </thead>
         <tbody>
+        <tr style="font-weight: bolder;">
+            <td colspan=4>Grand Total</td>
+            <td align=right><?= number_format($total['q1financial'], 2) ?></td>
+            <td align=right><?= number_format($total['q2financial'], 2) ?></td>
+            <td align=right><?= number_format($total['q3financial'], 2) ?></td>
+            <td align=right><?= number_format($total['q4financial'], 2) ?></td>
+            <td align=right><?= number_format(
+                $total['q1financial'] +
+                $total['q2financial'] +
+                $total['q3financial'] +
+                $total['q4financial']
+                , 2) ?>
+            </td>
+            <td align=right><?= number_format($total['q1physical'], 0) ?></td>
+            <td align=right><?= number_format($total['q2physical'], 0) ?></td>
+            <td align=right><?= number_format($total['q3physical'], 0) ?></td>
+            <td align=right><?= number_format($total['q4physical'], 0) ?></td>
+            <td align=right><?= number_format(
+                $total['q1physical'] +
+                $total['q2physical'] +
+                $total['q3physical'] +
+                $total['q4physical']
+                , 0) ?>
+            </td>
+            <td align=right><?= number_format($total['q1maleEmployed'], 0) ?></td>
+            <td align=right><?= number_format($total['q1femaleEmployed'], 0) ?></td>
+            <td align=right><?= number_format($total['q2maleEmployed'], 0) ?></td>
+            <td align=right><?= number_format($total['q2femaleEmployed'], 0) ?></td>
+            <td align=right><?= number_format($total['q3maleEmployed'], 0) ?></td>
+            <td align=right><?= number_format($total['q3femaleEmployed'], 0) ?></td>
+            <td align=right><?= number_format($total['q4maleEmployed'], 0) ?></td>
+            <td align=right><?= number_format($total['q4femaleEmployed'], 0) ?></td>
+            <td align=right><?= number_format(
+                $total['q1maleEmployed'] +
+                $total['q2maleEmployed'] +
+                $total['q3maleEmployed'] +
+                $total['q4maleEmployed']
+                , 0) ?>
+            </td>
+            <td align=right><?= number_format(
+                $total['q1femaleEmployed'] +
+                $total['q2femaleEmployed'] +
+                $total['q3femaleEmployed'] +
+                $total['q4femaleEmployed']
+                , 0) ?>
+            </td>
+            <td align=right><?= number_format($total['q1beneficiary'], 0) ?></td>
+            <td align=right><?= number_format($total['q1groupBeneficiary'], 0) ?></td>
+            <td align=right><?= number_format($total['q2beneficiary'], 0) ?></td>
+            <td align=right><?= number_format($total['q2groupBeneficiary'], 0) ?></td>
+            <td align=right><?= number_format($total['q3beneficiary'], 0) ?></td>
+            <td align=right><?= number_format($total['q3groupBeneficiary'], 0) ?></td>
+            <td align=right><?= number_format($total['q4beneficiary'], 0) ?></td>
+            <td align=right><?= number_format($total['q4groupBeneficiary'], 0) ?></td>
+            <td align=right><?= number_format(
+                $total['q1beneficiary'] +
+                $total['q2beneficiary'] +
+                $total['q3beneficiary'] +
+                $total['q4beneficiary']
+                , 0) ?>
+            </td>
+            <td align=right><?= number_format(
+                $total['q1groupBeneficiary'] +
+                $total['q2groupBeneficiary'] +
+                $total['q3groupBeneficiary'] +
+                $total['q4groupBeneficiary']
+                , 0) ?>
+            </td>
+        </tr>
         <?php if(!empty($data)){ ?>
             <?php $i = 1; ?>
             <?php foreach($data as $firstLevel => $firstLevels){ ?>

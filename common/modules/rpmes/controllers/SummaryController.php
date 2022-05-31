@@ -127,6 +127,7 @@ class SummaryController extends \yii\web\Controller
     public function actionMonitoringPlan()
     {
         $data = [];
+        $total = [];
 
         $sorts = [
             '_agency_by_category' => 'Agency by Category', //new
@@ -415,6 +416,62 @@ class SummaryController extends \yii\web\Controller
             $smallCaps = range('a', 'z');
             $numbers = range('1', '100');
 
+            $total['q1financial'] = 0;
+            $total['q2financial'] = 0;
+            $total['q3financial'] = 0;
+            $total['q4financial'] = 0;
+            $total['q1physical'] = 0;
+            $total['q2physical'] = 0;
+            $total['q3physical'] = 0;
+            $total['q4physical'] = 0;
+            $total['q1maleEmployed'] = 0;
+            $total['q2maleEmployed'] = 0;
+            $total['q3maleEmployed'] = 0;
+            $total['q4maleEmployed'] = 0;
+            $total['q1femaleEmployed'] = 0;
+            $total['q2femaleEmployed'] = 0;
+            $total['q3femaleEmployed'] = 0;
+            $total['q4femaleEmployed'] = 0;
+            $total['q1beneficiary'] = 0;
+            $total['q2beneficiary'] = 0;
+            $total['q3beneficiary'] = 0;
+            $total['q4beneficiary'] = 0;
+            $total['q1groupBeneficiary'] = 0;
+            $total['q2groupBeneficiary'] = 0;
+            $total['q3groupBeneficiary'] = 0;
+            $total['q4groupBeneficiary'] = 0;
+
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $total['q1financial'] += $project['q1financial'];
+                    $total['q2financial'] += $project['q2financial'];
+                    $total['q3financial'] += $project['q3financial'];
+                    $total['q4financial'] += $project['q4financial'];
+                    $total['q1physical'] += $project['q1physical'];
+                    $total['q2physical'] += $project['q2physical'];
+                    $total['q3physical'] += $project['q3physical'];
+                    $total['q4physical'] += $project['q4physical'];
+                    $total['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $total['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $total['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $total['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $total['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $total['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $total['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $total['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $total['q1beneficiary'] += $project['q1beneficiary'];
+                    $total['q2beneficiary'] += $project['q2beneficiary'];
+                    $total['q3beneficiary'] += $project['q3beneficiary'];
+                    $total['q4beneficiary'] += $project['q4beneficiary'];
+                    $total['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $total['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $total['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $total['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+
             if($model->grouping == '_agency_by_category')
             {
                 if(!empty($projects))
@@ -474,6 +531,31 @@ class SummaryController extends \yii\web\Controller
 
                     foreach($projects as $project)
                     {
+                        $totals['q1financial'] += $project['q1financial'];
+                        $totals['q2financial'] += $project['q2financial'];
+                        $totals['q3financial'] += $project['q3financial'];
+                        $totals['q4financial'] += $project['q4financial'];
+                        $totals['q1physical'] += $project['q1physical'];
+                        $totals['q2physical'] += $project['q2physical'];
+                        $totals['q3physical'] += $project['q3physical'];
+                        $totals['q4physical'] += $project['q4physical'];
+                        $totals['q1maleEmployed'] += $project['q1maleEmployed'];
+                        $totals['q2maleEmployed'] += $project['q2maleEmployed'];
+                        $totals['q3maleEmployed'] += $project['q3maleEmployed'];
+                        $totals['q4maleEmployed'] += $project['q4maleEmployed'];
+                        $totals['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                        $totals['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                        $totals['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                        $totals['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                        $totals['q1beneficiary'] += $project['q1beneficiary'];
+                        $totals['q2beneficiary'] += $project['q2beneficiary'];
+                        $totals['q3beneficiary'] += $project['q3beneficiary'];
+                        $totals['q4beneficiary'] += $project['q4beneficiary'];
+                        $totals['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                        $totals['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                        $totals['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                        $totals['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
                         $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
                         $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
                         $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
@@ -3241,6 +3323,7 @@ class SummaryController extends \yii\web\Controller
             return $this->renderAjax('monitoring-plan/_report', [
                 'model' => $model,
                 'data' => $data,
+                'total' => $total,
                 'bigCaps' => $bigCaps,
                 'smallCaps' => $smallCaps,
                 'numbers' => $numbers,
