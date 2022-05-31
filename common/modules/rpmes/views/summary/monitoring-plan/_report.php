@@ -82,10 +82,10 @@ DisableButtonAsset::register($this);
         </thead>
         <tbody>
         <?php if(!empty($data)){ ?>
-            <?php $i = 0; ?>
+            <?php $i = 1; ?>
             <?php foreach($data as $firstLevel => $firstLevels){ ?>
                     <tr style="font-weight: bolder;">
-                        <td colspan=4><?= $bigCaps[$i] ?>. <?= $firstLevel ?></td>
+                        <td colspan=4><?= $i ?>. <?= $firstLevel ?></td>
                         <td align=right><?= number_format($firstLevels['content']['q1financial'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['q2financial'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['q3financial'], 2) ?></td>
@@ -154,11 +154,11 @@ DisableButtonAsset::register($this);
                         </td>
                     </tr>
                 <?php if(!empty($firstLevels['firstLevels'])){ ?>
-                    <?php $j = 0; ?>
+                    <?php $j = 1; ?>
                     <?php foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){ ?>
                         <tr>
                             <td align=right>&nbsp;</td>
-                            <td colspan=3><?= $numbers[$j] ?>. <?= $secondLevel ?></td>
+                            <td colspan=3><?= $i.'.'.$j ?>. <?= $secondLevel ?></td>
                             <td align=right><?= number_format($secondLevels['content']['q1financial'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['q2financial'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['q3financial'], 2) ?></td>
@@ -227,12 +227,12 @@ DisableButtonAsset::register($this);
                             </td>
                         </tr>
                         <?php if(!empty($secondLevels['secondLevels'])){ ?>
-                            <?php $k = 0; ?>
+                            <?php $k = 1; ?>
                             <?php foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels){ ?>
                                 <tr>
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
-                                    <td colspan=2><?= $smallCaps[$k] ?>. <?= $thirdLevel ?></td>
+                                    <td colspan=2><?= $i.'.'.$j.'.'.$k ?>. <?= $thirdLevel ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['q1financial'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['q2financial'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['q3financial'], 2) ?></td>
@@ -301,13 +301,13 @@ DisableButtonAsset::register($this);
                                     </td>
                                 </tr>
                                 <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
-                                    <?php $l = 0; ?>
+                                    <?php $l = 1; ?>
                                     <?php foreach($thirdLevels['thirdLevels'] as $fourthLevel => $fourthLevels){ ?>
                                         <tr>
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
-                                            <td><?= $numbers[$l] ?>. <?= $fourthLevel ?></td>
+                                            <td><?= $i.'.'.$j.'.'.$k.'.'.$l ?>. <?= $fourthLevel ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['q1financial'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['q2financial'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['q3financial'], 2) ?></td>
