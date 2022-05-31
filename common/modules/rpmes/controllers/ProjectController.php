@@ -1216,7 +1216,7 @@ class ProjectController extends Controller
         $subSectors = SubSectorPerSector::find()
                     ->select(['sub_sector.id', 'sub_sector.title'])
                     ->leftJoin('sub_sector', 'sub_sector.id = sub_sector_per_sector.sub_sector_id')
-                    ->where(['in', 'sector_id', $sectorIDs])
+                    ->where(['sector_id' => $model->sector_id])
                     ->asArray()
                     ->all();
 
