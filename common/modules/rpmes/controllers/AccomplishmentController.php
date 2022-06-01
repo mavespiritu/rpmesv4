@@ -325,6 +325,7 @@ class AccomplishmentController extends \yii\web\Controller
                     foreach($accomplishment as $accomplishmentAccomp)
                     {
                         $accomplishmentAccomp->submitted_by = Yii::$app->user->id;
+                        $accomplishmentAccomp->date_submitted = date("Y-m-d H:i:s");
                         if(!($flag = $accomplishmentAccomp->save())){
                             $transaction->rollBack();
                             break;
