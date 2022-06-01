@@ -11,7 +11,6 @@ DisableButtonAsset::register($this);
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\DueDateSearch */
 /* @var $form yii\widgets\ActiveForm */
-
 ?>
 
 <?= ButtonDropdown::widget([
@@ -20,9 +19,9 @@ DisableButtonAsset::register($this);
         'options' => ['class' => 'btn btn-success btn-sm'],
         'dropdown' => [
             'items' => [
-                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-plan', 'type' => 'excel', 'year' => $model->year, 'grouping' => $model->grouping])],
-                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-plan', 'type' => 'pdf', 'year' => $model->year, 'grouping' => $model->grouping])],
+                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-plan', 'type' => 'excel', 'model' => json_encode($model)])],
+                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-plan', 'type' => 'pdf', 'model' => json_encode($model)])],
             ],
         ],
     ]); ?>
-<?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummary("'.$model->year.'", "'.$model->grouping.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+<?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummary("'.str_replace('"', '\'', json_encode($model)).'")', 'class' => 'btn btn-danger btn-sm']) ?>

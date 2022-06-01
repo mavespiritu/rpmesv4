@@ -3328,36 +3328,128 @@ class SummaryController extends \yii\web\Controller
         ]);
     }
 
-    public function actionDownloadMonitoringPlan($type, $year, $grouping)
+    public function actionDownloadMonitoringPlan($type, $model)
     {
-        $physicals = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $year])->createCommand()->getRawSql();
-        $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $year])->createCommand()->getRawSql();
-        $malesEmployed = ProjectTarget::find()->where(['target_type' => 'Male Employed', 'year' => $year])->createCommand()->getRawSql();
-        $femalesEmployed = ProjectTarget::find()->where(['target_type' => 'Female Employed', 'year' => $year])->createCommand()->getRawSql();
-        $beneficiaries = ProjectTarget::find()->where(['target_type' => 'Beneficiaries', 'year' => $year])->createCommand()->getRawSql();
+        $model = $type == 'print' ? json_decode(str_replace('\'', '"', $model), true) : json_decode($model, true);
+        $model = (object) $model;
+
+        $data = [];
+        $total = [];
+        
+        $physicals = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
+        $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year])->createCommand()->getRawSql();
+        $malesEmployed = ProjectTarget::find()->where(['target_type' => 'Male Employed', 'year' => $model->year])->createCommand()->getRawSql();
+        $femalesEmployed = ProjectTarget::find()->where(['target_type' => 'Female Employed', 'year' => $model->year])->createCommand()->getRawSql();
+        $beneficiaries = ProjectTarget::find()->where(['target_type' => 'Beneficiaries', 'year' => $model->year])->createCommand()->getRawSql();
+        $groupBeneficiaries = ProjectTarget::find()->where(['target_type' => 'Group Beneficiaries', 'year' => $model->year])->createCommand()->getRawSql();
+        
+        $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
+        $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
 
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
         $genders = ['M' => 'Male', 'F' => 'Female'];
+
+        $categoryTitles = ProjectCategory::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
+            ->leftJoin('category', 'category.id = project_category.category_id')
+            ->leftJoin('project', 'project.id = project_category.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_category.project_id'])
+            ->createCommand()->getRawSql();
+
+        $kraTitles = ProjectKra::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT key_result_area.title ORDER BY key_result_area.title ASC SEPARATOR ", ") as title'])
+            ->leftJoin('key_result_area', 'key_result_area.id = project_kra.key_result_area_id')
+            ->leftJoin('project', 'project.id = project_kra.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_kra.project_id'])
+            ->createCommand()->getRawSql();
+
+        $sdgGoalTitles = ProjectSdgGoal::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat("SDG #",sdg_goal.sdg_no,": ",sdg_goal.title) ORDER BY sdg_goal.sdg_no ASC SEPARATOR ", ") as title'])
+            ->leftJoin('sdg_goal', 'sdg_goal.id = project_sdg_goal.sdg_goal_id')
+            ->leftJoin('project', 'project.id = project_sdg_goal.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_sdg_goal.project_id'])
+            ->createCommand()->getRawSql();
+
+        $rdpChapterTitles = ProjectRdpChapter::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat("Chapter ",rdp_chapter.chapter_no,": ", rdp_chapter.title) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter.title ASC SEPARATOR ", ") as title'])
+            ->leftJoin('rdp_chapter', 'rdp_chapter.id = project_rdp_chapter.rdp_chapter_id')
+            ->leftJoin('project', 'project.id = project_rdp_chapter.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_rdp_chapter.project_id'])
+            ->createCommand()->getRawSql();
         
-        $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $year])->asArray()->all();
-        $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
+        $rdpChapterOutcomeTitles = ProjectRdpChapterOutcome::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat("Chapter Outcome ",rdp_chapter.chapter_no,".",rdp_chapter_outcome.level,": ", rdp_chapter_outcome.title) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter_outcome.level ASC, rdp_chapter_outcome.title ASC SEPARATOR ", ") as title'])
+            ->leftJoin('rdp_chapter_outcome', 'rdp_chapter_outcome.id = project_rdp_chapter_outcome.rdp_chapter_outcome_id')
+            ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_chapter_outcome.rdp_chapter_id')
+            ->leftJoin('project', 'project.id = project_rdp_chapter_outcome.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_rdp_chapter_outcome.project_id'])
+            ->createCommand()->getRawSql();
+        
+        $rdpSubChapterOutcomeTitles = ProjectRdpSubChapterOutcome::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT IF(rdp_chapter.id is null, concat("Sub-Chapter Outcome ",rdp_chapter.chapter_no,".0.",rdp_sub_chapter_outcome.level,": ", rdp_sub_chapter_outcome.title), concat("Sub-Chapter Outcome ",rdp_chapter.chapter_no,".",rdp_chapter_outcome.level,".",rdp_sub_chapter_outcome.level,": ", rdp_sub_chapter_outcome.title)) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter_outcome.level ASC, rdp_sub_chapter_outcome.level ASC SEPARATOR ", ") as title'])
+            ->leftJoin('rdp_sub_chapter_outcome', 'rdp_sub_chapter_outcome.id = project_rdp_sub_chapter_outcome.rdp_sub_chapter_outcome_id')
+            ->leftJoin('rdp_chapter_outcome', 'rdp_chapter_outcome.id = rdp_sub_chapter_outcome.rdp_chapter_outcome_id')
+            ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_chapter_outcome.rdp_chapter_id')
+            ->leftJoin('project', 'project.id = project_rdp_sub_chapter_outcome.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_rdp_sub_chapter_outcome.project_id'])
+            ->createCommand()->getRawSql();
+
+        $regionTitles = ProjectRegion::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
+            ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
+            ->leftJoin('project', 'project.id = project_region.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_region.project_id'])
+            ->createCommand()->getRawSql();
+
+        $provinceTitles = ProjectProvince::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
+            ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
+            ->leftJoin('project', 'project.id = project_province.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_province.project_id'])
+            ->createCommand()->getRawSql();
+
+        $citymunTitles = ProjectCitymun::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+            ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
+            ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+            ->leftJoin('project', 'project.id = project_citymun.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_citymun.project_id'])
+            ->createCommand()->getRawSql();
+        
+        $barangayTitles = ProjectBarangay::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+            ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
+            ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
+            ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+            ->leftJoin('project', 'project.id = project_barangay.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_barangay.project_id'])
+            ->createCommand()->getRawSql();
 
         $projects = Project::find()
                     ->select([
                         'project.id',
                         'agency.code as agencyTitle',
                         'program.title as programTitle',
-                        'category.title as categoryTitle',
-                        'key_result_area.title as kraTitle',
                         'project.title as projectTitle',
                         'sector.title as sectorTitle',
                         'sub_sector.title as subSectorTitle',
-                        'concat("SDG #",sdg_goal.sdg_no,": ",sdg_goal.title) as sdgGoalTitle',
-                        'concat("Chapter ",rdp_chapter.chapter_no,": ",rdp_chapter.title) as chapterTitle',
-                        'IF(rdp_chapter_outcome.id is not null, concat("Chapter Outcome ",rdp_chapter_outcome.level,": ",rdp_chapter_outcome.title), "No Chapter Outcome") as chapterOutcomeTitle',
-                        'IF(rdp_sub_chapter_outcome.id is not null, concat("Sub-Chapter Outcome ",rdp_sub_chapter_outcome.level,": ",rdp_sub_chapter_outcome.title), "No Sub-Chapter Outcome") as subChapterOutcomeTitle',
-                        'tblregion.abbreviation as regionTitle',
-                        'IF(tblprovince.province_c is not null, tblprovince.province_m, "Region-wide") as provinceTitle',
+                        'IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title) as provinceTitle',
+                        'categoryTitles.title as categoryTitle',
+                        'IF(kraTitles.title is null, "No KRA", kraTitles.title) as kraTitle',
+                        'IF(sdgGoalTitles.title is null, "No SDG Goals", sdgGoalTitles.title)  as sdgGoalTitle',
+                        'IF(rdpChapterTitles.title is null, "No RDP Chapters", rdpChapterTitles.title) as chapterTitle',
+                        'IF(rdpChapterOutcomeTitles.title is null, "No RDP Chapter Outcomes", rdpChapterOutcomeTitles.title) as chapterOutcomeTitle',
+                        'IF(rdpSubChapterOutcomeTitles.title is null, "No RDP Sub-Chapter Outcomes", rdpSubChapterOutcomeTitles.title) as subChapterOutcomeTitle',
                         'SUM(financials.q1) as q1financial',
                         'SUM(financials.q2) as q2financial',
                         'SUM(financials.q3) as q3financial',
@@ -3386,48 +3478,34 @@ class SummaryController extends \yii\web\Controller
                         'SUM(beneficiaries.q2) as q2beneficiary',
                         'SUM(beneficiaries.q3) as q3beneficiary',
                         'SUM(beneficiaries.q4) as q4beneficiary',
+                        'SUM(groupBeneficiaries.q1) as q1groupBeneficiary',
+                        'SUM(groupBeneficiaries.q2) as q2groupBeneficiary',
+                        'SUM(groupBeneficiaries.q3) as q3groupBeneficiary',
+                        'SUM(groupBeneficiaries.q4) as q4groupBeneficiary',
                     ]);
         $projects = $projects->leftJoin(['physicals' => '('.$physicals.')'], 'physicals.project_id = project.id');
         $projects = $projects->leftJoin(['financials' => '('.$financials.')'], 'financials.project_id = project.id');
         $projects = $projects->leftJoin(['malesEmployed' => '('.$malesEmployed.')'], 'malesEmployed.project_id = project.id');
         $projects = $projects->leftJoin(['femalesEmployed' => '('.$femalesEmployed.')'], 'femalesEmployed.project_id = project.id');
         $projects = $projects->leftJoin(['beneficiaries' => '('.$beneficiaries.')'], 'beneficiaries.project_id = project.id');
+        $projects = $projects->leftJoin(['groupBeneficiaries' => '('.$groupBeneficiaries.')'], 'groupBeneficiaries.project_id = project.id');
         $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
         $projects = $projects->leftJoin('program', 'program.id = project.program_id');
         $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
+        $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
         $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-        $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id and project_category.year = project.year');
-        $projects = $projects->leftJoin('category', 'category.id = project_category.category_id');
-        $projects = $projects->leftJoin('project_kra', 'project_kra.project_id = project.id and project_kra.year = project.year');
-        $projects = $projects->leftJoin('key_result_area', 'key_result_area.id = project_kra.key_result_area_id');
-        $projects = $projects->leftJoin('project_sdg_goal', 'project_sdg_goal.project_id = project.id and project_sdg_goal.year = project.year');
-        $projects = $projects->leftJoin('sdg_goal', 'sdg_goal.id = project_sdg_goal.sdg_goal_id');
-        $projects = $projects->leftJoin('project_rdp_chapter', 'project_rdp_chapter.project_id = project.id and project_rdp_chapter.year = project.year');
-        $projects = $projects->leftJoin('rdp_chapter', 'rdp_chapter.id = project_rdp_chapter.rdp_chapter_id');
-        $projects = $projects->leftJoin('project_rdp_chapter_outcome', 'project_rdp_chapter_outcome.project_id = project.id and project_rdp_chapter_outcome.year = project.year');
-        $projects = $projects->leftJoin('rdp_chapter_outcome', 'rdp_chapter_outcome.id = project_rdp_chapter_outcome.rdp_chapter_outcome_id');
-        $projects = $projects->leftJoin('project_rdp_sub_chapter_outcome', 'project_rdp_sub_chapter_outcome.project_id = project.id and project_rdp_sub_chapter_outcome.year = project.year');
-        $projects = $projects->leftJoin('rdp_sub_chapter_outcome', 'rdp_sub_chapter_outcome.id = project_rdp_sub_chapter_outcome.rdp_sub_chapter_outcome_id');
-        $projects = $projects->leftJoin('project_region', 'project_region.project_id = project.id and project_region.year = project.year');
-        $projects = $projects->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id');
-        $projects = $projects->leftJoin('project_province', 'project_province.project_id = project.id and project_province.year = project.year');
-        $projects = $projects->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id');
-        $projects = $projects->andWhere(['project.year' => $year, 'project.draft' => 'No']);
+        $projects = $projects->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['kraTitles' => '('.$kraTitles.')'], 'kraTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['sdgGoalTitles' => '('.$sdgGoalTitles.')'], 'sdgGoalTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['rdpChapterTitles' => '('.$rdpChapterTitles.')'], 'rdpChapterTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['rdpChapterOutcomeTitles' => '('.$rdpChapterOutcomeTitles.')'], 'rdpChapterOutcomeTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['rdpSubChapterOutcomeTitles' => '('.$rdpSubChapterOutcomeTitles.')'], 'rdpSubChapterOutcomeTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
+        $projects = $projects->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
         $projects = $projects->andWhere(['project.id' => $projectIDs]);
-
-        if($grouping == '_category_by_agency'){ $projects = $projects->groupBy(['category.id', 'agency.id']); }
-        if($grouping == '_category_by_sector_by_agency'){ $projects = $projects->groupBy(['category.id', 'sector.id', 'agency.id']); }
-        if($grouping == '_category_by_sector_by_sub_sector_by_agency'){ $projects = $projects->groupBy(['category.id', 'sector.id', 'sub_sector.id', 'agency.id']); }
-        if($grouping == '_sector_by_sub_sector_by_agency'){ $projects = $projects->groupBy(['sector.id', 'sub_sector.id', 'agency.id']); }
-        if($grouping == '_agency_by_sector'){ $projects = $projects->groupBy(['sector.id', 'agency.id']); }
-        if($grouping == '_agency_by_sector_by_sub_sector'){ $projects = $projects->groupBy(['sub_sector.id', 'sector.id', 'agency.id']); }
-        if($grouping == '_chapter_by_agency'){ $projects = $projects->groupBy(['rdp_chapter.id', 'agency.id']); }
-        if($grouping == '_chapter_by_chapter_outcome_by_agency'){ $projects = $projects->groupBy(['rdp_chapter.id', 'rdp_chapter_outcome.id', 'agency.id']); }
-        if($grouping == '_chapter_by_chapter_outcome_by_sub_chapter_outcome_by_agency'){ $projects = $projects->groupBy(['rdp_chapter.id', 'rdp_chapter_outcome.id', 'rdp_sub_chapter_outcome.id', 'agency.id']); }
-        if($grouping == '_sdg_goal_by_agency'){ $projects = $projects->groupBy(['sdg_goal.id', 'agency.id']); }
-        if($grouping == '_sdg_goal_by_category_by_sector_by_agency'){ $projects = $projects->groupBy(['sdg_goal.id', 'category.id', 'sector.id', 'agency.id']); }
-        if($grouping == '_agency_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'agency.id']); }
-        if($grouping == '_sector_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'sector.id']); }
 
         if(Yii::$app->user->can('AgencyUser'))
         {
@@ -3464,6 +3542,27 @@ class SummaryController extends \yii\web\Controller
             $projects = $projects->andWhere(['project.period' => $model->period]);
         }
 
+        if($model->grouping == '_agency_by_category'){ $projects = $projects->groupBy(['agencyTitle', 'categoryTitle']); }
+        if($model->grouping == '_agency_by_category_by_sector'){ $projects = $projects->groupBy(['agencyTitle', 'categoryTitle', 'sectorTitle']); }
+        if($model->grouping == '_agency_by_location'){ $projects = $projects->groupBy(['agencyTitle', 'provinceTitle']); }
+        if($model->grouping == '_agency_by_sector'){ $projects = $projects->groupBy(['agencyTitle', 'sectorTitle']); }
+        if($model->grouping == '_agency_by_sector_by_sub_sector'){ $projects = $projects->groupBy(['agencyTitle', 'sectorTitle', 'subSectorTitle']); }
+        if($model->grouping == '_category_by_agency'){ $projects = $projects->groupBy(['categoryTitle', 'agencyTitle']); }
+        if($model->grouping == '_category_by_sector'){ $projects = $projects->groupBy(['categoryTitle', 'sectorTitle']); }
+        if($model->grouping == '_category_by_sector_by_agency'){ $projects = $projects->groupBy(['categoryTitle', 'sectorTitle', 'agencyTitle']); }
+        if($model->grouping == '_category_by_sector_by_sub_sector_by_agency'){ $projects = $projects->groupBy(['categoryTitle', 'sectorTitle', 'subSectorTItle', 'agencyTitle']); }
+        if($model->grouping == '_chapter_by_agency'){ $projects = $projects->groupBy(['chapterTitle', 'agencyTitle']); }
+        if($model->grouping == '_chapter_by_chapter_outcome_by_agency'){ $projects = $projects->groupBy(['chapterTitle', 'chapterOutcomeTitle', 'agencyTitle']); }
+        if($model->grouping == '_chapter_by_chapter_outcome_by_sub_chapter_outcome_by_agency'){ $projects = $projects->groupBy(['chapterTitle', 'chapterOutcomeTitle', 'subChapterOutcomeTitle', 'agencyTitle']); }
+        if($model->grouping == '_sdg_goal_by_agency'){ $projects = $projects->groupBy(['sdgGoalTitle', 'agencyTitle']); }
+        if($model->grouping == '_sdg_goal_by_category_by_sector_by_agency'){ $projects = $projects->groupBy(['sdgGoalTitle', 'categoryTitle', 'sectorTitle', 'agencyTitle']); }
+        if($model->grouping == '_sector_by_agency'){ $projects = $projects->groupBy(['sectorTitle', 'agencyTitle']); }
+        if($model->grouping == '_sector_by_category'){ $projects = $projects->groupBy(['sectorTitle', 'categoryTitle']); }
+        if($model->grouping == '_sector_by_category_by_agency'){ $projects = $projects->groupBy(['sectorTitle', 'categoryTitle', 'agencyTitle']); }
+        if($model->grouping == '_sector_by_location'){ $projects = $projects->groupBy(['sectorTitle', 'provinceTitle']); }
+        if($model->grouping == '_sector_by_sub_sector'){ $projects = $projects->groupBy(['sectorTitle', 'subSectorTitle']); }
+        if($model->grouping == '_sector_by_sub_sector_by_agency'){ $projects = $projects->groupBy(['sectorTitle', 'subSectorTitle', 'agencyTitle']); }
+
         $projects = $projects->asArray()->all();
         
         //echo "<pre>"; print_r($projects); exit; 
@@ -3472,7 +3571,63 @@ class SummaryController extends \yii\web\Controller
         $smallCaps = range('a', 'z');
         $numbers = range('1', '100');
 
-        if($grouping == '_category_by_agency')
+        $total['q1financial'] = 0;
+        $total['q2financial'] = 0;
+        $total['q3financial'] = 0;
+        $total['q4financial'] = 0;
+        $total['q1physical'] = 0;
+        $total['q2physical'] = 0;
+        $total['q3physical'] = 0;
+        $total['q4physical'] = 0;
+        $total['q1maleEmployed'] = 0;
+        $total['q2maleEmployed'] = 0;
+        $total['q3maleEmployed'] = 0;
+        $total['q4maleEmployed'] = 0;
+        $total['q1femaleEmployed'] = 0;
+        $total['q2femaleEmployed'] = 0;
+        $total['q3femaleEmployed'] = 0;
+        $total['q4femaleEmployed'] = 0;
+        $total['q1beneficiary'] = 0;
+        $total['q2beneficiary'] = 0;
+        $total['q3beneficiary'] = 0;
+        $total['q4beneficiary'] = 0;
+        $total['q1groupBeneficiary'] = 0;
+        $total['q2groupBeneficiary'] = 0;
+        $total['q3groupBeneficiary'] = 0;
+        $total['q4groupBeneficiary'] = 0;
+
+        if(!empty($projects))
+        {
+            foreach($projects as $project)
+            {
+                $total['q1financial'] += $project['q1financial'];
+                $total['q2financial'] += $project['q2financial'];
+                $total['q3financial'] += $project['q3financial'];
+                $total['q4financial'] += $project['q4financial'];
+                $total['q1physical'] += $project['q1physical'];
+                $total['q2physical'] += $project['q2physical'];
+                $total['q3physical'] += $project['q3physical'];
+                $total['q4physical'] += $project['q4physical'];
+                $total['q1maleEmployed'] += $project['q1maleEmployed'];
+                $total['q2maleEmployed'] += $project['q2maleEmployed'];
+                $total['q3maleEmployed'] += $project['q3maleEmployed'];
+                $total['q4maleEmployed'] += $project['q4maleEmployed'];
+                $total['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                $total['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                $total['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                $total['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                $total['q1beneficiary'] += $project['q1beneficiary'];
+                $total['q2beneficiary'] += $project['q2beneficiary'];
+                $total['q3beneficiary'] += $project['q3beneficiary'];
+                $total['q4beneficiary'] += $project['q4beneficiary'];
+                $total['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                $total['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                $total['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                $total['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+            }
+        }
+
+        if($model->grouping == '_agency_by_category')
         {
             if(!empty($projects))
             {
@@ -3498,27 +3653,35 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
                     $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
                     $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
@@ -3543,31 +3706,39 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
                     $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
                     $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                     
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_category_by_sector_by_agency')
+        else if($model->grouping == '_agency_by_category_by_sector')
         {
             if(!empty($projects))
             {
@@ -3593,48 +3764,60 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
                     $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
                     $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
@@ -3659,52 +3842,64 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
                     $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
                     $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                     
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_category_by_sector_by_sub_sector_by_agency')
+        else if($model->grouping == '_agency_by_location')
         {
             if(!empty($projects))
             {
@@ -3730,69 +3925,35 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
                     $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
                     $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
@@ -3817,73 +3978,39 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
                     $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
                     $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                     
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_sector_by_sub_sector_by_agency')
+        else if($model->grouping == '_agency_by_sector')
         {
             if(!empty($projects))
             {
@@ -3909,48 +4036,34 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
                     $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
                     $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
@@ -3975,52 +4088,1600 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
                     $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
                     $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
 
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_agency_by_sector')
+        else if($model->grouping == '_agency_by_sector_by_sub_sector')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                    
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_category_by_agency')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                    
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_category_by_sector')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_category_by_sector_by_agency')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                    
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                    
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_category_by_sector_by_sub_sector_by_agency')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_chapter_by_agency')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['chapterTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_chapter_by_chapter_outcome_by_agency')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['chapterTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_chapter_by_chapter_outcome_by_sub_chapter_outcome_by_agency')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['chapterTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_sdg_goal_by_agency')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['sdgGoalTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['sdgGoalTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sdgGoalTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sdgGoalTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sdgGoalTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sdgGoalTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sdgGoalTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sdgGoalTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sdgGoalTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sdgGoalTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_sdg_goal_by_category_by_sector_by_agency')
+        {
+            if(!empty($projects))
+            {
+                foreach($projects as $project)
+                {
+                    $data[$project['sdgGoalTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
+                }
+
+                foreach($projects as $project)
+                {
+                    $data[$project['sdgGoalTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sdgGoalTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sdgGoalTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sdgGoalTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sdgGoalTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sdgGoalTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sdgGoalTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sdgGoalTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sdgGoalTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+                }
+            }
+        }
+        else if($model->grouping == '_sector_by_agency')
         {
             if(!empty($projects))
             {
@@ -4046,27 +5707,35 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['sectorTitle']]['content']['q2beneficiary'] = 0;
                     $data[$project['sectorTitle']]['content']['q3beneficiary'] = 0;
                     $data[$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
@@ -4091,1053 +5760,702 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
                     $data[$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
                     $data[$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_agency_by_sector_by_sub_sector')
+        else if($model->grouping == '_sector_by_category')
         {
             if(!empty($projects))
             {
                 foreach($projects as $project)
                 {
-                    $data[$project['subSectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
                 {
-                    $data[$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
 
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_chapter_by_agency')
+        else if($model->grouping == '_sector_by_category_by_agency')
         {
             if(!empty($projects))
             {
                 foreach($projects as $project)
                 {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
                 {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_chapter_by_chapter_outcome_by_agency')
+        else if($model->grouping == '_sector_by_location')
         {
             if(!empty($projects))
             {
                 foreach($projects as $project)
                 {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
                 {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
 
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_chapter_by_chapter_outcome_by_sub_chapter_outcome_by_agency')
+        else if($model->grouping == '_sector_by_sub_sector')
         {
             if(!empty($projects))
             {
                 foreach($projects as $project)
                 {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
 
                 foreach($projects as $project)
                 {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
 
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
-        else if($grouping == '_sdg_goal_by_agency')
+        else if($model->grouping == '_sector_by_sub_sector_by_agency')
         {
             if(!empty($projects))
             {
                 foreach($projects as $project)
                 {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] = 0;
 
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4groupBeneficiary'] = 0;
+
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4financial'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4physical'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] = 0;
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] = 0;
                 }
-
+                
                 foreach($projects as $project)
                 {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
+
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                     
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_sdg_goal_by_category_by_sector_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_agency_by_location')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['provinceTitle']]['content']['q1financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['provinceTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['provinceTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['provinceTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['provinceTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['provinceTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['provinceTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['provinceTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['provinceTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['provinceTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_sector_by_location')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['provinceTitle']]['content']['q1financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['provinceTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['provinceTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['provinceTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['provinceTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['provinceTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['provinceTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['provinceTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['provinceTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['provinceTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q1groupBeneficiary'] += $project['q1groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q2groupBeneficiary'] += $project['q2groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q3groupBeneficiary'] += $project['q3groupBeneficiary'];
+                    $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['q4groupBeneficiary'] += $project['q4groupBeneficiary'];
                 }
             }
         }
 
-        $filename = 'Monitoring Plan '.$year;
+        $filename = 'Monitoring Plan '.$model->year;
 
         if($type == 'excel')
         {
             header("Content-type: application/vnd.ms-excel");
             header("Content-Disposition: attachment; filename=".$filename.".xls");
-            return $this->renderPartial('monitoring-plan/reports/'.$grouping, [
+            return $this->renderPartial('monitoring-plan/_report-file', [
                 'type' => $type,
-                'year' => $year,
-                'grouping' => $grouping,
                 'data' => $data,
                 'bigCaps' => $bigCaps,
                 'smallCaps' => $smallCaps,
@@ -5147,10 +6465,8 @@ class SummaryController extends \yii\web\Controller
             ]);
         }else if($type == 'pdf')
         {
-            $content = $this->renderPartial('monitoring-plan/reports/'.$grouping, [
+            $content = $this->renderPartial('monitoring-plan/_report-file', [
                 'type' => $type,
-                'year' => $year,
-                'grouping' => $grouping,
                 'data' => $data,
                 'bigCaps' => $bigCaps,
                 'smallCaps' => $smallCaps,
@@ -5193,1821 +6509,19 @@ class SummaryController extends \yii\web\Controller
                 $headers = Yii::$app->response->headers;
                 $headers->add('Content-Type', 'application/pdf');
                 return $pdf->render();
-        }
-
-    }
-
-    public function actionPrintMonitoringPlan($year, $grouping)
-    {
-        $physicals = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $year])->createCommand()->getRawSql();
-        $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $year])->createCommand()->getRawSql();
-        $malesEmployed = ProjectTarget::find()->where(['target_type' => 'Male Employed', 'year' => $year])->createCommand()->getRawSql();
-        $femalesEmployed = ProjectTarget::find()->where(['target_type' => 'Female Employed', 'year' => $year])->createCommand()->getRawSql();
-        $beneficiaries = ProjectTarget::find()->where(['target_type' => 'Beneficiaries', 'year' => $year])->createCommand()->getRawSql();
-
-        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-        $genders = ['M' => 'Male', 'F' => 'Female'];
-        
-        $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $year])->asArray()->all();
-        $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
-
-        $projects = Project::find()
-                    ->select([
-                        'project.id',
-                        'agency.code as agencyTitle',
-                        'program.title as programTitle',
-                        'category.title as categoryTitle',
-                        'key_result_area.title as kraTitle',
-                        'project.title as projectTitle',
-                        'sector.title as sectorTitle',
-                        'sub_sector.title as subSectorTitle',
-                        'concat("SDG #",sdg_goal.sdg_no,": ",sdg_goal.title) as sdgGoalTitle',
-                        'concat("Chapter ",rdp_chapter.chapter_no,": ",rdp_chapter.title) as chapterTitle',
-                        'IF(rdp_chapter_outcome.id is not null, concat("Chapter Outcome ",rdp_chapter_outcome.level,": ",rdp_chapter_outcome.title), "No Chapter Outcome") as chapterOutcomeTitle',
-                        'IF(rdp_sub_chapter_outcome.id is not null, concat("Sub-Chapter Outcome ",rdp_sub_chapter_outcome.level,": ",rdp_sub_chapter_outcome.title), "No Sub-Chapter Outcome") as subChapterOutcomeTitle',
-                        'tblregion.abbreviation as regionTitle',
-                        'IF(tblprovince.province_c is not null, tblprovince.province_m, "Region-wide") as provinceTitle',
-                        'SUM(financials.q1) as q1financial',
-                        'SUM(financials.q2) as q2financial',
-                        'SUM(financials.q3) as q3financial',
-                        'SUM(financials.q4) as q4financial',
-                        'SUM(
-                            IF(physicals.q1 > 0, 1, 0) 
-                        ) as q1physical',
-                        'SUM(
-                            IF(physicals.q1 <= 0, IF(physicals.q2 > 0, 1, 0), 0)
-                        ) as q2physical',
-                        'SUM(
-                            IF(physicals.q1 <= 0, IF(physicals.q2 <= 0, IF(physicals.q3 > 0, 1, 0), 0), 0)
-                        ) as q3physical',
-                        'SUM(
-                            IF(physicals.q1 <= 0, IF(physicals.q2 <= 0, IF(physicals.q3 <= 0, IF(physicals.q4 > 0, 1, 0), 0), 0), 0)
-                        ) as q4physical',
-                        'SUM(malesEmployed.q1) as q1maleEmployed',
-                        'SUM(malesEmployed.q2) as q2maleEmployed',
-                        'SUM(malesEmployed.q3) as q3maleEmployed',
-                        'SUM(malesEmployed.q4) as q4maleEmployed',
-                        'SUM(femalesEmployed.q1) as q1femaleEmployed',
-                        'SUM(femalesEmployed.q2) as q2femaleEmployed',
-                        'SUM(femalesEmployed.q3) as q3femaleEmployed',
-                        'SUM(femalesEmployed.q4) as q4femaleEmployed',
-                        'SUM(beneficiaries.q1) as q1beneficiary',
-                        'SUM(beneficiaries.q2) as q2beneficiary',
-                        'SUM(beneficiaries.q3) as q3beneficiary',
-                        'SUM(beneficiaries.q4) as q4beneficiary',
-                    ]);
-        $projects = $projects->leftJoin(['physicals' => '('.$physicals.')'], 'physicals.project_id = project.id');
-        $projects = $projects->leftJoin(['financials' => '('.$financials.')'], 'financials.project_id = project.id');
-        $projects = $projects->leftJoin(['malesEmployed' => '('.$malesEmployed.')'], 'malesEmployed.project_id = project.id');
-        $projects = $projects->leftJoin(['femalesEmployed' => '('.$femalesEmployed.')'], 'femalesEmployed.project_id = project.id');
-        $projects = $projects->leftJoin(['beneficiaries' => '('.$beneficiaries.')'], 'beneficiaries.project_id = project.id');
-        $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
-        $projects = $projects->leftJoin('program', 'program.id = project.program_id');
-        $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
-        $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-        $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id and project_category.year = project.year');
-        $projects = $projects->leftJoin('category', 'category.id = project_category.category_id');
-        $projects = $projects->leftJoin('project_kra', 'project_kra.project_id = project.id and project_kra.year = project.year');
-        $projects = $projects->leftJoin('key_result_area', 'key_result_area.id = project_kra.key_result_area_id');
-        $projects = $projects->leftJoin('project_sdg_goal', 'project_sdg_goal.project_id = project.id and project_sdg_goal.year = project.year');
-        $projects = $projects->leftJoin('sdg_goal', 'sdg_goal.id = project_sdg_goal.sdg_goal_id');
-        $projects = $projects->leftJoin('project_rdp_chapter', 'project_rdp_chapter.project_id = project.id and project_rdp_chapter.year = project.year');
-        $projects = $projects->leftJoin('rdp_chapter', 'rdp_chapter.id = project_rdp_chapter.rdp_chapter_id');
-        $projects = $projects->leftJoin('project_rdp_chapter_outcome', 'project_rdp_chapter_outcome.project_id = project.id and project_rdp_chapter_outcome.year = project.year');
-        $projects = $projects->leftJoin('rdp_chapter_outcome', 'rdp_chapter_outcome.id = project_rdp_chapter_outcome.rdp_chapter_outcome_id');
-        $projects = $projects->leftJoin('project_rdp_sub_chapter_outcome', 'project_rdp_sub_chapter_outcome.project_id = project.id and project_rdp_sub_chapter_outcome.year = project.year');
-        $projects = $projects->leftJoin('rdp_sub_chapter_outcome', 'rdp_sub_chapter_outcome.id = project_rdp_sub_chapter_outcome.rdp_sub_chapter_outcome_id');
-        $projects = $projects->leftJoin('project_region', 'project_region.project_id = project.id and project_region.year = project.year');
-        $projects = $projects->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id');
-        $projects = $projects->leftJoin('project_province', 'project_province.project_id = project.id and project_province.year = project.year');
-        $projects = $projects->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id');
-        $projects = $projects->andWhere(['project.year' => $year, 'project.draft' => 'No']);
-        $projects = $projects->andWhere(['project.id' => $projectIDs]);
-
-        if($grouping == '_category_by_agency'){ $projects = $projects->groupBy(['category.id', 'agency.id']); }
-        if($grouping == '_category_by_sector_by_agency'){ $projects = $projects->groupBy(['category.id', 'sector.id', 'agency.id']); }
-        if($grouping == '_category_by_sector_by_sub_sector_by_agency'){ $projects = $projects->groupBy(['category.id', 'sector.id', 'sub_sector.id', 'agency.id']); }
-        if($grouping == '_sector_by_sub_sector_by_agency'){ $projects = $projects->groupBy(['sector.id', 'sub_sector.id', 'agency.id']); }
-        if($grouping == '_agency_by_sector'){ $projects = $projects->groupBy(['sector.id', 'agency.id']); }
-        if($grouping == '_agency_by_sector_by_sub_sector'){ $projects = $projects->groupBy(['sub_sector.id', 'sector.id', 'agency.id']); }
-        if($grouping == '_chapter_by_agency'){ $projects = $projects->groupBy(['rdp_chapter.id', 'agency.id']); }
-        if($grouping == '_chapter_by_chapter_outcome_by_agency'){ $projects = $projects->groupBy(['rdp_chapter.id', 'rdp_chapter_outcome.id', 'agency.id']); }
-        if($grouping == '_chapter_by_chapter_outcome_by_sub_chapter_outcome_by_agency'){ $projects = $projects->groupBy(['rdp_chapter.id', 'rdp_chapter_outcome.id', 'rdp_sub_chapter_outcome.id', 'agency.id']); }
-        if($grouping == '_sdg_goal_by_agency'){ $projects = $projects->groupBy(['sdg_goal.id', 'agency.id']); }
-        if($grouping == '_sdg_goal_by_category_by_sector_by_agency'){ $projects = $projects->groupBy(['sdg_goal.id', 'category.id', 'sector.id', 'agency.id']); }
-        if($grouping == '_agency_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'agency.id']); }
-        if($grouping == '_sector_by_location'){ $projects = $projects->groupBy(['tblprovince.province_c', 'sector.id']); }
-
-        if(Yii::$app->user->can('AgencyUser'))
+        }else if($type == 'print')
         {
-            $projects = $projects->andWhere(['agency.id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+            return $this->renderAjax('monitoring-plan/_report-file', [
+                'type' => $type,
+                'data' => $data,
+                'bigCaps' => $bigCaps,
+                'smallCaps' => $smallCaps,
+                'numbers' => $numbers,
+                'quarters' => $quarters,
+                'genders' => $genders,
+            ]);
         }
 
-        if($model->agency_id != '')
-        {
-            $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
-        }
-
-        if($model->category_id != '')
-        {
-            $projects = $projects->andWhere(['category.id' => $model->category_id]);
-        }
-
-        if($model->sector_id != '')
-        {
-            $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
-        }
-
-        if($model->province_id != '')
-        {
-            $projects = $projects->andWhere(['tblprovince.province_c' => $model->province_id]);
-        }
-
-        if($model->fund_source_id != '')
-        {
-            $projects = $projects->andWhere(['fund_source.id' => $model->fund_source_id]);
-        }
-
-        if($model->period != '')
-        {
-            $projects = $projects->andWhere(['project.period' => $model->period]);
-        }
-
-        $projects = $projects->asArray()->all();
-        
-        //echo "<pre>"; print_r($projects); exit; 
-
-        $bigCaps = range('A', 'Z');
-        $smallCaps = range('a', 'z');
-        $numbers = range('1', '100');
-
-        if($grouping == '_category_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_category_by_sector_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_category_by_sector_by_sub_sector_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_sector_by_sub_sector_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subSectors'][$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_agency_by_sector')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_agency_by_sector_by_sub_sector')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['subSectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['subSectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['subSectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['subSectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['subSectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['subSectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['subSectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['subSectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['subSectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['subSectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['subSectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['subSectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['subSectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['subSectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['subSectorTitle']]['sectors'][$project['sectorTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_chapter_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_chapter_by_chapter_outcome_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_chapter_by_chapter_outcome_by_sub_chapter_outcome_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['subChapterOutcomes'][$project['subChapterOutcomeTitle']]['chapterOutcomes'][$project['chapterOutcomeTitle']]['chapters'][$project['chapterTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_sdg_goal_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_sdg_goal_by_category_by_sector_by_agency')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4financial'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4physical'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['agencyTitle']]['sectors'][$project['sectorTitle']]['categories'][$project['categoryTitle']]['sdgGoals'][$project['sdgGoalTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_agency_by_location')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['provinceTitle']]['content']['q1financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['provinceTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['provinceTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['provinceTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['provinceTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['provinceTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['provinceTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['provinceTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['provinceTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['provinceTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['provinceTitle']]['agencies'][$project['agencyTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-        else if($grouping == '_sector_by_location')
-        {
-            if(!empty($projects))
-            {
-                foreach($projects as $project)
-                {
-                    $data[$project['provinceTitle']]['content']['q1financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4financial'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4physical'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['content']['q4beneficiary'] = 0;
-
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] = 0;
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] = 0;
-                }
-
-                foreach($projects as $project)
-                {
-                    $data[$project['provinceTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['provinceTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['provinceTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['provinceTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['provinceTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['provinceTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['provinceTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['provinceTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['provinceTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['provinceTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['provinceTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                    
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1financial'] += $project['q1financial'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2financial'] += $project['q2financial'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3financial'] += $project['q3financial'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1physical'] += $project['q1physical'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2physical'] += $project['q2physical'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3physical'] += $project['q3physical'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4physical'] += $project['q4physical'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1maleEmployed'] += $project['q1maleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2maleEmployed'] += $project['q2maleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3maleEmployed'] += $project['q3maleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4maleEmployed'] += $project['q4maleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1femaleEmployed'] += $project['q1femaleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2femaleEmployed'] += $project['q2femaleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3femaleEmployed'] += $project['q3femaleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4femaleEmployed'] += $project['q4femaleEmployed'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q1beneficiary'] += $project['q1beneficiary'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q2beneficiary'] += $project['q2beneficiary'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q3beneficiary'] += $project['q3beneficiary'];
-                    $data[$project['provinceTitle']]['sectors'][$project['sectorTitle']]['content']['q4beneficiary'] += $project['q4beneficiary'];
-                }
-            }
-        }
-
-        return $this->renderAjax('monitoring-plan/reports/'.$grouping, [
-            'type' => 'print',
-            'year' => $year,
-            'grouping' => $grouping,
-            'data' => $data,
-            'bigCaps' => $bigCaps,
-            'smallCaps' => $smallCaps,
-            'numbers' => $numbers,
-            'quarters' => $quarters,
-            'genders' => $genders,
-        ]);
     }
 
     public function actionMonitoringReport()

@@ -29,6 +29,8 @@ class Submission extends \yii\db\ActiveRecord
     public $sub_sector_id;
     public $category_id;
     public $period;
+    public $year;
+    public $agency_id;
     /**
      * {@inheritdoc}
      */
@@ -82,6 +84,16 @@ class Submission extends \yii\db\ActiveRecord
             'category_id' => 'Category',
             'period' => 'Period'
         ];
+    }
+
+    public function getYear()
+    {
+        return $this->year;
+    }
+
+    public function getAgency_id()
+    {
+        return $this->agency_id;
     }
 
     /**

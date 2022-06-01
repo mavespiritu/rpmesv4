@@ -40,10 +40,10 @@
 </div>
 <?php
     $script = '
-        function printSummary(year, grouping)
+        function printSummary(model)
         {
             var printWindow = window.open(
-                "'.Url::to(['/rpmes/summary/print-monitoring-plan']).'?year=" + year + "&grouping=" + grouping, 
+                "'.Url::to(['/rpmes/summary/download-monitoring-plan']).'?type=print&model=" + model, 
                 "Print",
                 "left=200", 
                 "top=200", 
