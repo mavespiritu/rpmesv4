@@ -6457,6 +6457,7 @@ class SummaryController extends \yii\web\Controller
             return $this->renderPartial('monitoring-plan/_report-file', [
                 'type' => $type,
                 'data' => $data,
+                'total' => $total,
                 'bigCaps' => $bigCaps,
                 'smallCaps' => $smallCaps,
                 'numbers' => $numbers,
@@ -6468,6 +6469,7 @@ class SummaryController extends \yii\web\Controller
             $content = $this->renderPartial('monitoring-plan/_report-file', [
                 'type' => $type,
                 'data' => $data,
+                'total' => $total,
                 'bigCaps' => $bigCaps,
                 'smallCaps' => $smallCaps,
                 'numbers' => $numbers,
@@ -6514,6 +6516,7 @@ class SummaryController extends \yii\web\Controller
             return $this->renderAjax('monitoring-plan/_report-file', [
                 'type' => $type,
                 'data' => $data,
+                'total' => $total,
                 'bigCaps' => $bigCaps,
                 'smallCaps' => $smallCaps,
                 'numbers' => $numbers,
