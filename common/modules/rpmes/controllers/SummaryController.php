@@ -3328,11 +3328,12 @@ class SummaryController extends \yii\web\Controller
         ]);
     }
 
-    public function actionDownloadMonitoringPlan($type, $model)
+    public function actionDownloadMonitoringPlan($type, $model, $year, $agency_id)
     {
         $model = $type == 'print' ? json_decode(str_replace('\'', '"', $model), true) : json_decode($model, true);
         $model = (object) $model;
-
+        $model->year = $year;
+        $model->agency_id = $agency_id;
         $data = [];
         $total = [];
         
