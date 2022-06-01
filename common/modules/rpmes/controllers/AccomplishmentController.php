@@ -391,7 +391,7 @@ class AccomplishmentController extends \yii\web\Controller
             $submissionModel->submitted_by = Yii::$app->user->id;
             $submissionModel->draft = 'No';
 
-            if($submissionModel->save())
+            if($submissionModel->save(false))
             {
                 \Yii::$app->getSession()->setFlash('success', 'Accomplishment '.$postData['quarter'].' '.$postData['year'].' has been submitted.');
                 return $this->redirect(['/rpmes/accomplishment']);
