@@ -22,16 +22,16 @@
                 <div class="box-body">
                     <?= $this->render('_search-monitoring-report', [
                         'model' => $model,
-                        'years' => $years,
                         'quarters' => $quarters,
                         'genders' => $genders,
-                        'fundSources' => $fundSources,
-                        'regions' => $regions,
-                        'provinces' => $provinces,
-                        'citymuns' => $citymuns,
+                        'years' => $years,
                         'sorts' => $sorts,
-                        'sectors' => $sectors,
                         'agencies' => $agencies,
+                        'sectors' => $sectors,
+                        'categories' => $categories,
+                        'locations' => $locations,
+                        'fundSources' => $fundSources,
+                        'periods' => $periods
                     ]) ?>
                     <hr>
                     <div id="summary-monitoring-report-table"></div>
