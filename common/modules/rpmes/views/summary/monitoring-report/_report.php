@@ -20,7 +20,7 @@ DisableButtonAsset::register($this);
 </div>
 <div class="clearfix"></div>
 <br>
-<div class="summary-monitoring-report-table" style="min-height: 600px;">
+<div class="summary-monitoring-report-table" style="height: 600px;">
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
         <thead>
             <tr>
