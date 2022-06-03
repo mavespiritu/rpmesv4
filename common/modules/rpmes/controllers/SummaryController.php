@@ -6871,32 +6871,14 @@ class SummaryController extends \yii\web\Controller
                                             )
                                         )';
 
-            $isCompleted = 'accomps.action';
+            $isCompleted = 'COALESCE(accomps.action, 0)';
             $isPercent = 'LOCATE("%", physicalTargets.indicator)';
             $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccomp.' - '.$physicalTarget.', IF('.$physicalTarget.' > 0, (('.$physicalAccomp.'/'.$physicalTarget.') * 100) -100 , 0))';
-            $behindSchedule = 'IF('.$physicalAccomp.' > 0, 
-                                    IF('.$isCompleted.' = 0,
-                                        IF(
-                                            IF('.$isPercent.' > 0, '.$physicalAccomp.' - '.$physicalTarget.', IF('.$physicalTarget.' > 0, (('.$physicalAccomp.'/'.$physicalTarget.') * 100) - 100, 0))
-                                        < 0, 1 , 0)
-                                    , 0)
-                                , 0)';
-            $onSchedule = 'IF('.$physicalAccomp.' > 0, 
-                                IF('.$isCompleted.' = 0,
-                                    IF(
-                                        IF('.$isPercent.' > 0, '.$physicalAccomp.' - '.$physicalTarget.', IF('.$physicalTarget.' > 0, (('.$physicalAccomp.'/'.$physicalTarget.') * 100) - 100, 0))
-                                    = 0, 1 , 0)
-                                , 0)
-                            , 0)';
-            $aheadOnSchedule = 'IF('.$physicalAccomp.' > 0, 
-                                    IF('.$isCompleted.' = 0,
-                                        IF(
-                                            IF('.$isPercent.' > 0, '.$physicalAccomp.' - '.$physicalTarget.', IF('.$physicalTarget.' > 0, (('.$physicalAccomp.'/'.$physicalTarget.') * 100) - 100, 0))
-                                        > 0, 1, 0)
-                                    , 0)
-                                , 0)';
-            $notYetStartedWithTarget = 'IF('.$physicalTarget.' > 0, 1, 0)';
-            $notYetStartedWithNoTarget = 'IF('.$physicalTarget.' <= 0, 1, 0)';
+            $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
+            $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
+            $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
+            $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' = 0, IF('.$physicalTarget.' > 0, 1, 0), 0), 0)';
+            $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' = 0, IF('.$physicalTarget.' <= 0, 1, 0), 0), 0)';
 
             $projects = Project::find()
                         ->select([
@@ -6918,7 +6900,7 @@ class SummaryController extends \yii\web\Controller
                             'IF(rdpChapterOutcomeTitles.title is null, "No RDP Chapter Outcomes", rdpChapterOutcomeTitles.title) as chapterOutcomeTitle',
                             'IF(rdpSubChapterOutcomeTitles.title is null, "No RDP Sub-Chapter Outcomes", rdpSubChapterOutcomeTitles.title) as subChapterOutcomeTitle',
                             'physicalTargets.indicator as indicator',
-                            'SUM(accomps.action) as completed',
+                            'SUM(COALESCE(accomps.action, 0)) as completed',
                             'SUM('.$slippage.') as slippage',
                             'SUM('.$behindSchedule.') as behindSchedule',
                             'SUM('.$onSchedule.') as onSchedule',
