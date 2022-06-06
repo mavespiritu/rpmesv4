@@ -64,6 +64,7 @@ DisableButtonAsset::register($this);
                         <td align=center><b><?= $gender ?></b></td>
                     <?php } ?>
                 <?php } ?>
+                <td align=center><b>Total</b></td>
                 <td align=center><b>Individual</b></td>
                 <td align=center><b>Group</b></td>
                 <td align=center><b>Total</b></td>
