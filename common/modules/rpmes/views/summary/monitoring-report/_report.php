@@ -26,10 +26,10 @@ DisableButtonAsset::register($this);
             <tr>
                 <td colspan=4 rowspan=3 align=center><b>Project Details</b></td>
                 <td colspan=6 align=center><b>Financial Status of Reporting Period</b></td>
-                <td colspan=5 align=center><b>Physical Status as of Reporting Period</b></td>
+                <td colspan=4 align=center><b>Physical Status as of Reporting Period</b></td>
                 <td colspan=6 align=center><b>Number of Persons Employed as of Reporting Period</b></td>
                 <td colspan=5 align=center><b>Number of Beneficiaries as of Reporting Period</b></td>
-                <td colspan=6 align=center><b>Project Implementation Status</b></td>
+                <td colspan=7 align=center><b>Project Implementation Status</b></td>
                 <td rowspan=3 align=center><b>Remarks</b></td>
             </tr>
             <tr>
@@ -67,7 +67,6 @@ DisableButtonAsset::register($this);
                 <td align=center><b>Total</b></td>
                 <td align=center><b>Individual</b></td>
                 <td align=center><b>Group</b></td>
-                <td align=center><b>Total</b></td>
                 <?php if($genders){ ?>
                     <?php foreach($genders as $g => $gender){ ?>
                         <td align=center><b>Indiviual - <?= $gender ?></b></td>
