@@ -97,11 +97,13 @@ class PlanController extends \yii\web\Controller
         $regionModel = new ProjectRegion();
         $provinceModel = new Projectprovince();
         $citymunModel = new ProjectCitymun();
+        $categoryModel = new ProjectCategory();
 
         $model->scenario = 'searchMonitoringProject';
         $regionModel->scenario = 'searchRegion';
         $provinceModel->scenario = 'searchProvince';
         $citymunModel->scenario = 'searchCitymun';
+        $categoryModel->scenario = 'searchCategory';
 
         $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
@@ -125,6 +127,9 @@ class PlanController extends \yii\web\Controller
 
         $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->asArray()->all();
         $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
+        
+        $categories = Category::find()->all();
+        $categories = ArrayHelper::map($categories, 'id', 'title');
 
         $scopes = LocationScope::find()->all();
         $scopes = ArrayHelper::map($scopes, 'id', 'title');
@@ -251,20 +256,22 @@ class PlanController extends \yii\web\Controller
             $model->load(Yii::$app->request->post()) &&
             $regionModel->load(Yii::$app->request->post()) &&
             $provinceModel->load(Yii::$app->request->post()) &&
-            $citymunModel->load(Yii::$app->request->post())
+            $citymunModel->load(Yii::$app->request->post()) &&
+            $categoryModel->load(Yii::$app->request->post())
         )
         {
             $postData = Yii::$app->request->post();
-            //echo "<pre>"; print_r($postData); exit;
 
             $project = $postData['Project'];
             $projectRegion = $postData['ProjectRegion'];
             $projectProvince = $postData['ProjectProvince'];
             $projectCitymun = $postData['ProjectCitymun'];
+            $projectCategory = $postData['ProjectCategory'];
 
             $regionIDs = ProjectRegion::find();
             $provinceIDs = ProjectProvince::find();
             $citymunIDs = ProjectCitymun::find();
+            $categoryIDs = ProjectCategory::find();
 
             $regions = Region::find()->orderBy(['region_sort' => SORT_ASC])->all();
             $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
@@ -291,6 +298,7 @@ class PlanController extends \yii\web\Controller
                 $regionIDs = $regionIDs->andWhere(['year' => $project['year']]);
                 $provinceIDs = $provinceIDs->andWhere(['year' => $project['year']]);
                 $citymunIDs = $citymunIDs->andWhere(['year' => $project['year']]);
+                $categoryIDs = $categoryIDs->andWhere(['year' => $project['year']]);
                 $model->year = $project['year'];
             }
 
@@ -368,6 +376,12 @@ class PlanController extends \yii\web\Controller
                 $citymunModel->citymun_id = $projectCitymun['citymun_id'];
             }
 
+            if(!empty($projectCategory['category_id']))
+            {
+                $categoryIDs = $categoryIDs->andWhere(['category_id' => $projectCategory['category_id']]);
+                $categoryModel->category_id = $projectCategory['category_id'];
+            }
+
             $regionIDs = $regionIDs->all();
             $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
 
@@ -384,6 +398,9 @@ class PlanController extends \yii\web\Controller
             $citymunIDs = $citymunIDs->all();
             $citymunIDs = ArrayHelper::map($citymunIDs, 'project_id', 'project_id');
 
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
             if(!empty($projectRegion['region_id']))
             {
                 $projectsPaging->andWhere(['id' => $regionIDs]);
@@ -397,6 +414,11 @@ class PlanController extends \yii\web\Controller
             if(!empty($projectCitymun['citymun_id']))
             {
                 $projectsPaging->andWhere(['id' => $citymunIDs]);
+            }
+
+            if(!empty($projectCategory['category_id']))
+            {
+                $projectsPaging->andWhere(['id' => $categoryIDs]);
             }
 
             $countProjects = clone $projectsPaging;
@@ -447,6 +469,7 @@ class PlanController extends \yii\web\Controller
                 'regionModel' => $regionModel,
                 'provinceModel' => $provinceModel,
                 'citymunModel' => $citymunModel,
+                'categoryModel' => $categoryModel,
                 'years' => $years,
                 'quarters' => $quarters,
                 'genders' => $genders,
@@ -479,6 +502,7 @@ class PlanController extends \yii\web\Controller
             'regionModel' => $regionModel,
             'provinceModel' => $provinceModel,
             'citymunModel' => $citymunModel,
+            'categoryModel' => $categoryModel,
             'years' => $years,
             'quarters' => $quarters,
             'genders' => $genders,

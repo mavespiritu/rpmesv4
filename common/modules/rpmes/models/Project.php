@@ -140,45 +140,6 @@ class Project extends \yii\db\ActiveRecord
         }
     }
 
-    public function getValidateProject()
-    {
-        $con = false;
-
-        if(!empty($this->period))
-        {
-            if(!empty($this->agency_id))
-            {
-                if(!empty($this->title))
-                {
-                    if(!empty($this->sector_id))
-                    {
-                        if(!empty($this->sub_sector_id))
-                        {
-                            if(!empty($this->mode_of_implementation_id))
-                            {
-                                if(!empty($this->fund_source_id))
-                                {
-                                    if(!empty($this->start_date))
-                                    {   
-                                        if(!empty($this->completion_date))
-                                        {
-                                            if(!empty($this->data_type))
-                                            {
-                                                $con = true;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return $con;
-    }
-
     public function getAllocationTotal()
     {
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Financial', 'year' => $this->year]);

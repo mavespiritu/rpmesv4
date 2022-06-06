@@ -168,10 +168,20 @@ DisableButtonAsset::register($this);
         </div>
     </div>
     <div class="row">
-        <div class="col-md-6 col-xs-12">
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($categoryModel, 'category_id')->widget(Select2::classname(), [
+                'data' => $categories,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'project_no')->textInput() ?>
         </div>
-        <div class="col-md-6 col-xs-12">
+        <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'title')->textInput() ?>
         </div>
     </div>

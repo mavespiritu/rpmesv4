@@ -33,7 +33,7 @@ DisableButtonAsset::register($this);
                 <td rowspan=3 align=center><b>Remarks</b></td>
             </tr>
             <tr>
-                <td rowspan=2 align=center><b>allocations</b></td>
+                <td rowspan=2 align=center><b>Allocations</b></td>
                 <td rowspan=2 align=center><b>Releases</b></td>
                 <td rowspan=2 align=center><b>Obligation</b></td>
                 <td rowspan=2 align=center><b>Disbursement</b></td>
