@@ -159,13 +159,7 @@ DisableButtonAsset::register($this);
                         <td align=right><?= number_format($firstLevels['content']['q2financial'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['q3financial'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['q4financial'], 2) ?></td>
-                        <td align=right><?= number_format(
-                            $firstLevels['content']['q1financial'] +
-                            $firstLevels['content']['q2financial'] +
-                            $firstLevels['content']['q3financial'] +
-                            $firstLevels['content']['q4financial']
-                            , 2) ?>
-                        </td>
+                        <td align=right><?= number_format($firstLevels['content']['financialTotal'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['q1physical'], 0) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['q2physical'], 0) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['q3physical'], 0) ?></td>
@@ -232,13 +226,7 @@ DisableButtonAsset::register($this);
                             <td align=right><?= number_format($secondLevels['content']['q2financial'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['q3financial'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['q4financial'], 2) ?></td>
-                            <td align=right><?= number_format(
-                                $secondLevels['content']['q1financial'] +
-                                $secondLevels['content']['q2financial'] +
-                                $secondLevels['content']['q3financial'] +
-                                $secondLevels['content']['q4financial']
-                                , 2) ?>
-                            </td>
+                            <td align=right><?= number_format($secondLevels['content']['financialTotal'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['q1physical'], 0) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['q2physical'], 0) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['q3physical'], 0) ?></td>
@@ -306,13 +294,7 @@ DisableButtonAsset::register($this);
                                     <td align=right><?= number_format($thirdLevels['content']['q2financial'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['q3financial'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['q4financial'], 2) ?></td>
-                                    <td align=right><?= number_format(
-                                        $thirdLevels['content']['q1financial'] +
-                                        $thirdLevels['content']['q2financial'] +
-                                        $thirdLevels['content']['q3financial'] +
-                                        $thirdLevels['content']['q4financial']
-                                        , 2) ?>
-                                    </td>
+                                    <td align=right><?= number_format($thirdLevels['content']['financialTotal'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['q1physical'], 0) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['q2physical'], 0) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['q3physical'], 0) ?></td>
@@ -381,13 +363,7 @@ DisableButtonAsset::register($this);
                                             <td align=right><?= number_format($fourthLevels['content']['q2financial'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['q3financial'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['q4financial'], 2) ?></td>
-                                            <td align=right><?= number_format(
-                                                $fourthLevels['content']['q1financial'] +
-                                                $fourthLevels['content']['q2financial'] +
-                                                $fourthLevels['content']['q3financial'] +
-                                                $fourthLevels['content']['q4financial']
-                                                , 2) ?>
-                                            </td>
+                                            <td align=right><?= number_format($fourthLevels['content']['financialTotal'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['q1physical'], 0) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['q2physical'], 0) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['q3physical'], 0) ?></td>

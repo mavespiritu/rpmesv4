@@ -304,7 +304,7 @@ class Project extends \yii\db\ActiveRecord
                 $value = intval($allocations[0]);
                 break;
             case 'Maintained':
-                $value = $allocation ? intval($allocation->q4) : 0;
+                $value = intval($allocations[0]);
                 break;
         }
 
