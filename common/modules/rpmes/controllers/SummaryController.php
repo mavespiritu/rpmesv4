@@ -295,6 +295,27 @@ class SummaryController extends \yii\web\Controller
                                 COALESCE(financials.q3, 0) +
                                 COALESCE(financials.q4, 0)
                                 )'; 
+            
+            $financialsQ2 = 'IF(project.data_type = "Cumulative",
+                                IF(financials.q2 > 0,
+                                    financials.q2 - financials.q1
+                                , financials.q1)
+                            ,COALESCE(financials.q2, 0)
+                            )'; 
+
+            $financialsQ3 = 'IF(project.data_type = "Cumulative",
+                                IF(COALESCE(financials.q3, 0) > 0,
+                                    COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0)
+                                , COALESCE(financials.q3, 0))
+                            ,COALESCE(financials.q2, 0)
+                            )'; 
+
+            $financialsQ4 = 'IF(project.data_type = "Cumulative",
+                                IF(COALESCE(financials.q4, 0) > 0,
+                                    COALESCE(financials.q4, 0) - COALESCE(financials.q3, 0)
+                                , COALESCE(financials.q4, 0))
+                            ,COALESCE(financials.q4, 0)
+                            )'; 
 
             $projects = Project::find()
                         ->select([
@@ -312,9 +333,9 @@ class SummaryController extends \yii\web\Controller
                             'IF(rdpChapterOutcomeTitles.title is null, "No RDP Chapter Outcomes", rdpChapterOutcomeTitles.title) as chapterOutcomeTitle',
                             'IF(rdpSubChapterOutcomeTitles.title is null, "No RDP Sub-Chapter Outcomes", rdpSubChapterOutcomeTitles.title) as subChapterOutcomeTitle',
                             'SUM(financials.q1) as q1financial',
-                            'SUM(financials.q2) as q2financial',
-                            'SUM(financials.q3) as q3financial',
-                            'SUM(financials.q4) as q4financial',
+                            'SUM('.$financialsQ2.') as q2financial',
+                            'SUM('.$financialsQ3.') as q3financial',
+                            'SUM('.$financialsQ4.') as q4financial',
                             'SUM('.$financialTotal.') as financialTotal',
                             'SUM(
                                 IF(physicals.q1 > 0, 1, 0) 
