@@ -87,13 +87,7 @@ DisableButtonAsset::register($this);
             <td align=right><?= number_format($total['q2financial'], 2) ?></td>
             <td align=right><?= number_format($total['q3financial'], 2) ?></td>
             <td align=right><?= number_format($total['q4financial'], 2) ?></td>
-            <td align=right><?= number_format(
-                $total['q1financial'] +
-                $total['q2financial'] +
-                $total['q3financial'] +
-                $total['q4financial']
-                , 2) ?>
-            </td>
+            <td align=right><?= number_format($total['financialTotal'], 2) ?></td>
             <td align=right><?= number_format($total['q1physical'], 0) ?></td>
             <td align=right><?= number_format($total['q2physical'], 0) ?></td>
             <td align=right><?= number_format($total['q3physical'], 0) ?></td>
