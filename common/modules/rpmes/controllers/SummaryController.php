@@ -307,7 +307,7 @@ class SummaryController extends \yii\web\Controller
                                 IF(COALESCE(financials.q3, 0) > 0,
                                     COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0)
                                 , COALESCE(financials.q3, 0))
-                            ,COALESCE(financials.q2, 0)
+                            ,COALESCE(financials.q3, 0)
                             )'; 
 
             $financialsQ4 = 'IF(project.data_type = "Cumulative",
@@ -3607,7 +3607,7 @@ class SummaryController extends \yii\web\Controller
                             IF(COALESCE(financials.q3, 0) > 0,
                                 COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0)
                             , COALESCE(financials.q3, 0))
-                        ,COALESCE(financials.q2, 0)
+                        ,COALESCE(financials.q3, 0)
                         )'; 
 
         $financialsQ4 = 'IF(project.data_type = "Cumulative",
