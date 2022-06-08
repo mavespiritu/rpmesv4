@@ -6887,6 +6887,17 @@ class SummaryController extends \yii\web\Controller
             $beneficiariesAccomps = BeneficiariesAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as action'])->where(['year' => $model->year])->createCommand()->getRawSql();
+            $allocationTotalPerAgency = ProjectTarget::find()
+                                        ->select(['agency_id', 'SUM(
+                                            COALESCE(q1, 0) + 
+                                            COALESCE(q2, 0) + 
+                                            COALESCE(q3, 0) + 
+                                            COALESCE(q4, 0)
+                                        ) as total'])
+                                        ->leftJoin('project', 'project.id = project_target.project_id')
+                                        ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
+                                        ->groupBy(['project.agency_id'])
+                                        ->createCommand()->getRawSql();
             
             $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
@@ -6976,24 +6987,32 @@ class SummaryController extends \yii\web\Controller
                 ->where(['project.draft' => 'No'])
                 ->groupBy(['project_barangay.project_id'])
                 ->createCommand()->getRawSql();
+            
+            $physicalTargetPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                                                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                                                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                                                    COALESCE(physicalTargets.q4, 0)
+                                                    )
+                                                )
+                                            )';
 
-            $physicalTarget = 'IF(project.data_type = "Default",
-                                    IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
-                                        IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0),
-                                            IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0),
-                                            COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)
-                                            )
-                                        )
-                                    )
-                                ,   
-                                    IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
-                                        IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
-                                            IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
-                                            COALESCE(physicalTargets.q4, 0)
-                                            )
-                                        )
-                                    )
-                                )';
+            $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Default",
+                                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0),
+                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0),
+                                                        COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)
+                                                        )
+                                                    )
+                                                )
+                                            ,   
+                                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                                                        COALESCE(physicalTargets.q4, 0)
+                                                        )
+                                                    )
+                                                )
+                                            )';
 
             $physicalTargetTotal = 'IF(project.data_type <> "Default",
                                     IF(COALESCE(physicalTargets.q4, 0) <= 0,
@@ -7004,80 +7023,86 @@ class SummaryController extends \yii\web\Controller
                                         , COALESCE(physicalTargets.q3, 0))
                                     , COALESCE(physicalTargets.q4, 0))
                                 ,   
-                                COALESCE(physicalTargets.q1, 0) +
-                                COALESCE(physicalTargets.q2, 0) +
-                                COALESCE(physicalTargets.q3, 0) +
-                                COALESCE(physicalTargets.q4, 0)
-                                )';            
+                                    COALESCE(physicalTargets.q1, 0) +
+                                    COALESCE(physicalTargets.q2, 0) +
+                                    COALESCE(physicalTargets.q3, 0) +
+                                    COALESCE(physicalTargets.q4, 0)
+                                )';     
             
-            $physicalTargetForTheQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
-                                                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
-                                                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
-                                                    COALESCE(physicalTargets.q4, 0)
+            $financialTargetPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
+                                            IF("'.$model->quarter.'" = "Q2", COALESCE(financialTargets.q2, 0),
+                                                IF("'.$model->quarter.'" = "Q3", COALESCE(financialTargets.q3, 0),
+                                                COALESCE(financialTargets.q4, 0)
+                                                )
+                                            )
+                                        )';
+            
+            $financialTargetTotalPerQuarter = 'IF(project.data_type <> "Cumulative",
+                                                IF("'.$model->quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
+                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0),
+                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0) + COALESCE(financialTargets.q3, 0),
+                                                        COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0) + COALESCE(financialTargets.q3, 0) + COALESCE(financialTargets.q4, 0)
+                                                        )
+                                                    )
+                                                )
+                                            ,   
+                                                IF("'.$model->quarter.'" = "Q1", financialTargets.q1,
+                                                    IF("'.$model->quarter.'" = "Q2", financialTargets.q2,
+                                                        IF("'.$model->quarter.'" = "Q3", financialTargets.q3,
+                                                            financialTargets.q4
+                                                        )
+                                                    )
+                                                )
+                                            )'; 
+
+            $financialTargetTotal = 'IF(project.data_type = "Cumulative",
+                                        IF(COALESCE(financialTargets.q4, 0) <= 0,
+                                            IF(COALESCE(financialTargets.q3, 0) <= 0,
+                                                IF(COALESCE(financialTargets.q2, 0) <= 0,
+                                                    COALESCE(financialTargets.q1, 0)
+                                                , COALESCE(financialTargets.q2, 0))
+                                            , COALESCE(financialTargets.q3, 0))
+                                        , COALESCE(financialTargets.q4, 0))
+                                    ,   
+                                        COALESCE(financialTargets.q1, 0) +
+                                        COALESCE(financialTargets.q2, 0) +
+                                        COALESCE(financialTargets.q3, 0) +
+                                        COALESCE(financialTargets.q4, 0)
+                                    )';                 
+
+            $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Default",
+                                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
+                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
+                                                        COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
+                                                        )
+                                                    )
+                                                )
+                                            ,   
+                                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+                                                        COALESCE(physicalAccompsQ4.value, 0)
+                                                        )
                                                     )
                                                 )
                                             )';
-            
-            $financialTarget = 'IF(project.data_type <> "Cumulative",
-                                    IF("'.$model->quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
-                                        IF("'.$model->quarter.'" = "Q2", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0),
-                                            IF("'.$model->quarter.'" = "Q3", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0) + COALESCE(financialTargets.q3, 0),
-                                            COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0) + COALESCE(financialTargets.q3, 0) + COALESCE(financialTargets.q4, 0)
-                                            )
-                                        )
-                                    )
-                                ,   
-                                    IF("'.$model->quarter.'" = "Q1", financialTargets.q1,
-                                        IF("'.$model->quarter.'" = "Q2", financialTargets.q2,
-                                            IF("'.$model->quarter.'" = "Q3", financialTargets.q3,
-                                                financialTargets.q4
-                                            )
-                                        )
-                                    )
-                                )'; 
 
-            $financialTotal = 'IF(project.data_type = "Cumulative",
-                                    IF(COALESCE(financialTargets.q4, 0) <= 0,
-                                        IF(COALESCE(financialTargets.q3, 0) <= 0,
-                                            IF(COALESCE(financialTargets.q2, 0) <= 0,
-                                                COALESCE(financialTargets.q1, 0)
-                                            , COALESCE(financialTargets.q2, 0))
-                                        , COALESCE(financialTargets.q3, 0))
-                                    , COALESCE(financialTargets.q4, 0))
-                                ,   
-                                COALESCE(financialTargets.q1, 0) +
-                                COALESCE(financialTargets.q2, 0) +
-                                COALESCE(financialTargets.q3, 0) +
-                                COALESCE(financialTargets.q4, 0)
-                                )';                 
-                
-            $financialTargetTotal = 'SUM(COALESCE('.$financialTotal.', 0))';
-
-            $physicalAccomp = 'IF(project.data_type = "Default",
-                                    IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                        IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
-                                            IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
-                                            COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
-                                            )
-                                        )
-                                    )
-                                ,   
-                                    IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                        IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
-                                            IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
-                                            COALESCE(physicalAccompsQ4.value, 0)
-                                            )
-                                        )
-                                    )
-                                )';
-
-            $physicalAccompForTheQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
-                                                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
-                                                    COALESCE(physicalAccompsQ4.value, 0)
-                                                    )
+            $physicalAccompPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                            IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+                                                IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+                                                COALESCE(physicalAccompsQ4.value, 0)
                                                 )
-                                            )';
+                                            )
+                                        )';
+            
+            $financialWeight = 'IF(allocationTotalPerAgency.total > 0, COALESCE(('.$financialTargetTotal.' / allocationTotalPerAgency.total), 0), 0)';
+
+            $physicalTargetPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalTargetPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
+            $physicalTargetWeight = $physicalTargetPercentage.' * '.$financialWeight;
+
+            $physicalAccompPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalAccompPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
+            $physicalAccompWeight = $physicalAccompPercentage.' * '.$financialWeight;
             
             $releases = 'IF(project.data_type <> "Cumulative",
                             IF("'.$model->quarter.'" = "Q1", COALESCE(financialAccompsQ1.releases, 0),
@@ -7207,20 +7232,12 @@ class SummaryController extends \yii\web\Controller
 
             $isCompleted = 'COALESCE(accomps.action, 0)';
             $isPercent = 'LOCATE("%", physicalTargets.indicator)';
-            $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccomp.' - '.$physicalTarget.', IF('.$physicalTarget.' > 0, (('.$physicalAccomp.'/'.$physicalTarget.') * 100) -100 , 0))';
-            $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
-            $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
-            $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
-            $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' = 0, IF('.$physicalTarget.' > 0, 1, 0), 0), 0)';
-            $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' = 0, IF('.$physicalTarget.' <= 0, 1, 0), 0), 0)';
-
-            $financialWeight = floatval($financialTargetTotal) > 0 ? floatval($financialTotal) / floatval($financialTargetTotal) : 0;
-
-            $physicalTargetPercentage = floatval($physicalTargetTotal) > 0 ? (floatval($physicalTargetForTheQuarter) / floatval($physicalTargetTotal))*100 : 0;
-            $physicalTargetWeight = $physicalTargetPercentage * $financialWeight;
-
-            $physicalAccompPercentage = floatval($physicalTargetTotal) > 0 ? (floatval($physicalAccompForTheQuarter) / floatval($physicalTargetTotal))*100 : 0;
-            $physicalAccompWeight = $physicalAccompPercentage * $financialWeight;
+            $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
+            $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
+            $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
+            $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
+            $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
+            $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
 
             $projects = Project::find()
                         ->select([
@@ -7249,10 +7266,13 @@ class SummaryController extends \yii\web\Controller
                             'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
                             'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
                             'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
-                            'SUM('.$financialTarget.') as allocations',
+                            'SUM('.$financialTargetTotal.') as allocations',
                             'SUM('.$releases.') as releases',
                             'SUM('.$obligations.') as obligations',
                             'SUM('.$expenditures.') as expenditures',
+                            /* 'SUM('.$physicalTargetTotal.') as physicalTargetTotal',
+                            'SUM('.$physicalTargetPercentage.') as physicalTargetPercentage',
+                            'SUM('.$financialWeight.') as financialWeight', */
                             'SUM('.$physicalTargetWeight.') as physicalTarget',
                             'SUM('.$physicalAccompWeight.') as physicalActual',
                             'SUM('.$maleEmployedTarget.') as malesEmployedTarget',
@@ -7292,6 +7312,7 @@ class SummaryController extends \yii\web\Controller
             $projects = $projects->leftJoin(['groupBeneficiariesAccompsQ3' => '('.$groupBeneficiariesAccomps.')'], 'groupBeneficiariesAccompsQ3.project_id = project.id and groupBeneficiariesAccompsQ3.quarter = "Q3"');
             $projects = $projects->leftJoin(['groupBeneficiariesAccompsQ4' => '('.$groupBeneficiariesAccomps.')'], 'groupBeneficiariesAccompsQ4.project_id = project.id and groupBeneficiariesAccompsQ4.quarter = "Q4"');
             $projects = $projects->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+            $projects = $projects->leftJoin(['allocationTotalPerAgency' => '('.$allocationTotalPerAgency.')'], 'allocationTotalPerAgency.agency_id = project.agency_id');
             $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
             $projects = $projects->leftJoin('program', 'program.id = project.program_id');
             $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
