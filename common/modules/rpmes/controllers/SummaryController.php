@@ -6887,7 +6887,7 @@ class SummaryController extends \yii\web\Controller
             $beneficiariesAccomps = BeneficiariesAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as action'])->where(['year' => $model->year])->createCommand()->getRawSql();
-            echo "<pre>"; print_r($financialAccomps); exit;
+            
             $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
 
@@ -6994,6 +6994,29 @@ class SummaryController extends \yii\web\Controller
                                         )
                                     )
                                 )';
+
+            $physicalTargetTotal = 'IF(project.data_type <> "Default",
+                                    IF(COALESCE(physicalTargets.q4, 0) <= 0,
+                                        IF(COALESCE(physicalTargets.q3, 0) <= 0,
+                                            IF(COALESCE(physicalTargets.q2, 0) <= 0,
+                                                COALESCE(physicalTargets.q1, 0)
+                                            , COALESCE(physicalTargets.q2, 0))
+                                        , COALESCE(physicalTargets.q3, 0))
+                                    , COALESCE(physicalTargets.q4, 0))
+                                ,   
+                                COALESCE(physicalTargets.q1, 0) +
+                                COALESCE(physicalTargets.q2, 0) +
+                                COALESCE(physicalTargets.q3, 0) +
+                                COALESCE(physicalTargets.q4, 0)
+                                )';            
+            
+            $physicalTargetForTheQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                                                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                                                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                                                    COALESCE(physicalTargets.q4, 0)
+                                                    )
+                                                )
+                                            )';
             
             $financialTarget = 'IF(project.data_type <> "Cumulative",
                                     IF("'.$model->quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
@@ -7013,7 +7036,24 @@ class SummaryController extends \yii\web\Controller
                                     )
                                 )'; 
 
-            $physicalAccomp = 'IF(project.data_type <> "Cumulative",
+            $financialTotal = 'IF(project.data_type = "Cumulative",
+                                    IF(COALESCE(financialTargets.q4, 0) <= 0,
+                                        IF(COALESCE(financialTargets.q3, 0) <= 0,
+                                            IF(COALESCE(financialTargets.q2, 0) <= 0,
+                                                COALESCE(financialTargets.q1, 0)
+                                            , COALESCE(financialTargets.q2, 0))
+                                        , COALESCE(financialTargets.q3, 0))
+                                    , COALESCE(financialTargets.q4, 0))
+                                ,   
+                                COALESCE(financialTargets.q1, 0) +
+                                COALESCE(financialTargets.q2, 0) +
+                                COALESCE(financialTargets.q3, 0) +
+                                COALESCE(financialTargets.q4, 0)
+                                )';                 
+                
+            $financialTargetTotal = 'SUM(COALESCE('.$financialTotal.', 0))';
+
+            $physicalAccomp = 'IF(project.data_type = "Default",
                                     IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
                                         IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
                                             IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
@@ -7030,6 +7070,14 @@ class SummaryController extends \yii\web\Controller
                                         )
                                     )
                                 )';
+
+            $physicalAccompForTheQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+                                                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+                                                    COALESCE(physicalAccompsQ4.value, 0)
+                                                    )
+                                                )
+                                            )';
             
             $releases = 'IF(project.data_type <> "Cumulative",
                             IF("'.$model->quarter.'" = "Q1", COALESCE(financialAccompsQ1.releases, 0),
@@ -7166,6 +7214,14 @@ class SummaryController extends \yii\web\Controller
             $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' = 0, IF('.$physicalTarget.' > 0, 1, 0), 0), 0)';
             $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccomp.' = 0, IF('.$physicalTarget.' <= 0, 1, 0), 0), 0)';
 
+            $financialWeight = floatval($financialTargetTotal) > 0 ? floatval($financialTotal) / floatval($financialTargetTotal) : 0;
+
+            $physicalTargetPercentage = floatval($physicalTargetTotal) > 0 ? (floatval($physicalTargetForTheQuarter) / floatval($physicalTargetTotal))*100 : 0;
+            $physicalTargetWeight = $physicalTargetPercentage * $financialWeight;
+
+            $physicalAccompPercentage = floatval($physicalTargetTotal) > 0 ? (floatval($physicalAccompForTheQuarter) / floatval($physicalTargetTotal))*100 : 0;
+            $physicalAccompWeight = $physicalAccompPercentage * $financialWeight;
+
             $projects = Project::find()
                         ->select([
                             'project.id',
@@ -7197,8 +7253,8 @@ class SummaryController extends \yii\web\Controller
                             'SUM('.$releases.') as releases',
                             'SUM('.$obligations.') as obligations',
                             'SUM('.$expenditures.') as expenditures',
-                            'SUM('.$physicalTarget.') as physicalTarget',
-                            'SUM('.$physicalAccomp.') as physicalActual',
+                            'SUM('.$physicalTargetWeight.') as physicalTarget',
+                            'SUM('.$physicalAccompWeight.') as physicalActual',
                             'SUM('.$maleEmployedTarget.') as malesEmployedTarget',
                             'SUM('.$femaleEmployedTarget.') as femalesEmployedTarget',
                             'SUM('.$maleEmployedAccomp.') as malesEmployedActual',
