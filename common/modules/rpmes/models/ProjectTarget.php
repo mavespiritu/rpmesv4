@@ -34,7 +34,7 @@ class ProjectTarget extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['q1', 'q2', 'q3', 'q4'], function ($attribute, $params, $validator) {
+            /* [['q1', 'q2', 'q3', 'q4'], function ($attribute, $params, $validator) {
                 $project = Project::findOne(['id' => $this->project_id]) ? Project::findOne(['id' => $this->project_id]) : new Project();
                 $data_type = !$project->isNewRecord ? $project->data_type : '';
                 $values = [];
@@ -94,7 +94,7 @@ class ProjectTarget extends \yii\db\ActiveRecord
                         }
                     }
                 }
-            }],
+            }], */
             [['q1', 'q2', 'q3', 'q4'], 'required'],
             [['indicator'], 'required', 'on' => 'physicalTarget'],
             [['project_id', 'year'], 'integer'],
