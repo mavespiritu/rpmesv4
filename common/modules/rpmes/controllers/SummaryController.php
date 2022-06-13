@@ -336,7 +336,7 @@ class SummaryController extends \yii\web\Controller
                             'SUM('.$financialsQ2.') as q2financial',
                             'SUM('.$financialsQ3.') as q3financial',
                             'SUM('.$financialsQ4.') as q4financial',
-                            'SUM(COALESCE(financials.q1, 0) + COALESCE('.$financialsQ2.', 0) + COALESCE('.$financialsQ3.', 0) + COALESCE('.$financialsQ4.', 0)) as financialTotal',
+                            'SUM(COALESCE('.$financialTotal.', 0)) as financialTotal',
                             'SUM(
                                 IF(physicals.q1 > 0, 1, 0) 
                             ) as q1physical',
@@ -3636,7 +3636,7 @@ class SummaryController extends \yii\web\Controller
                         'SUM('.$financialsQ2.') as q2financial',
                         'SUM('.$financialsQ3.') as q3financial',
                         'SUM('.$financialsQ4.') as q4financial',
-                        'SUM(COALESCE(financials.q1, 0) + COALESCE('.$financialsQ2.', 0) + COALESCE('.$financialsQ3.', 0) + COALESCE('.$financialsQ4.', 0)) as financialTotal',
+                        'SUM(COALESCE('.$financialTotal.', 0)) as financialTotal',
                         'SUM(
                             IF(physicals.q1 > 0, 1, 0) 
                         ) as q1physical',
