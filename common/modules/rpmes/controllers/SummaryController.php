@@ -3877,7 +3877,7 @@ class SummaryController extends \yii\web\Controller
                     $data[$project['agencyTitle']]['content']['q2financial'] += $project['q2financial'];
                     $data[$project['agencyTitle']]['content']['q3financial'] += $project['q3financial'];
                     $data[$project['agencyTitle']]['content']['q4financial'] += $project['q4financial'];
-                    $data[$project['agencyTitle']]['content']['q4financial'] += $project['financialTotal'];
+                    $data[$project['agencyTitle']]['content']['financialTotal'] += $project['financialTotal'];
                     $data[$project['agencyTitle']]['content']['q1physical'] += $project['q1physical'];
                     $data[$project['agencyTitle']]['content']['q2physical'] += $project['q2physical'];
                     $data[$project['agencyTitle']]['content']['q3physical'] += $project['q3physical'];
