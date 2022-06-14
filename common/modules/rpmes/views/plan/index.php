@@ -6,6 +6,7 @@ use yii\widgets\ActiveForm;
 use yii\grid\GridView;
 use yii\widgets\LinkPager;
 use common\components\helpers\HtmlHelper;
+use yii\bootstrap\ButtonDropdown;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 DisableButtonAsset::register($this);
 use yii\web\View;
@@ -25,6 +26,19 @@ function renderSummary($page)
     $total = $page->totalCount;
     return 'Showing <b>'.$firstNumber.'-'.$lastNumber.'</b> of <b>'.$total.'</b> items.';
 }
+
+$year = $model->year != '' ? $model->year : '';
+$agency_id = $model->agency_id != '' ? $model->agency_id : '';
+$category_id = $categoryModel->category_id != '' ? $categoryModel->category_id : '';
+$fund_source_id = $model->fund_source_id != '' ? $model->fund_source_id : '';
+$sector_id = $model->sector_id != '' ? $model->sector_id : '';
+$sub_sector_id = $model->sub_sector_id != '' ? $model->sub_sector_id : '';
+$region_id = !empty($regionModel->region_id) ? json_encode($regionModel->region_id) : '';
+$province_id = !empty($provinceModel->province_id) ? json_encode($provinceModel->province_id) : '';
+$period = $model->period != '' ? $model->period : '';
+$data_type = $model->data_type != '' ? $model->data_type : '';
+$project_no = $model->project_no != '' ? $model->project_no : '';
+$title = $model->title != '' ? $model->title : '';
 ?>
 <div class="plan-index">
     <div class="alert alert-<?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'info' : 'danger' : '' ?>"><i class="fa fa-exclamation-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' to go before the deadline of submission of monitoring plan. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) 
@@ -60,7 +74,6 @@ function renderSummary($page)
                     'model' => $model,
                     'regionModel' => $regionModel,
                     'provinceModel' => $provinceModel,
-                    'citymunModel' => $citymunModel,
                     'categoryModel' => $categoryModel,
                     'years' => $years,
                     'agencies' => $agencies,
@@ -73,17 +86,69 @@ function renderSummary($page)
                     'scopes' => $scopes,
                     'regions' => $regions,
                     'provinces' => $provinces,
-                    'citymuns' => $citymuns,
                     'categories' => $categories,
                     'kras' => $kras,
                     'goals' => $goals,
                     'chapters' => $chapters,
+                    'periods' => $periods,
+                    'dataTypes' => $dataTypes,
                 ]) ?>
                 <hr>
                 <?php $form = ActiveForm::begin([
                     'id' => 'monitoring-project-form',
                     'options' => ['class' => 'disable-submit-buttons'],
                 ]); ?>
+                <div class="pull-left">
+                    <?= ButtonDropdown::widget([
+                        'label' => '<i class="fa fa-download"></i> Export',
+                        'encodeLabel' => false,
+                        'options' => ['class' => 'btn btn-success btn-sm'],
+                        'dropdown' => [
+                            'items' => [
+                                [
+                                    'label' => 'Excel', 
+                                    'encodeLabel' => false, 
+                                    'url' => Url::to(['/rpmes/plan/download-monitoring-plan', 
+                                        'type' => 'excel', 
+                                        'year' => $year,
+                                        'agency_id' => $agency_id,
+                                        'category_id' => $category_id,
+                                        'fund_source_id' => $fund_source_id,
+                                        'sector_id' => $sector_id,
+                                        'sub_sector_id' => $sub_sector_id,
+                                        'region_id' => $region_id,
+                                        'province_id' => $province_id,
+                                        'period' => $period,
+                                        'data_type' => $data_type,
+                                        'project_no' => $project_no,
+                                        'title' => $title,
+                                    ])
+                                ],
+                                [   'label' => 'PDF', 
+                                    'encodeLabel' => false, 
+                                    'url' => Url::to(['/rpmes/plan/download-monitoring-plan',
+                                        'type' => 'pdf', 
+                                        'year' => $year,
+                                        'agency_id' => $agency_id,
+                                        'category_id' => $category_id,
+                                        'fund_source_id' => $fund_source_id,
+                                        'sector_id' => $sector_id,
+                                        'sub_sector_id' => $sub_sector_id,
+                                        'region_id' => $region_id,
+                                        'province_id' => $province_id,
+                                        'period' => $period,
+                                        'data_type' => $data_type,
+                                        'project_no' => $project_no,
+                                        'title' => $title,
+                                    ])
+                                ],
+                            ],
+                        ],
+                    ]) ?>
+                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormOneReport()', 'class' => 'btn btn-danger btn-sm']) ?>
+                </div>
+                <div class="clearfix"></div>
+                <br>
                 <div class="summary"><?= renderSummary($projectsPages) ?></div>
                 <div class="monitoring-project-table" style="height: 800px;">
                     <table class="table table-condensed table-striped table-hover table-responsive table-bordered" cellspacing="0" style="min-width: 3000px;">

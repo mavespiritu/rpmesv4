@@ -39,6 +39,28 @@ DisableButtonAsset::register($this);
             ?>
         </div>
         <div class="col-md-3 col-xs-12">
+            <?= $form->field($categoryModel, 'category_id')->widget(Select2::classname(), [
+                'data' => $categories,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
+                'data' => $fundSources,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'fund-source-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+    </div>
+    <div class="row">
+    <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
                 'data' => $sectors,
                 'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
@@ -73,8 +95,6 @@ DisableButtonAsset::register($this);
                 ]);
             ?>
         </div>
-    </div>
-    <div class="row">
         <div class="col-md-3 col-xs-12">
             <?= $form->field($regionModel, 'region_id')->widget(Select2::classname(), [
                 'data' => $regions,
@@ -94,8 +114,6 @@ DisableButtonAsset::register($this);
                             }).done(function(result) {
                                 $(".province-select").html("").select2({ data:result, multiple:true, theme:"krajee", width:"100%",placeholder:"Select one or more", allowClear: true});
                                 $(".province-select").select2("val","");
-                                $(".citymun-select").select2("val","");
-                                $(".barangay-select").select2("val","");
                             });
                         }'
     
@@ -110,68 +128,25 @@ DisableButtonAsset::register($this);
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
-                'pluginEvents'=>[
-                    'select2:select select2:unselect'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.Url::to(['/rpmes/project/citymun-list']).'",
-                                dataType: "JSON",
-                                data: {
-                                        id: JSON.stringify($("#projectprovince-province_id").select2("data")),
-                                    }
-                            }).done(function(result) {
-                                $(".citymun-select").html("").select2({ data:result, multiple:true, theme:"krajee", width:"100%",placeholder:"Select one or more", allowClear: true});
-                                $(".citymun-select").select2("val","");
-                                $(".barangay-select").select2("val","");
-                            });
-                        }'
-    
-                ]
-                ]);
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($citymunModel, 'citymun_id')->widget(Select2::classname(), [
-                'data' => $citymuns,
-                'options' => ['multiple' => true, 'placeholder' => 'Select one or more', 'class'=>'citymun-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                'pluginEvents'=>[
-                    'select2:select select2:unselect'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.Url::to(['/rpmes/project/barangay-list']).'",
-                                dataType: "JSON",
-                                data: {
-                                        id: JSON.stringify($("#projectcitymun-citymun_id").select2("data")),
-                                    }
-                            }).done(function(result) {
-                                $(".barangay-select").html("").select2({ data:result, multiple:true, theme:"krajee", width:"100%",placeholder:"Select one or more", allowClear: true});
-                                $(".barangay-select").select2("val","");
-                            });
-                        }'
-    
-                ]
-                ]);
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
-                'data' => $fundSources,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'fund-source-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
                 ]);
             ?>
         </div>
     </div>
     <div class="row">
         <div class="col-md-3 col-xs-12">
-            <?= $form->field($categoryModel, 'category_id')->widget(Select2::classname(), [
-                'data' => $categories,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
+            <?= $form->field($model, 'period')->widget(Select2::classname(), [
+                'data' => $periods,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'period-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'data_type')->widget(Select2::classname(), [
+                'data' => $dataTypes,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'data-type-select'],
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
