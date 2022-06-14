@@ -145,7 +145,21 @@ $title = $model->title != '' ? $model->title : '';
                             ],
                         ],
                     ]) ?>
-                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormOneReport()', 'class' => 'btn btn-danger btn-sm']) ?>
+                    <?= Html::button('<i class="fa fa-print"></i> Print', [
+                        'onClick' => 'printFormOneReport(
+                            "'.$year.'",
+                            "'.$agency_id.'",
+                            "'.$category_id.'",
+                            "'.$fund_source_id.'",
+                            "'.$sector_id.'",
+                            "'.$sub_sector_id.'",
+                            "'.str_replace('"', '\'', json_encode($regionModel->region_id)).'",
+                            "'.str_replace('"', '\'', json_encode($provinceModel->province_id)).'",
+                            "'.$period.'",
+                            "'.$data_type.'",
+                            "'.$project_no.'",
+                            "'.$title.'"
+                        )', 'class' => 'btn btn-danger btn-sm']) ?>
                 </div>
                 <div class="clearfix"></div>
                 <br>
@@ -293,6 +307,26 @@ $title = $model->title != '' ? $model->title : '';
 </div>
 <?php
     $script = '
+    function printFormOneReport(year, agency_id, category_id, fund_source_id, sector_id, sub_sector_id, region_id, province_id, period, data_type, project_no, title)
+    {
+        var printWindow = window.open(
+            "'.Url::to(['/rpmes/plan/download-monitoring-plan']).'?type=print&year=" + year +  "&agency_id=" + agency_id + "&category_id=" + category_id + "&fund_source_id=" + fund_source_id + "&sector_id=" + sector_id + "&sub_sector_id=" + sub_sector_id + "&region_id=" + region_id + "&province_id=" + province_id + "&period=" + period + "&data_type=" + data_type+ "&project_no=" + project_no+ "&title=" + title, 
+            "Print",
+            "left=200", 
+            "top=200", 
+            "width=650", 
+            "height=500", 
+            "toolbar=0", 
+            "resizable=0"
+            );
+            printWindow.addEventListener("load", function() {
+                printWindow.print();
+                setTimeout(function() {
+                printWindow.close();
+            }, 1);
+            }, true);
+    }
+
     function enableMonitoringButtons()
     {
         if($("#monitoring-project-form input:checkbox:checked").length > 0)

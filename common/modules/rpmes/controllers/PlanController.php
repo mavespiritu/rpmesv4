@@ -613,8 +613,8 @@ class PlanController extends \yii\web\Controller
         $title
     )
     {
-        $region_id = json_decode($region_id, true);
-        $province_id = json_decode($province_id, true);
+        $region_id = $type == 'print' ? json_decode(str_replace('\'', '"', $region_id), true) : json_decode($region_id, true);
+        $province_id = $type == 'print' ? json_decode(str_replace('\'', '"', $province_id), true) : json_decode($province_id, true);
         $agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : $agency_id;
         
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
