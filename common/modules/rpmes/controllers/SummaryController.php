@@ -3633,41 +3633,55 @@ class SummaryController extends \yii\web\Controller
             ->groupBy(['project_barangay.project_id'])
             ->createCommand()->getRawSql();
 
-        $financialTotal = 'IF(project.data_type = "Cumulative",
-                                IF(COALESCE(financials.q4, 0) <= 0,
-                                    IF(COALESCE(financials.q3, 0) <= 0,
-                                        IF(COALESCE(financials.q2, 0) <= 0,
-                                            COALESCE(financials.q1, 0)
-                                        , COALESCE(financials.q2, 0))
-                                    , COALESCE(financials.q3, 0))
-                                , COALESCE(financials.q4, 0))
-                            ,   
-                            COALESCE(financials.q1, 0) +
-                            COALESCE(financials.q2, 0) +
-                            COALESCE(financials.q3, 0) +
-                            COALESCE(financials.q4, 0)
-                            )'; 
-        
-        $financialsQ2 = 'IF(project.data_type = "Cumulative",
+            $financialTotal = 'IF(project.data_type = "Cumulative",
+                        IF(COALESCE(financials.q4, 0) <= 0,
+                            IF(COALESCE(financials.q3, 0) <= 0,
+                                IF(COALESCE(financials.q2, 0) <= 0,
+                                    COALESCE(financials.q1, 0)
+                                , COALESCE(financials.q2, 0)
+                                )
+                            , COALESCE(financials.q3, 0)
+                            )
+                        , COALESCE(financials.q4, 0))
+                    ,   
+                    COALESCE(financials.q1, 0) +
+                    COALESCE(financials.q2, 0) +
+                    COALESCE(financials.q3, 0) +
+                    COALESCE(financials.q4, 0)
+                    )'; 
+
+            $financialsQ2 = 'IF(project.data_type = "Cumulative",
+                    IF(COALESCE(financials.q2, 0) > 0,
+                        COALESCE(financials.q2, 0) - COALESCE(financials.q1, 0)
+                    , COALESCE(financials.q2, 0)
+                    )
+                ,COALESCE(financials.q2, 0)
+                )'; 
+
+            $financialsQ3 = 'IF(project.data_type = "Cumulative",
+                    IF(COALESCE(financials.q3, 0) > 0,
+                        IF(COALESCE(financials.q2, 0) > 0, 
+                            COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0), 
+                            COALESCE(financials.q3, 0) - COALESCE(financials.q1, 0)
+                        )
+                    , COALESCE(financials.q3, 0)
+                    )
+                ,COALESCE(financials.q3, 0)
+                )'; 
+
+            $financialsQ4 = 'IF(project.data_type = "Cumulative",
+                    IF(COALESCE(financials.q4, 0) > 0,
+                        IF(COALESCE(financials.q3, 0) > 0,
+                            COALESCE(financials.q4, 0) - COALESCE(financials.q3, 0),
                             IF(COALESCE(financials.q2, 0) > 0,
-                            COALESCE(financials.q2, 0) - COALESCE(financials.q1, 0)
-                            , COALESCE(financials.q2, 0))
-                        ,COALESCE(financials.q2, 0)
-                        )'; 
-
-        $financialsQ3 = 'IF(project.data_type = "Cumulative",
-                            IF(COALESCE(financials.q3, 0) > 0,
-                                COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0)
-                            , COALESCE(financials.q3, 0))
-                        ,COALESCE(financials.q3, 0)
-                        )'; 
-
-        $financialsQ4 = 'IF(project.data_type = "Cumulative",
-                            IF(COALESCE(financials.q4, 0) > 0,
-                                COALESCE(financials.q4, 0) - COALESCE(financials.q3, 0)
-                            , COALESCE(financials.q4, 0))
-                        ,COALESCE(financials.q4, 0)
-                        )'; 
+                                COALESCE(financials.q4, 0) - COALESCE(financials.q2, 0),
+                                COALESCE(financials.q4, 0) - COALESCE(financials.q1, 0)
+                            )
+                        )
+                    , COALESCE(financials.q4, 0)
+                    )
+                ,COALESCE(financials.q4, 0)
+                )'; 
 
         $projects = Project::find()
                     ->select([
