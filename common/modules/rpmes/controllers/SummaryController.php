@@ -3542,6 +3542,7 @@ class SummaryController extends \yii\web\Controller
 
         $regionIDs = ProjectRegion::find();
         $provinceIDs = ProjectProvince::find();
+        $categoryIDs = ProjectCategory::find();
 
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
         $genders = ['M' => 'Male', 'F' => 'Female'];
@@ -3742,8 +3743,6 @@ class SummaryController extends \yii\web\Controller
         $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
         $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
         $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-        $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id');
-        $projects = $projects->leftJoin('category', 'category.id = project_category.category_id');
         $projects = $projects->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
         $projects = $projects->leftJoin(['kraTitles' => '('.$kraTitles.')'], 'kraTitles.project_id = project.id');
         $projects = $projects->leftJoin(['sdgGoalTitles' => '('.$sdgGoalTitles.')'], 'sdgGoalTitles.project_id = project.id');
@@ -3769,7 +3768,7 @@ class SummaryController extends \yii\web\Controller
 
         if($model->category_id != '')
         {
-            $projects = $projects->andWhere(['category.id' => $model->category_id]);
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $model->category_id]);
         }
 
         if($model->sector_id != '')
@@ -3803,6 +3802,9 @@ class SummaryController extends \yii\web\Controller
         $provinceIDs = $provinceIDs->all();
         $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
 
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
         if($model->region_id != '')
         {
             $projects = $projects->andWhere(['project.id' => $regionIDs]);
@@ -3811,6 +3813,11 @@ class SummaryController extends \yii\web\Controller
         if($model->province_id != '')
         {
             $projects = $projects->andWhere(['project.id' => $provinceIDs]);
+        }
+
+        if($model->category_id != '')
+        {
+            $projects = $projects->andWhere(['project.id' => $categoryIDs]);
         }
 
         if($model->grouping == '_agency_by_category'){ $projects = $projects->groupBy(['agencyTitle', 'categoryTitle']); }
