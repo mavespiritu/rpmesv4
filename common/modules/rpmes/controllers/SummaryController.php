@@ -201,10 +201,6 @@ class SummaryController extends \yii\web\Controller
             $provinceIDs = ProjectProvince::find();
             $categoryIDs = ProjectCategory::find();
 
-            $provinces = Province::find()
-            ->select(['province_c as id', 'concat(tblregion.abbreviation,": ",tblprovince.province_m) as title', 'abbreviation'])
-            ->leftJoin('tblregion', 'tblregion.region_c = tblprovince.region_c');
-
             $categoryTitles = ProjectCategory::find()
                 ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
                 ->leftJoin('category', 'category.id = project_category.category_id')
@@ -430,7 +426,6 @@ class SummaryController extends \yii\web\Controller
             if($model->region_id != '')
             {
                 $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
-                $provinces = $provinces->andWhere(['tblprovince.region_c' => $model->region_id]);
             }
 
             if($model->province_id != '')
@@ -6963,8 +6958,10 @@ class SummaryController extends \yii\web\Controller
         $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->asArray()->all();
         $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
 
-        $locations = Province::find()->orderBy(['province_m' => SORT_ASC])->asArray()->all();
-        $locations = ArrayHelper::map($locations, 'province_c', 'province_m');
+        $regions = Region::find()->orderBy(['region_sort' => SORT_ASC])->all();
+        $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
+
+        $provinces = [];
 
         $periods = ['Current Year' => 'Current Year', 'Carry-Over' => 'Carry-Over'];
 
@@ -7007,6 +7004,10 @@ class SummaryController extends \yii\web\Controller
             
             $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
+
+            $regionIDs = ProjectRegion::find();
+            $provinceIDs = ProjectProvince::find();
+            $categoryIDs = ProjectCategory::find();
 
             $categoryTitles = ProjectCategory::find()
                 ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
@@ -7449,7 +7450,7 @@ class SummaryController extends \yii\web\Controller
 
             if($model->category_id != '')
             {
-                $projects = $projects->andWhere(['category.id' => $model->category_id]);
+                $categoryIDs = $categoryIDs->andWhere(['category_id' => $model->category_id]);
             }
 
             if($model->sector_id != '')
@@ -7457,9 +7458,14 @@ class SummaryController extends \yii\web\Controller
                 $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
             }
 
+            if($model->region_id != '')
+            {
+                $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
+            }
+
             if($model->province_id != '')
             {
-                $projects = $projects->andWhere(['tblprovince.province_c' => $model->province_id]);
+                $provinceIDs = $provinceIDs->andWhere(['province_id' => $model->province_id]);
             }
 
             if($model->fund_source_id != '')
@@ -7470,6 +7476,30 @@ class SummaryController extends \yii\web\Controller
             if($model->period != '')
             {
                 $projects = $projects->andWhere(['project.period' => $model->period]);
+            }
+
+            $regionIDs = $regionIDs->all();
+            $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
+
+            $provinceIDs = $provinceIDs->all();
+            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+            if($model->region_id != '')
+            {
+                $projects = $projects->andWhere(['project.id' => $regionIDs]);
+            }
+
+            if($model->province_id != '')
+            {
+                $projects = $projects->andWhere(['project.id' => $provinceIDs]);
+            }
+
+            if($model->category_id != '')
+            {
+                $projects = $projects->andWhere(['project.id' => $categoryIDs]);
             }
 
             if($model->grouping == '_agency_by_category'){ $projects = $projects->groupBy(['agencyTitle', 'categoryTitle']); }
@@ -10294,7 +10324,8 @@ class SummaryController extends \yii\web\Controller
             'agencies' => $agencies,
             'sectors' => $sectors,
             'categories' => $categories,
-            'locations' => $locations,
+            'regions' => $regions,
+            'provinces' => $provinces,
             'fundSources' => $fundSources,
             'periods' => $periods
         ]);

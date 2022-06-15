@@ -29,7 +29,8 @@
                         'agencies' => $agencies,
                         'sectors' => $sectors,
                         'categories' => $categories,
-                        'locations' => $locations,
+                        'regions' => $regions,
+                        'provinces' => $provinces,
                         'fundSources' => $fundSources,
                         'periods' => $periods
                     ]) ?>

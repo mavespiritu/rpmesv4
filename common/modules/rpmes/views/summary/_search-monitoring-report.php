@@ -72,8 +72,33 @@ DisableButtonAsset::register($this);
             ?>
         </div>
         <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'region_id')->widget(Select2::classname(), [
+                'data' => $regions,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'region-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                'pluginEvents'=>[
+                    'select2:select select2:unselect'=>'
+                        function(){
+                            $.ajax({
+                                url: "'.Url::to(['/rpmes/project/province-list-single']).'",
+                                data: {
+                                        id: this.value,
+                                    }
+                            }).done(function(result) {
+                                $(".province-select").html("").select2({ data:result, multiple:false, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
+                                $(".province-select").select2("val","");
+                            });
+                        }'
+    
+                ]
+                ]);
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'province_id')->widget(Select2::classname(), [
-                'data' => $locations,
+                'data' => $provinces,
                 'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'province-select'],
                 'pluginOptions' => [
                     'allowClear' =>  true,
@@ -91,6 +116,8 @@ DisableButtonAsset::register($this);
                 ])->label('Fund Source');
             ?>
         </div>
+    </div>
+    <div class="row">
         <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'period')->widget(Select2::classname(), [
                 'data' => $periods,
@@ -101,11 +128,6 @@ DisableButtonAsset::register($this);
                 ]);
             ?>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-3 col-xs-12">&nbsp;</div>
-        <div class="col-md-3 col-xs-12">&nbsp;</div>
-        <div class="col-md-3 col-xs-12">&nbsp;</div>
         <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'grouping')->widget(Select2::classname(), [
                     'data' => $sorts,
