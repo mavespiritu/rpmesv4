@@ -355,7 +355,31 @@ class SummaryController extends \yii\web\Controller
                             'IF(rdpChapterTitles.title is null, "No RDP Chapters", rdpChapterTitles.title) as chapterTitle',
                             'IF(rdpChapterOutcomeTitles.title is null, "No RDP Chapter Outcomes", rdpChapterOutcomeTitles.title) as chapterOutcomeTitle',
                             'IF(rdpSubChapterOutcomeTitles.title is null, "No RDP Sub-Chapter Outcomes", rdpSubChapterOutcomeTitles.title) as subChapterOutcomeTitle',
-                            
+                            'SUM(financials.q1) as q1financial',
+                            'SUM('.$financialsQ2.') as q2financial',
+                            'SUM('.$financialsQ3.') as q3financial',
+                            'SUM('.$financialsQ4.') as q4financial',
+                            'SUM(COALESCE('.$financialTotal.', 0)) as financialTotal',
+                            'SUM(IF(physicals.q1 > 0, 1, 0)) as q1physical',
+                            'SUM(IF(physicals.q1 <= 0, IF(physicals.q2 > 0, 1, 0), 0)) as q2physical',
+                            'SUM(IF(physicals.q1 <= 0, IF(physicals.q2 <= 0, IF(physicals.q3 > 0, 1, 0), 0), 0)) as q3physical',
+                            'SUM(IF(physicals.q1 <= 0, IF(physicals.q2 <= 0, IF(physicals.q3 <= 0, IF(physicals.q4 > 0, 1, 0), 0), 0), 0)) as q4physical',
+                            'SUM(malesEmployed.q1) as q1maleEmployed',
+                            'SUM(malesEmployed.q2) as q2maleEmployed',
+                            'SUM(malesEmployed.q3) as q3maleEmployed',
+                            'SUM(malesEmployed.q4) as q4maleEmployed',
+                            'SUM(femalesEmployed.q1) as q1femaleEmployed',
+                            'SUM(femalesEmployed.q2) as q2femaleEmployed',
+                            'SUM(femalesEmployed.q3) as q3femaleEmployed',
+                            'SUM(femalesEmployed.q4) as q4femaleEmployed',
+                            'SUM(beneficiaries.q1) as q1beneficiary',
+                            'SUM(beneficiaries.q2) as q2beneficiary',
+                            'SUM(beneficiaries.q3) as q3beneficiary',
+                            'SUM(beneficiaries.q4) as q4beneficiary',
+                            'SUM(groupBeneficiaries.q1) as q1groupBeneficiary',
+                            'SUM(groupBeneficiaries.q2) as q2groupBeneficiary',
+                            'SUM(groupBeneficiaries.q3) as q3groupBeneficiary',
+                            'SUM(groupBeneficiaries.q4) as q4groupBeneficiary',
                         ]);
             
             $projects = $projects->leftJoin(['physicals' => '('.$physicals.')'], 'physicals.project_id = project.id');
@@ -383,10 +407,6 @@ class SummaryController extends \yii\web\Controller
             $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
             $projects = $projects->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
             $projects = $projects->andWhere(['project.id' => $projectIDs]);
-
-            $projects = $projects->asArray()->all();
-            
-            echo "<pre>"; print_r($projects); exit; 
 
             if(Yii::$app->user->can('AgencyUser'))
             {
