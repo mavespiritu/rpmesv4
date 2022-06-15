@@ -808,6 +808,7 @@ class PlanController extends \yii\web\Controller
                     ->asArray()
                     ->all();
 
+        $projects = ArrayHelper::map($projects, 'id', 'id');
         echo "<pre>"; print_r($projects); exit;
         $filename = 'Initial Project Report';
 
