@@ -756,12 +756,11 @@ class PlanController extends \yii\web\Controller
         $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
         $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
         $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-        $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id');
-        $projects = $projects->leftJoin('category', 'category.id = project_category.category_id');
         $projects = $projects->andWhere(['project.draft' => 'No']);
 
         $regionIDs = ProjectRegion::find();
         $provinceIDs = ProjectProvince::find();
+        $categoryIDs = ProjectCategory::find();
 
         if($year != '')
         {
@@ -775,7 +774,7 @@ class PlanController extends \yii\web\Controller
 
         if($category_id != '')
         {
-            $projects = $projects->andWhere(['category.id' => $category_id]);
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
         }
 
         if($fund_source_id != '')
@@ -829,6 +828,9 @@ class PlanController extends \yii\web\Controller
         $provinceIDs = $provinceIDs->all();
         $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
 
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
         if($region_id != '')
         {
             $projects = $projects->andWhere(['project.id' => $regionIDs]);
@@ -837,6 +839,11 @@ class PlanController extends \yii\web\Controller
         if($province_id != '')
         {
             $projects = $projects->andWhere(['project.id' => $provinceIDs]);
+        }
+
+        if($category_id != '')
+        {
+            $projects = $projects->andWhere(['project.id' => $categoryIDs]);
         }
 
         $projects = $projects 
