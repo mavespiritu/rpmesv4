@@ -6893,10 +6893,20 @@ class SummaryController extends \yii\web\Controller
             $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as action'])->where(['year' => $model->year])->createCommand()->getRawSql();
             $allocationTotalPerAgency = ProjectTarget::find()
                                         ->select(['agency_id', 'SUM(
-                                            COALESCE(q1, 0) + 
-                                            COALESCE(q2, 0) + 
-                                            COALESCE(q3, 0) + 
-                                            COALESCE(q4, 0)
+                                            IF(project.data_type = "Cumulative",
+                                                IF(COALESCE(q4, 0) <= 0,
+                                                    IF(COALESCE(q3, 0) <= 0,
+                                                        IF(COALESCE(q2, 0) <= 0,
+                                                            COALESCE(q1, 0)
+                                                        , COALESCE(q2, 0))
+                                                    , COALESCE(q3, 0))
+                                                , COALESCE(q4, 0))
+                                            ,   
+                                                COALESCE(q1, 0) +
+                                                COALESCE(q2, 0) +
+                                                COALESCE(q3, 0) +
+                                                COALESCE(q4, 0)
+                                            )
                                         ) as total'])
                                         ->leftJoin('project', 'project.id = project_target.project_id')
                                         ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
