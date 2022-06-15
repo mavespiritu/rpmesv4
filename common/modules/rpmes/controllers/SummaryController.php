@@ -7351,31 +7351,7 @@ class SummaryController extends \yii\web\Controller
                             'IF(rdpChapterOutcomeTitles.title is null, "No RDP Chapter Outcomes", rdpChapterOutcomeTitles.title) as chapterOutcomeTitle',
                             'IF(rdpSubChapterOutcomeTitles.title is null, "No RDP Sub-Chapter Outcomes", rdpSubChapterOutcomeTitles.title) as subChapterOutcomeTitle',
                             'physicalTargets.indicator as indicator',
-                            'SUM('.$isCompleted.') as completed',
-                            'SUM('.$slippage.') as slippage',
-                            'SUM('.$behindSchedule.') as behindSchedule',
-                            'SUM('.$onSchedule.') as onSchedule',
-                            'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
-                            'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
-                            'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
-                            'SUM('.$financialTargetPerQuarter.') as allocations',
-                            'SUM('.$releases.') as releases',
-                            'SUM('.$obligations.') as obligations',
-                            'SUM('.$expenditures.') as expenditures',
-                            /* 'SUM('.$physicalTargetTotal.') as physicalTargetTotal',
-                            'SUM('.$physicalTargetPercentage.') as physicalTargetPercentage',
-                            'SUM('.$financialWeight.') as financialWeight', */
-                            'SUM('.$physicalTargetWeight.') as physicalTarget',
-                            'SUM('.$physicalAccompWeight.') as physicalActual',
-                            'SUM('.$maleEmployedTarget.') as malesEmployedTarget',
-                            'SUM('.$femaleEmployedTarget.') as femalesEmployedTarget',
-                            'SUM('.$maleEmployedAccomp.') as malesEmployedActual',
-                            'SUM('.$femaleEmployedAccomp.') as femalesEmployedActual',
-                            'SUM('.$beneficiaryTarget.') as beneficiariesTarget',
-                            'SUM('.$groupBeneficiaryTarget.') as groupBeneficiariesTarget',
-                            'SUM('.$maleBeneficiaryAccomp.') as maleBeneficiariesActual',
-                            'SUM('.$femaleBeneficiaryAccomp.') as femaleBeneficiariesActual',
-                            'SUM('.$groupBeneficiaryAccomp.') as groupBeneficiariesActual',
+                            
                         ]);
             $projects = $projects->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
             $projects = $projects->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
@@ -7422,6 +7398,10 @@ class SummaryController extends \yii\web\Controller
             $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
             $projects = $projects->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
             $projects = $projects->andWhere(['project.id' => $projectIDs]);
+
+            $projects = $projects->asArray()->all();
+
+            echo "<pre>"; print_r($projects); exit;
 
             if(Yii::$app->user->can('AgencyUser'))
             {
