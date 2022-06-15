@@ -705,6 +705,41 @@ class PlanController extends \yii\web\Controller
         $projects = Project::find()
                     ->select([
                         'project.id',
+                        'mode_of_implementation.title as modeOfImplementationTitle',
+                        'project.title as projectTitle',
+                        'sector.title as sectorTitle',
+                        'sub_sector.title as subSectorTitle',
+                        'fund_source.title as fundSourceTitle',
+                        'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
+                        'project.start_date as startDate',
+                        'project.completion_date as completionDate',
+                        'IF(project.data_type <> "", concat(physicalTargets.indicator, " (",project.data_type,")"), concat(physicalTargets.indicator, " (No Data Type)")) as unitOfMeasure',
+                        'financialTargets.q1 as financialQ1',
+                        'financialTargets.q2 as financialQ2',
+                        'financialTargets.q3 as financialQ3',
+                        'financialTargets.q4 as financialQ4',
+                        'COALESCE('.$financialTotal.', 0) as financialTotal',
+                        'physicalTargets.q1 as physicalQ1',
+                        'physicalTargets.q2 as physicalQ2',
+                        'physicalTargets.q3 as physicalQ3',
+                        'physicalTargets.q4 as physicalQ4',
+                        'COALESCE('.$physicalTotal.', 0) as physicalTotal',
+                        'maleEmployedTargets.q1 as maleEmployedQ1',
+                        'maleEmployedTargets.q2 as maleEmployedQ2',
+                        'maleEmployedTargets.q3 as maleEmployedQ3',
+                        'maleEmployedTargets.q4 as maleEmployedQ4',
+                        'femaleEmployedTargets.q1 as femaleEmployedQ1',
+                        'femaleEmployedTargets.q2 as femaleEmployedQ2',
+                        'femaleEmployedTargets.q3 as femaleEmployedQ3',
+                        'femaleEmployedTargets.q4 as femaleEmployedQ4',
+                        'beneficiariesTargets.q1 as beneficiaryQ1',
+                        'beneficiariesTargets.q2 as beneficiaryQ2',
+                        'beneficiariesTargets.q3 as beneficiaryQ3',
+                        'beneficiariesTargets.q4 as beneficiaryQ4',
+                        'groupBeneficiariesTargets.q1 as groupBeneficiaryQ1',
+                        'groupBeneficiariesTargets.q2 as groupBeneficiaryQ2',
+                        'groupBeneficiariesTargets.q3 as groupBeneficiaryQ3',
+                        'groupBeneficiariesTargets.q4 as groupBeneficiaryQ4',
                     ]);
         $projects = $projects->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
         $projects = $projects->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
@@ -808,8 +843,6 @@ class PlanController extends \yii\web\Controller
                     ->asArray()
                     ->all();
 
-        $projects = ArrayHelper::map($projects, 'id', 'id');
-        echo "<pre>"; print_r($projects); exit;
         $filename = 'Initial Project Report';
 
         if($type == 'excel')
