@@ -360,7 +360,7 @@ class SummaryController extends \yii\web\Controller
                             'SUM('.$financialsQ3.') as q3financial',
                             'SUM('.$financialsQ4.') as q4financial',
                             'SUM(COALESCE('.$financialTotal.', 0)) as financialTotal',
-                            'SUM(IF(COALESCE(physicals.q1, 0), 0) > 0, 1, 0)) as q1physical',
+                            'SUM(IF(COALESCE(physicals.q1, 0) > 0, 1, 0)) as q1physical',
                             'SUM(IF(COALESCE(physicals.q1, 0) > 0, 0, IF(COALESCE(physicals.q2, 0) > 0, 1, 0))) as q2physical',
                             'SUM(IF(COALESCE(physicals.q1, 0) > 0, 0, IF(COALESCE(physicals.q2, 0) > 0, 0, IF(COALESCE(physicals.q3, 0) > 0, 1, 0)))) as q3physical',
                             'SUM(IF(COALESCE(physicals.q1, 0) > 0, 0, IF(COALESCE(physicals.q2, 0) > 0, 0, IF(COALESCE(physicals.q3, 0) > 0, 0, IF(COALESCE(physicals.q4, 0) > 0, 1, 0))))) as q4physical',
