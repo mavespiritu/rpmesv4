@@ -7280,7 +7280,7 @@ class SummaryController extends \yii\web\Controller
                             'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
                             'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
                             'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
-                            'SUM('.$financialTargetTotal.') as allocations',
+                            'SUM('.$financialTargetPerQuarter.') as allocations',
                             'SUM('.$releases.') as releases',
                             'SUM('.$obligations.') as obligations',
                             'SUM('.$expenditures.') as expenditures',
