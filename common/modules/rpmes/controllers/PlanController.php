@@ -274,11 +274,6 @@ class PlanController extends \yii\web\Controller
             $provinceIDs = ProjectProvince::find();
             $categoryIDs = ProjectCategory::find();
 
-            $provinces = Province::find()
-            ->orderBy(['province_m' => SORT_ASC])
-            ->asArray()
-            ->all();
-
             $regions = Region::find()->orderBy(['region_sort' => SORT_ASC])->all();
             $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
 

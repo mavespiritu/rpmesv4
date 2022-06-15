@@ -218,6 +218,26 @@ class ProjectController extends Controller
         return $arr;
     }
 
+    public function actionProvinceListSingle($id)
+    {
+
+        $provinces = Province::find()
+                    ->select(['province_c as id', 'concat(tblregion.abbreviation,": ",tblprovince.province_m) as title', 'abbreviation'])
+                    ->leftJoin('tblregion', 'tblregion.region_c = tblprovince.region_c')
+                    ->where(['tblprovince.region_c' => $id])
+                    ->orderBy(['abbreviation' => SORT_ASC, 'province_m' => SORT_ASC])
+                    ->asArray()
+                    ->all();
+
+        $arr = [];
+        $arr[] = ['id'=>'','text'=>''];
+        foreach($provinces as $province){
+            $arr[] = ['id' => $province['id'] ,'text' => $province['title']];
+        }
+        \Yii::$app->response->format = 'json';
+        return $arr;
+    }
+
     public function actionCitymunList($id)
     {
         $ids = json_decode($id, true);

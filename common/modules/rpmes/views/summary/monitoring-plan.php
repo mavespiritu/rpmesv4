@@ -27,9 +27,10 @@
                         'agencies' => $agencies,
                         'sectors' => $sectors,
                         'categories' => $categories,
-                        'locations' => $locations,
                         'fundSources' => $fundSources,
-                        'periods' => $periods
+                        'periods' => $periods,
+                        'regions' => $regions,
+                        'provinces' => $provinces
                     ]) ?>
                     <hr>
                     <div id="summary-monitoring-plan-table"></div>

@@ -178,10 +178,12 @@ class SummaryController extends \yii\web\Controller
         $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->asArray()->all();
         $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
 
-        $locations = Province::find()->orderBy(['province_m' => SORT_ASC])->asArray()->all();
-        $locations = ArrayHelper::map($locations, 'province_c', 'province_m');
-
         $periods = ['Current Year' => 'Current Year', 'Carry-Over' => 'Carry-Over'];
+
+        $regions = Region::find()->orderBy(['region_sort' => SORT_ASC])->all();
+        $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
+
+        $provinces = [];
         
         if($model->load(Yii::$app->request->post()))
         {
@@ -194,6 +196,13 @@ class SummaryController extends \yii\web\Controller
             
             $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
+
+            $regionIDs = ProjectRegion::find();
+            $provinceIDs = ProjectProvince::find();
+
+            $provinces = Province::find()
+            ->select(['province_c as id', 'concat(tblregion.abbreviation,": ",tblprovince.province_m) as title', 'abbreviation'])
+            ->leftJoin('tblregion', 'tblregion.region_c = tblprovince.region_c');
 
             $categoryTitles = ProjectCategory::find()
                 ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
@@ -286,8 +295,10 @@ class SummaryController extends \yii\web\Controller
                                         IF(COALESCE(financials.q3, 0) <= 0,
                                             IF(COALESCE(financials.q2, 0) <= 0,
                                                 COALESCE(financials.q1, 0)
-                                            , COALESCE(financials.q2, 0))
-                                        , COALESCE(financials.q3, 0))
+                                            , COALESCE(financials.q2, 0)
+                                            )
+                                        , COALESCE(financials.q3, 0)
+                                        )
                                     , COALESCE(financials.q4, 0))
                                 ,   
                                 COALESCE(financials.q1, 0) +
@@ -299,21 +310,33 @@ class SummaryController extends \yii\web\Controller
             $financialsQ2 = 'IF(project.data_type = "Cumulative",
                                 IF(COALESCE(financials.q2, 0) > 0,
                                     COALESCE(financials.q2, 0) - COALESCE(financials.q1, 0)
-                                , COALESCE(financials.q2, 0))
+                                , COALESCE(financials.q2, 0)
+                                )
                             ,COALESCE(financials.q2, 0)
                             )'; 
 
             $financialsQ3 = 'IF(project.data_type = "Cumulative",
                                 IF(COALESCE(financials.q3, 0) > 0,
-                                    COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0)
-                                , COALESCE(financials.q3, 0))
+                                    IF(COALESCE(financials.q2, 0) > 0, 
+                                        COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0), 
+                                        COALESCE(financials.q3, 0) - COALESCE(financials.q1, 0)
+                                    )
+                                , COALESCE(financials.q3, 0)
+                                )
                             ,COALESCE(financials.q3, 0)
                             )'; 
 
             $financialsQ4 = 'IF(project.data_type = "Cumulative",
                                 IF(COALESCE(financials.q4, 0) > 0,
-                                    COALESCE(financials.q4, 0) - COALESCE(financials.q3, 0)
-                                , COALESCE(financials.q4, 0))
+                                    IF(COALESCE(financials.q3, 0) > 0,
+                                        COALESCE(financials.q4, 0) - COALESCE(financials.q3, 0),
+                                        IF(COALESCE(financials.q2, 0) > 0,
+                                            COALESCE(financials.q4, 0) - COALESCE(financials.q2, 0),
+                                            COALESCE(financials.q4, 0) - COALESCE(financials.q1, 0)
+                                        )
+                                    )
+                                , COALESCE(financials.q4, 0)
+                                )
                             ,COALESCE(financials.q4, 0)
                             )'; 
 
@@ -412,10 +435,16 @@ class SummaryController extends \yii\web\Controller
             {
                 $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
             }
+            
+            if($model->region_id != '')
+            {
+                $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
+                $provinces = $provinces->andWhere(['tblprovince.region_c' => $model->region_id]);
+            }
 
             if($model->province_id != '')
             {
-                $projects = $projects->andWhere(['tblprovince.province_c' => $model->province_id]);
+                $provinceIDs = $provinceIDs->andWhere(['province_id' => $model->province_id]);
             }
 
             if($model->fund_source_id != '')
@@ -426,6 +455,22 @@ class SummaryController extends \yii\web\Controller
             if($model->period != '')
             {
                 $projects = $projects->andWhere(['project.period' => $model->period]);
+            }
+
+            $regionIDs = $regionIDs->all();
+            $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
+
+            $provinceIDs = $provinceIDs->all();
+            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+            if($model->region_id != '')
+            {
+                $projects = $projects->andWhere(['project.id' => $regionIDs]);
+            }
+
+            if($model->province_id != '')
+            {
+                $projects = $projects->andWhere(['project.id' => $provinceIDs]);
             }
 
             if($model->grouping == '_agency_by_category'){ $projects = $projects->groupBy(['agencyTitle', 'categoryTitle']); }
@@ -3454,9 +3499,10 @@ class SummaryController extends \yii\web\Controller
                 'agencies' => $agencies,
                 'sectors' => $sectors,
                 'categories' => $categories,
-                'locations' => $locations,
                 'fundSources' => $fundSources,
-                'periods' => $periods
+                'periods' => $periods,
+                'regions' => $regions,
+                'provinces' => $provinces,
             ]);
         }
 
@@ -3469,9 +3515,10 @@ class SummaryController extends \yii\web\Controller
             'agencies' => $agencies,
             'sectors' => $sectors,
             'categories' => $categories,
-            'locations' => $locations,
             'fundSources' => $fundSources,
-            'periods' => $periods
+            'periods' => $periods,
+            'regions' => $regions,
+            'provinces' => $provinces,
         ]);
     }
 
@@ -3493,6 +3540,9 @@ class SummaryController extends \yii\web\Controller
         
         $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
         $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
+
+        $regionIDs = ProjectRegion::find();
+        $provinceIDs = ProjectProvince::find();
 
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
         $genders = ['M' => 'Male', 'F' => 'Female'];
@@ -3714,9 +3764,14 @@ class SummaryController extends \yii\web\Controller
             $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
         }
 
+        if($model->region_id != '')
+        {
+            $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
+        }
+
         if($model->province_id != '')
         {
-            $projects = $projects->andWhere(['tblprovince.province_c' => $model->province_id]);
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $model->province_id]);
         }
 
         if($model->fund_source_id != '')
@@ -3727,6 +3782,22 @@ class SummaryController extends \yii\web\Controller
         if($model->period != '')
         {
             $projects = $projects->andWhere(['project.period' => $model->period]);
+        }
+
+        $regionIDs = $regionIDs->all();
+        $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($model->region_id != '')
+        {
+            $projects = $projects->andWhere(['project.id' => $regionIDs]);
+        }
+
+        if($model->province_id != '')
+        {
+            $projects = $projects->andWhere(['project.id' => $provinceIDs]);
         }
 
         if($model->grouping == '_agency_by_category'){ $projects = $projects->groupBy(['agencyTitle', 'categoryTitle']); }
