@@ -3634,54 +3634,54 @@ class SummaryController extends \yii\web\Controller
             ->createCommand()->getRawSql();
 
             $financialTotal = 'IF(project.data_type = "Cumulative",
-                        IF(COALESCE(financials.q4, 0) <= 0,
-                            IF(COALESCE(financials.q3, 0) <= 0,
-                                IF(COALESCE(financials.q2, 0) <= 0,
-                                    COALESCE(financials.q1, 0)
-                                , COALESCE(financials.q2, 0)
-                                )
-                            , COALESCE(financials.q3, 0)
-                            )
-                        , COALESCE(financials.q4, 0))
-                    ,   
-                    COALESCE(financials.q1, 0) +
-                    COALESCE(financials.q2, 0) +
-                    COALESCE(financials.q3, 0) +
-                    COALESCE(financials.q4, 0)
-                    )'; 
+                                    IF(COALESCE(financials.q4, 0) <= 0,
+                                        IF(COALESCE(financials.q3, 0) <= 0,
+                                            IF(COALESCE(financials.q2, 0) <= 0,
+                                                COALESCE(financials.q1, 0)
+                                            , COALESCE(financials.q2, 0)
+                                            )
+                                        , COALESCE(financials.q3, 0)
+                                        )
+                                    , COALESCE(financials.q4, 0))
+                                ,   
+                                COALESCE(financials.q1, 0) +
+                                COALESCE(financials.q2, 0) +
+                                COALESCE(financials.q3, 0) +
+                                COALESCE(financials.q4, 0)
+                                )'; 
 
             $financialsQ2 = 'IF(project.data_type = "Cumulative",
-                    IF(COALESCE(financials.q2, 0) > 0,
-                        COALESCE(financials.q2, 0) - COALESCE(financials.q1, 0)
-                    , COALESCE(financials.q2, 0)
-                    )
-                ,COALESCE(financials.q2, 0)
-                )'; 
+                                IF(COALESCE(financials.q2, 0) > 0,
+                                    COALESCE(financials.q2, 0) - COALESCE(financials.q1, 0)
+                                , COALESCE(financials.q2, 0)
+                                )
+                            ,COALESCE(financials.q2, 0)
+                            )'; 
 
             $financialsQ3 = 'IF(project.data_type = "Cumulative",
-                    IF(COALESCE(financials.q3, 0) > 0,
-                        IF(COALESCE(financials.q2, 0) > 0, 
-                            COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0), 
-                            COALESCE(financials.q3, 0) - COALESCE(financials.q1, 0)
-                        )
-                    , COALESCE(financials.q3, 0)
-                    )
-                ,COALESCE(financials.q3, 0)
-                )'; 
+                                IF(COALESCE(financials.q3, 0) > 0,
+                                    IF(COALESCE(financials.q2, 0) > 0, 
+                                        COALESCE(financials.q3, 0) - COALESCE(financials.q2, 0), 
+                                        COALESCE(financials.q3, 0) - COALESCE(financials.q1, 0)
+                                    )
+                                , COALESCE(financials.q3, 0)
+                                )
+                            ,COALESCE(financials.q3, 0)
+                            )'; 
 
             $financialsQ4 = 'IF(project.data_type = "Cumulative",
-                    IF(COALESCE(financials.q4, 0) > 0,
-                        IF(COALESCE(financials.q3, 0) > 0,
-                            COALESCE(financials.q4, 0) - COALESCE(financials.q3, 0),
-                            IF(COALESCE(financials.q2, 0) > 0,
-                                COALESCE(financials.q4, 0) - COALESCE(financials.q2, 0),
-                                COALESCE(financials.q4, 0) - COALESCE(financials.q1, 0)
-                            )
-                        )
-                    , COALESCE(financials.q4, 0)
-                    )
-                ,COALESCE(financials.q4, 0)
-                )'; 
+                                IF(COALESCE(financials.q4, 0) > 0,
+                                    IF(COALESCE(financials.q3, 0) > 0,
+                                        COALESCE(financials.q4, 0) - COALESCE(financials.q3, 0),
+                                        IF(COALESCE(financials.q2, 0) > 0,
+                                            COALESCE(financials.q4, 0) - COALESCE(financials.q2, 0),
+                                            COALESCE(financials.q4, 0) - COALESCE(financials.q1, 0)
+                                        )
+                                    )
+                                , COALESCE(financials.q4, 0)
+                                )
+                            ,COALESCE(financials.q4, 0)
+                            )'; 
 
         $projects = Project::find()
                     ->select([
@@ -6975,7 +6975,8 @@ class SummaryController extends \yii\web\Controller
             $personEmployedAccomps = PersonEmployedAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $beneficiariesAccomps = BeneficiariesAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
-            $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as action'])->where(['year' => $model->year])->createCommand()->getRawSql();
+            $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
+ 
             $allocationTotalPerAgency = ProjectTarget::find()
                                         ->select(['agency_id', 'SUM(
                                             IF(project.data_type = "Cumulative",
@@ -7329,7 +7330,7 @@ class SummaryController extends \yii\web\Controller
                                             )
                                         )';
 
-            $isCompleted = 'COALESCE(accomps.action, 0)';
+            $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
             $isPercent = 'LOCATE("%", physicalTargets.indicator)';
             $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
             $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
@@ -7358,7 +7359,7 @@ class SummaryController extends \yii\web\Controller
                             'IF(rdpChapterOutcomeTitles.title is null, "No RDP Chapter Outcomes", rdpChapterOutcomeTitles.title) as chapterOutcomeTitle',
                             'IF(rdpSubChapterOutcomeTitles.title is null, "No RDP Sub-Chapter Outcomes", rdpSubChapterOutcomeTitles.title) as subChapterOutcomeTitle',
                             'physicalTargets.indicator as indicator',
-                            'SUM(COALESCE(accomps.action, 0)) as completed',
+                            'SUM('.$isCompleted.') as completed',
                             'SUM('.$slippage.') as slippage',
                             'SUM('.$behindSchedule.') as behindSchedule',
                             'SUM('.$onSchedule.') as onSchedule',
