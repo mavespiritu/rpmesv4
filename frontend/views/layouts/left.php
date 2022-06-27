@@ -51,6 +51,7 @@
                         'items' => [
                             ['label' => 'Monitoring Plans', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report-sector'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                     ],
                     ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
