@@ -7095,6 +7095,8 @@ class SummaryController extends \yii\web\Controller
                 ->groupBy(['project_barangay.project_id'])
                 ->createCommand()->getRawSql();
             
+            $isPercent = 'LOCATE("%", physicalTargets.indicator)';
+            
             $physicalTargetPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
                                                 IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
                                                     IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
@@ -7202,14 +7204,6 @@ class SummaryController extends \yii\web\Controller
                                                 )
                                             )
                                         )';
-            
-            $financialWeight = 'IF(allocationTotalPerAgency.total > 0, COALESCE(('.$financialTargetTotal.' / allocationTotalPerAgency.total), 0), 0)';
-
-            $physicalTargetPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalTargetPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
-            $physicalTargetWeight = $physicalTargetPercentage.' * '.$financialWeight;
-
-            $physicalAccompPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalAccompPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
-            $physicalAccompWeight = $physicalAccompPercentage.' * '.$financialWeight;
             
             $releases = 'IF(project.data_type <> "Cumulative",
                             IF("'.$model->quarter.'" = "Q1", COALESCE(financialAccompsQ1.releases, 0),
@@ -7338,13 +7332,20 @@ class SummaryController extends \yii\web\Controller
                                         )';
 
             $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
-            $isPercent = 'LOCATE("%", physicalTargets.indicator)';
             $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
             $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
             $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
             $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
             $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
             $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
+
+            $financialWeight = 'IF(allocationTotalPerAgency.total > 0, COALESCE(('.$financialTargetTotal.' / allocationTotalPerAgency.total), 0), 0)';
+
+            $physicalTargetPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalTargetPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
+            $physicalTargetWeight = $physicalTargetPercentage.' * '.$financialWeight;
+
+            $physicalAccompPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalAccompPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
+            $physicalAccompWeight = $physicalAccompPercentage.' * '.$financialWeight;
 
             $projects = Project::find()
                         ->select([
@@ -7377,9 +7378,9 @@ class SummaryController extends \yii\web\Controller
                             'SUM('.$releases.') as releases',
                             'SUM('.$obligations.') as obligations',
                             'SUM('.$expenditures.') as expenditures',
-                            /* 'SUM('.$physicalTargetTotal.') as physicalTargetTotal',
-                            'SUM('.$physicalTargetPercentage.') as physicalTargetPercentage',
-                            'SUM('.$financialWeight.') as financialWeight', */
+                            'SUM('.$physicalTargetTotal.') as physicalTargetTotal',
+                            'SUM('.$financialTargetTotal.') as financialTargetTotal',
+                            'SUM('.$financialWeight.') as financialWeight',
                             'SUM('.$physicalTargetWeight.') as physicalTarget',
                             'SUM('.$physicalAccompWeight.') as physicalActual',
                             'SUM('.$maleEmployedTarget.') as malesEmployedTarget',
@@ -7538,6 +7539,9 @@ class SummaryController extends \yii\web\Controller
             $total['releases'] = 0;
             $total['obligations'] = 0;
             $total['expenditures'] = 0;
+            $total['physicalTargetTotal'] = 0;
+            $total['financialTargetTotal'] = 0;
+            $total['expenditures'] = 0;
             $total['physicalTarget'] = 0;
             $total['physicalActual'] = 0;
             $total['malesEmployedTarget'] = 0;
@@ -7566,6 +7570,8 @@ class SummaryController extends \yii\web\Controller
                     $total['releases'] += $project['releases'];
                     $total['obligations'] += $project['obligations'];
                     $total['expenditures'] += $project['expenditures'];
+                    $total['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                    $total['financialTargetTotal'] += $project['financialTargetTotal'];
                     $total['physicalTarget'] += $project['physicalTarget'];
                     $total['physicalActual'] += $project['physicalActual'];
                     $total['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -7598,6 +7604,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -7622,6 +7630,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -7649,6 +7659,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -7673,6 +7685,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -7705,6 +7719,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -7729,6 +7745,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -7753,6 +7771,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -7780,6 +7800,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -7804,6 +7826,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -7828,6 +7852,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -7860,6 +7886,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -7884,6 +7912,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['malesEmployedTarget'] = 0;
@@ -7911,6 +7941,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -7935,6 +7967,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['provinceTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -7967,6 +8001,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -7991,6 +8027,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8018,6 +8056,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8042,6 +8082,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8074,6 +8116,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8098,6 +8142,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8122,6 +8168,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['releases'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['obligations'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8149,6 +8197,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8173,6 +8223,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8197,6 +8249,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['agencyTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8229,6 +8283,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8253,6 +8309,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8280,6 +8338,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8304,6 +8364,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8336,6 +8398,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8360,6 +8424,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8387,6 +8453,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8411,6 +8479,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8443,6 +8513,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8467,6 +8539,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8491,6 +8565,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8518,6 +8594,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8542,6 +8620,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8566,6 +8646,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8598,6 +8680,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8622,6 +8706,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8646,6 +8732,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8670,6 +8758,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8697,6 +8787,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8721,6 +8813,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8745,6 +8839,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8769,6 +8865,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['categoryTitle']]['firstLevels'][$project['sectorTitle']]['secondLevels'][$project['subSectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8801,6 +8899,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8825,6 +8925,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8852,6 +8954,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8876,6 +8980,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -8908,6 +9014,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8932,6 +9040,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8956,6 +9066,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -8983,6 +9095,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9007,6 +9121,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9031,6 +9147,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9063,6 +9181,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9087,6 +9207,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9111,6 +9233,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9135,6 +9259,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9162,6 +9288,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9186,6 +9314,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9210,6 +9340,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9234,6 +9366,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['chapterTitle']]['firstLevels'][$project['chapterOutcomeTitle']]['secondLevels'][$project['subChapterOutcomeTitle']]['thirdLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9266,6 +9400,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['content']['releases'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['obligations'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sdgGoalTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sdgGoalTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9290,6 +9426,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9317,6 +9455,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sdgGoalTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sdgGoalTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sdgGoalTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sdgGoalTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sdgGoalTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sdgGoalTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sdgGoalTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9341,6 +9481,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9373,6 +9515,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['content']['releases'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['obligations'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sdgGoalTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sdgGoalTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sdgGoalTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9397,6 +9541,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9421,6 +9567,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9445,6 +9593,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9472,6 +9622,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sdgGoalTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sdgGoalTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sdgGoalTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sdgGoalTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sdgGoalTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sdgGoalTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sdgGoalTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9496,6 +9648,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9520,6 +9674,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9544,6 +9700,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sdgGoalTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['sectorTitle']]['thirdLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9576,6 +9734,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9600,6 +9760,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9627,6 +9789,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9651,6 +9815,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9683,6 +9849,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9707,6 +9875,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9734,6 +9904,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9758,6 +9930,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9790,6 +9964,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9814,6 +9990,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9838,6 +10016,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9865,6 +10045,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9889,6 +10071,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9913,6 +10097,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['categoryTitle']]['secondLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -9945,6 +10131,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9969,6 +10157,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['malesEmployedTarget'] = 0;
@@ -9996,6 +10186,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -10020,6 +10212,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['provinceTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -10052,6 +10246,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -10076,6 +10272,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -10103,6 +10301,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -10127,6 +10327,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -10159,6 +10361,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -10183,6 +10387,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['malesEmployedTarget'] = 0;
@@ -10207,6 +10413,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['releases'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['obligations'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['expenditures'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] = 0;
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTarget'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalActual'] = 0;
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] = 0;
@@ -10234,6 +10442,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -10258,6 +10468,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
@@ -10282,6 +10494,8 @@ class SummaryController extends \yii\web\Controller
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['releases'] += $project['releases'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['obligations'] += $project['obligations'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['expenditures'] += $project['expenditures'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTargetTotal'] += $project['physicalTargetTotal'];
+                        $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['financialTargetTotal'] += $project['financialTargetTotal'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalTarget'] += $project['physicalTarget'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['physicalActual'] += $project['physicalActual'];
                         $data[$project['sectorTitle']]['firstLevels'][$project['subSectorTitle']]['secondLevels'][$project['agencyTitle']]['content']['malesEmployedTarget'] += $project['malesEmployedTarget'];
