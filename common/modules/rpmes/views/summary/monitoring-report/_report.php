@@ -116,7 +116,7 @@ DisableButtonAsset::register($this);
         <?php if(!empty($data)){ ?>
             <?php $i = 1; ?>
             <?php foreach($data as $firstLevel => $firstLevels){ ?>
-                <?= $weight = $total['financialTargetTotal'] > 0 ? $firstLevels['content']['financialTargetTotal'] / $total['financialTargetTotal'] : 0; ?>
+                <?php $weight = $total['financialTargetTotal'] > 0 ? $firstLevels['content']['financialTargetTotal'] / $total['financialTargetTotal'] : 0; ?>
                     <tr style="font-weight: bolder;">
                         <td colspan=4><?= $i ?>. <?= $firstLevel ?></td>
                         <td align=right><?= number_format($firstLevels['content']['allocations'], 2) ?></td>
@@ -152,7 +152,7 @@ DisableButtonAsset::register($this);
                 <?php if(!empty($firstLevels['firstLevels'])){ ?>
                     <?php $j = 1; ?>
                     <?php foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){ ?>
-                        <?= $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0; ?>
+                        <?php $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0; ?>
                         <tr>
                             <td align=right>&nbsp;</td>
                             <td colspan=3><?= $i.'.'.$j ?>. <?= $secondLevel ?></td>
@@ -189,7 +189,7 @@ DisableButtonAsset::register($this);
                         <?php if(!empty($secondLevels['secondLevels'])){ ?>
                             <?php $k = 1; ?>
                             <?php foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels){ ?>
-                                <?= $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0; ?>
+                                <?php $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0; ?>
                                 <tr>
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
@@ -227,7 +227,7 @@ DisableButtonAsset::register($this);
                                 <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
                                     <?php $l = 1; ?>
                                     <?php foreach($thirdLevels['thirdLevels'] as $fourthLevel => $fourthLevels){ ?>
-                                        <?= $weight = $thirdLevels['content']['financialTargetTotal'] > 0 ? $fourthLevels['content']['financialTargetTotal'] / $thirdLevels['content']['financialTargetTotal'] : 0; ?>
+                                        <?php $weight = $thirdLevels['content']['financialTargetTotal'] > 0 ? $fourthLevels['content']['financialTargetTotal'] / $thirdLevels['content']['financialTargetTotal'] : 0; ?>
                                         <tr>
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
