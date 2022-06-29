@@ -19,22 +19,28 @@ $this->title = 'Trainings';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="training-index">
-
     <p>
-        <?= Html::a('<i class=\"fa fa-plus\"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
-</div>
-<div class="row">
-    <div class="col-md-18 col-xs-12">
-        <div class="box box-solid">
-            <div class="box-body">
-                <?= $this->render('_search', [
-                    'searchModel' => $searchModel,
-                    'years' => $years,
-                ]) ?>
-                <br>
-                <br>
-                <br>
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Trainings</h3>
+                </div>
+                <div class="box-body">
+                    <?= $this->render('_search', [
+                            'searchModel' => $searchModel,
+                            'years' => $years,
+                    ]) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="box box-primary">
+                <br>    
                 <div class="pull-left">
                         <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
@@ -81,6 +87,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                          ],
                                         ]); 
                     ?>
+                </div>
             </div>
         </div>
     </div>

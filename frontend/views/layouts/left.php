@@ -54,6 +54,9 @@
                             ['label' => 'Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report-sector'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                     ],
+                    ['label' => 'Training', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Resolution', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Project Problem/Issue', 'icon' => 'folder', 'url' => ['/rpmes/project-problem'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Due Dates', 'icon' => 'clock-o', 'url' => ['/rpmes/due-date'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     [

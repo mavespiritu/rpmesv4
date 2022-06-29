@@ -89,7 +89,7 @@ DisableButtonAsset::register($this);
             <?php $i = 1; ?>
             <?php foreach($data as $firstLevel => $firstLevels){ ?>
                     <tr style="font-weight: bolder;">
-                        <td colspan=5><?= $i ?>. <?= str_replace("$",")",str_replace("+","date('F j, Y H:i:s', strtotime(",str_replace("*","<br>",$firstLevel))) ?></td>
+                        <td colspan=5><?= $i ?>. <?= str_replace("*","<br>",str_replace("+"," <?= date('F j, Y H:i:s', strtotime(",str_replace("$",") ?>",$firstLevel))) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['allocations'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['releases'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['obligations'], 2) ?></td>
@@ -125,7 +125,7 @@ DisableButtonAsset::register($this);
                     <?php foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){ ?>
                         <tr style="font-weight: bolder;">
                             <td align=right>&nbsp;</td>
-                            <td colspan=5><?= $i ?>. <?= str_replace("$",") ?>",str_replace("+"," <?+ date('F j, Y H:i:s', strtotime(",str_replace("*","<br>",$secondLevel))) ?></td>
+                            <td colspan=4><?= $i ?>. <?= str_replace("*","<br>",str_replace("+"," <?= date('F j, Y H:i:s', strtotime(",str_replace("$",") ?>",$secondLevel))) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['allocations'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['releases'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['obligations'], 2) ?></td>
@@ -162,7 +162,7 @@ DisableButtonAsset::register($this);
                                 <tr style="font-weight: bolder;">
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
-                                    <td colspan=5><?= $i ?>. <?= str_replace("$",") ?>",str_replace("+","<?+ date('F j, Y H:i:s', strtotime(",str_replace("*","<br>",$thirdLevel))) ?></td>
+                                    <td colspan=3><?= $i ?>. <?= str_replace("*","<br>",str_replace("+"," <?= date('F j, Y H:i:s', strtotime(",str_replace("$",") ?>",$thirdLevel))) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['allocations'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['releases'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['obligations'], 2) ?></td>

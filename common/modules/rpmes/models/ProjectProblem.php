@@ -50,7 +50,11 @@ class ProjectProblem extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'project_id' => 'Project ID',
+            'year' => 'Year',
+            'quarter' => 'quarter',
+            'project_id' => 'Project',
+            'projectTitle' => 'Project',
+            'sectorTitle' => 'Sector',
             'nature' => 'Nature',
             'detail' => 'Detail',
             'strategy' => 'Strategy',
@@ -58,6 +62,10 @@ class ProjectProblem extends \yii\db\ActiveRecord
             'lesson_learned' => 'Lesson Learned',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',
+            'subSectorTitle' => 'Sub Sector',
+            'projectCitymuns' => 'Project City/Municipal',
+            'projectProvinces' => 'Project Province',
+            'projectRegions' => 'Project Region',
         ];
     }
 
@@ -81,7 +89,7 @@ class ProjectProblem extends \yii\db\ActiveRecord
 
     public function getSector()
     {
-        return $this->project->sector;
+        return $this->project->sector ? $this->project->sector->title : null;
     }
 
     public function getSectorTitle()
@@ -106,11 +114,62 @@ class ProjectProblem extends \yii\db\ActiveRecord
 
     public function getAgency()
     {
-        return $this->project->agency ? $this->project->agency->title : 'No Agency';
+        return $this->project->agency ? $this->project->agency->code : null;
     }
 
     public function getAllocationTotal()
     {
         return $this->project->allocationTotal;
+    }
+
+    public function getProjectBarangays()
+    {
+        $brangayLocations = [];
+        $barangays = $this->project->projectBarangays;
+
+            foreach($barangays as $barangay)
+            {
+                $brangayLocations[] = $barangay->barangayName;
+            }
+
+        return !empty($brangayLocations) ? implode(" ; ", $brangayLocations) : 'All Barangay';
+    }
+
+    public function getProjectCitymuns()
+    {
+        $citymunsLocations = [];
+        $citymuns = $this->project->projectCitymuns;
+
+            foreach($citymuns as $citymun)
+            {
+                $citymunsLocations[] = $citymun->citymunName;
+            }
+
+        return !empty($citymunsLocations) ? implode(" ; ", $citymunsLocations) : 'All City/Municipality';
+    }
+
+    public function getProjectProvinces()
+    {
+        $provincesLocations = [];
+        $provinces = $this->project->projectProvinces;
+
+            foreach($provinces as $province)
+            {
+                $provincesLocations[] = $province->provinceName;
+            }
+
+        return !empty($provincesLocations) ? implode(" ; ", $provincesLocations) : 'All Province';
+    }
+    public function getProjectRegions()
+    {
+        $regionsLocations = [];
+        $regions = $this->project->projectRegions;
+
+            foreach($regions as $region)
+            {
+                $regionsLocations[] = $region->regionName;
+            }
+
+        return !empty($regionsLocations) ? implode(" ; ", $regionsLocations) : 'No Region';
     }
 }

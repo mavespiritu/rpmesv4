@@ -18,99 +18,83 @@ $this->title = 'Project Problems';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-problem-index">
-
     <p>
-        <?= Html::a('<i class=\"fa fa-plus\"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
-
-    <?= $this->render('_search', [
-                    'searchModel' => $searchModel,
-                    'years' => $years,
-                    'agencies' =>$agencies
-                ]) ?>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <div class="pull-left">
-        <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
-            'label' => '<i class="fa fa-download"></i> Export',
-            'encodeLabel' => false,
-            'options' => ['class' => 'btn btn-success btn-sm'],
-            'dropdown' => [
-                'items' => [
-                    ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-problem/download-form-eleven', 'type' => 'excel', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
-                    ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-problem/download-form-eleven', 'type' => 'pdf', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
-                ],
-            ],
-        ]) : '' ?>
-        <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormElevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Project Problems/Issues</h3>
+                </div>
+                <div class="box-body">
+                    <?= $this->render('_search', [
+                        'searchModel' => $searchModel,
+                        'years' => $years,
+                        'agencies' =>$agencies
+                    ]) ?>
+                </div>
+            </div>
+        </div>
     </div>
-    <br>
-    <br>
-    <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
-                                    RPMES Form 11: LIST OF PROJECT PROBLEMS/ISSUES
-    </h5>
-    <?= GridView::widget([
-        'options' => [
-            'class' => 'table-responsive',
-        ],
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
-            [
-                'label' => 'Project',
-                'value' => function ($model) {
-                return $model->getProjectTitle();
-                            }
-            ],
-            'nature',
-            'detail:ntext',
-            'strategy:ntext',
-            [
-                'label' => 'Sector',
-                'value' => function ($model) {
-                return $model->getSectorTitle();
-                            }
-            ],
-            [
-                'label' => 'Sub Sector',
-                'value' => function ($model) {
-                return $model->getSubSectorTitle();
-                            }
-            ],
-            [
-                'label' => 'Location',
-                'value' => function ($model) {
-                return $model->getLocation();
-                            }
-            ],
-            [
-                'label' => 'Agency',
-                'value' => function ($model) {
-                return $model->getAgency();
-                            }
-            ],
-            [
-                'label' => 'Total Project Cost',
-                'value' => function ($model) {
-                return $model->getAllocationTotal();
-                            }
-            ],
-            //'responsible_entity:ntext',
-            //'lesson_learned:ntext',
-            //'submitted_by',
-            //'date_submitted',
-
-            ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
-        ],
-    ]); ?>
-
-
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="box box-primary">
+                <br>
+                <div class="pull-left">
+                    <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
+                        'label' => '<i class="fa fa-download"></i> Export',
+                        'encodeLabel' => false,
+                        'options' => ['class' => 'btn btn-success btn-sm'],
+                        'dropdown' => [
+                            'items' => [
+                                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-problem/download-form-eleven', 'type' => 'excel', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-problem/download-form-eleven', 'type' => 'pdf', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                            ],
+                        ],
+                    ]) : '' ?>
+                        <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormElevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+                </div>
+                <div class="clearfix"></div>
+                    <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+                                                RPMES Form 11: LIST OF PROJECT PROBLEMS/ISSUES
+                    </h5>
+                        <?= GridView::widget([
+                            'options' => [
+                            'class' => 'table-responsive',
+                        ],
+                        'dataProvider' => $dataProvider,
+                        'filterModel' => $searchModel,
+                        'columns' => [
+                            ['class' => 'yii\grid\SerialColumn'],
+                            'id',
+                            'year',
+                            'quarter',
+                            'projectTitle',
+                            'nature',
+                            'detail:ntext',
+                            'strategy:ntext',
+                            'responsible_entity',
+                            'lesson_learned',
+                            'sectorTitle',
+                            'subSectorTitle',
+                            'projectBarangays',
+                            'projectCitymuns',
+                            'projectProvinces',
+                            'projectRegions',
+                            'agency',
+                            [
+                                'label' => 'Total Project Cost',
+                                'value' => function ($model) {
+                                return $model->getAllocationTotal();
+                                }
+                            ],
+                            ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
+                        ],
+                        ]); ?>
+            </div>
+        </div>
+    </div>
 </div>
 <?php
     $script = '

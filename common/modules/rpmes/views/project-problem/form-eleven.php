@@ -29,8 +29,10 @@
     <table class="table table-condensed table-bordered table-striped table-condensed table-responsive" cellspacing="0">
         <thead>
             <tr>
-                <td colspan=2 rowspan=2 align=center><b>Name of Project/Total Project Cost</b></td>
-                <td colspan=2 rowspan=2 align=center><b>Sector/Sub Sector</b></td>
+                <td rowspan=2 align=center><b>Year</b></td>
+                <td rowspan=2 align=center><b>Quarter</b></td>
+                <td colspan=4 rowspan=2 align=center><b>Name of Project<br>Total Project Cost</b></td>
+                <td colspan=2 rowspan=2 align=center><b>Sector<br>Sub Sector</b></td>
                 <td colspan=2 rowspan=2 align=center><b>Location</b></td>
                 <td rowspan=2 align=center><b>Implementing Agency</b></td>
                 <td colspan=2 align=center><b>Problems / Issues</b></td>
@@ -39,8 +41,8 @@
                 <td rowspan=2 align=center><b>Lessons Learned and Good Practices that could be Shared to the NPMC / Other PMCs</b></td>
             </tr>
             <tr>
-                <td>Nature</td>
-                <td>Details</td>
+                <td align=center><b>Nature</b></td>
+                <td align=center><b>Details</b></td>
             </tr>
         </thead>
         <tbody>
@@ -48,7 +50,9 @@
             <?php $idx = 1; ?>
             <?php foreach($problems as $problem){ ?>
                 <tr>
-                    <td colspan=2 align=center><?= $problem['projectTitle'] ?></td>
+                    <td rowspan=2 align=center><?= $problem['year'] ?></td>
+                    <td rowspan=2 align=center><?= $problem['quarter'] ?></td>
+                    <td colspan=4 align=center><?= $problem['projectTitle'] ?></td>
                     <td colspan=2 align=center><?= $problem['sectorTitle'] ?></td>
                     <td colspan=2 rowspan=2 align=center><?= $problem['locationTitle'] ?></td>
                     <td rowspan=2 align=center><?= $problem['agencyCode'] ?></td>
@@ -59,7 +63,7 @@
                     <td rowspan=2 align=center><?= $problem['lesson_learned'] ?></td>
                 </tr>
                 <tr>
-                    <td colspan=2 align=center><?= number_format($problem['totalCost'], 2) ?></td>
+                    <td colspan=4 align=center><?= number_format($problem['totalCost'], 2) ?></td>
                     <td colspan=2 align=center><?= $problem['subSectorTitle'] ?>
                 <?php $idx ++ ?>
             <?php } ?>

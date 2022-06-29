@@ -17,6 +17,7 @@ use yii\bootstrap\ButtonDropdown;
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
+        'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
 
     <div class="col-md-6 col-xs-12">

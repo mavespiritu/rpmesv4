@@ -14935,7 +14935,7 @@ class SummaryController extends \yii\web\Controller
                             'program.title as programTitle',
                             'category.title as categoryTitle',
                             'key_result_area.title as kraTitle',
-                            'CONCAT('.' project.title,'.'"*a. ",'.' project.title,'.'" *b. ",'.'sector.title,'.'"/",'.'sub_sector.title,'.'"*c. ",'.'fund_source.title,'.'"*d. ",'.'"+",'.'project.start_date,'.'"$",'.'" to ",'.'project.completion_date,'.'"*e. ",'.'categoryTitles.title) as projectTitle',
+                            'CONCAT('.' project.title,'.'"*a. ",'.' project.title,'.'" *b. ",'.'sector.title,'.'"/",'.'sub_sector.title,'.'"*c. ",'.'fund_source.title,'.'"*d. ",'.'"+",'.'"project.start_date",'.'"$",'.'" to ",'.'project.completion_date,'.'"*e. ",'.'categoryTitles.title) as projectTitle',
                             'sector.title as sectorTitle',
                             'sub_sector.title as subSectorTitle',
                             'fund_source.title as fundSourceTitle',

@@ -179,14 +179,7 @@ class ProjectProblemController extends Controller
         $model['year'] = $year;
         $model['quarter'] = $quarter;
 
-        if($model['year'] != '')
-        {
-            $problems = $problems->andWhere(['project_problem.year' => $model['year']]);
-        }
-        if($model['quarter'] != '')
-        {
-            $problems = $problems->andWhere(['project_problem.quarter' => $model['quarter']]);
-        }
+        //echo "<pre>"; print_r($model['year']); exit;
 
         $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model['year']])->createCommand()->getRawSql();
         
@@ -270,6 +263,15 @@ class ProjectProblemController extends Controller
                     ;
 
         $problems = $problems->leftJoin(['financials' => '('.$financials.')'], 'financials.project_id = project_problem.project_id');
+
+        if($model['year'] != '')
+        {
+            $problems = $problems->andWhere(['project_problem.year' => $model['year']]);
+        }
+        if($model['quarter'] != '')
+        {
+            $problems = $problems->andWhere(['project_problem.quarter' => $model['quarter']]);
+        }
 
         $problems = $problems->orderBy(['project_problem.nature' => SORT_ASC])->asArray()->all();
 
