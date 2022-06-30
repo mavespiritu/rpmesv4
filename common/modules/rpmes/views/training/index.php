@@ -48,12 +48,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         'options' => ['class' => 'btn btn-success btn-sm'],
                         'dropdown' => [
                             'items' => [
-                                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/training/download-form-nine', 'type' => 'excel', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
-                                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/training/download-form-nine', 'type' => 'pdf', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/training/download-form-nine', 'type' => 'excel', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'title' => $searchModel->title == null ? '2022' : $searchModel->title, 'objective' => $searchModel->objective == null ? '' : $searchModel->objective, 'office' => $searchModel->office == null ? '' : $searchModel->office, 'organization' => $searchModel->organization == null ? '' : $searchModel->organization, 'startDate' => $searchModel->start_date == null ? '' : $searchModel->start_date, 'endDate' => $searchModel->end_date == null ? '' : $searchModel->end_date, 'maleParticipant' => $searchModel->male_participant == null ? '' : $searchModel->male_participant, 'femaleParticipant' => $searchModel->female_participant == null ? '' : $searchModel->female_participant, 'model' => json_encode($searchModel)])],
+                                
+                                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/training/download-form-nine', 'type' => 'pdf', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'title' => $searchModel->title == null ? '2022' : $searchModel->title, 'objective' => $searchModel->objective == null ? '' : $searchModel->objective, 'office' => $searchModel->office == null ? '' : $searchModel->office, 'organization' => $searchModel->organization == null ? '' : $searchModel->organization, 'startDate' => $searchModel->start_date == null ? '' : $searchModel->start_date, 'endDate' => $searchModel->end_date == null ? '' : $searchModel->end_date, 'maleParticipant' => $searchModel->male_participant == null ? '' : $searchModel->male_participant, 'femaleParticipant' => $searchModel->female_participant == null ? '' : $searchModel->female_participant, 'model' => json_encode($searchModel)])],
                             ],
                     ],
                     ]) : '' ?>
-                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormNineReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormNineReport("'.$searchModel->year.'", "'.$searchModel->quarter.'", "'.$searchModel->title.'", "'.$searchModel->objective.'", "'.$searchModel->office.'", "'.$searchModel->organization.'", "'.$searchModel->start_date.'", "'.$searchModel->end_date.'", "'.$searchModel->male_participant.'", "'.$searchModel->female_participant.'")', 'class' => 'btn btn-danger btn-sm']) ?>
                 </div>
                 <br>
                 <br>
@@ -94,10 +95,10 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php
     $script = '
-        function printFormNineReport(year,quarter)
+        function printFormNineReport(year,quarter,title,objective,office,organization,startDate,end_date,maleParticipant,femaleParticipant)
         {
             var printWindow = window.open(
-                "'.Url::to(['/rpmes/training/print-form-nine']).'?year=" + year + "&quarter=" + quarter, 
+                "'.Url::to(['/rpmes/training/print-form-nine']).'?year=" + year + "&quarter=" + quarter + "&title=" + title + "&objective=" + objective + "&office=" + office + "&organization=" + organization + "&startDate=" + startDate + "&endDate=" + end_date + "&maleParticipant=" + maleParticipant + "&femaleParticipant=" + femaleParticipant,
                 "Print",
                 "left=200", 
                 "top=200", 

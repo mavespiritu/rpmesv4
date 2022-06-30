@@ -155,11 +155,18 @@ class TrainingController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
-    public function actionPrintFormNine($year,$quarter)
+    public function actionPrintFormNine($year, $quarter, $title, $objective, $office, $startDate, $endDate, $maleParticipant, $femaleParticipant)
     {
         $model = [];
         $model['year'] = $year;
         $model['quarter'] = $quarter;
+        $model['title'] = $title;
+        $model['objective'] = $objective;
+        $model['office'] = $office;
+        $model['start_date'] = $startDate;
+        $model['end_date'] = $endDate;
+        $model['male_participant'] = $maleParticipant;
+        $model['female_participant'] = $femaleParticipant;
 
         $trainings = Training::find()
                     ->select(['id','title','objective','office','organization','start_date','end_date','male_participant','female_participant','quarter','year']);
@@ -172,6 +179,41 @@ class TrainingController extends Controller
         if($model['quarter'] != '')
         {
             $trainings = $trainings->andWhere(['training.quarter' => $model['quarter']]);
+        }
+
+        if($model['title'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.title' => $model['title']]);
+        }
+
+        if($model['objective'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.objective' => $model['offiobjectivece']]);
+        }
+
+        if($model['office'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.office' => $model['office']]);
+        }
+
+        if($model['start_date'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.start_date' => $model['start_date']]);
+        }
+
+        if($model['end_date'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.end_date' => $model['end_date']]);
+        }
+
+        if($model['male_participant'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.male_participant' => $model['male_participant']]);
+        }
+        
+        if($model['female_participant'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.female_participant' => $model['female_participant']]);
         }
 
         $trainings = $trainings->orderBy(['training.title' => SORT_ASC])->asArray()->all();
@@ -182,11 +224,18 @@ class TrainingController extends Controller
             'trainings' => $trainings
         ]);
     }
-    public function actionDownloadFormNine($type, $year, $quarter, $model)
+    public function actionDownloadFormNine($type, $year, $quarter, $title, $objective, $office, $organization, $startDate, $endDate, $maleParticipant, $femaleParticipant, $model)
     {
         $model = json_decode($model, true); 
         $model['year'] = $year;
         $model['quarter'] = $quarter;
+        $model['title'] = $title;
+        $model['objective'] = $objective;
+        $model['office'] = $office;
+        $model['start_date'] = $startDate;
+        $model['end_date'] = $endDate;
+        $model['male_participant'] = $maleParticipant;
+        $model['female_participant'] = $femaleParticipant;
 
         $trainings = Training::find()
                     ->select(['id','title','objective','office','organization','start_date','end_date','male_participant','female_participant','quarter','year']);
@@ -195,9 +244,45 @@ class TrainingController extends Controller
         {
             $trainings = $trainings->andWhere(['training.year' => $model['year']]);
         }
+        
         if($model['quarter'] != '')
         {
             $trainings = $trainings->andWhere(['training.quarter' => $model['quarter']]);
+        }
+
+        if($model['title'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.title' => $model['title']]);
+        }
+
+        if($model['objective'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.objective' => $model['offiobjectivece']]);
+        }
+
+        if($model['office'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.office' => $model['office']]);
+        }
+
+        if($model['start_date'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.start_date' => $model['start_date']]);
+        }
+
+        if($model['end_date'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.end_date' => $model['end_date']]);
+        }
+
+        if($model['male_participant'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.male_participant' => $model['male_participant']]);
+        }
+        
+        if($model['female_participant'] != '')
+        {
+            $trainings = $trainings->andWhere(['training.female_participant' => $model['female_participant']]);
         }
 
         $trainings = $trainings->orderBy(['training.title' => SORT_ASC])->asArray()->all();
