@@ -40,7 +40,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
-                <br>
                 <div class="pull-left">
                     <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
@@ -53,7 +52,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
                         ],
                     ]) : '' ?>
-                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormTenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormTenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'", "'.$searchModel->resolution_number.'", "'.$searchModel->resolution.'", "'.$searchModel->date_approved.'", "'.$searchModel->rpmc_action.'")', 'class' => 'btn btn-danger btn-sm']) ?>
                 </div>
                 <div class="clearfix"></div>
                     <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
@@ -97,10 +96,10 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <?php
     $script = '
-        function printFormTenReport(year,quarter)
+        function printFormTenReport(year,quarter,resolutionNumber,resolution,dateApproved,rpmcAction)
         {
             var printWindow = window.open(
-                "'.Url::to(['/rpmes/resolution/print-form-ten']).'?year=" + year + "&quarter=" + quarter, 
+                "'.Url::to(['/rpmes/resolution/print-form-ten']).'?year=" + year + "&quarter=" + quarter+ "&resolutionNumber=" + resolutionNumber + "&resolution=" + resolution + "&dateApproved=" + dateApproved + "&rpmcAction=" + rpmcAction, 
                 "Print",
                 "left=200", 
                 "top=200", 

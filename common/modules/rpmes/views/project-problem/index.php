@@ -40,7 +40,6 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
-                <br>
                 <div class="pull-left">
                     <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',

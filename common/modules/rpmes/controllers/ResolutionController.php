@@ -157,11 +157,15 @@ class ResolutionController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    public function actionPrintFormTen($year,$quarter)
+    public function actionPrintFormTen($year,$quarter,$resolutionNumber,$resolution,$dateApproved,$rpmcAction)
     {
         $model = [];
         $model['year'] = $year;
         $model['quarter'] = $quarter;
+        $model['resolution_number'] = $resolutionNumber;
+        $model['resolution'] = $resolution;
+        $model['date_approved'] = $dateApproved;
+        $model['rpmc_action'] = $rpmcAction;
 
         $resolutions = Resolution::find();
 
@@ -173,6 +177,26 @@ class ResolutionController extends Controller
         if($model['quarter'] != '')
         {
             $resolutions = $resolutions->andWhere(['resolution.quarter' => $model['quarter']]);
+        }
+
+        if($model['resolution_number'] != '')
+        {
+            $resolutions = $resolutions->andWhere(['resolution.resolution_number' => $model['resolution_number']]);
+        }
+
+        if($model['resolution'] != '')
+        {
+            $resolutions = $resolutions->andWhere(['resolution.resolution' => $model['resolution']]);
+        }
+
+        if($model['date_approved'] != '')
+        {
+            $resolutions = $resolutions->andWhere(['resolution.date_approved' => $model['date_approved']]);
+        }
+
+        if($model['rpmc_action'] != '')
+        {
+            $resolutions = $resolutions->andWhere(['resolution.rpmc_action' => $model['rpmc_action']]);
         }
 
         $resolutions = $resolutions->orderBy(['resolution.resolution' => SORT_ASC])->all();

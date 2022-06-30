@@ -37,6 +37,20 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
+                <div class="pull-left">
+                        <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
+                        'label' => '<i class="fa fa-download"></i> Export',
+                        'encodeLabel' => false,
+                        'options' => ['class' => 'btn btn-success btn-sm'],
+                        'dropdown' => [
+                            'items' => [
+                                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-finding/download-form-seven', 'type' => 'excel', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-finding/download-form-seven', 'type' => 'pdf', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                            ],
+                    ],
+                    ]) : '' ?>
+                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormSevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+                </div>
                 <div class="clearfix"></div>
                     <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
                                                 RPMES Form 7: LIST OF PROJECT MMAJOR FINDINGS
@@ -70,20 +84,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
                         ],
                     ]); ?>
-                    <div class="pull-right">
-                        <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
-                        'label' => '<i class="fa fa-download"></i> Export',
-                        'encodeLabel' => false,
-                        'options' => ['class' => 'btn btn-success btn-sm'],
-                        'dropdown' => [
-                            'items' => [
-                                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-finding/download-form-seven', 'type' => 'excel', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
-                                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-finding/download-form-seven', 'type' => 'pdf', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
-                            ],
-                    ],
-                    ]) : '' ?>
-                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormSevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
-                </div>
             </div>
         </div>
     </div>

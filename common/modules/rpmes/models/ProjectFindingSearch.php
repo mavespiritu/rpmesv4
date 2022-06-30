@@ -125,9 +125,9 @@ class ProjectFindingSearch extends ProjectFinding
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'year' => $this->year,
-            'project_id' => $this->project_id,
+            'project_finding.id' => $this->id,
+            'project_finding.year' => $this->year,
+            'project_finding.project_id' => $this->project_id,
         ]);
 
         $query->andFilterWhere(['like', 'project_finding.quarter', $this->quarter])

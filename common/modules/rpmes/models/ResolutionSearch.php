@@ -61,13 +61,13 @@ class ResolutionSearch extends Resolution
             'id' => $this->id,
             'resolution_number' => $this->resolution_number,
             'resolution' => $this->resolution,
-            'date_approved' => $this->date_approved,
             'quarter' => $this->quarter,
             'year' => $this->year,
         ]);
 
         $query->andFilterWhere(['like', 'resolution', $this->resolution])
             ->andFilterWhere(['like', 'resolution_number', $this->resolution_number])
+            ->andFilterWhere(['like', 'date_approved', $this->date_approved])
             ->andFilterWhere(['like', 'rpmc_action', $this->rpmc_action])
             ->andFilterWhere(['like', 'quarter', $this->quarter])
             ->andFilterWhere(['like', 'year', $this->year]);

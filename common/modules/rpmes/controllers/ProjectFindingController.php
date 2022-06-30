@@ -118,6 +118,9 @@ class ProjectFindingController extends Controller
     {
         $model = $this->findModel($id);
 
+        $projects = Project::find()->where(['draft' => 'No'])->all();
+        $projects = ArrayHelper::map($projects, 'id', 'title');
+
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             \Yii::$app->getSession()->setFlash('success', 'Record Updated');
             return $this->redirect(['index']);
@@ -125,6 +128,7 @@ class ProjectFindingController extends Controller
 
         return $this->render('update', [
             'model' => $model,
+            'projects' => $projects, 
         ]);
     }
 
