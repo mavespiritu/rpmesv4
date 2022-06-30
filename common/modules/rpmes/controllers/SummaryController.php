@@ -10512,6 +10512,105 @@ class SummaryController extends \yii\web\Controller
                 }
             }
 
+            //echo "<pre>"; print_r($data); exit;
+
+            $physical = [];
+            $totalPhysical = [];
+            $totalPhysical['target'] = 0;
+            $totalPhysical['actual'] = 0;
+            if(!empty($data))
+            {
+                foreach($data as $firstLevel => $firstLevels){
+                    $physical['target'][$firstLevel]['value'] = 0;
+                    $physical['actual'][$firstLevel]['value'] = 0;
+                    $physicalTarget = 0;
+                    $physicalActual = 0;
+
+                    if(!empty($firstLevels['firstLevels'])){
+                        foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){
+                            $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] = 0;
+                            $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] = 0;
+                            $physicalTarget = 0;
+                            $physicalActual = 0;
+
+                            if(!empty($secondLevels['secondLevels'])){
+                                foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels){
+                                    $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] = 0;
+                                    $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] = 0;
+                                    $physicalTarget = 0;
+                                    $physicalActual = 0;
+
+                                    if(!empty($thirdLevels['thirdLevels'])){
+                                        foreach($thirdLevels['thirdLevels'] as $fourthLevel => $fourthLevels){
+                                            $weight = $thirdLevels['content']['financialTargetTotal'] > 0 ? $fourthLevels['content']['financialTargetTotal'] / $thirdLevels['content']['financialTargetTotal'] : 0;
+                                            $physicalTarget = $fourthLevels['content']['physicalTarget'] * $weight;
+                                            $physicalActual = $fourthLevels['content']['physicalActual'] * $weight;
+
+                                            $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'] = $physicalTarget;
+                                            $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'] = $physicalActual;
+
+                                            $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalTarget;
+                                            $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalActual;
+
+                                            $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
+                                            $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
+
+                                            $physical['target'][$firstLevel]['value'] += $physicalTarget;
+                                            $physical['actual'][$firstLevel]['value'] += $physicalActual;
+
+                                            $totalPhysical['target'] += $physicalTarget;
+                                            $totalPhysical['actual'] += $physicalActual;
+                                        }
+                                    }else{
+                                        $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0;
+                                        $physicalTarget = $fourthLevels['content']['physicalTarget'] * $weight;
+                                        $physicalActual = $fourthLevels['content']['physicalActual'] * $weight;
+
+                                        $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalTarget;
+                                        $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalActual;
+
+                                        $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
+                                        $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
+
+                                        $physical['target'][$firstLevel]['value'] += $physicalTarget;
+                                        $physical['actual'][$firstLevel]['value'] += $physicalActual;
+
+                                        $totalPhysical['target'] += $physicalTarget;
+                                        $totalPhysical['actual'] += $physicalActual;
+                                    }
+                                }
+                            }else{
+                                $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0;
+                                $physicalTarget = $secondLevels['content']['physicalTarget'] * $weight;
+                                $physicalActual = $secondLevels['content']['physicalActual'] * $weight;
+
+                                $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
+                                $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
+
+                                $physical['target'][$firstLevel]['value'] += $physicalTarget;
+                                $physical['actual'][$firstLevel]['value'] += $physicalActual;
+
+                                $totalPhysical['target'] += $physicalTarget;
+                                $totalPhysical['actual'] += $physicalActual;
+
+                            }
+                        }
+                    }else{
+                        $weight = $total['content']['financialTargetTotal'] > 0 ? $firstLevels['content']['financialTargetTotal'] / $total['content']['financialTargetTotal'] : 0;
+                        $physicalTarget = $firstLevels['content']['physicalTarget'] * $weight;
+                        $physicalActual = $firstLevels['content']['physicalActual'] * $weight;
+
+                        $physical['target'][$firstLevel]['value'] += $physicalTarget;
+                        $physical['actual'][$firstLevel]['value'] += $physicalActual;
+
+                        $totalPhysical['target'] += $physicalTarget;
+                        $totalPhysical['actual'] += $physicalActual;
+                    }
+                }
+            }
+
+            //echo "<pre>"; print_r($physical); exit;
+
             $bigCaps = range('A', 'Z');
             $smallCaps = range('a', 'z');
             $numbers = range('1', '100');
@@ -10525,6 +10624,8 @@ class SummaryController extends \yii\web\Controller
                 'numbers' => $numbers,
                 'quarters' => $quarters,
                 'genders' => $genders,
+                'physical' => $physical,
+                'totalPhysical' => $totalPhysical
             ]);
 
         }
@@ -10541,7 +10642,7 @@ class SummaryController extends \yii\web\Controller
             'regions' => $regions,
             'provinces' => $provinces,
             'fundSources' => $fundSources,
-            'periods' => $periods
+            'periods' => $periods,
         ]);
     }
 

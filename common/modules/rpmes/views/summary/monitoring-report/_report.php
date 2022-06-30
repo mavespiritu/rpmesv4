@@ -13,10 +13,7 @@ DisableButtonAsset::register($this);
 /* @var $form yii\widgets\ActiveForm */
 
 ?>
-<?php 
-$physicalTargetTotal = 0;
-$physicalActualTotal = 0;
-?>
+
 <div class="pull-left">
     <?= $this->render('_menu', [
         'model' => $model
@@ -93,8 +90,8 @@ $physicalActualTotal = 0;
             <td align=right><?= number_format($total['expenditures'], 2) ?></td>
             <td align=right><?= $total['allocations'] > 0 ? number_format(($total['releases'] / $total['allocations']) * 100, 2) : number_format(0, 2) ?></td>
             <td align=right><?= $total['releases'] > 0 ? number_format(($total['expenditures'] / $total['releases']) * 100, 2) : number_format(0, 2) ?></td>
-            <td align=right><?= number_format($physicalTargetTotal, 2) ?></td>
-            <td align=right><?= number_format($physicalActualTotal, 2) ?></td>
+            <td align=right><?= number_format($totalPhysical['target'], 2) ?></td>
+            <td align=right><?= number_format($totalPhysical['actual'], 2) ?></td>
             <td align=right><?= count($total) > 0 ? number_format(($total['slippage']/count($total)), 2) : number_format(0, 2) ?></td>
             <td align=right><?= $total['physicalTarget'] > 0 ? number_format(($total['physicalActual'] / $total['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
             <td align=right><?= number_format($total['malesEmployedTarget'], 0) ?></td>
@@ -129,8 +126,8 @@ $physicalActualTotal = 0;
                         <td align=right><?= number_format($firstLevels['content']['expenditures'], 2) ?></td>
                         <td align=right><?= $firstLevels['content']['allocations'] > 0 ? number_format(($firstLevels['content']['releases'] / $firstLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
                         <td align=right><?= $firstLevels['content']['releases'] > 0 ? number_format(($firstLevels['content']['expenditures'] / $firstLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                        <td align=right><?= number_format($physicalTargetTotal, 2) ?></td>
-                        <td align=right><?= number_format($physicalActualTotal, 2) ?></td>
+                        <td align=right><?= number_format($physical['target'][$firstLevel]['value'], 2) ?></td>
+                        <td align=right><?= number_format($physical['actual'][$firstLevel]['value'], 2) ?></td>
                         <td align=right><?= count($firstLevels) > 0 ? number_format(($firstLevels['content']['slippage']/count($firstLevels['content'])), 2) : number_format(0, 2) ?></td>
                         <td align=right><?= $firstLevels['content']['physicalTarget'] > 0 ? number_format(($firstLevels['content']['physicalActual'] / $firstLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['malesEmployedTarget'], 0) ?></td>
@@ -165,8 +162,8 @@ $physicalActualTotal = 0;
                                 <td align=right><?= number_format($secondLevels['content']['expenditures'], 2) ?></td>
                                 <td align=right><?= $secondLevels['content']['allocations'] > 0 ? number_format(($secondLevels['content']['releases'] / $secondLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
                                 <td align=right><?= $secondLevels['content']['releases'] > 0 ? number_format(($secondLevels['content']['expenditures'] / $secondLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                                <td align=right><?= number_format($physicalTargetTotal, 2) ?></td>
-                                <td align=right><?= number_format($physicalActualTotal, 2) ?></td>
+                                <td align=right><?= number_format($physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'], 2) ?></td>
+                                <td align=right><?= number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'], 2) ?></td>
                                 <td align=right><?= count($secondLevels) > 0 ? number_format(($secondLevels['content']['slippage']/count($secondLevels['content'])), 2) : number_format(0, 2) ?></td>
                                 <td align=right><?= $secondLevels['content']['physicalTarget'] > 0 ? number_format(($secondLevels['content']['physicalActual'] / $secondLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
                                 <td align=right><?= number_format($secondLevels['content']['malesEmployedTarget'], 0) ?></td>
@@ -192,7 +189,8 @@ $physicalActualTotal = 0;
                             <?php $k = 1; ?>
                             <?php foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels){ ?>
                                 <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
-                                    
+                                    <?php $target['thirdLevels']['target'] = 0 ?>
+                                    <?php $target['thirdLevels']['actual'] = 0 ?>
                                     <tr>
                                         <td align=right>&nbsp;</td>
                                         <td align=right>&nbsp;</td>
@@ -203,8 +201,8 @@ $physicalActualTotal = 0;
                                         <td align=right><?= number_format($thirdLevels['content']['expenditures'], 2) ?></td>
                                         <td align=right><?= $thirdLevels['content']['allocations'] > 0 ? number_format(($thirdLevels['content']['releases'] / $thirdLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
                                         <td align=right><?= $thirdLevels['content']['releases'] > 0 ? number_format(($thirdLevels['content']['expenditures'] / $thirdLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                                        <td align=right><?= number_format($physicalTargetTotal, 2) ?></td>
-                                        <td align=right><?= number_format($physicalActualTotal, 2) ?></td>
+                                        <td align=right><?= number_format($physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'], 2) ?></td>
+                                        <td align=right><?= number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'], 2) ?></td>
                                         <td align=right><?= count($thirdLevels) > 0 ? number_format(($thirdLevels['content']['slippage']/count($thirdLevels['content'])), 2) : number_format(0, 2) ?></td>
                                         <td align=right><?= $thirdLevels['content']['physicalTarget'] > 0 ? number_format(($thirdLevels['content']['physicalActual'] / $thirdLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
                                         <td align=right><?= number_format($thirdLevels['content']['malesEmployedTarget'], 0) ?></td>
@@ -229,9 +227,6 @@ $physicalActualTotal = 0;
                                     </tr>
                                     <?php $l = 1; ?>
                                     <?php foreach($thirdLevels['thirdLevels'] as $fourthLevel => $fourthLevels){ ?>
-                                        <?php $weight = $thirdLevels['content']['financialTargetTotal'] > 0 ? $fourthLevels['content']['financialTargetTotal'] / $thirdLevels['content']['financialTargetTotal'] : 0; ?>
-                                        <?php $physicalTarget = $fourthLevels['content']['physicalTarget'] * $weight; ?>
-                                        <?php $physicalActual = $fourthLevels['content']['physicalActual'] * $weight; ?>
                                         <tr>
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
@@ -243,8 +238,8 @@ $physicalActualTotal = 0;
                                             <td align=right><?= number_format($fourthLevels['content']['expenditures'], 2) ?></td>
                                             <td align=right><?= $fourthLevels['content']['allocations'] > 0 ? number_format(($fourthLevels['content']['releases'] / $fourthLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
                                             <td align=right><?= $fourthLevels['content']['releases'] > 0 ? number_format(($fourthLevels['content']['expenditures'] / $fourthLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                                            <td align=right><?= number_format($physicalTarget, 2) ?></td>
-                                            <td align=right><?= number_format($physicalActual, 2) ?></td>
+                                            <td align=right><?= number_format($physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'], 2) ?></td>
+                                            <td align=right><?= number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'], 2) ?></td>
                                             <td align=right><?= count($fourthLevels['content']) > 0 ? number_format(($fourthLevels['content']['slippage']/count($fourthLevels['content'])), 2) : number_format(0, 2) ?></td>
                                             <td align=right><?= $fourthLevels['content']['physicalTarget'] > 0 ? number_format(($fourthLevels['content']['physicalActual'] / $fourthLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['malesEmployedTarget'], 0) ?></td>
@@ -268,135 +263,13 @@ $physicalActualTotal = 0;
                                             <td>&nbsp;</td>
                                         </tr>
                                         <?php $l++ ?>
-                                        <?php $physicalTargetTotal += $physicalTarget ?>
-                                        <?php $physicalActualTotal += $physicalActual ?>
                                     <?php } ?>
-                                <?php }else{ ?>
-                                    <?php $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0; ?>
-                                    <?php $physicalTarget = $thirdLevels['content']['physicalTarget'] * $weight; ?>
-                                    <?php $physicalActual = $thirdLevels['content']['physicalActual'] * $weight; ?>
-                                    <tr>
-                                        <td align=right>&nbsp;</td>
-                                        <td align=right>&nbsp;</td>
-                                        <td colspan=2><?= $i.'.'.$j.'.'.$k ?>. <?= $thirdLevel ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['allocations'], 2) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['releases'], 2) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['obligations'], 2) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['expenditures'], 2) ?></td>
-                                        <td align=right><?= $thirdLevels['content']['allocations'] > 0 ? number_format(($thirdLevels['content']['releases'] / $thirdLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
-                                        <td align=right><?= $thirdLevels['content']['releases'] > 0 ? number_format(($thirdLevels['content']['expenditures'] / $thirdLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                                        <td align=right><?= number_format($physicalTarget, 2) ?></td>
-                                        <td align=right><?= number_format($physicalActual, 2) ?></td>
-                                        <td align=right><?= count($thirdLevels) > 0 ? number_format(($thirdLevels['content']['slippage']/count($thirdLevels['content'])), 2) : number_format(0, 2) ?></td>
-                                        <td align=right><?= $thirdLevels['content']['physicalTarget'] > 0 ? number_format(($thirdLevels['content']['physicalActual'] / $thirdLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['malesEmployedTarget'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['femalesEmployedTarget'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['malesEmployedTarget'] + $thirdLevels['content']['femalesEmployedTarget'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['malesEmployedActual'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['femalesEmployedActual'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['malesEmployedActual'] + $thirdLevels['content']['femalesEmployedActual'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['beneficiariesTarget'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['groupBeneficiariesTarget'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['maleBeneficiariesActual'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['femaleBeneficiariesActual'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['groupBeneficiariesActual'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['completed'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['behindSchedule'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['onSchedule'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['aheadOnSchedule'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['notYetStartedWithTarget'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
-                                        <td align=right><?= number_format($thirdLevels['content']['completed'] + $thirdLevels['content']['behindSchedule'] + $thirdLevels['content']['onSchedule'] + $thirdLevels['content']['aheadOnSchedule'] + $thirdLevels['content']['notYetStartedWithTarget'] + $thirdLevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
-                                        <td>&nbsp;</td>
-                                    </tr>
-
-                                    <?php $physicalTargetTotal += $physicalTarget; ?>
-                                    <?php $physicalActualTotal += $physicalActual; ?>
                                 <?php } ?>
                                 <?php $k++ ?>
                             <?php } ?>
-                        <?php }else{ ?>
-                            <?php $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0; ?>
-                            <?php $physicalTarget = $secondLevels['content']['physicalTarget'] * $weight; ?>
-                            <?php $physicalActual = $secondLevels['content']['physicalActual'] * $weight; ?>
-                            <tr>
-                                <td align=right>&nbsp;</td>
-                                <td colspan=3><?= $i.'.'.$j ?>. <?= $secondLevel ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['allocations'], 2) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['releases'], 2) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['obligations'], 2) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['expenditures'], 2) ?></td>
-                                <td align=right><?= $secondLevels['content']['allocations'] > 0 ? number_format(($secondLevels['content']['releases'] / $secondLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
-                                <td align=right><?= $secondLevels['content']['releases'] > 0 ? number_format(($secondLevels['content']['expenditures'] / $secondLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                                <td align=right><?= number_format($physicalTarget, 2) ?></td>
-                                <td align=right><?= number_format($physicalActual, 2) ?></td>
-                                <td align=right><?= count($secondLevels) > 0 ? number_format(($secondLevels['content']['slippage']/count($secondLevels['content'])), 2) : number_format(0, 2) ?></td>
-                                <td align=right><?= $secondLevels['content']['physicalTarget'] > 0 ? number_format(($secondLevels['content']['physicalActual'] / $secondLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['malesEmployedTarget'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['femalesEmployedTarget'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['malesEmployedTarget'] + $secondLevels['content']['femalesEmployedTarget'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['malesEmployedActual'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['femalesEmployedActual'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['malesEmployedActual'] + $secondLevels['content']['femalesEmployedActual'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['beneficiariesTarget'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['groupBeneficiariesTarget'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['maleBeneficiariesActual'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['femaleBeneficiariesActual'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['groupBeneficiariesActual'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['completed'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['behindSchedule'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['onSchedule'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['aheadOnSchedule'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['notYetStartedWithTarget'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
-                                <td align=right><?= number_format($secondLevels['content']['completed'] + $secondLevels['content']['behindSchedule'] + $secondLevels['content']['onSchedule'] + $secondLevels['content']['aheadOnSchedule'] + $secondLevels['content']['notYetStartedWithTarget'] + $secondLevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
-                                <td>&nbsp;</td>
-                            </tr>
-                            <?php $physicalTargetTotal += $physicalTarget; ?>
-                            <?php $physicalActualTotal += $physicalActual; ?>
                         <?php } ?>
                         <?php $j++ ?>
                     <?php } ?>
-                <?php }else{ ?>
-
-                    <?php $weight = $total['financialTargetTotal'] > 0 ? $firstLevels['content']['financialTargetTotal'] / $total['financialTargetTotal'] : 0; ?>
-                    <?php $physicalTarget = $firstLevels['content']['physicalTarget'] * $weight; ?>
-                    <?php $physicalActual = $firstLevels['content']['physicalActual'] * $weight; ?>
-                    <tr style="font-weight: bolder;">
-                        <td colspan=4><?= $i ?>. <?= $firstLevel ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['allocations'], 2) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['releases'], 2) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['obligations'], 2) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['expenditures'], 2) ?></td>
-                        <td align=right><?= $firstLevels['content']['allocations'] > 0 ? number_format(($firstLevels['content']['releases'] / $firstLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
-                        <td align=right><?= $firstLevels['content']['releases'] > 0 ? number_format(($firstLevels['content']['expenditures'] / $firstLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                        <td align=right><?= number_format($physicalTarget, 2) ?></td>
-                        <td align=right><?= number_format($physicalActual, 2) ?></td>
-                        <td align=right><?= count($firstLevels) > 0 ? number_format(($firstLevels['content']['slippage']/count($firstLevels['content'])), 2) : number_format(0, 2) ?></td>
-                        <td align=right><?= $firstLevels['content']['physicalTarget'] > 0 ? number_format(($firstLevels['content']['physicalActual'] / $firstLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['malesEmployedTarget'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['femalesEmployedTarget'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['malesEmployedTarget'] + $firstLevels['content']['femalesEmployedTarget'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['malesEmployedActual'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['femalesEmployedActual'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['malesEmployedActual'] + $firstLevels['content']['femalesEmployedActual'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['beneficiariesTarget'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['groupBeneficiariesTarget'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['maleBeneficiariesActual'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['femaleBeneficiariesActual'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['groupBeneficiariesActual'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['completed'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['behindSchedule'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['onSchedule'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['aheadOnSchedule'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['notYetStartedWithTarget'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
-                        <td align=right><?= number_format($firstLevels['content']['completed'] + $firstLevels['content']['behindSchedule'] + $firstLevels['content']['onSchedule'] + $firstLevels['content']['aheadOnSchedule'] + $firstLevels['content']['notYetStartedWithTarget'] + $firstLevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
-                        <td>&nbsp;</td>
-                    </tr>
-
-                    <?php $physicalTargetTotal += $physicalTarget; ?>
-                    <?php $physicalActualTotal += $physicalActual; ?>
                 <?php } ?>
                 <?php $i++ ?>
             <?php } ?>
