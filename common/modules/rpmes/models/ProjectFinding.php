@@ -5,28 +5,25 @@ namespace common\modules\rpmes\models;
 use Yii;
 
 /**
- * This is the model class for table "project_problem".
+ * This is the model class for table "project_finding".
  *
  * @property int $id
+ * @property string|null $quarter
+ * @property int|null $year
  * @property int|null $project_id
- * @property string|null $nature
- * @property string|null $detail
- * @property string|null $strategy
- * @property string|null $responsible_entity
- * @property string|null $lesson_learned
- * @property int|null $submitted_by
- * @property string|null $date_submitted
- *
- * @property Project $project
+ * @property string|null $inspection_date
+ * @property string|null $major_finding
+ * @property string|null $issues
+ * @property string|null $action
  */
-class ProjectProblem extends \yii\db\ActiveRecord
+class ProjectFinding extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'project_problem';
+        return 'project_finding';
     }
 
     /**
@@ -35,11 +32,9 @@ class ProjectProblem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['project_id', 'nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned', 'quarter'], 'required'],
-            [['project_id', 'submitted_by', 'year'], 'integer'],
-            [['nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned'], 'string'],
-            [['date_submitted'], 'safe'],
-            [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
+            [['quarter', 'major_finding', 'issues', 'action'], 'string'],
+            [['year', 'project_id'], 'integer'],
+            [['inspection_date'], 'safe'],
         ];
     }
 
@@ -50,18 +45,13 @@ class ProjectProblem extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'quarter' => 'Quarter',
             'year' => 'Year',
-            'quarter' => 'quarter',
-            'project_id' => 'Project',
-            'projectTitle' => 'Project',
-            'sectorTitle' => 'Sector',
-            'nature' => 'Nature',
-            'detail' => 'Detail',
-            'strategy' => 'Strategy',
-            'responsible_entity' => 'Responsible Entity',
-            'lesson_learned' => 'Lesson Learned',
-            'submitted_by' => 'Submitted By',
-            'date_submitted' => 'Date Submitted',
+            'project_id' => 'Project ID',
+            'inspection_date' => 'Inspection Date',
+            'major_finding' => 'Major Finding',
+            'issues' => 'Issues',
+            'action' => 'Action',
             'subSectorTitle' => 'Sub Sector',
             'projectCitymuns' => 'Project City/Municipal',
             'projectProvinces' => 'Project Province',
@@ -105,11 +95,6 @@ class ProjectProblem extends \yii\db\ActiveRecord
     public function getSubSectorTitle()
     {
         return $this->project->subSector ? $this->project->subSector->title : 'No Sub Sector';
-    }
-
-    public function getLocation()
-    {
-        return $this->project->location;
     }
 
     public function getAgency()
@@ -160,7 +145,6 @@ class ProjectProblem extends \yii\db\ActiveRecord
 
         return !empty($provincesLocations) ? implode(" ; ", $provincesLocations) : 'All Province';
     }
-    
     public function getProjectRegions()
     {
         $regionsLocations = [];

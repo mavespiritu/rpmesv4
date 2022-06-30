@@ -68,8 +68,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         'columns' => [
                             ['class' => 'yii\grid\SerialColumn'],
                             'id',
-                            'year',
                             'quarter',
+                            'year',
                             'projectTitle',
                             'nature',
                             'detail:ntext',
