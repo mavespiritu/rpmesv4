@@ -173,7 +173,7 @@ class Project extends \yii\db\ActiveRecord
         rsort($allocationsQ4);
         $value = 0;
         
-        switch($this->data_type){
+        /* switch($this->data_type){
             case 'Default':
             case 'Maintained':
                      if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : 0; }
@@ -187,7 +187,12 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q3) : $allocationsQ3; }
                 else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q4) : $allocationsQ4; }
                 break;
-        }
+        } */
+
+        if($quarter == 'Q1'){ $value = floatval($q1); }
+        else if($quarter == 'Q2'){ $value = floatval($q1) + floatval($q2); }
+        else if($quarter == 'Q3'){ $value = floatval($q1) + floatval($q2) + floatval($q3); }
+        else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
 
         return $value;
     }
@@ -214,7 +219,7 @@ class Project extends \yii\db\ActiveRecord
 
         $value = 0;
         
-        switch($this->data_type){
+        /* switch($this->data_type){
             case 'Default':
             case 'Maintained':
                      if($quarter == 'Q1'){ $value = floatval($q1); }
@@ -228,7 +233,12 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q3'){ $value = floatval($q3); }
                 else if($quarter == 'Q4'){ $value = floatval($q4); }
                 break;
-        }
+        } */
+
+        if($quarter == 'Q1'){ $value = floatval($q1); }
+        else if($quarter == 'Q2'){ $value = floatval($q1) + floatval($q2); }
+        else if($quarter == 'Q3'){ $value = floatval($q1) + floatval($q2) + floatval($q3); }
+        else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
 
         return $value;
     }
@@ -242,7 +252,7 @@ class Project extends \yii\db\ActiveRecord
 
         $value = 0;
         
-        switch($this->data_type){
+        /* switch($this->data_type){
             case 'Default':
             case 'Maintained':
                      if($quarter == 'Q1'){ $value = floatval($q1); }
@@ -256,7 +266,12 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q3'){ $value = floatval($q3); }
                 else if($quarter == 'Q4'){ $value = floatval($q4); }
                 break;
-        }
+        } */
+
+        if($quarter == 'Q1'){ $value = floatval($q1); }
+        else if($quarter == 'Q2'){ $value = floatval($q1) + floatval($q2); }
+        else if($quarter == 'Q3'){ $value = floatval($q1) + floatval($q2) + floatval($q3); }
+        else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
 
         return $value;
     }
@@ -270,7 +285,7 @@ class Project extends \yii\db\ActiveRecord
 
         $value = 0;
         
-        switch($this->data_type){
+        /* switch($this->data_type){
             case 'Default':
             case 'Maintained':
                      if($quarter == 'Q1'){ $value = floatval($q1); }
@@ -284,7 +299,12 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q3'){ $value = floatval($q3); }
                 else if($quarter == 'Q4'){ $value = floatval($q4); }
                 break;
-        }
+        } */
+
+        if($quarter == 'Q1'){ $value = floatval($q1); }
+        else if($quarter == 'Q2'){ $value = floatval($q1) + floatval($q2); }
+        else if($quarter == 'Q3'){ $value = floatval($q1) + floatval($q2) + floatval($q3); }
+        else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
 
         return $value;
     }
