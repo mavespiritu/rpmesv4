@@ -159,7 +159,7 @@ class ProjectExceptionController extends \yii\web\Controller
                 {
                     foreach($projects as $project)
                     {
-                        if($project->project->getImplementationStatus($model->quarter) == $model->status)
+                        if(($project->project->getImplementationStatus($model->quarter) == $model->status) && $project->isCompleted == false)
                         {
                             $exceptionModel = ProjectException::findOne(['project_id' => $project->project_id, 'year' => $model->year, 'quarter' => $model->quarter]) ? 
                             ProjectException::findOne(['project_id' => $project->project_id, 'year' => $model->year, 'quarter' => $model->quarter]) : new ProjectException();
@@ -177,7 +177,7 @@ class ProjectExceptionController extends \yii\web\Controller
                 {
                     foreach($projects as $project)
                     {
-                        if(($project->project->getPhysicalSlippage($model->quarter) <= -15) || ($project->project->getPhysicalSlippage($model->quarter) >= 15))
+                        if((($project->project->getPhysicalSlippage($model->quarter) <= -15) || ($project->project->getPhysicalSlippage($model->quarter) >= 15)) && $project->isCompleted == false)
                         {
                             $exceptionModel = ProjectException::findOne(['project_id' => $project->project_id, 'year' => $model->year, 'quarter' => $model->quarter]) ? 
                             ProjectException::findOne(['project_id' => $project->project_id, 'year' => $model->year, 'quarter' => $model->quarter]) : new ProjectException();

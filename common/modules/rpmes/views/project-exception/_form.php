@@ -61,7 +61,7 @@ function renderSummary($page)
                     <?php if($projectsModels){ ?>
                         <?php $i = 1; ?>
                         <?php foreach($projectsModels as $model){ ?>
-                            <?php if($model->getImplementationStatus($getData['quarter']) == $getData['status']){ ?>
+                            <?php if(($model->getImplementationStatus($getData['quarter']) == $getData['status']) && $model->isCompleted == false){ ?>
                             <tr>
                                 <td align=center><?= $i ?></td>
                                 <td>
@@ -94,7 +94,7 @@ function renderSummary($page)
                     <?php if($projectsModels){ ?>
                         <?php $i = 1; ?>
                         <?php foreach($projectsModels as $model){ ?>
-                            <?php if(($model->getPhysicalSlippage($getData['quarter']) <= -15) || ($model->getPhysicalSlippage($getData['quarter']) >= 15)){ ?>
+                            <?php if((($model->getPhysicalSlippage($getData['quarter']) <= -15) || ($model->getPhysicalSlippage($getData['quarter']) >= 15)) && $model->isCompleted == false){ ?>
                             <tr>
                                 <td align=center><?= $i ?></td>
                                 <td>
