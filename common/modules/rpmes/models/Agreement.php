@@ -5,28 +5,26 @@ namespace common\modules\rpmes\models;
 use Yii;
 
 /**
- * This is the model class for table "project_problem".
+ * This is the model class for table "agreement".
  *
  * @property int $id
+ * @property int|null $year
+ * @property string|null $quarter
  * @property int|null $project_id
- * @property string|null $nature
- * @property string|null $detail
- * @property string|null $strategy
- * @property string|null $responsible_entity
- * @property string|null $lesson_learned
+ * @property string|null $date_of_pss
+ * @property string|null $agreement_reached
+ * @property string|null $next_step
  * @property int|null $submitted_by
  * @property string|null $date_submitted
- *
- * @property Project $project
  */
-class ProjectProblem extends \yii\db\ActiveRecord
+class Agreement extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'project_problem';
+        return 'agreement';
     }
 
     /**
@@ -35,11 +33,10 @@ class ProjectProblem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['project_id', 'nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned', 'quarter'], 'required'],
-            [['project_id', 'submitted_by', 'year'], 'integer'],
-            [['nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned'], 'string'],
-            [['date_submitted'], 'safe'],
-            [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
+            [['year', 'project_id', 'submitted_by'], 'integer'],
+            [['quarter', 'agreement_reached', 'next_step'], 'string'],
+            [['year', 'quarter' ,'project_id', 'date_of_pss', 'agreement_reached', 'next_step'], 'required'],
+            [['date_of_pss', 'date_submitted'], 'safe'],
         ];
     }
 
@@ -51,30 +48,14 @@ class ProjectProblem extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'year' => 'Year',
-            'quarter' => 'quarter',
-            'project_id' => 'Project',
-            'projectTitle' => 'Project',
-            'sectorTitle' => 'Sector',
-            'nature' => 'Nature of Problem',
-            'detail' => 'Detail of Problem',
-            'strategy' => 'Strategies / Actions Taken to Resolve the Problem / Issue',
-            'responsible_entity' => 'Responsible Entities / Key Actors and Their Specific Assistance',
-            'lesson_learned' => 'Lessons Learned and Good Practices that could be Shared to the NPMC / Other PMCs',
+            'quarter' => 'Quarter',
+            'project_id' => 'Project ID',
+            'date_of_pss' => 'Facilitation Meeting Date',
+            'agreement_reached' => 'Agreement Reached',
+            'next_step' => 'Next Step',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',
-            'subSectorTitle' => 'Sub Sector',
-            'projectCitymuns' => 'Project City/Municipal',
-            'projectProvinces' => 'Project Province',
-            'projectRegions' => 'Project Region',
         ];
-    }
-
-    public function getYearsList() 
-    {
-        $currentYear = 2099;
-        $yearFrom = 1900;
-        $yearsRange = range($yearFrom, $currentYear);
-        return array_combine($yearsRange, $yearsRange);
     }
 
     public function getProject()
@@ -85,6 +66,14 @@ class ProjectProblem extends \yii\db\ActiveRecord
     public function getProjectTitle()
     {
         return $this->project ? $this->project->title : 'No Project';
+    }
+
+    public function getYearsList() 
+    {
+        $currentYear = 2099;
+        $yearFrom = 1900;
+        $yearsRange = range($yearFrom, $currentYear);
+        return array_combine($yearsRange, $yearsRange);
     }
 
     public function getSector()
@@ -173,4 +162,5 @@ class ProjectProblem extends \yii\db\ActiveRecord
 
         return !empty($regionsLocations) ? implode(" ; ", $regionsLocations) : 'No Region';
     }
+
 }

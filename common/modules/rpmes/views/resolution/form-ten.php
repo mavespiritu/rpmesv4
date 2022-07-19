@@ -32,7 +32,7 @@
                 <td align=center><b>Quarter </b></td>
                 <td align=center><b>Year </b></td>
                 <td align=center><b>Resolution Number</b></td>
-                <td align=center><b>Resolution</b></td>
+                <td align=center><b>Resolution/s Passed</b></td>
                 <td align=center><b>Date Approved</b></td>
                 <td align=center><b>RPMC Actions/Remarks</b></td>
                 <td align=center><b>Attached Scanned File of the Resolution</b></td>

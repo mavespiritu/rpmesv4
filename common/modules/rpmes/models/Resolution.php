@@ -55,7 +55,7 @@ class Resolution extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'resolution_number' => 'Resolution Number',
-            'resolution' => 'Resolution',
+            'resolution' => 'Resolutions Passed',
             'date_approved' => 'Date Approved',
             'rpmc_action' => 'Rpmc Action/Remarks',
             'quarter' => 'Quarter',

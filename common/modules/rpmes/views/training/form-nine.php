@@ -31,10 +31,10 @@
             <tr>
                 <td rowspan=2 align=center><b>Quarter</b></td>
                 <td rowspan=2 align=center><b>Year</b></td>
-                <td rowspan=2 colspan=1 align=center><b>Title</b></td>
-                <td rowspan=2 colspan=1 align=center><b>Objective</b></td>
-                <td rowspan=2 colspan=1 align=center><b>Office</b></td>
-                <td rowspan=2 align=center><b>Organization</b></td>
+                <td rowspan=2 colspan=1 align=center><b>Title of Training</b></td>
+                <td rowspan=2 colspan=1 align=center><b>Objective of Training</b></td>
+                <td rowspan=2 colspan=1 align=center><b>Lead Office</b></td>
+                <td rowspan=2 align=center><b>Participating Office/Agencies/Organizations</b></td>
                 <td rowspan=2 align=center><b>Start Date</b></td>
                 <td rowspan=2 align=center><b>End Date</b></td>
                 <td colspan=3 align=center><b>Participants</b></td>

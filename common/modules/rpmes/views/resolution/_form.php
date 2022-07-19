@@ -23,7 +23,7 @@ DisableButtonAsset::register($this);
 
     <?= $form->field($model, 'resolution_number')->textInput() ?>
 
-    <?= $form->field($model, 'resolution')->textarea(['rows' => 2])->label('Resolution *'); ?>
+    <?= $form->field($model, 'resolution')->textarea(['rows' => 2])->label('Resolution/s Passed *'); ?>
 
     <?= $form->field($model, 'date_approved')->widget(DatePicker::className(), [
                 'type' => DatePicker::TYPE_COMPONENT_APPEND,
@@ -34,7 +34,7 @@ DisableButtonAsset::register($this);
                 ],
             ])->label('Date Approved *'); ?>
 
-    <?= $form->field($model, 'rpmc_action')->textarea(['rows' => 2])->label('RPMC Action *'); ?>
+    <?= $form->field($model, 'rpmc_action')->textarea(['rows' => 2])->label('RPMC Actions / Remarks *'); ?>
 
     <?= $form->field($model, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
 

@@ -50,10 +50,10 @@ class Training extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'title' => 'Title',
-            'objective' => 'Objective',
-            'office' => 'Office',
-            'organization' => 'Organization',
+            'title' => 'Title of Training',
+            'objective' => 'Objective of Training',
+            'office' => 'Lead Office',
+            'organization' => 'Participating Offices / Agencies / Organizations',
             'start_date' => 'Start Date',
             'end_date' => 'End Date',
             'male_participant' => 'Male Participant',

@@ -27,13 +27,13 @@ DisableButtonAsset::register($this);
     	'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
 
-    <?= $form->field($model, 'title')->textarea(['rows' => 2])->label('Title *'); ?>
+    <?= $form->field($model, 'title')->textarea(['rows' => 2])->label('Title of Training *'); ?>
 
-    <?= $form->field($model, 'objective')->textarea(['rows' => 2])->label('Objective *'); ?>
+    <?= $form->field($model, 'objective')->textarea(['rows' => 2])->label('Objective of Training *'); ?>
 
-    <?= $form->field($model, 'office')->textarea(['rows' => 2])->label('Office *'); ?>
+    <?= $form->field($model, 'office')->textarea(['rows' => 2])->label('Lead Office *'); ?>
 
-    <?= $form->field($model, 'organization')->textInput()->label('Organization *'); ?>
+    <?= $form->field($model, 'organization')->textInput()->label('Participating Offices/ Agencies/ Organizations *'); ?>
 
             <?= $form->field($model, 'start_date')->widget(DatePicker::className(), [
                 'type' => DatePicker::TYPE_COMPONENT_APPEND,
