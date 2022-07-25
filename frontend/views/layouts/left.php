@@ -51,8 +51,14 @@
                         'items' => [
                             ['label' => 'Monitoring Plans', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report-sector'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                     ],
+                    ['label' => 'Form 9: Training', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 10: Resolutions Passed', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 11: Lessons Learned', 'icon' => 'folder', 'url' => ['/rpmes/project-problem'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 7: Project Major Finding', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Agreements Reached', 'icon' => 'folder', 'url' => ['/rpmes/agreement'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Due Dates', 'icon' => 'clock-o', 'url' => ['/rpmes/due-date'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     [
