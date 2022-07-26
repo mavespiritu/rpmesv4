@@ -18,7 +18,14 @@ DisableButtonAsset::register($this);
     	'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
 
-    <?= $form->field($model, 'year')->dropDownList(['' => '', $model->getYearsList()])->label('Year *'); ?>
+    <?= $form->field($model, 'year')->widget(Select2::classname(), [
+        'data' => $model->YearsList,
+        'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('Year *');
+    ?>
 
     <?= $form->field($model, 'quarter')->dropDownList([ 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter', ], ['prompt' => '']) ?>
 
