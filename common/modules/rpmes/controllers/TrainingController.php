@@ -218,7 +218,7 @@ class TrainingController extends Controller
 
         $trainings = $trainings->orderBy(['training.title' => SORT_ASC])->asArray()->all();
 
-        echo "<pre>"; print_r($trainings); exit;
+        //echo "<pre>"; print_r($trainings); exit;
 
         return $this->renderAjax('form-nine', [
             'model' => $model,
