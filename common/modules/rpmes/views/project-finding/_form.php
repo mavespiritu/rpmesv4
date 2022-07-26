@@ -18,6 +18,17 @@ DisableButtonAsset::register($this);
     	'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
 
+    <?= $form->field($model, 'year')->widget(Select2::classname(), [
+        'data' => $model->YearsList,
+        'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('Year *');
+    ?>
+
+    <?= $form->field($model, 'quarter')->dropDownList([ 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter', ], ['prompt' => '']) ?>
+
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <?= $form->field($model, 'project_id')->widget(Select2::classname(), [
@@ -50,15 +61,11 @@ DisableButtonAsset::register($this);
         ])->label('Date of Inspection *'); 
     ?>
 
-    <?= $form->field($model, 'major_finding')->textarea(['rows' => 4]) ?>
+    <?= $form->field($model, 'major_finding')->textarea(['rows' => 4])->label('Major Finding/s *') ?>
 
-    <?= $form->field($model, 'issues')->textarea(['rows' => 4]) ?>
+    <?= $form->field($model, 'issues')->textarea(['rows' => 4])->label('Issues *') ?>
 
-    <?= $form->field($model, 'action')->textarea(['rows' => 4]) ?>
-
-    <?= $form->field($model, 'quarter')->dropDownList([ 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter', ], ['prompt' => '']) ?>
-
-    <?= $form->field($model, 'year')->dropDownList(['' => '', $model->getYearsList()])->label('Year *'); ?>
+    <?= $form->field($model, 'action')->textarea(['rows' => 4])->label('Action/s Taken/Recommendation *') ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>

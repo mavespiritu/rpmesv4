@@ -49,9 +49,9 @@ class ProjectFinding extends \yii\db\ActiveRecord
             'year' => 'Year',
             'project_id' => 'Project ID',
             'inspection_date' => 'Inspection Date',
-            'major_finding' => 'Major Finding',
+            'major_finding' => 'Major Finding/s',
             'issues' => 'Issues',
-            'action' => 'Action',
+            'action' => 'Action/s Taken/Recommendations',
             'subSectorTitle' => 'Sub Sector',
             'projectCitymuns' => 'Project City/Municipal',
             'projectProvinces' => 'Project Province',
@@ -61,10 +61,11 @@ class ProjectFinding extends \yii\db\ActiveRecord
 
     public function getYearsList() 
     {
-        $currentYear = 2099;
-        $yearFrom = 1900;
-        $yearsRange = range($yearFrom, $currentYear);
-        return array_combine($yearsRange, $yearsRange);
+        $currentYear = date('Y');
+        $leastYear = date('Y') - 3;
+        $maxYear = date('Y') + 3;
+        $yearRange = range($leastYear, $maxYear);
+        return array_combine($yearRange, $yearRange);
     }
 
     public function getProject()

@@ -34,12 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'years' => $years,
                     ]) ?>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <div class="box box-primary">
+                <hr>
                 <div class="pull-left">
                     <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
@@ -54,10 +49,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     ]) : '' ?>
                     <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormTenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'", "'.$searchModel->resolution_number.'", "'.$searchModel->resolution.'", "'.$searchModel->date_approved.'", "'.$searchModel->rpmc_action.'")', 'class' => 'btn btn-danger btn-sm']) ?>
                 </div>
-                <div class="clearfix"></div>
-                    <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+                <div class="clearfix"></div><br>
+                    <!-- <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
                                                     RPMES Form 10: LIST OF RESOLUTIONS PASSED
-                    </h5>
+                    </h5> -->
                     <?= GridView::widget([
                         'options' => [
                             'class' => 'table-responsive',

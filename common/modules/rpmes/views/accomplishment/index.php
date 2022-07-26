@@ -30,6 +30,7 @@
                     <?php if(!empty($getData)){ ?>
                         <?= $this->render('_form', [
                             'years' => $years,
+                            'model' => $model,
                             'agencies' => $agencies,
                             'quarters' => $quarters,
                             'genders' => $genders,
@@ -45,7 +46,7 @@
                             'getData' => $getData,
                             'dueDate' => $dueDate,
                             'submissionModel' => $submissionModel,
-                            'agency_id' => $agency_id
+                            'agency_id' => $agency_id,
                         ]); ?>
                     <?php } ?>
                 </div>

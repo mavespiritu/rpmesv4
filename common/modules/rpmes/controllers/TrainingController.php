@@ -89,6 +89,19 @@ class TrainingController extends Controller
     {
         $model = new Training();
 
+        $currentYear = date('Y');
+        $leastYear = date('Y') -5;
+        $maxYear = date('Y') + 3;
+        $yearsRange = [];
+
+        for ($x = $leastYear; $x <= $currentYear; $x++) {
+            $yearsRange = $x;  
+        }
+
+        for ($x = $currentYear; $x <= $maxYear; $x++) {
+            $yearsRange = $x; 
+        }
+
         if ($model->load(Yii::$app->request->post())) {
             $model->submitted_by = Yii::$app->user->id;
             $model->date_submitted = date('Y-m-d H:i:s');
@@ -99,6 +112,7 @@ class TrainingController extends Controller
 
         return $this->render('create', [
             'model' => $model,
+            'yearsRange' => $yearsRange,
         ]);
     }
 
@@ -217,6 +231,8 @@ class TrainingController extends Controller
         }
 
         $trainings = $trainings->orderBy(['training.title' => SORT_ASC])->asArray()->all();
+
+        //echo "<pre>"; print_r($trainings); exit;
 
         return $this->renderAjax('form-nine', [
             'model' => $model,

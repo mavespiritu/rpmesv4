@@ -14,6 +14,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-md-6 col-xs-12">
             <?= $this->render('_form', [
                 'model' => $model,
+                'yearsRange' => $yearsRange,
             ]) ?>
         </div>
     </div>

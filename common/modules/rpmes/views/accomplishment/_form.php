@@ -18,6 +18,7 @@ use common\components\helpers\HtmlHelper;
 use dosamigos\switchery\Switchery;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 DisableButtonAsset::register($this);
+use yii\bootstrap\ButtonDropdown;
 /* @var $this yii\web\View */   
 /* @var $form yii\widgets\ActiveForm */
 $HtmlHelper = new HtmlHelper();
@@ -29,11 +30,6 @@ function renderSummary($page)
     return 'Showing <b>'.$firstNumber.'-'.$lastNumber.'</b> of <b>'.$total.'</b> items.';
 }
 ?>
-    <?php $form = ActiveForm::begin([
-        'options' => ['id' => 'accomplishment-form', 'class' => 'disable-submit-buttons'],
-    ]); ?>
-        <div class="alert alert-<?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'info' : 'danger' : '' ?>"><i class="fa fa-exclamation-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' to go before the deadline of submission of '.$getData['quarter'].' Accomplishment. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) 
-                : 'Submission of '.$getData['quarter'].' Accomplishment has ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) : 'No due date set' ?></div>
         <div class="summary"><?= renderSummary($projectsPages) ?></div>
         <div class="accomplishment-form accomplishment-table" style="height: 600px;">
             <table id="accomplishment-table" class="table table-bordered table-hover table-striped" cellspacing="0" style="min-width: 4000px;">
@@ -386,6 +382,92 @@ function renderSummary($page)
         }
 
         return false;
+    });
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>
+<?php
+    $script = '
+    function printFormTwoReport(year, quarter, agency_id)
+    {
+        var printWindow = window.open(
+            "'.Url::to(['/rpmes/accomplishment/print-form-two']).'?type=print&year=" + year +  "&quarter=" + quarter + "&agency_id=" + agency_id, 
+            "Print",
+            "left=200", 
+            "top=200", 
+            "width=650", 
+            "height=500", 
+            "toolbar=0", 
+            "resizable=0"
+            );
+            printWindow.addEventListener("load", function() {
+                printWindow.print();
+                setTimeout(function() {
+                printWindow.close();
+            }, 1);
+            }, true);
+    }
+
+    function enableMonitoringButtons()
+    {
+        if($("#monitoring-project-form input:checkbox:checked").length > 0)
+        {
+            $("#delete-selected-monitoring-project-button").attr("disabled", false);
+        }else{
+            $("#delete-selected-monitoring-project-button").attr("disabled", true);
+        }
+    }
+
+    $(".check-monitoring-projects").click(function(){
+        $(".check-monitoring-project").not(this).prop("checked", this.checked);
+        enableMonitoringButtons();
+    });
+    
+    $(".check-monitoring-project").click(function() {
+        enableMonitoringButtons();
+    });
+
+    $("#delete-selected-monitoring-project-button").on("click", function(e) {
+        var checkedVals = $(".check-monitoring-project:checkbox:checked").map(function() {
+            return this.value;
+        }).get();
+
+        var ids = checkedVals.join(",");
+
+        e.preventDefault();
+
+        var con = confirm("Are you sure you want to remove this projects?");
+        if(con == true)
+        {
+            var form = $("#monitoring-project-form");
+            var formData = form.serialize();
+
+            $.ajax({
+                url: form.attr("action"),
+                type: "GET",
+                data: {id: ids},
+                success: function (data) {
+                    console.log(data);
+                    form.enableSubmitButtons();
+                    $.growl.notice({ title: "Success!", message: "The selected projects has been deleted" });
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            }); 
+        }
+
+        return false;
+    });
+
+    $(document).ready(function(){
+        $(".check-monitoring-project").removeAttr("checked");
+        enableMonitoringButtons();
+        $(".monitoring-project-table").freezeTable({
+            "scrollable": true,
+            "columnNum": 3
+        });
     });
     ';
 
