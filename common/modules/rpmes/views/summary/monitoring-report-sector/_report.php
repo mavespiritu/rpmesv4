@@ -21,9 +21,7 @@ DisableButtonAsset::register($this);
 <div class="clearfix"></div>
 <br>
 <div class="summary-monitoring-report-sector-table" style="height: 600px;">
-    <h5 class="text-center" style="text-align:center;">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
-        RPMES Form 5: Summary of Financial and Physical Accomplishment <br>
-        As of Reporting Period <?php echo date("F j, Y"); ?>
+
     </h5>
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
         <thead>
@@ -85,11 +83,43 @@ DisableButtonAsset::register($this);
             </tr>
         </thead>
         <tbody>
+        <tr style="font-weight: bolder;">
+            <td colspan=5>Grand Total</td>
+            <td align=right><?= number_format($total['allocations'], 2) ?></td>
+            <td align=right><?= number_format($total['releases'], 2) ?></td>
+            <td align=right><?= number_format($total['obligations'], 2) ?></td>
+            <td align=right><?= number_format($total['expenditures'], 2) ?></td>
+            <td align=right><?= $total['allocations'] > 0 ? number_format(($total['releases'] / $total['allocations']) * 100, 2) : number_format(0, 2) ?></td>
+            <td align=right><?= $total['releases'] > 0 ? number_format(($total['expenditures'] / $total['releases']) * 100, 2) : number_format(0, 2) ?></td>
+            <td align=right><?= number_format($total['physicalTarget'], 2) ?></td>
+            <td align=right><?= number_format($total['physicalActual'], 2) ?></td>
+            <td align=right><?= count($total) > 0 ? number_format(($total['slippage']/count($total)), 2) : number_format(0, 2) ?></td>
+            <td align=right><?= $total['physicalTarget'] > 0 ? number_format(($total['physicalActual'] / $total['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
+            <td align=right><?= number_format($total['malesEmployedTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['femalesEmployedTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['malesEmployedTarget'] + $total['femalesEmployedTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['malesEmployedActual'], 0) ?></td>
+            <td align=right><?= number_format($total['femalesEmployedActual'], 0) ?></td>
+            <td align=right><?= number_format($total['malesEmployedActual'] + $total['femalesEmployedActual'], 0) ?></td>
+            <td align=right><?= number_format($total['beneficiariesTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['groupBeneficiariesTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['maleBeneficiariesActual'], 0) ?></td>
+            <td align=right><?= number_format($total['femaleBeneficiariesActual'], 0) ?></td>
+            <td align=right><?= number_format($total['groupBeneficiariesActual'], 0) ?></td>
+            <td align=right><?= number_format($total['completed'], 0) ?></td>
+            <td align=right><?= number_format($total['behindSchedule'], 0) ?></td>
+            <td align=right><?= number_format($total['onSchedule'], 0) ?></td>
+            <td align=right><?= number_format($total['aheadOnSchedule'], 0) ?></td>
+            <td align=right><?= number_format($total['notYetStartedWithTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['notYetStartedWithNoTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['completed'] + $total['behindSchedule'] + $total['onSchedule'] + $total['aheadOnSchedule'] + $total['notYetStartedWithTarget'] + $total['notYetStartedWithNoTarget'], 0) ?></td>
+            <td>&nbsp;</td>
+        </tr>
         <?php if(!empty($data)){ ?>
             <?php $i = 1; ?>
             <?php foreach($data as $firstLevel => $firstLevels){ ?>
                     <tr style="font-weight: bolder;">
-                        <td colspan=5><?= $i ?>. <?= str_replace("*","<br>",str_replace("+"," <?= date('F j, Y H:i:s', strtotime(",str_replace("$",") ?>",$firstLevel))) ?></td>
+                        <td colspan=5><?= $i ?>. <?= str_replace("*","<br>", $firstLevel) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['allocations'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['releases'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['obligations'], 2) ?></td>
@@ -125,7 +155,7 @@ DisableButtonAsset::register($this);
                     <?php foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){ ?>
                         <tr style="font-weight: bolder;">
                             <td align=right>&nbsp;</td>
-                            <td colspan=4><?= $i ?>. <?= str_replace("*","<br>",str_replace("+"," <?= date('F j, Y H:i:s', strtotime(",str_replace("$",") ?>",$secondLevel))) ?></td>
+                            <td colspan=4><?= $i.'.'.$j ?>.<?= str_replace("*","<br>", $secondLevel) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['allocations'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['releases'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['obligations'], 2) ?></td>
@@ -159,10 +189,10 @@ DisableButtonAsset::register($this);
                         <?php if(!empty($secondLevels['secondLevels'])){ ?>
                             <?php $k = 1; ?>
                             <?php foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels){ ?>
-                                <tr style="font-weight: bolder;">
+                                <tr>
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
-                                    <td colspan=3><?= $i ?>. <?= str_replace("*","<br>",str_replace("+"," <?= date('F j, Y H:i:s', strtotime(",str_replace("$",") ?>",$thirdLevel))) ?></td>
+                                    <td colspan=3><?= $i.'.'.$j.'.'.$k ?>.<?= str_replace("*","<br>", $thirdLevel) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['allocations'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['releases'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['obligations'], 2) ?></td>
@@ -196,11 +226,11 @@ DisableButtonAsset::register($this);
                                 <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
                                     <?php $l = 1; ?>
                                     <?php foreach($thirdLevels['thirdLevels'] as $fourthLevel => $fourthLevels){ ?>
-                                        <tr style="font-weight: bolder;">
+                                        <tr>
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
-                                            <td colspan=2><?= $i.'.'.$j.'.'.$k.'.'.$l ?>. <?= str_replace("*","<br>&nbsp;&nbsp;&nbsp;&nbsp;",$fourthLevel) ?></td>
+                                            <td colspan=2><?= $i.'.'.$j.'.'.$k.'.'.$l ?>.<?= str_replace("*","<br>", $fourthLevel) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['allocations'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['releases'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['obligations'], 2) ?></td>
@@ -234,12 +264,12 @@ DisableButtonAsset::register($this);
                                         <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
                                             <?php $m = 1; ?>
                                             <?php foreach($fourthLevels['fourthLevels'] as $fifthLevel => $fifthLevels){ ?>
-                                                <tr style="font-weight: bolder;">
+                                                <tr>
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
-                                                    <td><?= $i.'.'.$j.'.'.$k.'.'.$l.'.'.$m ?>. <?= str_replace("*","<br>&nbsp;&nbsp;&nbsp;",$fifthLevel) ?></td>
+                                                    <td><?= $i.'.'.$j.'.'.$k.'.'.$l.'.'.$m ?>. <?= str_replace("*","<br>", $fifthLevel) ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['allocations'], 2) ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['releases'], 2) ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['obligations'], 2) ?></td>

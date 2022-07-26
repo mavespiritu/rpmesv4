@@ -34,12 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             'years' => $years,
                     ]) ?>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <div class="box box-primary">
+                <hr>
                 <div class="pull-left">
                         <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
@@ -54,12 +49,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     ]) : '' ?>
                     <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormNineReport("'.$searchModel->year.'", "'.$searchModel->quarter.'", "'.$searchModel->title.'", "'.$searchModel->objective.'", "'.$searchModel->office.'", "'.$searchModel->organization.'", "'.$searchModel->start_date.'", "'.$searchModel->end_date.'", "'.$searchModel->male_participant.'", "'.$searchModel->female_participant.'")', 'class' => 'btn btn-danger btn-sm']) ?>
-                </div>
-                <br>
-                <br>
-                <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+                </div><br><br>
+                    <!-- <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
                                     RPMES Form 9: LIST OF TRAININGS AND WORKSHOPS
-                </h5>
+                    </h5> -->
                     <?= GridView::widget(['options' => ['class' => 'table-responsive',],
                             'dataProvider' => $dataProvider,
                             'filterModel' => $searchModel,

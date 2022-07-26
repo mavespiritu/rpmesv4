@@ -26,6 +26,10 @@ DisableButtonAsset::register($this);
     <?php $form = ActiveForm::begin([
     	'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
+    
+    <?= $form->field($model, 'year')->dropDownList(['' => '', $model->getYearsList()])->label('Year *'); ?>
+
+    <?= $form->field($model, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
 
     <?= $form->field($model, 'title')->textarea(['rows' => 2])->label('Title of Training *'); ?>
 
@@ -65,10 +69,6 @@ DisableButtonAsset::register($this);
     <?= $form->field($model, 'male_participant')->textInput(['type'=>'number'])->label('Male Participant *'); ?>
 
     <?= $form->field($model, 'female_participant')->textInput(['type'=>'number'])->label('Female Participant *'); ?>
-
-    <?= $form->field($model, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
-
-    <?= $form->field($model, 'year')->dropDownList(['' => '', $model->getYearsList()])->label('Year *'); ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>

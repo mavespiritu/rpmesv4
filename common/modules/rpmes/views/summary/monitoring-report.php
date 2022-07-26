@@ -43,10 +43,10 @@
 </div>
 <?php
     $script = '
-        function printSummaryReport(year, quarter, fund_source_id, agency_id, region_id, province_id, citymun_id, sector_id, grouping)
+        function printSummaryReport(model, year, quarter, agency_id)
         {
             var printWindow = window.open(
-                "'.Url::to(['/rpmes/summary/print-monitoring-report']).'?year=" + year + "&quarter=" + quarter + "&fund_source_id=" + fund_source_id + "&agency_id=" + agency_id + "&region_id=" + region_id + "&province_id=" + province_id + "&citymun_id=" + citymun_id + "&sector_id=" + sector_id + "&grouping=" + grouping, 
+                "'.Url::to(['/rpmes/summary/download-monitoring-report']).'?type=print&model=" + model + "&year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id, 
                 "Print",
                 "left=200", 
                 "top=200", 

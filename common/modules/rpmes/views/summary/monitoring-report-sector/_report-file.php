@@ -26,7 +26,7 @@
 <table class="table table-condensed table-bordered table-striped table-condensed table-responsive">
 <thead>
             <tr>
-                <td colspan=5 rowspan=3 align=center><b>Project Details</b></td>
+                <td colspan=5 rowspan=3 align=center><b>Project Details</b><br>a. Project Title<br>b. Sector/Subsector<br>c. Fund Source<br>d. Project Schedule<br>e. Category</td>
                 <td colspan=6 align=center><b>Financial Status of Reporting Period</b></td>
                 <td colspan=4 align=center><b>Physical Status as of Reporting Period</b></td>
                 <td colspan=6 align=center><b>Number of Persons Employed as of Reporting Period</b></td>
@@ -83,11 +83,43 @@
             </tr>
         </thead>
         <tbody>
+        <tr style="font-weight: bolder;">
+            <td colspan=5>Grand Total</td>
+            <td align=right><?= number_format($total['allocations'], 2) ?></td>
+            <td align=right><?= number_format($total['releases'], 2) ?></td>
+            <td align=right><?= number_format($total['obligations'], 2) ?></td>
+            <td align=right><?= number_format($total['expenditures'], 2) ?></td>
+            <td align=right><?= $total['allocations'] > 0 ? number_format(($total['releases'] / $total['allocations']) * 100, 2) : number_format(0, 2) ?></td>
+            <td align=right><?= $total['releases'] > 0 ? number_format(($total['expenditures'] / $total['releases']) * 100, 2) : number_format(0, 2) ?></td>
+            <td align=right><?= number_format($total['physicalTarget'], 2) ?></td>
+            <td align=right><?= number_format($total['physicalActual'], 2) ?></td>
+            <td align=right><?= count($total) > 0 ? number_format(($total['slippage']/count($total)), 2) : number_format(0, 2) ?></td>
+            <td align=right><?= $total['physicalTarget'] > 0 ? number_format(($total['physicalActual'] / $total['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
+            <td align=right><?= number_format($total['malesEmployedTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['femalesEmployedTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['malesEmployedTarget'] + $total['femalesEmployedTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['malesEmployedActual'], 0) ?></td>
+            <td align=right><?= number_format($total['femalesEmployedActual'], 0) ?></td>
+            <td align=right><?= number_format($total['malesEmployedActual'] + $total['femalesEmployedActual'], 0) ?></td>
+            <td align=right><?= number_format($total['beneficiariesTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['groupBeneficiariesTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['maleBeneficiariesActual'], 0) ?></td>
+            <td align=right><?= number_format($total['femaleBeneficiariesActual'], 0) ?></td>
+            <td align=right><?= number_format($total['groupBeneficiariesActual'], 0) ?></td>
+            <td align=right><?= number_format($total['completed'], 0) ?></td>
+            <td align=right><?= number_format($total['behindSchedule'], 0) ?></td>
+            <td align=right><?= number_format($total['onSchedule'], 0) ?></td>
+            <td align=right><?= number_format($total['aheadOnSchedule'], 0) ?></td>
+            <td align=right><?= number_format($total['notYetStartedWithTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['notYetStartedWithNoTarget'], 0) ?></td>
+            <td align=right><?= number_format($total['completed'] + $total['behindSchedule'] + $total['onSchedule'] + $total['aheadOnSchedule'] + $total['notYetStartedWithTarget'] + $total['notYetStartedWithNoTarget'], 0) ?></td>
+            <td>&nbsp;</td>
+        </tr>
         <?php if(!empty($data)){ ?>
             <?php $i = 1; ?>
             <?php foreach($data as $firstLevel => $firstLevels){ ?>
                     <tr style="font-weight: bolder;">
-                        <td colspan=5><?= $i ?>. <?= str_replace("*","<br>&nbsp",$firstLevel) ?></td>
+                        <td colspan=5><?= $i ?>. <?= str_replace("*","<br>", $firstLevel) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['allocations'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['releases'], 2) ?></td>
                         <td align=right><?= number_format($firstLevels['content']['obligations'], 2) ?></td>
@@ -123,7 +155,7 @@
                     <?php foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){ ?>
                         <tr style="font-weight: bolder;">
                             <td align=right>&nbsp;</td>
-                            <td colspan=4><?= $i.'.'.$j ?>. <?= str_replace("*","<br>  ",$secondLevel) ?></td>
+                            <td colspan=4><?= $i.'.'.$j ?>.<?= str_replace("*","<br>", $secondLevel) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['allocations'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['releases'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['obligations'], 2) ?></td>
@@ -157,10 +189,10 @@
                         <?php if(!empty($secondLevels['secondLevels'])){ ?>
                             <?php $k = 1; ?>
                             <?php foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels){ ?>
-                                <tr>
+                                <tr style="font-weight: bolder;">
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
-                                    <td colspan=3><?= $i.'.'.$j.'.'.$k ?>. <?= str_replace("*","<br>  ",$thirdLevel) ?></td>
+                                    <td colspan=3><?= $i.'.'.$j.'.'.$k ?>.<?= str_replace("*","<br>", $thirdLevel) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['allocations'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['releases'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['obligations'], 2) ?></td>
@@ -194,11 +226,11 @@
                                 <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
                                     <?php $l = 1; ?>
                                     <?php foreach($thirdLevels['thirdLevels'] as $fourthLevel => $fourthLevels){ ?>
-                                        <tr>
+                                        <tr style="font-weight: bolder;">
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
-                                            <td colspan=2><?= $i.'.'.$j.'.'.$k.'.'.$l ?>. <?= str_replace("*","<br>  ",$fourthLevel) ?></td>
+                                            <td colspan=2><?= $i.'.'.$j.'.'.$k.'.'.$l ?>.<?= str_replace("*","<br>", $fourthLevel) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['allocations'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['releases'], 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['obligations'], 2) ?></td>
@@ -232,12 +264,12 @@
                                         <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
                                             <?php $m = 1; ?>
                                             <?php foreach($fourthLevels['fourthLevels'] as $fifthLevel => $fifthLevels){ ?>
-                                                <tr>
+                                                <tr style="font-weight: bolder;">
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
-                                                    <td><?= $i.'.'.$j.'.'.$k.'.'.$l.'.'.$m ?>. <?= str_replace("*","<br>  ",$fifthLevel) ?></td>
+                                                    <td><?= $i.'.'.$j.'.'.$k.'.'.$l.'.'.$m ?>. <?= str_replace("*","<br>", $fifthLevel) ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['allocations'], 2) ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['releases'], 2) ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['obligations'], 2) ?></td>

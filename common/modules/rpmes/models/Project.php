@@ -223,11 +223,11 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
                 break;
             case 'Cumulative':
-                     if($quarter == 'Q1'){ $value = floatval($q1); }
-                else if($quarter == 'Q2'){ $value = floatval($q2); }
-                else if($quarter == 'Q3'){ $value = floatval($q3); }
-                else if($quarter == 'Q4'){ $value = floatval($q4); }
-                break;
+                    if($quarter == 'Q1'){ $value = floatval($q1); }
+               else if($quarter == 'Q2'){ $value = $q2 ? floatval($q2) : floatval($q1);}
+               else if($quarter == 'Q3'){ $value = $q2 ? $q3 ? floatval($q3) : floatval($q2) : floatval($q1);}
+               else if($quarter == 'Q4'){ $value = $q2 ? $q3 ? $q4 ? floatval($q4) : floatval($q3) : floatval($q2) : floatval($q1);}
+               break;
         }
 
         return $value;
@@ -252,9 +252,9 @@ class Project extends \yii\db\ActiveRecord
                 break;
             case 'Cumulative':
                      if($quarter == 'Q1'){ $value = floatval($q1); }
-                else if($quarter == 'Q2'){ $value = floatval($q2); }
-                else if($quarter == 'Q3'){ $value = floatval($q3); }
-                else if($quarter == 'Q4'){ $value = floatval($q4); }
+                else if($quarter == 'Q2'){ $value = $q2 ? floatval($q2) : floatval($q1);}
+                else if($quarter == 'Q3'){ $value = $q2 ? $q3 ? floatval($q3) : floatval($q2) : floatval($q1);}
+                else if($quarter == 'Q4'){ $value = $q2 ? $q3 ? $q4 ? floatval($q4) : floatval($q3) : floatval($q2) : floatval($q1);}
                 break;
         }
 
@@ -279,11 +279,11 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
                 break;
             case 'Cumulative':
-                     if($quarter == 'Q1'){ $value = floatval($q1); }
-                else if($quarter == 'Q2'){ $value = floatval($q2); }
-                else if($quarter == 'Q3'){ $value = floatval($q3); }
-                else if($quarter == 'Q4'){ $value = floatval($q4); }
-                break;
+                    if($quarter == 'Q1'){ $value = floatval($q1); }
+               else if($quarter == 'Q2'){ $value = $q2 ? floatval($q2) : floatval($q1);}
+               else if($quarter == 'Q3'){ $value = $q2 ? $q3 ? floatval($q3) : floatval($q2) : floatval($q1);}
+               else if($quarter == 'Q4'){ $value = $q2 ? $q3 ? $q4 ? floatval($q4) : floatval($q3) : floatval($q2) : floatval($q1);}
+               break;
         }
 
         return $value;

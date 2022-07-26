@@ -20,9 +20,9 @@ DisableButtonAsset::register($this);
         'options' => ['class' => 'btn btn-success btn-sm'],
         'dropdown' => [
             'items' => [
-                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-report', 'type' => 'excel', 'year' => $model->year, 'agency_id' => $model->agency_id, 'quarter' => $model->quarter, 'model' => json_encode($model)])],
-                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-report', 'type' => 'pdf', 'year' => $model->year, 'agency_id' => $model->agency_id, 'quarter' => $model->quarter, 'model' => json_encode($model)])],
+                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-report', 'type' => 'excel', 'model' => json_encode($model), 'year' => $model->year, 'quarter' => $model->quarter, 'agency_id' => $model->agency_id])],
+                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-report', 'type' => 'pdf', 'model' => json_encode($model), 'year' => $model->year, 'quarter' => $model->quarter, 'agency_id' => $model->agency_id])],
             ],
         ],
     ]); ?>
-    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummaryReport("'.$model->year.'","'.$model->quarter.'","'.$model->fund_source_id.'","'.$model->agency_id.'","'.$model->region_id.'","'.$model->province_id.'","'.$model->citymun_id.'","'.$model->sector_id.'","'.$model->grouping.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+<?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummaryReport("'.str_replace('"', '\'', json_encode($model)).'","'.$model->year.'","'.$model->quarter.'","'.$model->agency_id.'")', 'class' => 'btn btn-danger btn-sm']) ?>

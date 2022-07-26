@@ -31,12 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'years' => $years,
                     ]) ?>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <div class="box box-primary">
+                <hr>
                 <div class="pull-left">
                         <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
@@ -52,9 +47,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormSevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
                 </div>
                 <div class="clearfix"></div>
-                    <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+                    <!-- <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
                                                 RPMES Form 7: LIST OF PROJECT MMAJOR FINDINGS
-                    </h5>
+                    </h5> --><br>
                     <?= GridView::widget([
                         'options' => [
                         'class' => 'table-responsive',
