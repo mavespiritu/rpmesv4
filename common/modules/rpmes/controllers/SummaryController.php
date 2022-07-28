@@ -16535,6 +16535,28 @@ class SummaryController extends \yii\web\Controller
                                         ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
                                         ->groupBy(['project.agency_id'])
                                         ->createCommand()->getRawSql();
+
+            $allocationTotalPerProject = ProjectTarget::find()
+                                        ->select(['id', 'SUM(
+                                            IF(project.data_type = "Cumulative",
+                                                IF(COALESCE(q4, 0) <= 0,
+                                                    IF(COALESCE(q3, 0) <= 0,
+                                                        IF(COALESCE(q2, 0) <= 0,
+                                                            COALESCE(q1, 0)
+                                                        , COALESCE(q2, 0))
+                                                    , COALESCE(q3, 0))
+                                                , COALESCE(q4, 0))
+                                            ,   
+                                                COALESCE(q1, 0) +
+                                                COALESCE(q2, 0) +
+                                                COALESCE(q3, 0) +
+                                                COALESCE(q4, 0)
+                                            )
+                                        ) as total'])
+                                        ->leftJoin('project', 'project.id = project_target.project_id')
+                                        ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
+                                        ->groupBy(['project.id'])
+                                        ->createCommand()->getRawSql();
             
             $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
@@ -21198,6 +21220,7 @@ class SummaryController extends \yii\web\Controller
                                             )
                                         )';
             
+            //per project
             $financialWeight = 'IF(allocationTotalPerAgency.total > 0, COALESCE(('.$financialTargetTotal.' / allocationTotalPerAgency.total), 0), 0)';
 
             $physicalTargetPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalTargetPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
