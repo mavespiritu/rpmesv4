@@ -5,7 +5,7 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\Training */
 
-$this->title = 'Add New Training';
+$this->title = 'Add New Record';
 $this->params['breadcrumbs'][] = ['label' => 'Trainings', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>

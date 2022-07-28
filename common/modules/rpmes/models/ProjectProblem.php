@@ -71,10 +71,11 @@ class ProjectProblem extends \yii\db\ActiveRecord
 
     public function getYearsList() 
     {
-        $currentYear = 2099;
-        $yearFrom = 1900;
-        $yearsRange = range($yearFrom, $currentYear);
-        return array_combine($yearsRange, $yearsRange);
+        $currentYear = date('Y');
+        $leastYear = date('Y') - 1;
+        $maxYear = date('Y');
+        $yearRange = range($leastYear, $maxYear);
+        return array_combine($yearRange, $yearRange);
     }
 
     public function getProject()

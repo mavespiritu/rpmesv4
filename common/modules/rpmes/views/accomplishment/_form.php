@@ -30,6 +30,9 @@ function renderSummary($page)
     return 'Showing <b>'.$firstNumber.'-'.$lastNumber.'</b> of <b>'.$total.'</b> items.';
 }
 ?>
+<?php $form = ActiveForm::begin([
+    'options' => ['class' => 'disable-submit-buttons'],
+]); ?>
         <div class="summary"><?= renderSummary($projectsPages) ?></div>
         <div class="accomplishment-form accomplishment-table" style="height: 600px;">
             <table id="accomplishment-table" class="table table-bordered table-hover table-striped" cellspacing="0" style="min-width: 4000px;">

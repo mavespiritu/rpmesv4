@@ -90,8 +90,13 @@ class ProjectFindingController extends Controller
     public function actionCreate()
     {
         $model = new ProjectFinding();
-        $projects = Project::find()->where(['draft' => 'No'])->all();
+        $projects = Project::find()->select(['project.id','CONCAT(agency.code,'.'": ",'.'project.title) as title','agency.code']);
+        $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
+        $projects = $projects->andWhere(['project.draft' => 'No']);
+        $projects = $projects->orderBy(['agency.code' => SORT_ASC])->asArray()->all();
         $projects = ArrayHelper::map($projects, 'id', 'title');
+
+        //echo "<pre>"; print_r($projects); exit;
 
         if ($model->load(Yii::$app->request->post())) {
             $model->submitted_by = Yii::$app->user->id;

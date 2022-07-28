@@ -136,7 +136,7 @@ class ProjectFindingSearch extends ProjectFinding
             ->andFilterWhere(['like', 'project_finding.action', $this->action])
             ->andFilterWhere(['like', 'project_finding.inspection_date', $this->inspection_date])
             ->andFilterWhere(['like', 'sector.title', $this->sectorTitle])
-            ->andFilterWhere(['like', 'sub_sector.title', $this->subSectorTitle])
+            ->andFilterWhere(['like', 'sub_sector.title', $this->sectorTitle])
             ->andFilterWhere(['like', 'agency.code', $this->agency])
             ->andFilterWhere(['like', 'project.title', $this->projectTitle])
             ->andFilterWhere(['like', 'tblbarangay.barangay_m', $this->projectBarangays])

@@ -17,9 +17,6 @@ use kartik\select2\Select2;
     ]); ?>
 
     <div class="col-md-6 col-xs-12">
-        <?= $form->field($searchModel, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
-    </div>
-    <div class="col-md-6 col-xs-12">
         <?= $form->field($searchModel, 'year')->widget(Select2::classname(), [
             'data' => $years,
             'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
@@ -29,6 +26,11 @@ use kartik\select2\Select2;
             ])->label('Year *');
         ?>
     </div>
+
+    <div class="col-md-6 col-xs-12">
+        <?= $form->field($searchModel, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
+    </div>
+    
     <div class="form-group pull-right">
         <?= Html::submitButton('Search', ['class' => 'btn btn-primary']) ?>
         <?= Html::resetButton('Reset', ['class' => 'btn btn-outline-secondary']) ?>

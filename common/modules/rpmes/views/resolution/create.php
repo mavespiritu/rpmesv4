@@ -5,7 +5,7 @@ use yii\helpers\Html;
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\Resolution */
 
-$this->title = 'Add Resolution';
+$this->title = 'Add New Record';
 $this->params['breadcrumbs'][] = ['label' => 'Resolutions', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>

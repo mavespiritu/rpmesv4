@@ -34,6 +34,7 @@ class ProjectFinding extends \yii\db\ActiveRecord
         return [
             [['quarter', 'major_finding', 'issues', 'action'], 'string'],
             [['year', 'project_id'], 'integer'],
+            [['year', 'project_id', 'inspection_date', 'quarter', 'major_finding', 'issues', 'action'], 'required'],
             [['inspection_date'], 'safe'],
         ];
     }
@@ -56,6 +57,8 @@ class ProjectFinding extends \yii\db\ActiveRecord
             'projectCitymuns' => 'Project City/Municipal',
             'projectProvinces' => 'Project Province',
             'projectRegions' => 'Project Region',
+            'projectTitle' => 'Name of Project / Total Project Cost',
+            'sectorTitle' => 'Sector / Subsector',
         ];
     }
 
@@ -75,7 +78,7 @@ class ProjectFinding extends \yii\db\ActiveRecord
 
     public function getProjectTitle()
     {
-        return $this->project ? $this->project->title : 'No Project';
+        return $this->project ? $this->project->title.' / '.number_format($this->project->allocationTotal, 2) : 'No Project';
     }
 
     public function getSector()
@@ -85,7 +88,7 @@ class ProjectFinding extends \yii\db\ActiveRecord
 
     public function getSectorTitle()
     {
-        return $this->project->sector ? $this->project->sector->title : 'No Sector';
+        return $this->project->sector ? $this->project->sectorTitle.' / '.($this->project->subSector ? $this->project->subSector->title : 'No Sub Sector'): 'No Sector';
     }
 
     public function getSubSector()
@@ -105,7 +108,7 @@ class ProjectFinding extends \yii\db\ActiveRecord
 
     public function getAllocationTotal()
     {
-        return $this->project->allocationTotal;
+        return number_format($this->project->allocationTotal, 2);
     }
 
     public function getProjectBarangays()
