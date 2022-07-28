@@ -20,8 +20,8 @@ DisableButtonAsset::register($this);
         'options' => ['class' => 'btn btn-success btn-sm'],
         'dropdown' => [
             'items' => [
-                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-report-sector', 'type' => 'excel', 'model' => json_encode($model), 'year' => $model->year,'quarter' => $model->quarter, 'agency_id' => $model->agency_id])],
-                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-report-sector', 'type' => 'pdf', 'model' => json_encode($model), 'year' => $model->year, 'quarter' => $model->quarter, 'agency_id' => $model->agency_id])],
+                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-summary-accomplishment', 'type' => 'excel', 'model' => json_encode($model), 'year' => $model->year,'quarter' => $model->quarter, 'agency_id' => $model->agency_id])],
+                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-summary-accomplishment', 'type' => 'pdf', 'model' => json_encode($model), 'year' => $model->year, 'quarter' => $model->quarter, 'agency_id' => $model->agency_id])],
             ],
         ],
     ]); ?>

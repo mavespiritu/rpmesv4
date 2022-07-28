@@ -20,7 +20,7 @@
                     <h3 class="box-title">Summary of Financial and Physical Accomplishment</h3>
                 </div>
                 <div class="box-body">
-                    <?= $this->render('_search-monitoring-report-sector', [
+                    <?= $this->render('_search-summary-accomplishment', [
                         'model' => $model,
                         'quarters' => $quarters,
                         'genders' => $genders,
@@ -36,7 +36,7 @@
                         'periods' => $periods
                     ]) ?>
                     <hr>
-                    <div id="summary-monitoring-report-sector-table"></div>
+                    <div id="summary-summary-accomplishment-table"></div>
                 </div>
             </div>
         </div>
@@ -47,7 +47,7 @@
         function printSummary(model, year, quarter, agency_id)
         {
             var printWindow = window.open(
-                "'.Url::to(['/rpmes/summary/download-monitoring-report-sector']).'?type=print&model=" + model + "&year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id, 
+                "'.Url::to(['/rpmes/summary/download-summary-accomplishment']).'?type=print&model=" + model + "&year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id, 
                 "Print",
                 "left=200", 
                 "top=200", 

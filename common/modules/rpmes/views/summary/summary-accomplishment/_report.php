@@ -20,7 +20,7 @@ DisableButtonAsset::register($this);
 </div>
 <div class="clearfix"></div>
 <br>
-<div class="summary-monitoring-report-sector-table" style="height: 600px;">
+<div class="summary-summary-accomplishment-table" style="height: 600px;">
 
     </h5>
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
@@ -377,7 +377,7 @@ DisableButtonAsset::register($this);
 <?php
     $script = '
         $(document).ready(function(){
-            $(".summary-monitoring-report-sector-table").freezeTable({
+            $(".summary-summary-accomplishment-table").freezeTable({
                 "scrollable": true,
             });
         });

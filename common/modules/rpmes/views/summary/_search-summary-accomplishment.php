@@ -12,10 +12,10 @@ DisableButtonAsset::register($this);
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="acknowledgment-monitoring-report-sector-search">
+<div class="acknowledgment-summary-accomplishment-search">
 
     <?php $form = ActiveForm::begin([
-        'id' => 'search-summary-monitoring-report-sector-form'
+        'id' => 'search-summary-summary-accomplishment-form'
     ]); ?>
 
     <div class="row">
@@ -173,7 +173,7 @@ DisableButtonAsset::register($this);
 </div>
 <?php
     $script = '
-    $("#search-summary-monitoring-report-sector-form").on("beforeSubmit", function (e) {
+    $("#search-summary-summary-accomplishment-form").on("beforeSubmit", function (e) {
         e.preventDefault();
      
         var form = $(this);
@@ -184,14 +184,14 @@ DisableButtonAsset::register($this);
             type: form.attr("method"),
             data: formData,
             beforeSend: function(){
-                $("#summary-monitoring-report-sector-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+                $("#summary-summary-accomplishment-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
             success: function (data) {
                 console.log(this.data);
-                $("#summary-monitoring-report-sector-table").empty();
-                $("#summary-monitoring-report-sector-table").hide();
-                $("#summary-monitoring-report-sector-table").fadeIn("slow");
-                $("#summary-monitoring-report-sector-table").html(data);
+                $("#summary-summary-accomplishment-table").empty();
+                $("#summary-summary-accomplishment-table").hide();
+                $("#summary-summary-accomplishment-table").fadeIn("slow");
+                $("#summary-summary-accomplishment-table").html(data);
             },
             error: function (err) {
                 console.log(err);

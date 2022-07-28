@@ -74,10 +74,10 @@ class SummaryController extends \yii\web\Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['monitoring-plan', 'download-monitoring-plan', 'print-monitoring-plan', 'monitoring-report', 'download-monitoring-report', 'print-monitoring-report', 'download-monitoring-report-sector', 'print-monitoring-report-sector'],
+                'only' => ['monitoring-plan', 'download-monitoring-plan', 'print-monitoring-plan', 'monitoring-report', 'download-monitoring-report', 'print-monitoring-report', 'download-summary-accomplishment', 'print-summary-accomplishment'],
                 'rules' => [
                     [
-                        'actions' => ['monitoring-plan', 'download-monitoring-plan', 'print-monitoring-plan', 'monitoring-report', 'download-monitoring-report', 'print-monitoring-report', 'download-monitoring-report-sector', 'print-monitoring-report-sector'],
+                        'actions' => ['monitoring-plan', 'download-monitoring-plan', 'print-monitoring-plan', 'monitoring-report', 'download-monitoring-report', 'print-monitoring-report', 'download-summary-accomplishment', 'print-summary-accomplishment'],
                         'allow' => true,
                         'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
                     ],
@@ -16489,7 +16489,7 @@ class SummaryController extends \yii\web\Controller
     }
 
     //new summary report
-    public function actionMonitoringReportSector()
+    public function actionSummaryAccomplishment()
     {   
         $data = [];
         $total = [];
@@ -16566,50 +16566,6 @@ class SummaryController extends \yii\web\Controller
             $beneficiariesAccomps = BeneficiariesAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
- 
-            $allocationTotalPerAgency = ProjectTarget::find()
-                                        ->select(['agency_id', 'SUM(
-                                            IF(project.data_type = "Cumulative",
-                                                IF(COALESCE(q4, 0) <= 0,
-                                                    IF(COALESCE(q3, 0) <= 0,
-                                                        IF(COALESCE(q2, 0) <= 0,
-                                                            COALESCE(q1, 0)
-                                                        , COALESCE(q2, 0))
-                                                    , COALESCE(q3, 0))
-                                                , COALESCE(q4, 0))
-                                            ,   
-                                                COALESCE(q1, 0) +
-                                                COALESCE(q2, 0) +
-                                                COALESCE(q3, 0) +
-                                                COALESCE(q4, 0)
-                                            )
-                                        ) as total'])
-                                        ->leftJoin('project', 'project.id = project_target.project_id')
-                                        ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
-                                        ->groupBy(['project.agency_id'])
-                                        ->createCommand()->getRawSql();
-
-            $allocationTotalPerProject = ProjectTarget::find()
-                                        ->select(['id', 'SUM(
-                                            IF(project.data_type = "Cumulative",
-                                                IF(COALESCE(q4, 0) <= 0,
-                                                    IF(COALESCE(q3, 0) <= 0,
-                                                        IF(COALESCE(q2, 0) <= 0,
-                                                            COALESCE(q1, 0)
-                                                        , COALESCE(q2, 0))
-                                                    , COALESCE(q3, 0))
-                                                , COALESCE(q4, 0))
-                                            ,   
-                                                COALESCE(q1, 0) +
-                                                COALESCE(q2, 0) +
-                                                COALESCE(q3, 0) +
-                                                COALESCE(q4, 0)
-                                            )
-                                        ) as total'])
-                                        ->leftJoin('project', 'project.id = project_target.project_id')
-                                        ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
-                                        ->groupBy(['project.id'])
-                                        ->createCommand()->getRawSql();
             
             $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
@@ -16703,6 +16659,8 @@ class SummaryController extends \yii\web\Controller
                 ->where(['project.draft' => 'No'])
                 ->groupBy(['project_barangay.project_id'])
                 ->createCommand()->getRawSql();
+            
+            $isPercent = 'LOCATE("%", physicalTargets.indicator)';
             
             $physicalTargetPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
                                                 IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
@@ -16811,14 +16769,6 @@ class SummaryController extends \yii\web\Controller
                                                 )
                                             )
                                         )';
-            
-            $financialWeight = 'IF(allocationTotalPerAgency.total > 0, COALESCE(('.$financialTargetTotal.' / allocationTotalPerAgency.total), 0), 0)';
-
-            $physicalTargetPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalTargetPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
-            $physicalTargetWeight = $physicalTargetPercentage.' * '.$financialWeight;
-
-            $physicalAccompPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalAccompPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
-            $physicalAccompWeight = $physicalAccompPercentage.' * '.$financialWeight;
             
             $releases = 'IF(project.data_type <> "Cumulative",
                             IF("'.$model->quarter.'" = "Q1", COALESCE(financialAccompsQ1.releases, 0),
@@ -16947,7 +16897,6 @@ class SummaryController extends \yii\web\Controller
                                         )';
 
             $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
-            $isPercent = 'LOCATE("%", physicalTargets.indicator)';
             $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
             $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
             $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompPerQuarter.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
@@ -16955,26 +16904,102 @@ class SummaryController extends \yii\web\Controller
             $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
             $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
 
-            $level = 0;
+            $allocationTotalPerAgency = ProjectTarget::find()
+                                        ->select(['agency_id', 'SUM(
+                                            IF(project.data_type = "Cumulative",
+                                                IF(COALESCE(q4, 0) <= 0,
+                                                    IF(COALESCE(q3, 0) <= 0,
+                                                        IF(COALESCE(q2, 0) <= 0,
+                                                            COALESCE(q1, 0)
+                                                        , COALESCE(q2, 0))
+                                                    , COALESCE(q3, 0))
+                                                , COALESCE(q4, 0))
+                                            ,   
+                                                COALESCE(q1, 0) +
+                                                COALESCE(q2, 0) +
+                                                COALESCE(q3, 0) +
+                                                COALESCE(q4, 0)
+                                            )
+                                        ) as total']);
 
-            if($model->grouping == '_agency_by_category'){ $level = 2; }
-            if($model->grouping == '_agency_by_category_by_sector'){ $level = 3; }
-            if($model->grouping == '_agency_by_location'){ $level = 2; }
-            if($model->grouping == '_agency_by_sector'){ $level = 2; }
-            if($model->grouping == '_category_by_agency'){ $level = 2; }
-            if($model->grouping == '_category_by_sector'){ $level = 2; }
-            if($model->grouping == '_category_by_sector_by_agency'){ $level = 3; }
-            if($model->grouping == '_chapter_by_agency'){ $level = 2; }
-            if($model->grouping == '_chapter_by_chapter_outcome_by_agency'){ $level = 3; }
-            if($model->grouping == '_chapter_by_chapter_outcome_by_sub_chapter_outcome_by_agency'){ $level = 4; }
-            if($model->grouping == '_sdg_goal_by_agency'){ $level = 2; }
-            if($model->grouping == '_sdg_goal_by_category_by_sector_by_agency'){ $level = 3; }
-            if($model->grouping == '_sector_by_agency'){ $level = 2; }
-            if($model->grouping == '_sector_by_category'){ $level = 2; }
-            if($model->grouping == '_sector_by_category_by_agency'){ $level = 3; }
-            if($model->grouping == '_sector_by_location'){ $level = 2; }
-            if($model->grouping == '_sector_by_sub_sector'){ $level = 2; }
-            if($model->grouping == '_sector_by_sub_sector_by_agency'){ $level = 3; }
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('project', 'project.id = project_target.project_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('agency', 'agency.id = project.agency_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('program', 'program.id = project.program_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('sector', 'sector.id = project.sector_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
+
+            if($model->agency_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['agency.id' => $model->agency_id]);
+            }
+
+            if($model->category_id != '')
+            {
+                $categoryIDs = $categoryIDs->andWhere(['category_id' => $model->category_id]);
+            }
+
+            if($model->sector_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['sector.id' => $model->sector_id]);
+            }
+
+            if($model->region_id != '')
+            {
+                $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
+            }
+
+            if($model->province_id != '')
+            {
+                $provinceIDs = $provinceIDs->andWhere(['province_id' => $model->province_id]);
+            }
+
+            if($model->fund_source_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['fund_source.id' => $model->fund_source_id]);
+            }
+
+            if($model->period != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['project.period' => $model->period]);
+            }
+
+            $regionIDs = $regionIDs->all();
+            $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
+
+            $provinceIDs = $provinceIDs->all();
+            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+            if($model->region_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['project.id' => $regionIDs]);
+            }
+
+            if($model->province_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['project.id' => $provinceIDs]);
+            }
+
+            if($model->category_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['project.id' => $categoryIDs]);
+            }
+
+            $allocationTotalPerAgency = $allocationTotalPerAgency
+                                        ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
+                                        ->groupBy(['project.agency_id'])
+                                        ->createCommand()->getRawSql();
+
+            $financialWeight = 'IF(allocationTotalPerAgency.total > 0, COALESCE(('.$financialTargetTotal.' / allocationTotalPerAgency.total), 0), 0)';
+
+            $physicalTargetPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalTargetPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
+            $physicalTargetWeight = $physicalTargetPercentage.' * '.$financialWeight;
+
+            $physicalAccompPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalAccompPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
+            $physicalAccompWeight = $physicalAccompPercentage.' * '.$financialWeight;
 
             $projects = Project::find()
                         ->select([
@@ -16984,8 +17009,7 @@ class SummaryController extends \yii\web\Controller
                             'program.title as programTitle',
                             'category.title as categoryTitle',
                             'key_result_area.title as kraTitle',
-                            'project.title as projectTitleOnly',
-                            'CONCAT('.'"a. ",'.' project.title,'.'" *b. ",'.'sector.title,'.'"/",'.'sub_sector.title,'.'"*c. ",'.'fund_source.title,'.'"*d. ",'.'project.start_date,'.'" to ",'.'project.completion_date,'.'"*e. ",'.'categoryTitles.title) as projectTitle',
+                            'CONCAT('.'"*a. ",'.' project.title,'.'" *b. ",'.'sector.title,'.'"/",'.'sub_sector.title,'.'"*c. ",'.'fund_source.title,'.'"*d. ",'.'project.start_date,'.'" to ",'.'project.completion_date,'.'"*e. ",'.'categoryTitles.title) as projectTitle',
                             'sector.title as sectorTitle',
                             'sub_sector.title as subSectorTitle',
                             'fund_source.title as fundSourceTitle',
@@ -16997,7 +17021,6 @@ class SummaryController extends \yii\web\Controller
                             'IF(rdpChapterOutcomeTitles.title is null, "No RDP Chapter Outcomes", rdpChapterOutcomeTitles.title) as chapterOutcomeTitle',
                             'IF(rdpSubChapterOutcomeTitles.title is null, "No RDP Sub-Chapter Outcomes", rdpSubChapterOutcomeTitles.title) as subChapterOutcomeTitle',
                             'physicalTargets.indicator as indicator',
-                            '('.$level.') as level',
                             'SUM('.$isCompleted.') as completed',
                             'SUM('.$slippage.') as slippage',
                             'SUM('.$behindSchedule.') as behindSchedule',
@@ -17009,9 +17032,9 @@ class SummaryController extends \yii\web\Controller
                             'SUM('.$releases.') as releases',
                             'SUM('.$obligations.') as obligations',
                             'SUM('.$expenditures.') as expenditures',
-                            /* 'SUM('.$physicalTargetTotal.') as physicalTargetTotal',
-                            'SUM('.$physicalTargetPercentage.') as physicalTargetPercentage',
-                            'SUM('.$financialWeight.') as financialWeight', */
+                            'SUM('.$physicalTargetTotal.') as physicalTargetTotal',
+                            'SUM('.$financialTargetTotal.') as financialTargetTotal',
+                            'SUM('.$financialWeight.') as financialWeight',
                             'SUM('.$physicalTargetWeight.') as physicalTarget',
                             'SUM('.$physicalAccompWeight.') as physicalActual',
                             'SUM('.$maleEmployedTarget.') as malesEmployedTarget',
@@ -17080,19 +17103,9 @@ class SummaryController extends \yii\web\Controller
                 $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
             }
 
-            if($model->category_id != '')
-            {
-                $categoryIDs = $categoryIDs->andWhere(['category_id' => $model->category_id]);
-            }
-
             if($model->sector_id != '')
             {
                 $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
-            }
-
-            if($model->sub_sector_id != '')
-            {
-                $projects = $projects->andWhere(['sub_sector.id' => $model->sub_sector_id]);
             }
 
             if($model->region_id != '')
@@ -17114,15 +17127,6 @@ class SummaryController extends \yii\web\Controller
             {
                 $projects = $projects->andWhere(['project.period' => $model->period]);
             }
-
-            $regionIDs = $regionIDs->all();
-            $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
-
-            $provinceIDs = $provinceIDs->all();
-            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-            $categoryIDs = $categoryIDs->all();
-            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
 
             if($model->region_id != '')
             {
@@ -20992,7 +20996,7 @@ class SummaryController extends \yii\web\Controller
 
             //echo "<pre>"; print_r($data); exit;
 
-            return $this->renderAjax('monitoring-report-sector/_report', [
+            return $this->renderAjax('summary-accomplishment/_report', [
                 'model' => $model,
                 'data' => $data,
                 'total' => $total,
@@ -21006,7 +21010,7 @@ class SummaryController extends \yii\web\Controller
 
         }
 
-        return $this->render('monitoring-report-sector', [
+        return $this->render('summary-accomplishment', [
             'model' => $model,
             'quarters' => $quarters,
             'genders' => $genders,
@@ -25564,7 +25568,7 @@ class SummaryController extends \yii\web\Controller
         {
             header("Content-type: application/vnd.ms-excel");
             header("Content-Disposition: attachment; filename=".$filename.".xls");
-            return $this->renderPartial('monitoring-report-sector/_report-file', [
+            return $this->renderPartial('summary-accomplishment/_report-file', [
                 'type' => $type,
                 'model' => $model,
                 'data' => $data,
@@ -25579,7 +25583,7 @@ class SummaryController extends \yii\web\Controller
             ]);
         }else if($type == 'pdf')
         {
-            $content = $this->renderPartial('monitoring-report-sector/_report-file', [
+            $content = $this->renderPartial('summary-accomplishment/_report-file', [
                 'type' => $type,
                 'model' => $model,
                 'data' => $data,
@@ -25628,7 +25632,7 @@ class SummaryController extends \yii\web\Controller
                 $headers->add('Content-Type', 'application/pdf');
                 return $pdf->render();
         }else if($type == 'print'){
-            return $this->renderAjax('monitoring-report-sector/_report-file', [
+            return $this->renderAjax('summary-accomplishment/_report-file', [
                 'type' => $type,
                 'model' => $model,
                 'data' => $data,
