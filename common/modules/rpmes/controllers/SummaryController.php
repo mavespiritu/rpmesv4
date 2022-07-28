@@ -6979,28 +6979,6 @@ class SummaryController extends \yii\web\Controller
             $beneficiariesAccomps = BeneficiariesAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
- 
-            $allocationTotalPerAgency = ProjectTarget::find()
-                                        ->select(['agency_id', 'SUM(
-                                            IF(project.data_type = "Cumulative",
-                                                IF(COALESCE(q4, 0) <= 0,
-                                                    IF(COALESCE(q3, 0) <= 0,
-                                                        IF(COALESCE(q2, 0) <= 0,
-                                                            COALESCE(q1, 0)
-                                                        , COALESCE(q2, 0))
-                                                    , COALESCE(q3, 0))
-                                                , COALESCE(q4, 0))
-                                            ,   
-                                                COALESCE(q1, 0) +
-                                                COALESCE(q2, 0) +
-                                                COALESCE(q3, 0) +
-                                                COALESCE(q4, 0)
-                                            )
-                                        ) as total'])
-                                        ->leftJoin('project', 'project.id = project_target.project_id')
-                                        ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
-                                        ->groupBy(['project.agency_id'])
-                                        ->createCommand()->getRawSql();
             
             $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
@@ -7339,6 +7317,95 @@ class SummaryController extends \yii\web\Controller
             $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
             $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
 
+            $allocationTotalPerAgency = ProjectTarget::find()
+                                        ->select(['agency_id', 'SUM(
+                                            IF(project.data_type = "Cumulative",
+                                                IF(COALESCE(q4, 0) <= 0,
+                                                    IF(COALESCE(q3, 0) <= 0,
+                                                        IF(COALESCE(q2, 0) <= 0,
+                                                            COALESCE(q1, 0)
+                                                        , COALESCE(q2, 0))
+                                                    , COALESCE(q3, 0))
+                                                , COALESCE(q4, 0))
+                                            ,   
+                                                COALESCE(q1, 0) +
+                                                COALESCE(q2, 0) +
+                                                COALESCE(q3, 0) +
+                                                COALESCE(q4, 0)
+                                            )
+                                        ) as total']);
+
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('project', 'project.id = project_target.project_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('agency', 'agency.id = project.agency_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('program', 'program.id = project.program_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('sector', 'sector.id = project.sector_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
+            $allocationTotalPerAgency = $allocationTotalPerAgency->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
+
+            if($model->agency_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['agency.id' => $model->agency_id]);
+            }
+
+            if($model->category_id != '')
+            {
+                $categoryIDs = $categoryIDs->andWhere(['category_id' => $model->category_id]);
+            }
+
+            if($model->sector_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['sector.id' => $model->sector_id]);
+            }
+
+            if($model->region_id != '')
+            {
+                $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
+            }
+
+            if($model->province_id != '')
+            {
+                $provinceIDs = $provinceIDs->andWhere(['province_id' => $model->province_id]);
+            }
+
+            if($model->fund_source_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['fund_source.id' => $model->fund_source_id]);
+            }
+
+            if($model->period != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['project.period' => $model->period]);
+            }
+
+            $regionIDs = $regionIDs->all();
+            $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
+
+            $provinceIDs = $provinceIDs->all();
+            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+            if($model->region_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['project.id' => $regionIDs]);
+            }
+
+            if($model->province_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['project.id' => $provinceIDs]);
+            }
+
+            if($model->category_id != '')
+            {
+                $allocationTotalPerAgency = $allocationTotalPerAgency->andWhere(['project.id' => $categoryIDs]);
+            }
+
+            $allocationTotalPerAgency = $allocationTotalPerAgency
+                                        ->andWhere(['project_target.year' => $model->year, 'project.draft' => 'No'])
+                                        ->groupBy(['project.agency_id'])
+                                        ->createCommand()->getRawSql();
+
             $financialWeight = 'IF(allocationTotalPerAgency.total > 0, COALESCE(('.$financialTargetTotal.' / allocationTotalPerAgency.total), 0), 0)';
 
             $physicalTargetPercentage = 'IF('.$physicalTargetTotal.' > 0, COALESCE(('.$physicalTargetPerQuarter.' / '.$physicalTargetTotal.') * 100, 0), 0)';
@@ -7449,11 +7516,6 @@ class SummaryController extends \yii\web\Controller
                 $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
             }
 
-            if($model->category_id != '')
-            {
-                $categoryIDs = $categoryIDs->andWhere(['category_id' => $model->category_id]);
-            }
-
             if($model->sector_id != '')
             {
                 $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
@@ -7478,15 +7540,6 @@ class SummaryController extends \yii\web\Controller
             {
                 $projects = $projects->andWhere(['project.period' => $model->period]);
             }
-
-            $regionIDs = $regionIDs->all();
-            $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
-
-            $provinceIDs = $provinceIDs->all();
-            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-            $categoryIDs = $categoryIDs->all();
-            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
 
             if($model->region_id != '')
             {
