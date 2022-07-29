@@ -383,7 +383,7 @@ class Project extends \yii\db\ActiveRecord
             case 'Maintained':
                      if($quarter == 'Q1'){ $value = $q1; }
                 else if($quarter == 'Q2'){ $value = $q1 + $q2; }
-                else if($quarter == 'Q3'){ $value = $q1 + $q2 + $q3;; }
+                else if($quarter == 'Q3'){ $value = $q1 + $q2 + $q3; }
                 else if($quarter == 'Q4'){ $value = $q1 + $q2 + $q3 + $q4; }
                 break;
         }

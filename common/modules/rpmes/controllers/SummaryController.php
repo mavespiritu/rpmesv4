@@ -6975,7 +6975,7 @@ class SummaryController extends \yii\web\Controller
             $groupBeneficiariesTargets = ProjectTarget::find()->where(['target_type' => 'Group Beneficiaries', 'year' => $model->year])->createCommand()->getRawSql();
             $financialAccomps = FinancialAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
-            $personEmployedAccomps = PersonEmployedAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
+            $personEmployedAccomps = PersonEmployedAccomplishment::find()->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
             $beneficiariesAccomps = BeneficiariesAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
