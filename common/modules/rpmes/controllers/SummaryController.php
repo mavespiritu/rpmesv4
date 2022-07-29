@@ -10619,6 +10619,12 @@ class SummaryController extends \yii\web\Controller
         $model->quarter = $quarter;
         $model->agency_id = $agency_id;
 
+        $data = [];
+        $total = [];
+
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+        $genders = ['M' => 'Male', 'F' => 'Female'];
+
         $financialTargets = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year])->createCommand()->getRawSql();
             $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
             $maleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Male Employed', 'year' => $model->year])->createCommand()->getRawSql();
