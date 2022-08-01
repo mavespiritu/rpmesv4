@@ -178,7 +178,7 @@ function renderSummary($page)
                                 <td><?= $model->data_type != "" ? $model->unitOfMeasure.'<br>('.$model->data_type.')' : $model->unitOfMeasure.'<br>(No Data Type)' ?></td>
                                 <td align=center><?= $model->indicatorUnitOfMeasure == true ? number_format($model->getPhysicalTargetAsOfReportingPeriod($getData['quarter']), 2).'%' : number_format($model->getPhysicalTargetAsOfReportingPeriod($getData['quarter']), 0) ?></td>
                                 <td align=center><?= $model->indicatorUnitOfMeasure == true ? number_format($model->getPhysicalTargetForQuarter($getData['quarter']), 2).'%' : number_format($model->getPhysicalTargetForQuarter($getData['quarter']), 0) ?></td>
-                                <td align=center><b><?= $model->indicatorUnitOfMeasure == true ? number_format($model->getPhysicalActualToDate($getData['quarter']), 2).'%' : number_format($model->getPhysicalActualToDate($getData['quarter']), 0) ?></b></td>
+                                <td align=center><b><?= $model->indicatorUnitOfMeasure == true ? $model->getPhysicalActualToDate($getData['quarter']).'%' : number_format($model->getPhysicalActualToDate($getData['quarter']), 0) ?></b></td>
                                 <td align=center>
                                     <?= $form->field($physical[$model->id], "[$model->id]value")->widget(MaskedInput::classname(), [
                                         'options' => [

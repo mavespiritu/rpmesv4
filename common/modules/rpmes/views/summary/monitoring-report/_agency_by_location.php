@@ -88,8 +88,8 @@ DisableButtonAsset::register($this);
                         <td align=right><?= number_format($locations['content']['expendituresAsOfReportingPeriod'], 2) ?></td>
                         <td align=right><?= $locations['content']['allocationAsOfReportingPeriod'] > 0 ? number_format(($locations['content']['releasesAsOfReportingPeriod'] / $locations['content']['allocationAsOfReportingPeriod']) * 100, 2) : number_format(0, 2) ?></td>
                         <td align=right><?= $locations['content']['releasesAsOfReportingPeriod'] > 0 ? number_format(($locations['content']['expendituresAsOfReportingPeriod'] / $locations['content']['releasesAsOfReportingPeriod']) * 100, 2) : number_format(0, 2) ?></td>
-                        <td align=right><?= number_format($locations['content']['physicalTargetAsOfReportingPeriod'], 0) ?></td>
-                        <td align=right><?= number_format($locations['content']['physicalActualAsOfReportingPeriod'], 0) ?></td>
+                        <td align=right><?= $locations['content']['physicalTargetAsOfReportingPeriod'] ?></td>
+                        <td align=right><?= $locations['content']['physicalActualAsOfReportingPeriod'] ?></td>
                         <td align=right><?= count($locations) > 0 ? number_format(($locations['content']['slippage']/count($locations)), 2) : number_format(0, 2) ?></td>
                         <td align=right><?= $locations['content']['physicalTargetAsOfReportingPeriod'] > 0 ? number_format(($locations['content']['physicalActualAsOfReportingPeriod'] / $locations['content']['physicalTargetAsOfReportingPeriod']) * 100, 2) : number_format(0, 2) ?></td>
                         <td align=right><?= number_format($locations['content']['malesEmployedTargetAsOfReportingPeriod'], 0) ?></td>
