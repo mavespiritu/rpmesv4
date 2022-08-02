@@ -50,6 +50,7 @@ class Submission extends \yii\db\ActiveRecord
             [['year', 'grouping'], 'required', 'on' => 'summaryMonitoringPlan'],
             [['year', 'quarter', 'grouping'], 'required', 'on' => 'summaryMonitoringReport'],
             [['year', 'quarter','grouping'], 'required', 'on' => 'summaryMonitoringReportSector'],
+            [['year', 'quarter'], 'required', 'on' => 'delayedProjects'],
             [['agency_id', 'year', 'submitted_by', 'fund_source_id', 'sector_id', 'sub_sector_id', 'category_id'], 'integer'],
             [['report', 'quarter', 'semester', 'draft', 'region_id', 'province_id', 'citymun_id', 'period'], 'string'],
             [['date_submitted'], 'safe'],
@@ -149,5 +150,10 @@ class Submission extends \yii\db\ActiveRecord
         $status = $dueDate ? strtotime(date("Y-m-d", strtotime($this->date_submitted))) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' before deadline' : $HtmlHelper->time_elapsed_string($dueDate->due_date).' after deadline' : 'no deadline set';
 
         return $status;
+    }
+
+    public function getLocation()
+    {
+        return $this->project->location;
     }
 }
