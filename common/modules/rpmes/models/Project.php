@@ -374,17 +374,17 @@ class Project extends \yii\db\ActiveRecord
         
         switch($this->data_type){
             case 'Default':
-                     if($quarter == 'Q1'){ $value = $q1; }
-                else if($quarter == 'Q2'){ $value = $q1 + $q2; }
-                else if($quarter == 'Q3'){ $value = $q1 + $q2 + $q3; }
-                else if($quarter == 'Q4'){ $value = $q1 + $q2 + $q3 + $q4; }
+                     if($quarter == 'Q1'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) : intval($q1); }
+                else if($quarter == 'Q2'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) : intval($q1) + intval($q2); }
+                else if($quarter == 'Q3'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) + floatval($q3) : intval($q1) + intval($q2) + intval($q3); }
+                else if($quarter == 'Q4'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4) : intval($q1) + intval($q2) + intval($q3) + intval($q4); }
                 break;
             case 'Cumulative':
             case 'Maintained':
-                     if($quarter == 'Q1'){ $value = $q1; }
-                else if($quarter == 'Q2'){ $value = $q1 + $q2; }
-                else if($quarter == 'Q3'){ $value = $q1 + $q2 + $q3; }
-                else if($quarter == 'Q4'){ $value = $q1 + $q2 + $q3 + $q4; }
+                     if($quarter == 'Q1'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) : intval($q1); }
+                else if($quarter == 'Q2'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) : intval($q1) + intval($q2); }
+                else if($quarter == 'Q3'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) + floatval($q3) : intval($q1) + intval($q2) + intval($q3); }
+                else if($quarter == 'Q4'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4) : intval($q1) + intval($q2) + intval($q3) + intval($q4); }
                 break;
         }
 
