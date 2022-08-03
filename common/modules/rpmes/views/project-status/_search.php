@@ -4,6 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
+use yii\web\View;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 DisableButtonAsset::register($this);
 
@@ -16,7 +17,7 @@ DisableButtonAsset::register($this);
 
     <?php $form = ActiveForm::begin([
     	'options' => ['class' => 'disable-submit-buttons'],
-        'method' => 'get'
+        'id' => 'search-delayed-project-form'
     ]); ?>
 
     <div class="row">
@@ -103,5 +104,37 @@ DisableButtonAsset::register($this);
     <div class="pull-right"><?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?></div>
     <div class="clearfix"></div>
     <?php ActiveForm::end(); ?>
-
 </div>
+<?php
+    $script = '
+    $("#search-delayed-project-form").on("beforeSubmit", function (e) {
+        e.preventDefault();
+     
+        var form = $(this);
+        var formData = form.serialize();
+        
+        $.ajax({
+            url: form.attr("action"),
+            type: form.attr("method"),
+            data: formData,
+            beforeSend: function(){
+                $("#project-status-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+            },
+            success: function (data) {
+                console.log(this.data);
+                $("#project-status-table").empty();
+                $("#project-status-table").hide();
+                $("#project-status-table").fadeIn("slow");
+                $("#project-status-table").html(data);
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        });      
+
+        return false;
+    });
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>

@@ -3,6 +3,9 @@
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
+use yii\bootstrap\ButtonDropdown;
+use yii\helpers\Url;
+use yii\web\View;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 DisableButtonAsset::register($this);
 
@@ -10,61 +13,78 @@ DisableButtonAsset::register($this);
 /* @var $model common\modules\rpmes\models\Project */
 /* @var $form yii\widgets\ActiveForm */
 ?>
-
-<div class="project-form">
-
-    <?php $form = ActiveForm::begin([
-    	'options' => ['class' => 'disable-submit-buttons'],
-    ]); ?>
-
-    <?= $form->field($model, 'source_id')->textInput() ?>
-
-    <?= $form->field($model, 'project_no')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'year')->textInput() ?>
-
-    <?= $form->field($model, 'agency_id')->textInput() ?>
-
-    <?= $form->field($model, 'program_id')->textInput() ?>
-
-    <?= $form->field($model, 'title')->textarea(['rows' => 6]) ?>
-
-    <?= $form->field($model, 'description')->textarea(['rows' => 6]) ?>
-
-    <?= $form->field($model, 'sector_id')->textInput() ?>
-
-    <?= $form->field($model, 'sub_sector_id')->textInput() ?>
-
-    <?= $form->field($model, 'location_scope_id')->textInput() ?>
-
-    <?= $form->field($model, 'mode_of_implementation_id')->textInput() ?>
-
-    <?= $form->field($model, 'other_mode')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'fund_source_id')->textInput() ?>
-
-    <?= $form->field($model, 'typhoon')->textInput(['maxlength' => true]) ?>
-
-    <?= $form->field($model, 'data_type')->dropDownList([ 'Default' => 'Default', 'Cumulative' => 'Cumulative', 'Maintained' => 'Maintained', ], ['prompt' => '']) ?>
-
-    <?= $form->field($model, 'period')->dropDownList([ 'Current Year' => 'Current Year', 'Carry-Over' => 'Carry-Over', ], ['prompt' => '']) ?>
-
-    <?= $form->field($model, 'start_date')->textInput() ?>
-
-    <?= $form->field($model, 'completion_date')->textInput() ?>
-
-    <?= $form->field($model, 'submitted_by')->textInput() ?>
-
-    <?= $form->field($model, 'date_submitted')->textInput() ?>
-
-    <?= $form->field($model, 'draft')->dropDownList([ 'Yes' => 'Yes', 'No' => 'No', ], ['prompt' => '']) ?>
-
-    <?= $form->field($model, 'complete')->dropDownList([ 'Yes' => 'Yes', 'No' => 'No', ], ['prompt' => '']) ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+<div class="project-status-table">
+    <div class="pull-left">
+        <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
+            'label' => '<i class="fa fa-download"></i> Export',
+            'encodeLabel' => false,
+            'options' => ['class' => 'btn btn-success btn-sm'],
+            'dropdown' => [
+                'items' => [
+                    ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-status/download-form-six', 'type' => 'excel', 'year' => $model->year == null ? '2022' : $model->year, 'quarter' => $model->quarter == null ? '' : $model->quarter, 'agency_id' => $model->agency_id == null ? '' : $model->agency_id, 'sector_id' => $model->sector_id == null ? '' : $model->sector_id, 'region_id' => $model->region_id == null ? '' : $model->region_id, 'province_id' => $model->province_id == null ? '' : $model->province_id, 'model' => json_encode($model)])],
+                    ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-status/download-form-six', 'type' => 'pdf', 'year' => $model->year == null ? '2022' : $model->year, 'quarter' => $model->quarter == null ? '' : $model->quarter, 'agency_id' => $model->agency_id == null ? '' : $model->agency_id, 'sector_id' => $model->sector_id == null ? '' : $model->sector_id, 'region_id' => $model->region_id == null ? '' : $model->region_id, 'province_id' => $model->province_id == null ? '' : $model->province_id, 'model' => json_encode($model)])],
+                ],
+            ],
+        ]) : '' ?>
+            <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormSixReport("'.$model->year.'", "'.$model->quarter.'", "'.$model->agency_id.'", "'.$model->sector_id.'", "'.$model->region_id.'", "'.$model->province_id.'")', 'class' => 'btn btn-danger btn-sm']) ?>
     </div>
-
-    <?php ActiveForm::end(); ?>
-
+    <div class="clearfix"></div><br>
+    <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
+        <thead>
+            <tr>
+                <td rowspan=2 align=center><b>#</td>
+                <td rowspan=2 colspan=2 align=center><b>Project Title</td>
+                <td rowspan=2 align=center><b>Total Project Cost</b></td>
+                <td rowspan=2 colspan=2 align=center><b>Sector/Subsector</b></td>
+                <td rowspan=2 colspan=2 align=center><b>Location</b></td>
+                <td rowspan=2 align=center><b>Implementing Agency</b></td>
+                <td rowspan=2 align=center><b>Fund Utilization</b></td>
+                <td colspan=3 align=center><b>Physical Status (as of Reporting Period)</b></td>
+                <td rowspan=2 colspan=2 align=center><b>Issues</b></td>
+                <td rowspan=2 align=center><b>Source of Information</b></td>
+                <td rowspan=2 colspan=2 align=center><b>Recommendations</b></td>
+            </tr>
+            <tr>
+                <td align=center><b>Target</b></td>
+                <td align=center><b>Actual</b></td>
+                <td align=center><b>Slippage</b></td>
+            </tr>
+        </thead>
+        <tbody>
+        <?php if(!empty($projects)){ ?>
+            <?php $idx = 1; ?>
+            <?php foreach($projects as $project){ ?>
+                <?php if((($project['slippage'] <= -15)) && $project['slippage'] != 1){ ?>
+                    <tr>
+                        <td align=center><?= $idx ?></td>
+                        <td colspan=2 align=center><?= $project['projectTitle'] ?></td>
+                        <td align=center><?= number_format($project['totalCost'], 2) ?></td>
+                        <td colspan=2 align=center><?= $project['sectorTitle']. ' / '.$project['subSectorTitle'] ?></td>
+                        <td colspan=2 align=center><?= $project['locationTitle'] ?></td>
+                        <td align=center><?= $project['agencyTitle'] ?></td>
+                        <td align=center><?= $project['releases'] > 0 ? number_format(($project['expenditures'] / $project['releases']) * 100, 2) : number_format(0, 2) ?></td>
+                        <td align=center><?= number_format($project['physicalTargetTotalPerQuarter'], 2) ?></td>
+                        <td align=center><?= number_format($project['physicalAccompTotalPerQuarter'], 2) ?></td>
+                        <td align=center><?= $project['slippage'] ?>%</td>
+                        <td colspan=2 align=center><?= $project['causes'] ?></td>
+                        <td align=center><?= $project['agencyTitle'] ?></td>
+                        <td colspan=2 align=center><?= $project['recommendations'] ?></td>
+                    </tr>
+                    <?php $idx ++ ?>
+                <?php } ?>
+            <?php } ?>
+        <?php } ?>
+        </tbody>
+    </table>
 </div>
+<?php
+    $script = '
+        $(document).ready(function(){
+            $(".project-status-table").freezeTable({
+                "scrollable": true,
+            });
+        });
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>
