@@ -30,6 +30,9 @@ function renderSummary($page)
     return 'Showing <b>'.$firstNumber.'-'.$lastNumber.'</b> of <b>'.$total.'</b> items.';
 }
 ?>
+<?php $form = ActiveForm::begin([
+    'options' => ['class' => 'disable-submit-buttons'],
+]); ?>
         <div class="summary"><?= renderSummary($projectsPages) ?></div>
         <?php $form = ActiveForm::begin([
             'options' => ['class' => 'disable-submit-buttons'],

@@ -21,9 +21,6 @@ use yii\bootstrap\ButtonDropdown;
     ]); ?>
 
     <div class="col-md-6 col-xs-12">
-        <?= $form->field($searchModel, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
-    </div>
-    <div class="col-md-6 col-xs-12">
         <?= $form->field($searchModel, 'year')->widget(Select2::classname(), [
             'data' => $years,
             'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
@@ -32,6 +29,10 @@ use yii\bootstrap\ButtonDropdown;
             ],
             ])->label('Year *');
         ?>
+    </div>
+
+    <div class="col-md-6 col-xs-12">
+        <?= $form->field($searchModel, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
     </div>
 
     <div class="form-group pull-right">

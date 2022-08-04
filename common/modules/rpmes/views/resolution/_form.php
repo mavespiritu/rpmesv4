@@ -21,6 +21,17 @@ DisableButtonAsset::register($this);
     	'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
 
+    <?= $form->field($model, 'year')->widget(Select2::classname(), [
+        'data' => $model->YearsList,
+        'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
+        'pluginOptions' => [
+            'allowClear' =>  true,
+        ],
+        ])->label('Year *');
+    ?>
+
+    <?= $form->field($model, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
+
     <?= $form->field($model, 'resolution_number')->textInput() ?>
 
     <?= $form->field($model, 'resolution')->textarea(['rows' => 2])->label('Resolution/s Passed *'); ?>
@@ -36,11 +47,7 @@ DisableButtonAsset::register($this);
 
     <?= $form->field($model, 'rpmc_action')->textarea(['rows' => 2])->label('RPMC Actions / Remarks *'); ?>
 
-    <?= $form->field($model, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
-
-    <?= $form->field($model, 'year')->dropDownList(['' => '', $model->getYearsList()])->label('Year *'); ?>
-
-    <h4>Scanned File</h4>
+    <h5>Upload Scanned File</h5>
             <hr>
             <div class="row" style="margin-left: 1%;">
                 <div class="col-md-3 col-xs-12">

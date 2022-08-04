@@ -51,9 +51,10 @@
                         'items' => [
                             ['label' => 'Monitoring Plans', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report-sector'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                     ],
+                    ['label' => 'Form 5: Summary Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 6: Behind Schedule', 'icon' => 'folder', 'url' => ['/rpmes/project-status'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Form 7: Project Finding', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 9: Trainings', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 10: Resolutions', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest],
