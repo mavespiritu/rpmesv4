@@ -102,7 +102,7 @@ class ProjectStatusController extends Controller
 
             $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
-            $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model['year']])->createCommand()->getRawSql();
+            $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year])->createCommand()->getRawSql();
 
             $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
         
@@ -213,7 +213,7 @@ class ProjectStatusController extends Controller
 
             $isPercent = 'LOCATE("%", physicalTargets.indicator)';
             $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
-            $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
+            $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompTotalPerQuarter.' - '.$physicalTargetTotalPerQuarter.', IF('.$physicalTargetTotalPerQuarter.' > 0, (('.$physicalAccompTotalPerQuarter.'/'.$physicalTargetTotalPerQuarter.') * 100) -100 , 0))';
 
             $regionTitles = ProjectRegion::find()
                 ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
@@ -263,8 +263,8 @@ class ProjectStatusController extends Controller
                             'COALESCE('.$financialTotal.', 0) as totalCost',
                             $releases.'as releases',
                             $expenditures.'as expenditures',
-                            $physicalTargetPerQuarter. 'as physicalTargetTotalPerQuarter',
-                            $physicalAccompPerQuarter. 'as physicalAccompTotalPerQuarter',
+                            $physicalTargetTotalPerQuarter. 'as physicalTargetTotalPerQuarter',
+                            $physicalAccompTotalPerQuarter. 'as physicalAccompTotalPerQuarter',
                             $slippage. 'as slippage',
                             'regionTitles.title as regionTitles',
                             'accomps.isCompleted as isCompleted',
@@ -468,7 +468,7 @@ class ProjectStatusController extends Controller
 
         $isPercent = 'LOCATE("%", physicalTargets.indicator)';
         $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
-        $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
+        $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompTotalPerQuarter.' - '.$physicalTargetTotalPerQuarter.', IF('.$physicalTargetTotalPerQuarter.' > 0, (('.$physicalAccompTotalPerQuarter.'/'.$physicalTargetTotalPerQuarter.') * 100) -100 , 0))';
         
         $regionTitles = ProjectRegion::find()
             ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
@@ -518,8 +518,8 @@ class ProjectStatusController extends Controller
                         'COALESCE('.$financialTotal.', 0) as totalCost',
                         $releases.'as releases',
                         $expenditures.'as expenditures',
-                        $physicalTargetPerQuarter. 'as physicalTargetTotalPerQuarter',
-                        $physicalAccompPerQuarter. 'as physicalAccompTotalPerQuarter',
+                        $physicalTargetTotalPerQuarter. 'as physicalTargetTotalPerQuarter',
+                        $physicalAccompTotalPerQuarter. 'as physicalAccompTotalPerQuarter',
                         $slippage. 'as slippage',
                         'accomps.isCompleted as isCompleted',
                         'project_exception.recommendations as recommendations',
@@ -706,7 +706,7 @@ class ProjectStatusController extends Controller
 
         $isPercent = 'LOCATE("%", physicalTargets.indicator)';
         $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
-        $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
+        $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompTotalPerQuarter.' - '.$physicalTargetTotalPerQuarter.', IF('.$physicalTargetTotalPerQuarter.' > 0, (('.$physicalAccompTotalPerQuarter.'/'.$physicalTargetTotalPerQuarter.') * 100) -100 , 0))';
         
         $regionTitles = ProjectRegion::find()
             ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
@@ -756,8 +756,8 @@ class ProjectStatusController extends Controller
                         'COALESCE('.$financialTotal.', 0) as totalCost',
                         $releases.'as releases',
                         $expenditures.'as expenditures',
-                        $physicalTargetPerQuarter. 'as physicalTargetTotalPerQuarter',
-                        $physicalAccompPerQuarter. 'as physicalAccompTotalPerQuarter',
+                        $physicalTargetTotalPerQuarter. 'as physicalTargetTotalPerQuarter',
+                        $physicalAccompTotalPerQuarter. 'as physicalAccompTotalPerQuarter',
                         $slippage. 'as slippage',
                         'accomps.isCompleted as isCompleted',
                         'project_exception.recommendations as recommendations',
