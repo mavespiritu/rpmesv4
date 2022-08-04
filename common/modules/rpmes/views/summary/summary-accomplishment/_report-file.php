@@ -211,8 +211,13 @@
                                     <td align=right><?= number_format($thirdLevels['content']['expenditures'], 2) ?></td>
                                     <td align=right><?= $thirdLevels['content']['allocations'] > 0 ? number_format(($thirdLevels['content']['releases'] / $thirdLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
                                     <td align=right><?= $thirdLevels['content']['releases'] > 0 ? number_format(($thirdLevels['content']['expenditures'] / $thirdLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                                    <td align=right><?= number_format($thirdLevels['content']['physicalTarget'], 2) ?></td>
-                                    <td align=right><?= number_format($thirdLevels['content']['physicalActual'], 2) ?></td>
+                                    <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
+                                    <?= '<td align=right>'. number_format($thirdLevels['content']['physicalTarget'], 2).'</td>' ?>
+                                    <?= '<td align=right>'. number_format($thirdLevels['content']['physicalActual'], 2).'</td>' ?>
+                                    <?php }else{ ?>
+                                    <?= '<td align=right>'. number_format($thirdLevels['content']['projectPhysicalTarget'], 2).'</td>' ?>
+                                    <?= '<td align=right>'. number_format($thirdLevels['content']['projectPhysicalAccomp'], 2).'</td>' ?>
+                                    <?php } ?>
                                     <td align=right><?= count($thirdLevels) > 0 ? number_format(($thirdLevels['content']['slippage']/count($thirdLevels['content'])), 2) : number_format(0, 2) ?></td>
                                     <td align=right><?= $thirdLevels['content']['physicalTarget'] > 0 ? number_format(($thirdLevels['content']['physicalActual'] / $thirdLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['malesEmployedTarget'], 0) ?></td>
@@ -258,8 +263,13 @@
                                             <td align=right><?= number_format($fourthLevels['content']['expenditures'], 2) ?></td>
                                             <td align=right><?= $fourthLevels['content']['allocations'] > 0 ? number_format(($fourthLevels['content']['releases'] / $fourthLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
                                             <td align=right><?= $fourthLevels['content']['releases'] > 0 ? number_format(($fourthLevels['content']['expenditures'] / $fourthLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                                            <td align=right><?= number_format($fourthLevels['content']['physicalTarget'], 2) ?></td>
-                                            <td align=right><?= number_format($fourthLevels['content']['physicalActual'], 2) ?></td>
+                                            <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
+                                            <?= '<td align=right>'. number_format($fourthLevels['content']['physicalTarget'], 2).'</td>' ?>
+                                            <?= '<td align=right>'. number_format($fourthLevels['content']['physicalActual'], 2).'</td>' ?>
+                                            <?php }else{ ?>
+                                            <?= '<td align=right>'. number_format($fourthLevels['content']['projectPhysicalTarget'], 2).'</td>' ?>
+                                            <?= '<td align=right>'. number_format($fourthLevels['content']['projectPhysicalAccomp'], 2).'</td>' ?>
+                                            <?php } ?>
                                             <td align=right><?= count($fourthLevels['content']) > 0 ? number_format(($fourthLevels['content']['slippage']/count($fourthLevels['content'])), 2) : number_format(0, 2) ?></td>
                                             <td align=right><?= $fourthLevels['content']['physicalTarget'] > 0 ? number_format(($fourthLevels['content']['physicalActual'] / $fourthLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
                                             <td align=right><?= number_format($fourthLevels['content']['malesEmployedTarget'], 0) ?></td>
@@ -298,8 +308,8 @@
                                                     <td align=right><?= number_format($fifthLevels['content']['expenditures'], 2) ?></td>
                                                     <td align=right><?= $fifthLevels['content']['allocations'] > 0 ? number_format(($fifthLevels['content']['releases'] / $fifthLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
                                                     <td align=right><?= $fifthLevels['content']['releases'] > 0 ? number_format(($fifthLevels['content']['expenditures'] / $fifthLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                                                    <td align=right><?= number_format($fifthLevels['content']['physicalTarget'], 2) ?></td>
-                                                    <td align=right><?= number_format($fifthLevels['content']['physicalActual'], 2) ?></td>
+                                                    <td align=right><?= number_format($fourthLevels['content']['projectPhysicalTarget'], 2) ?></td>
+                                                    <td align=right><?= number_format($fourthLevels['content']['projectPhysicalAccomp'], 2) ?></td>
                                                     <td align=right><?= count($fifthLevels['content']) > 0 ? number_format(($fifthLevels['content']['slippage']/count($fifthLevels['content'])), 2) : number_format(0, 2) ?></td>
                                                     <td align=right><?= $fifthLevels['content']['physicalTarget'] > 0 ? number_format(($fifthLevels['content']['physicalActual'] / $fifthLevels['content']['physicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['malesEmployedTarget'], 0) ?></td>
