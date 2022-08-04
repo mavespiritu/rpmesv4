@@ -16,7 +16,6 @@ DisableButtonAsset::register($this);
 <div class="project-search">
 
     <?php $form = ActiveForm::begin([
-    	'options' => ['class' => 'disable-submit-buttons'],
         'id' => 'search-delayed-project-form'
     ]); ?>
 
@@ -101,7 +100,9 @@ DisableButtonAsset::register($this);
             ?>
         </div>
     </div>
-    <div class="pull-right"><?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?></div>
+    <div class="pull-right">
+        <?= Html::submitButton('Generate Data', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;']) ?>
+    </div>
     <div class="clearfix"></div>
     <?php ActiveForm::end(); ?>
 </div>

@@ -266,6 +266,7 @@ class ProjectStatusController extends Controller
                             $physicalTargetPerQuarter. 'as physicalTargetTotalPerQuarter',
                             $physicalAccompPerQuarter. 'as physicalAccompTotalPerQuarter',
                             $slippage. 'as slippage',
+                            'regionTitles.title as regionTitles',
                             'accomps.isCompleted as isCompleted',
                             'project_exception.recommendations as recommendations',
                             'project_exception.causes as causes',                
@@ -276,6 +277,10 @@ class ProjectStatusController extends Controller
             $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
             $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
             $projects = $projects->leftJoin('project_exception', 'project_exception.project_id = project.id');
+            $projects = $projects->leftJoin('project_region', 'project_region.project_id = project.id and project_region.year = project.year');
+            $projects = $projects->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id');
+            $projects = $projects->leftJoin('project_province', 'project_province.project_id = project.id and project_province.year = project.year');
+            $projects = $projects->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id');
             $projects = $projects->leftJoin(['financialAccompsQ1' => '('.$financialAccomps.')'], 'financialAccompsQ1.project_id = project.id and financialAccompsQ1.quarter = "Q1"');
             $projects = $projects->leftJoin(['financialAccompsQ2' => '('.$financialAccomps.')'], 'financialAccompsQ2.project_id = project.id and financialAccompsQ2.quarter = "Q2"');
             $projects = $projects->leftJoin(['financialAccompsQ3' => '('.$financialAccomps.')'], 'financialAccompsQ3.project_id = project.id and financialAccompsQ3.quarter = "Q3"');
@@ -303,15 +308,15 @@ class ProjectStatusController extends Controller
             {
                 $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
             }
-
+                
             if($model->region_id != '')
             {
-                $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
+                $projects = $projects->andWhere(['tblregion.region_c' => $model->region_id]);
             }
 
             if($model->province_id != '')
             {
-                $provinceIDs = $provinceIDs->andWhere(['province_id' => $model->province_id]);
+                $projects = $projects->andWhere(['tblprovince.province_c' => $model->province_id]);
             }
 
             $projects = $projects->asArray()->all();
