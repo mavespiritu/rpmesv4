@@ -268,8 +268,8 @@ class ProjectStatusController extends Controller
                             $slippage. 'as slippage',
                             'regionTitles.title as regionTitles',
                             'accomps.isCompleted as isCompleted',
-                            'project_exception.recommendations as recommendations',
-                            'project_exception.causes as causes',                
+                            'IF(project_exception.recommendations is null, "No Recommendation/s", project_exception.recommendations) as recommendations',
+                            'IF(project_exception.causes is null, "No Issue/s", project_exception.causes) as causes',                
                         ]);
             $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
             $projects = $projects->leftJoin('program', 'program.id = project.program_id');
