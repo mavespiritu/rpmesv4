@@ -13,7 +13,7 @@ DisableButtonAsset::register($this);
 /* @var $model common\modules\rpmes\models\Project */
 /* @var $form yii\widgets\ActiveForm */
 ?>
-<div class="project-status-table">
+<div class="project-status-table" style="height: 600px;">
     <div class="pull-left">
         <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
             'label' => '<i class="fa fa-download"></i> Export',
