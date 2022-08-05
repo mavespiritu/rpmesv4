@@ -33,8 +33,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         'years' => $years,
                         'agencies' =>$agencies
                     ]) ?>
-                </div>
-                <hr>
+                    <br><br>
+                    <hr>
                 <div class="pull-left">
                     <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
@@ -83,6 +83,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
                         ],
                         ]); ?>
+                </div>
             </div>
         </div>
     </div>

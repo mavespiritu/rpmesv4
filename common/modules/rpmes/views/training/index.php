@@ -33,8 +33,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             'searchModel' => $searchModel,
                             'years' => $years,
                     ]) ?>
-                </div>
-                <hr>
+                    <br><br>
+                    <hr>
                 <div class="pull-left">
                         <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
