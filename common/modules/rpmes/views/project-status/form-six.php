@@ -63,7 +63,7 @@
                     <td align=center><?= $project['releases'] > 0 ? number_format(($project['expenditures'] / $project['releases']) * 100, 2) : number_format(0, 2) ?></td>
                     <td align=center><?= number_format($project['physicalTargetTotalPerQuarter'], 2) ?></td>
                     <td align=center><?= number_format($project['physicalAccompTotalPerQuarter'], 2) ?></td>
-                    <td align=center><?= $project['slippage'] ?>%</td>
+                    <td align=center><?= number_format($project['slippage'], 2) ?>%</td>
                     <td colspan=2 align=center><?= $project['causes'] ?></td>
                     <td align=center><?= $project['agencyTitle'] ?></td>
                     <td colspan=2 align=center><?= $project['recommendations'] ?></td>
