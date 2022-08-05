@@ -159,23 +159,30 @@ class ProjectStatusController extends Controller
                                 )
                             )';
 
-            $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Default",
-                                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
-                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
+            // $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Default",
+            //                                     IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+            //                                         IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
+            //                                             IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
+            //                                             COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
+            //                                             )
+            //                                         )
+            //                                     )
+            //                                 ,   
+            //                                     IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+            //                                         IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+            //                                             IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+            //                                             COALESCE(physicalAccompsQ4.value, 0)
+            //                                             )
+            //                                         )
+            //                                     )
+            //                                 )';
+            $physicalAccompTotalPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
+                                                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
                                                         COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
-                                                        )
-                                                    )
-                                                )
-                                            ,   
-                                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
-                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
-                                                        COALESCE(physicalAccompsQ4.value, 0)
-                                                        )
-                                                    )
-                                                )
-                                            )';
+                                                      )
+                                                  )
+                                              )';
 
             $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Default",
                                                 IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
