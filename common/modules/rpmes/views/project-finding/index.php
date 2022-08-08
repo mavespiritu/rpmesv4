@@ -32,47 +32,49 @@ $this->params['breadcrumbs'][] = $this->title;
                     ]) ?>
                 </div>
                 <hr>
-                <div class="pull-left">
-                        <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
-                        'label' => '<i class="fa fa-download"></i> Export',
-                        'encodeLabel' => false,
-                        'options' => ['class' => 'btn btn-success btn-sm'],
-                        'dropdown' => [
-                            'items' => [
-                                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-finding/download-form-seven', 'type' => 'excel', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
-                                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-finding/download-form-seven', 'type' => 'pdf', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                <div class="box-body">
+                    <div class="pull-left">
+                            <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
+                            'label' => '<i class="fa fa-download"></i> Export',
+                            'encodeLabel' => false,
+                            'options' => ['class' => 'btn btn-success btn-sm'],
+                            'dropdown' => [
+                                'items' => [
+                                    ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-finding/download-form-seven', 'type' => 'excel', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                                    ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-finding/download-form-seven', 'type' => 'pdf', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                                ],
+                        ],
+                        ]) : '' ?>
+                        <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormSevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+                    </div>
+                    <div class="clearfix"></div>
+                        <!-- <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+                                                    RPMES Form 7: LIST OF PROJECT MMAJOR FINDINGS
+                        </h5> --><br>
+                        <?= GridView::widget([
+                            'options' => [
+                            'class' => 'table-responsive',
                             ],
-                    ],
-                    ]) : '' ?>
-                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormSevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
-                </div>
-                <div class="clearfix"></div>
-                    <!-- <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
-                                                RPMES Form 7: LIST OF PROJECT MMAJOR FINDINGS
-                    </h5> --><br>
-                    <?= GridView::widget([
-                        'options' => [
-                        'class' => 'table-responsive',
-                        ],
-                        'dataProvider' => $dataProvider,
-                        'filterModel' => $searchModel,
-                        'columns' => [
-                            ['class' => 'yii\grid\SerialColumn'],
-                                'projectTitle',
-                                'sectorTitle',
-                                'agency',
-                                'projectRegions',
-                                'projectProvinces',
-                                'projectCitymuns',
-                                'projectBarangays',
-                                'inspection_date',
-                                'major_finding',
-                                'issues',
-                                'action',
+                            'dataProvider' => $dataProvider,
+                            'filterModel' => $searchModel,
+                            'columns' => [
+                                ['class' => 'yii\grid\SerialColumn'],
+                                    'projectTitle',
+                                    'sectorTitle',
+                                    'agency',
+                                    'projectRegions',
+                                    'projectProvinces',
+                                    'projectCitymuns',
+                                    'projectBarangays',
+                                    'inspection_date',
+                                    'major_finding',
+                                    'issues',
+                                    'action',
 
-                            ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
-                        ],
-                    ]); ?>
+                                ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
+                            ],
+                        ]); ?>
+                </div>
             </div>
         </div>
     </div>

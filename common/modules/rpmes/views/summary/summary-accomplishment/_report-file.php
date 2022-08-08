@@ -86,6 +86,7 @@
         <tbody>
         <tr style="font-weight: bolder;">
             <td colspan=5>Grand Total</td>
+            <td align=right>&nbsp;</td>
             <td align=right><?= number_format($total['allocations'], 2) ?></td>
             <td align=right><?= number_format($total['releases'], 2) ?></td>
             <td align=right><?= number_format($total['obligations'], 2) ?></td>

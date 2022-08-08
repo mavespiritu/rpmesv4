@@ -421,13 +421,30 @@ class ProjectStatusController extends Controller
                             )
                         )';
 
-        $physicalAccompTotalPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                        IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
-                            IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
-                                COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
-                              )
-                          )
-                      )';
+            // $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Default",
+            //                                     IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+            //                                         IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
+            //                                             IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
+            //                                             COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
+            //                                             )
+            //                                         )
+            //                                     )
+            //                                 ,   
+            //                                     IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+            //                                         IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+            //                                             IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+            //                                             COALESCE(physicalAccompsQ4.value, 0)
+            //                                             )
+            //                                         )
+            //                                     )
+            //                                 )';
+        $physicalAccompTotalPerQuarter = 'IF("'.$model['quarter'].'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                            IF("'.$model['quarter'].'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
+                                                IF("'.$model['quarter'].'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
+                                                    COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
+                                                  )
+                                              )
+                                          )';
 
         $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Default",
                                             IF("'.$model['quarter'].'" = "Q1", COALESCE(physicalTargets.q1, 0),
@@ -466,7 +483,7 @@ class ProjectStatusController extends Controller
         $isPercent = 'LOCATE("%", physicalTargets.indicator)';
         $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
         $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompTotalPerQuarter.' - '.$physicalTargetTotalPerQuarter.', IF('.$physicalTargetTotalPerQuarter.' > 0, (('.$physicalAccompTotalPerQuarter.'/'.$physicalTargetTotalPerQuarter.') * 100) -100 , 0))';
-        
+
         $regionTitles = ProjectRegion::find()
             ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
             ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
@@ -491,7 +508,7 @@ class ProjectStatusController extends Controller
             ->where(['project.draft' => 'No'])
             ->groupBy(['project_citymun.project_id'])
             ->createCommand()->getRawSql();
-            
+        
         $barangayTitles = ProjectBarangay::find()
             ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
             ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
@@ -501,7 +518,7 @@ class ProjectStatusController extends Controller
             ->where(['project.draft' => 'No'])
             ->groupBy(['project_barangay.project_id'])
             ->createCommand()->getRawSql();
-
+            
         $projects = Project::find()
                     ->select([
                         'project.id',
@@ -518,9 +535,10 @@ class ProjectStatusController extends Controller
                         $physicalTargetTotalPerQuarter. 'as physicalTargetTotalPerQuarter',
                         $physicalAccompTotalPerQuarter. 'as physicalAccompTotalPerQuarter',
                         $slippage. 'as slippage',
+                        'regionTitles.title as regionTitles',
                         'accomps.isCompleted as isCompleted',
-                        'project_exception.recommendations as recommendations',
-                        'project_exception.causes as causes',                
+                        'IF(project_exception.recommendations is null, "No Recommendation/s", project_exception.recommendations) as recommendations',
+                        'IF(project_exception.causes is null, "No Issue/s", project_exception.causes) as causes',                
                     ]);
         $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
         $projects = $projects->leftJoin('program', 'program.id = project.program_id');
@@ -528,6 +546,10 @@ class ProjectStatusController extends Controller
         $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
         $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
         $projects = $projects->leftJoin('project_exception', 'project_exception.project_id = project.id');
+        $projects = $projects->leftJoin('project_region', 'project_region.project_id = project.id and project_region.year = project.year');
+        $projects = $projects->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id');
+        $projects = $projects->leftJoin('project_province', 'project_province.project_id = project.id and project_province.year = project.year');
+        $projects = $projects->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id');
         $projects = $projects->leftJoin(['financialAccompsQ1' => '('.$financialAccomps.')'], 'financialAccompsQ1.project_id = project.id and financialAccompsQ1.quarter = "Q1"');
         $projects = $projects->leftJoin(['financialAccompsQ2' => '('.$financialAccomps.')'], 'financialAccompsQ2.project_id = project.id and financialAccompsQ2.quarter = "Q2"');
         $projects = $projects->leftJoin(['financialAccompsQ3' => '('.$financialAccomps.')'], 'financialAccompsQ3.project_id = project.id and financialAccompsQ3.quarter = "Q3"');
@@ -649,9 +671,9 @@ class ProjectStatusController extends Controller
                             )
                         )';
 
-        $physicalAccompTotalPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                            IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
-                                                IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
+        $physicalAccompTotalPerQuarter = 'IF("'.$model['quarter'].'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                            IF("'.$model['quarter'].'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
+                                                IF("'.$model['quarter'].'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
                                                     COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
                                                   )
                                               )

@@ -52,7 +52,7 @@
     <?php if(!empty($projects)){ ?>
         <?php $idx = 1; ?>
         <?php foreach($projects as $project){ ?>
-            <?php if((($project['slippage'] <= -15) || ($project['slippage'] >= 15)) && $project['slippage'] != 1){ ?>
+            <?php if((($project['slippage'] <= -15)) && $project['slippage'] != 1){ ?>
                 <tr>
                     <td align=center><?= $idx ?></td>
                     <td colspan=2 align=center><?= $project['projectTitle'] ?></td>
