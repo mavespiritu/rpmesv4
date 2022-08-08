@@ -316,14 +316,14 @@ function renderSummary($page)
         </div>
         <div>
             <div class="pull-right"><?= LinkPager::widget(['pagination' => $projectsPages]); ?></div>
-            <div class="pull-left"><?= $projectsModels ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Save Accomplishment', ['class' => 'btn btn-primary', 'style' => 'margin-top: 20px;', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' : '' ?></div>
+            <div class="pull-left"><?= $projectsModels ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Save Accomplishment', ['class' => 'btn btn-primary', 'style' => 'margin-top: 20px;', 'id' => 'accomplishment-submit-button', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' : '' ?></div>
             <div class="clearfix"></div>
         </div>
-    <?php ActiveForm::end(); ?>
-    <hr>
-    <h4>Accomplishment Submission for <?= $getData['quarter'] ?> <?= $getData['year'] ?></h4>
-    <p><i class="fa fa-exclamation-circle"></i> Make sure to complete accomplishment for <?= $getData['quarter'] ?> <?= $getData['year'] ?> before clicking the button below. Once submitted, action cannot be reverted.</p>
-    <?= $projectsModels ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? !$submissionModel->isNewRecord ? 'Accomplishment for '.$submissionModel->quarter.' '.$submissionModel->year.' has been submitted by '.$submissionModel->submitter.' last '.date("F j, Y H:i:s", strtotime($submissionModel->date_submitted)) : Html::button('Submit Accomplishment '.$getData['quarter'].' '.$getData['year'],['class' => 'btn btn-success', 'id' => 'accomplishment-submit-button']) : '' : '' : '' ?>
+<?php ActiveForm::end(); ?>
+<hr>
+<h4>Accomplishment Submission for <?= $getData['quarter'] ?> <?= $getData['year'] ?></h4>
+<p><i class="fa fa-exclamation-circle"></i> Make sure to complete accomplishment for <?= $getData['quarter'] ?> <?= $getData['year'] ?> before clicking the button below. Once submitted, action cannot be reverted.</p>
+<?= $projectsModels ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? !$submissionModel->isNewRecord ? 'Accomplishment for '.$submissionModel->quarter.' '.$submissionModel->year.' has been submitted by '.$submissionModel->submitter.' last '.date("F j, Y H:i:s", strtotime($submissionModel->date_submitted)) : Html::button('Submit Accomplishment '.$getData['quarter'].' '.$getData['year'],['class' => 'btn btn-success', 'id' => 'accomplishment-submit-button']) : '' : '' : '' ?>
 <?php
     $script = '
     function updateAccomplishmentTable(){
