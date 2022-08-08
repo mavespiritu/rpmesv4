@@ -120,7 +120,7 @@ class ProjectProblem extends \yii\db\ActiveRecord
 
     public function getAllocationTotal()
     {
-        return $this->project->allocationTotal;
+        return number_format($this->project->allocationTotal, 2);
     }
 
     public function getProjectBarangays()
