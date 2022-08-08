@@ -160,7 +160,7 @@ DisableButtonAsset::register($this);
                     'pluginOptions' => [
                         'allowClear' =>  true,
                     ],
-                ]);
+                ])->label('Group by *');
             ?>
         </div>
     </div>
