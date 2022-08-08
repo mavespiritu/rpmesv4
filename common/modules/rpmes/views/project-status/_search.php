@@ -48,7 +48,7 @@ DisableButtonAsset::register($this);
                     'pluginOptions' => [
                         'allowClear' =>  true,
                     ],
-                ])->label('Agency *');
+                ])->label('Agency');
             ?>
             </div>
         <?php } ?>

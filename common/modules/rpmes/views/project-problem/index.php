@@ -33,56 +33,57 @@ $this->params['breadcrumbs'][] = $this->title;
                         'years' => $years,
                         'agencies' =>$agencies
                     ]) ?>
-                    <br><br>
-                    <hr>
-                <div class="pull-left">
-                    <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
-                        'label' => '<i class="fa fa-download"></i> Export',
-                        'encodeLabel' => false,
-                        'options' => ['class' => 'btn btn-success btn-sm'],
-                        'dropdown' => [
-                            'items' => [
-                                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-problem/download-form-eleven', 'type' => 'excel', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
-                                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-problem/download-form-eleven', 'type' => 'pdf', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
-                            ],
-                        ],
-                    ]) : '' ?>
-                        <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormElevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
                 </div>
-                <div class="clearfix"></div>
-                    <!-- <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
-                                                RPMES Form 11: LIST OF PROJECT PROBLEMS/ISSUES
-                    </h5> --><br>
-                        <?= GridView::widget([
-                            'options' => [
-                            'class' => 'table-responsive',
-                        ],
-                        'dataProvider' => $dataProvider,
-                        'filterModel' => $searchModel,
-                        'columns' => [
-                            ['class' => 'yii\grid\SerialColumn'],
-                            'projectTitle',
-                            'nature',
-                            'detail:ntext',
-                            'strategy:ntext',
-                            'responsible_entity',
-                            'lesson_learned',
-                            'sectorTitle',
-                            'subSectorTitle',
-                            'projectBarangays',
-                            'projectCitymuns',
-                            'projectProvinces',
-                            'projectRegions',
-                            'agency',
-                            [
-                                'label' => 'Total Project Cost',
-                                'value' => function ($model) {
-                                return $model->getAllocationTotal();
-                                }
+                <hr>
+                <div class="box-body">
+                    <div class="pull-left">
+                        <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
+                            'label' => '<i class="fa fa-download"></i> Export',
+                            'encodeLabel' => false,
+                            'options' => ['class' => 'btn btn-success btn-sm'],
+                            'dropdown' => [
+                                'items' => [
+                                    ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-problem/download-form-eleven', 'type' => 'excel', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                                    ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-problem/download-form-eleven', 'type' => 'pdf', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'model' => json_encode($searchModel)])],
+                                ],
                             ],
-                            ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
-                        ],
-                        ]); ?>
+                        ]) : '' ?>
+                            <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormElevenReport("'.$searchModel->year.'", "'.$searchModel->quarter.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+                    </div>
+                    <div class="clearfix"></div>
+                        <!-- <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+                                                    RPMES Form 11: LIST OF PROJECT PROBLEMS/ISSUES
+                        </h5> --><br>
+                            <?= GridView::widget([
+                                'options' => [
+                                'class' => 'table-responsive',
+                            ],
+                            'dataProvider' => $dataProvider,
+                            'filterModel' => $searchModel,
+                            'columns' => [
+                                ['class' => 'yii\grid\SerialColumn'],
+                                'projectTitle',
+                                'nature',
+                                'detail:ntext',
+                                'strategy:ntext',
+                                'responsible_entity',
+                                'lesson_learned',
+                                'sectorTitle',
+                                'subSectorTitle',
+                                'projectBarangays',
+                                'projectCitymuns',
+                                'projectProvinces',
+                                'projectRegions',
+                                'agency',
+                                [
+                                    'label' => 'Total Project Cost',
+                                    'value' => function ($model) {
+                                    return $model->getAllocationTotal();
+                                    }
+                                ],
+                                ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
+                            ],
+                            ]); ?>
                 </div>
             </div>
         </div>
