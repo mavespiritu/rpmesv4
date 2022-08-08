@@ -58,6 +58,7 @@ DisableButtonAsset::register($this);
             <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
         </div>
     </div>
+    
     <?php ActiveForm::end(); ?>
 
 </div>

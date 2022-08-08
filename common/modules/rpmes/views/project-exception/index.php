@@ -12,7 +12,7 @@
     $this->title = 'Project Exceptions';
     $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="accomplishment-index">
+<div class="project-exception-index">
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
