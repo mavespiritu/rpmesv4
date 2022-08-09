@@ -30,9 +30,9 @@
                         ],
                         
                     ],
-                    ['label' => 'Monitoring Plan', 'icon' => 'folder', 'url' => ['/rpmes/plan'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 1: Monitoring Plan', 'icon' => 'folder', 'url' => ['/rpmes/plan'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 2: Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/accomplishment'], 'visible' => !Yii::$app->user->isGuest],
-                    ['label' => 'Project Exception', 'icon' => 'folder', 'url' => ['/rpmes/project-exception'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 3: Project Exception', 'icon' => 'folder', 'url' => ['/rpmes/project-exception'], 'visible' => !Yii::$app->user->isGuest],
                     [
                         'label' => 'Acknowledgment',
                         'icon' => 'folder',
@@ -49,8 +49,8 @@
                         'url' => '#',
                         'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles)),
                         'items' => [
-                            ['label' => 'Monitoring Plans', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'Form 4: Monitoring Plans', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'Form 4: Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                     ],
                     ['label' => 'Form 5: Summary Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],

@@ -200,7 +200,18 @@ DisableButtonAsset::register($this);
                                 <?php } ?>
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
-                                    <td colspan=3><?= $i.'.'.$j.'.'.$k ?>.<?= str_replace("*","<br>", $thirdLevel) ?></td>
+                                    <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
+                                    <?= '<td colspan=3>'.$i.'.'.$j.'.'.$k.'. '. $thirdLevel.'</td>' ?>
+                                    <?php }else{ ?>
+                                    <?= '<td colspan=3>'.$i.'.'.$j.'.'.$k.
+                                        '<br>a. '.$thirdLevels['content']['projectTitle'].
+                                        '<br>b. '.$thirdLevels['content']['sectorTitle'].' / '.$thirdLevels['content']['subSectorTitle'].
+                                        '<br>c. '.$thirdLevels['content']['fundSourceTitle'].
+                                        '<br>d. '.date('F j, Y', strtotime($thirdLevels['content']['projectStartDate'])).' to '.date('F j, Y', strtotime($thirdLevels['content']['projectCompletionDate'])).
+                                        '<br>e. '.$thirdLevels['content']['categoryTitle'].
+                                        '<br>f. '.$thirdLevels['content']['locationTitle'].
+                                    '</td>' ?>
+                                    <?php } ?>
                                     <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
                                     <?= '<td align=right>&nbsp;</td>' ?>
                                     <?php }else{ ?>
@@ -252,7 +263,18 @@ DisableButtonAsset::register($this);
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
-                                            <td colspan=2><?= $i.'.'.$j.'.'.$k.'.'.$l ?>.<?= str_replace("*","<br>", $fourthLevel) ?></td>
+                                            <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
+                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'.$l.'. '. $fourthLevel.'</td>' ?>
+                                            <?php }else{ ?>
+                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'.$l.
+                                                '<br>a. '.$fourthLevels['content']['projectTitle'].
+                                                '<br>b. '.$fourthLevels['content']['sectorTitle'].' / '.$fourthLevels['content']['subSectorTitle'].
+                                                '<br>c. '.$fourthLevels['content']['fundSourceTitle'].
+                                                '<br>d. '.date('F j, Y', strtotime($fourthLevels['content']['projectStartDate'])).' to '.date('F j, Y', strtotime($fourthLevels['content']['projectCompletionDate'])).
+                                                '<br>e. '.$fourthLevels['content']['categoryTitle'].
+                                                '<br>f. '.$fourthLevels['content']['locationTitle'].
+                                            '</td>' ?>
+                                            <?php } ?>
                                             <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
                                             <?= '<td align=right>&nbsp;</td>' ?>
                                             <?php }else{ ?>
@@ -301,7 +323,14 @@ DisableButtonAsset::register($this);
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
-                                                    <td><?= $i.'.'.$j.'.'.$k.'.'.$l.'.'.$m ?>. <?= str_replace("*","<br>", $fifthLevel) ?></td>
+                                                    <td><?= $i.'.'.$j.'.'.$k.'.'.$l.'.'.$m ?>
+                                                        <br>a.<?= $fourthLevels['content']['projectTitle'] ?>
+                                                        <br>b.<?= $fourthLevels['content']['sectorTitle'].' / '.$fourthLevels['content']['subSectorTitle'] ?>
+                                                        <br>c.<?= $fourthLevels['content']['fundSourceTitle'] ?>
+                                                        <br>d.<?= date('F j, Y', strtotime($fourthLevels['content']['projectStartDate'])).' to '.date('F j, Y', strtotime($fourthLevels['content']['projectCompletionDate'])) ?>
+                                                        <br>e.<?= $fourthLevels['content']['categoryTitle'] ?>
+                                                        <br>f.<?= $fourthLevels['content']['locationTitle'] ?>
+                                                    </td>
                                                     <td align=right><?= $fifthLevels['content']['indicator'] ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['allocations'], 2) ?></td>
                                                     <td align=right><?= number_format($fifthLevels['content']['releases'], 2) ?></td>
