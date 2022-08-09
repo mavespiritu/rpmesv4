@@ -261,7 +261,7 @@ class AccomplishmentController extends \yii\web\Controller
                     foreach($physical as $physicalAccomp)
                     {
                         $physicalAccomp->value = $this->removeMask($physicalAccomp->value);
-                        if(!($flag = $physicalAccomp->save())){
+                        if(!($flag = $physicalAccomp->save(false))){
                             $transaction->rollBack();
                             break;
                         }
@@ -275,7 +275,7 @@ class AccomplishmentController extends \yii\web\Controller
                         $financialAccomp->releases = $this->removeMask($financialAccomp->releases);
                         $financialAccomp->obligation = $this->removeMask($financialAccomp->obligation);
                         $financialAccomp->expenditures = $this->removeMask($financialAccomp->expenditures);
-                        if(!($flag = $financialAccomp->save())){
+                        if(!($flag = $financialAccomp->save(false))){
                             $transaction->rollBack();
                             break;
                         }
@@ -288,7 +288,7 @@ class AccomplishmentController extends \yii\web\Controller
                     {
                         $personEmployedAccomp->male = $this->removeMask($personEmployedAccomp->male);
                         $personEmployedAccomp->female = $this->removeMask($personEmployedAccomp->female);
-                        if(!($flag = $personEmployedAccomp->save())){
+                        if(!($flag = $personEmployedAccomp->save(false))){
                             $transaction->rollBack();
                             break;
                         }
@@ -301,7 +301,7 @@ class AccomplishmentController extends \yii\web\Controller
                     {
                         $beneficiariesAccomp->male = $this->removeMask($beneficiariesAccomp->male);
                         $beneficiariesAccomp->female = $this->removeMask($beneficiariesAccomp->female);
-                        if(!($flag = $beneficiariesAccomp->save())){
+                        if(!($flag = $beneficiariesAccomp->save(false))){
                             $transaction->rollBack();
                             break;
                         }
@@ -313,7 +313,7 @@ class AccomplishmentController extends \yii\web\Controller
                     foreach($groups as $groupsAccomp)
                     {
                         $groupsAccomp->value = $this->removeMask($groupsAccomp->value);
-                        if(!($flag = $groupsAccomp->save())){
+                        if(!($flag = $groupsAccomp->save(false))){
                             $transaction->rollBack();
                             break;
                         }
@@ -326,7 +326,7 @@ class AccomplishmentController extends \yii\web\Controller
                     {
                         $accomplishmentAccomp->submitted_by = Yii::$app->user->id;
                         $accomplishmentAccomp->date_submitted = date("Y-m-d H:i:s");
-                        if(!($flag = $accomplishmentAccomp->save())){
+                        if(!($flag = $accomplishmentAccomp->save(false))){
                             $transaction->rollBack();
                             break;
                         }
