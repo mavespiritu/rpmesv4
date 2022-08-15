@@ -182,10 +182,10 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) + floatval($allocation->q4) : 0; }
                 break;
             case 'Cumulative':
-                     if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : $allocationsQ1; }
-                else if($quarter == 'Q2'){ $value = $allocation ? floatval($allocation->q2) : $allocationsQ2; }
-                else if($quarter == 'Q3'){ $value = $allocation ? floatval($allocation->q3) : $allocationsQ3; }
-                else if($quarter == 'Q4'){ $value = $allocation ? floatval($allocation->q4) : $allocationsQ4; }
+                     if($quarter == 'Q1'){ $value = $allocation ? floatval($allocation->q1) : 0; }
+                else if($quarter == 'Q2'){ $value = $allocation ? $allocation->q2 ? floatval($allocation->q2) : floatval($allocation->q1) : 0;}
+                else if($quarter == 'Q3'){ $value = $allocation ? ($allocation->q3 ? floatval($allocation->q3) : ($allocation->q2 ? floatval($allocation->q2) : floatval($allocation->q1))) : 0;}
+                else if($quarter == 'Q4'){ $value = $allocation ? ($allocation->q4 ? floatval($allocation->q4) : ($allocation->q3 ? floatval($allocation->q3) : ($allocation->q2 ? floatval($allocation->q2) : floatval($allocation->q1)))) : 0;}
                 break;
         }
 
