@@ -16992,7 +16992,7 @@ class SummaryController extends \yii\web\Controller
 
             $projects = $projects->asArray()->all();
 
-            echo '<pre>'; print_r($projects); exit;
+            //echo '<pre>'; print_r($projects); exit;
             
             $total['completed'] = 0;
             $total['behindSchedule'] = 0;
