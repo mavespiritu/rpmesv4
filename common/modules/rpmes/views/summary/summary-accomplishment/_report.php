@@ -93,8 +93,8 @@ DisableButtonAsset::register($this);
             <td align=right><?= number_format($total['expenditures'], 2) ?></td>
             <td align=right><?= $total['allocations'] > 0 ? number_format(($total['releases'] / $total['allocations']) * 100, 2) : number_format(0, 2) ?></td>
             <td align=right><?= $total['releases'] > 0 ? number_format(($total['expenditures'] / $total['releases']) * 100, 2) : number_format(0, 2) ?></td>
-            <td align=right><?= number_format($totalPhysical['target'], 2) ?></td>
-            <td align=right><?= number_format($totalPhysical['actual'], 2) ?></td>
+            <td align=right>-</td>
+            <td align=right>-</td>
             <td align=right><?= $totalPhysical['actual'] - $totalPhysical['target'] >= 0 ? number_format($totalPhysical['actual'] - $totalPhysical['target'], 2) : '('.number_format(abs($totalPhysical['actual'] - $totalPhysical['target']), 2).')' ?></td>
             <td align=right><?= $totalPhysical['target'] > 0 ? number_format(($totalPhysical['actual'] / $totalPhysical['target']) * 100, 2) : number_format(0, 2) ?></td>
             <td align=right><?= number_format($total['malesEmployedTarget'], 0) ?></td>
