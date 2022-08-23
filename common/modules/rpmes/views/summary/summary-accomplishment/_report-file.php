@@ -24,7 +24,7 @@
 </style>
 <?php } ?>
 <table class="table table-condensed table-bordered table-striped table-condensed table-responsive">
-<thead>
+    <thead>
             <tr>
                 <td colspan=5 rowspan=3 align=center><b>Project Details</b><br>a. Project Title<br>b. Sector/Subsector<br>c. Fund Source<br>d. Project Schedule<br>e. Category</td>
                 <td rowspan=3 align=center><b>Output Indicator</b></td>
@@ -93,8 +93,8 @@
             <td align=right><?= number_format($total['expenditures'], 2) ?></td>
             <td align=right><?= $total['allocations'] > 0 ? number_format(($total['releases'] / $total['allocations']) * 100, 2) : number_format(0, 2) ?></td>
             <td align=right><?= $total['releases'] > 0 ? number_format(($total['expenditures'] / $total['releases']) * 100, 2) : number_format(0, 2) ?></td>
-            <td align=right><?= number_format($totalPhysical['target'], 2) ?></td>
-            <td align=right><?= number_format($totalPhysical['actual'], 2) ?></td>
+            <td align=right>-</td>
+            <td align=right>-</td>
             <td align=right><?= $totalPhysical['actual'] - $totalPhysical['target'] >= 0 ? number_format($totalPhysical['actual'] - $totalPhysical['target'], 2) : '('.number_format(abs($totalPhysical['actual'] - $totalPhysical['target']), 2).')' ?></td>
             <td align=right><?= $totalPhysical['target'] > 0 ? number_format(($totalPhysical['actual'] / $totalPhysical['target']) * 100, 2) : number_format(0, 2) ?></td>
             <td align=right><?= number_format($total['malesEmployedTarget'], 0) ?></td>
@@ -340,6 +340,7 @@
         <?php } ?>
         <tr style="font-weight: bolder;">
             <td colspan=4>Grand Total</td>
+            <td>&nbsp;</td>
             <td>&nbsp;</td>
             <td align=right><?= number_format($total['allocations'], 2) ?></td>
             <td align=right><?= number_format($total['releases'], 2) ?></td>
