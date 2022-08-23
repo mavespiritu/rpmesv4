@@ -225,7 +225,7 @@ DisableButtonAsset::register($this);
                                     <td align=right><?= $thirdLevels['content']['allocations'] > 0 ? number_format(($thirdLevels['content']['releases'] / $thirdLevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
                                     <td align=right><?= $thirdLevels['content']['releases'] > 0 ? number_format(($thirdLevels['content']['expenditures'] / $thirdLevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
                                     <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
-                                            <?= '<td align=right>'. number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'], 2).'</td>' ?>
+                                            <?= '<td align=right>'. number_format($physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'], 2).'</td>' ?>
                                             <?= '<td align=right>'. number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'], 2).'</td>' ?>
                                             <?php }else{ ?>
                                             <?= '<td align=right>'. number_format($thirdLevels['content']['projectPhysicalTarget'], 2).'</td>' ?>
@@ -340,6 +340,7 @@ DisableButtonAsset::register($this);
         <?php } ?>
         <tr style="font-weight: bolder;">
             <td colspan=4>Grand Total</td>
+            <td>&nbsp;</td>
             <td>&nbsp;</td>
             <td align=right><?= number_format($total['allocations'], 2) ?></td>
             <td align=right><?= number_format($total['releases'], 2) ?></td>

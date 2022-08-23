@@ -27254,7 +27254,7 @@ class SummaryController extends \yii\web\Controller
                                     }else{
                                         $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0;
                                         $physicalTarget = $thirdLevels['content']['projectPhysicalTarget'] * $weight;
-                                        $physicalActual = $thirdLevels['content']['projectPhysicalTarget'] * $weight;
+                                        $physicalActual = $thirdLevels['content']['projectPhysicalAccomp'] * $weight;
 
                                         $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalTarget;
                                         $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalActual;
@@ -27273,7 +27273,7 @@ class SummaryController extends \yii\web\Controller
                             }else{
                                 $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0;
                                 $physicalTarget = $secondLevels['content']['projectPhysicalTarget'] * $weight;
-                                $physicalActual = $secondLevels['content']['projectPhysicalTarget'] * $weight;
+                                $physicalActual = $secondLevels['content']['projectPhysicalAccomp'] * $weight;
 
                                 $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
                                 $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
@@ -27288,7 +27288,7 @@ class SummaryController extends \yii\web\Controller
                     }else{
                         $weight = $total['content']['financialTargetTotal'] > 0 ? $firstLevels['content']['financialTargetTotal'] / $total['content']['financialTargetTotal'] : 0;
                         $physicalTarget = $firstLevels['content']['projectPhysicalTarget'] * $weight;
-                        $physicalActual = $firstLevels['content']['projectPhysicalTarget'] * $weight;
+                        $physicalActual = $firstLevels['content']['projectPhysicalAccomp'] * $weight;
 
                         $physical['target'][$firstLevel]['value'] += $physicalTarget;
                         $physical['actual'][$firstLevel]['value'] += $physicalActual;
