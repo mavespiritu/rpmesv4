@@ -16552,9 +16552,9 @@ class SummaryController extends \yii\web\Controller
 
             $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Cumulative",
                                             IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
-                                                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
-                                                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
-                                                    COALESCE(physicalTargets.q4, 0)
+                                                IF("'.$model->quarter.'" = "Q2", IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)),
+                                                    IF("'.$model->quarter.'" = "Q3", IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)),
+                                                    IF(COALESCE(physicalTargets.q4, 0) = 0, IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)), COALESCE(physicalTargets.q4, 0))
                                                     )
                                                 )
                                             )
@@ -16601,9 +16601,9 @@ class SummaryController extends \yii\web\Controller
                                                 )
                                             ,   
                                                 IF("'.$model->quarter.'" = "Q1", financialTargets.q1,
-                                                    IF("'.$model->quarter.'" = "Q2", financialTargets.q2,
-                                                        IF("'.$model->quarter.'" = "Q3", financialTargets.q3,
-                                                            financialTargets.q4
+                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(financialTargets.q2, financialTargets.q1, 0),
+                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(financialTargets.q3, financialTargets.q2, financialTargets.q1, 0),
+                                                            COALESCE(financialTargets.q4, financialTargets.q3, financialTargets.q2, financialTargets.q1, 0)
                                                         )
                                                     )
                                                 )
@@ -16660,9 +16660,9 @@ class SummaryController extends \yii\web\Controller
                             )
                         ,   
                             IF("'.$model->quarter.'" = "Q1", COALESCE(financialAccompsQ1.releases, 0),
-                                IF("'.$model->quarter.'" = "Q2", COALESCE(financialAccompsQ2.releases, 0),
-                                    IF("'.$model->quarter.'" = "Q3", COALESCE(financialAccompsQ3.releases, 0),
-                                    COALESCE(financialAccompsQ4.releases, 0)
+                                IF("'.$model->quarter.'" = "Q2", IF(COALESCE(financialAccompsQ2.releases, 0) = 0, COALESCE(financialAccompsQ1.releases, 0), COALESCE(financialAccompsQ2.releases, 0)),
+                                    IF("'.$model->quarter.'" = "Q3", IF(COALESCE(financialAccompsQ3.releases, 0) = 0, IF(COALESCE(financialAccompsQ2.releases, 0) = 0, COALESCE(financialAccompsQ1.releases, 0), COALESCE(financialAccompsQ2.releases, 0)), COALESCE(financialAccompsQ3.releases, 0)),
+                                    IF(COALESCE(financialAccompsQ4.releases, 0) = 0, IF(COALESCE(financialAccompsQ3.releases, 0) = 0, IF(COALESCE(financialAccompsQ2.releases, 0) = 0, COALESCE(financialAccompsQ1.releases, 0), COALESCE(financialAccompsQ2.releases, 0)), COALESCE(financialAccompsQ3.releases, 0)), COALESCE(financialAccompsQ4.releases, 0))
                                     )
                                 )
                             )
@@ -16678,9 +16678,9 @@ class SummaryController extends \yii\web\Controller
                                 )
                             ,   
                                 IF("'.$model->quarter.'" = "Q1", COALESCE(financialAccompsQ1.obligation, 0),
-                                    IF("'.$model->quarter.'" = "Q2", COALESCE(financialAccompsQ2.obligation, 0),
-                                        IF("'.$model->quarter.'" = "Q3", COALESCE(financialAccompsQ3.obligation, 0),
-                                        COALESCE(financialAccompsQ4.obligation, 0)
+                                    IF("'.$model->quarter.'" = "Q2", IF(COALESCE(financialAccompsQ2.obligation, 0) = 0, COALESCE(financialAccompsQ1.obligation, 0), COALESCE(financialAccompsQ2.obligation, 0)),
+                                        IF("'.$model->quarter.'" = "Q3", IF(COALESCE(financialAccompsQ3.obligation, 0) = 0, IF(COALESCE(financialAccompsQ2.obligation, 0) = 0, COALESCE(financialAccompsQ1.obligation, 0), COALESCE(financialAccompsQ2.obligation, 0)), COALESCE(financialAccompsQ3.obligation, 0)),
+                                        IF(COALESCE(financialAccompsQ4.obligation, 0) = 0, IF(COALESCE(financialAccompsQ3.obligation, 0) = 0, IF(COALESCE(financialAccompsQ2.obligation, 0) = 0, COALESCE(financialAccompsQ1.obligation, 0), COALESCE(financialAccompsQ2.obligation, 0)), COALESCE(financialAccompsQ3.obligation, 0)), COALESCE(financialAccompsQ4.obligation, 0))
                                         )
                                     )
                                 )
@@ -16696,9 +16696,9 @@ class SummaryController extends \yii\web\Controller
                                 )
                             ,   
                                 IF("'.$model->quarter.'" = "Q1", COALESCE(financialAccompsQ1.expenditures, 0),
-                                    IF("'.$model->quarter.'" = "Q2", COALESCE(financialAccompsQ2.expenditures, 0),
-                                        IF("'.$model->quarter.'" = "Q3", COALESCE(financialAccompsQ3.expenditures, 0),
-                                        COALESCE(financialAccompsQ4.expenditures, 0)
+                                    IF("'.$model->quarter.'" = "Q2", IF(COALESCE(financialAccompsQ2.expenditures, 0) = 0, COALESCE(financialAccompsQ1.expenditures, 0), COALESCE(financialAccompsQ2.expenditures, 0)),
+                                        IF("'.$model->quarter.'" = "Q3", IF(COALESCE(financialAccompsQ3.expenditures, 0) = 0, IF(COALESCE(financialAccompsQ2.expenditures, 0) = 0, COALESCE(financialAccompsQ1.expenditures, 0), COALESCE(financialAccompsQ2.expenditures, 0)), COALESCE(financialAccompsQ3.expenditures, 0)),
+                                        IF(COALESCE(financialAccompsQ4.expenditures, 0) = 0, IF(COALESCE(financialAccompsQ3.expenditures, 0) = 0, IF(COALESCE(financialAccompsQ2.expenditures, 0) = 0, COALESCE(financialAccompsQ1.expenditures, 0), COALESCE(financialAccompsQ2.expenditures, 0)), COALESCE(financialAccompsQ3.expenditures, 0)), COALESCE(financialAccompsQ4.expenditures, 0))
                                         )
                                     )
                                 )
