@@ -29,6 +29,13 @@ function renderSummary($page)
     return 'Showing <b>'.$firstNumber.'-'.$lastNumber.'</b> of <b>'.$total.'</b> items.';
 }
 ?>
+<div class="pull-left">
+    <?= $this->render('_menu', [
+        'model' => $model
+    ]) ?>
+</div>
+<div class="clearfix"></div>
+<br>
     <?php $form = ActiveForm::begin([
         'options' => ['id' => 'accomplishment-form', 'class' => 'disable-submit-buttons'],
     ]); ?>
