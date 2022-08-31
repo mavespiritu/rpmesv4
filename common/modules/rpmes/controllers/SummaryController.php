@@ -21783,17 +21783,8 @@ class SummaryController extends \yii\web\Controller
                                             
                                             $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalTarget;
                                             $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalActual;
-                                            
-                                            $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
-                                            $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
-                                            
-                                            $physical['target'][$firstLevel]['value'] += $physicalTarget;
-                                            $physical['actual'][$firstLevel]['value'] += $physicalActual;
-                                            
-                                            $totalPhysical['target'] += $physicalTarget;
-                                            $totalPhysical['actual'] += $physicalActual;
-                                            
-                                        }
+                                        }                          
+                                        
                                     }else{
                                         $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0;
                                         $physicalTarget = $thirdLevels['content']['projectPhysicalTarget'] * $weight;
@@ -21812,6 +21803,19 @@ class SummaryController extends \yii\web\Controller
                                         $totalPhysical['actual'] += $physicalActual;
                                         //echo "<pre>"; print_r($projects); exit;
                                     }
+                                    
+                                }
+                                foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels)
+                                {   
+                                    $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0;
+                                    $physicalTarget = $thirdLevels['content']['projectPhysicalTarget'] * $weight;
+                                    $physicalActual = $thirdLevels['content']['projectPhysicalAccomp'] * $weight;
+
+                                    $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] = $physicalTarget;
+                                    $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] = $physicalActual;
+
+                                    $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
+                                    $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
                                 }
                             }else{
                                 $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0;
@@ -21825,9 +21829,22 @@ class SummaryController extends \yii\web\Controller
                                 $physical['actual'][$firstLevel]['value'] += $physicalActual;
 
                                 $totalPhysical['target'] += $physicalTarget;
-                                $totalPhysical['actual'] += $physicalActual;
+                                $totalPhysical['actual'] += $physicalActual;echo "<pre>"; print_r($physical); exit;
                             }
                         }
+                        foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){  
+                                            
+                            $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0;
+                            
+                            $physicalTarget = $secondLevels['content']['projectPhysicalTarget'] * $weight;
+                            $physicalActual = $secondLevels['content']['projectPhysicalAccomp'] * $weight;
+
+                            $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] = $physicalTarget;
+                            $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] = $physicalActual;
+
+                            $physical['target'][$firstLevel]['value'] += $physicalTarget;
+                            $physical['actual'][$firstLevel]['value'] += $physicalActual;
+                        } 
                     }else{
                         $weight = $total['content']['financialTargetTotal'] > 0 ? $firstLevels['content']['financialTargetTotal'] / $total['content']['financialTargetTotal'] : 0;
                         $physicalTarget = $firstLevels['content']['projectPhysicalTarget'] * $weight;
@@ -21841,6 +21858,21 @@ class SummaryController extends \yii\web\Controller
                     }
                 }
             }
+            // foreach($data as $firstLevel => $firstLevels){
+                                            
+            //     $weight = $total['content']['financialTargetTotal'] > 0 ? $firstLevels['content']['financialTargetTotal'] / $total['content']['financialTargetTotal'] : 0;
+                
+            //     $physicalTarget = $firstLevels['content']['projectPhysicalTarget'] * $weight;
+            //     $physicalActual = $firstLevels['content']['projectPhysicalAccomp'] * $weight;
+                
+            //     $physical['target'][$firstLevel]['value'] = $physicalTarget;
+            //     $physical['actual'][$firstLevel]['value'] = $physicalActual;
+                
+            //     $totalPhysical['target'] += $physicalTarget;
+            //     $totalPhysical['actual'] += $physicalActual;
+            // }
+
+            // echo "<pre>"; print_r($physical); exit;
 
             return $this->renderAjax('summary-accomplishment/_report', [
                 'model' => $model,

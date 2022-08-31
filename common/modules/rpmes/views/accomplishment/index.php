@@ -54,3 +54,28 @@
         </div>
     </div>
 </div>
+<?php
+    $script = '
+        function printSummary(model, year, quarter, agency_id)
+        {
+            var printWindow = window.open(
+                "'.Url::to(['/rpmes/accomplishment/download-accomplishment']).'?type=print&model=" + model + "&year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id, 
+                "Print",
+                "left=200", 
+                "top=200", 
+                "width=650", 
+                "height=500", 
+                "toolbar=0", 
+                "resizable=0"
+                );
+                printWindow.addEventListener("load", function() {
+                    printWindow.print();
+                    setTimeout(function() {
+                    printWindow.close();
+                }, 1);
+                }, true);
+        }
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>
