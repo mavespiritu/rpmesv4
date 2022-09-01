@@ -75,7 +75,7 @@ class AccomplishmentController extends \yii\web\Controller
                 'only' => ['index'],
                 'rules' => [
                     [
-                        'actions' => ['index'],
+                        'actions' => ['index','downloadAccomplishment'],
                         'allow' => true,
                         'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
                     ],
@@ -418,6 +418,15 @@ class AccomplishmentController extends \yii\web\Controller
         $financialAccomps = FinancialAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
         $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
         $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
+        $maleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Male Employed', 'year' => $model->year])->createCommand()->getRawSql();
+        $femaleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Female Employed', 'year' => $model->year])->createCommand()->getRawSql();
+        $personEmployedAccomps = PersonEmployedAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
+        $beneficiariesTargets = ProjectTarget::find()->where(['target_type' => 'Beneficiaries', 'year' => $model->year])->createCommand()->getRawSql();
+        $groupBeneficiariesTargets = ProjectTarget::find()->where(['target_type' => 'Group Beneficiaries', 'year' => $model->year])->createCommand()->getRawSql();
+        $beneficiariesAccomps = BeneficiariesAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
+        $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
+        $accompsSubmitter = Accomplishment::find()->where(['year' => $model->year, 'quarter' => $model->quarter])->createCommand()->getRawSql();
+        $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
 
         $regionTitles = ProjectRegion::find()
             ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
@@ -610,6 +619,86 @@ class AccomplishmentController extends \yii\web\Controller
                                             )
                                         )';
 
+        $maleEmployedTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(maleEmployedTargets.q1, 0),
+                                    IF("'.$model->quarter.'" = "Q2", COALESCE(maleEmployedTargets.q2, 0),
+                                        IF("'.$model->quarter.'" = "Q3", COALESCE(maleEmployedTargets.q3, 0),
+                                        COALESCE(maleEmployedTargets.q4, 0)
+                                        )
+                                    )
+                                )';
+            
+        $femaleEmployedTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(femaleEmployedTargets.q1, 0),
+                                    IF("'.$model->quarter.'" = "Q2", COALESCE(femaleEmployedTargets.q2, 0),
+                                        IF("'.$model->quarter.'" = "Q3", COALESCE(femaleEmployedTargets.q3, 0),
+                                        COALESCE(femaleEmployedTargets.q4, 0)
+                                        )
+                                    )
+                                )';
+
+        $maleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.male, 0),
+                                IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0),
+                                    IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0),
+                                    COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0) + COALESCE(personEmployedAccompsQ4.male, 0)
+                                    )
+                                )
+                            )';
+
+        $femaleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.female, 0),
+                                    IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0),
+                                        IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0),
+                                        COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0) + COALESCE(personEmployedAccompsQ4.female, 0)
+                                        )
+                                    )
+                                )';
+
+        $beneficiaryTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(beneficiariesTargets.q1, 0),
+                                IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesTargets.q2, 0),
+                                    IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesTargets.q3, 0),
+                                    COALESCE(beneficiariesTargets.q4, 0)
+                                    )
+                                )
+                            )';
+        
+        $groupBeneficiaryTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(groupBeneficiariesTargets.q1, 0),
+                                IF("'.$model->quarter.'" = "Q2", COALESCE(groupBeneficiariesTargets.q2, 0),
+                                    IF("'.$model->quarter.'" = "Q3", COALESCE(groupBeneficiariesTargets.q3, 0),
+                                    COALESCE(groupBeneficiariesTargets.q4, 0)
+                                    )
+                                )
+                            )';
+
+        $maleBeneficiaryAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(beneficiariesAccompsQ1.male, 0),
+                            IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesAccompsQ1.male, 0) + COALESCE(beneficiariesAccompsQ2.male, 0),
+                                IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesAccompsQ1.male, 0) + COALESCE(beneficiariesAccompsQ2.male, 0) + COALESCE(beneficiariesAccompsQ3.male, 0),
+                                COALESCE(beneficiariesAccompsQ1.male, 0) + COALESCE(beneficiariesAccompsQ2.male, 0) + COALESCE(beneficiariesAccompsQ3.male, 0) + COALESCE(beneficiariesAccompsQ4.male, 0)
+                                )
+                            )
+                        )';
+    
+        $femaleBeneficiaryAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(beneficiariesAccompsQ1.female, 0),
+                                IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesAccompsQ1.female, 0) + COALESCE(beneficiariesAccompsQ2.female, 0),
+                                    IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesAccompsQ1.female, 0) + COALESCE(beneficiariesAccompsQ2.female, 0) + COALESCE(beneficiariesAccompsQ3.female, 0),
+                                    COALESCE(beneficiariesAccompsQ1.female, 0) + COALESCE(beneficiariesAccompsQ2.female, 0) + COALESCE(beneficiariesAccompsQ3.female, 0) + COALESCE(beneficiariesAccompsQ4.female, 0)
+                                    )
+                                )
+                            )';
+
+        $groupBeneficiaryAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(groupBeneficiariesAccompsQ1.value, 0),
+                                IF("'.$model->quarter.'" = "Q2", COALESCE(groupBeneficiariesAccompsQ1.value, 0) + COALESCE(groupBeneficiariesAccompsQ2.value, 0),
+                                    IF("'.$model->quarter.'" = "Q3", COALESCE(groupBeneficiariesAccompsQ1.value, 0) + COALESCE(groupBeneficiariesAccompsQ2.value, 0) + COALESCE(groupBeneficiariesAccompsQ3.value, 0),
+                                    COALESCE(groupBeneficiariesAccompsQ1.value, 0) + COALESCE(groupBeneficiariesAccompsQ2.value, 0) + COALESCE(groupBeneficiariesAccompsQ3.value, 0) + COALESCE(groupBeneficiariesAccompsQ4.value, 0)
+                                    )
+                                )
+                            )';
+        $financialTargetPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
+                            IF("'.$model->quarter.'" = "Q2", COALESCE(financialTargets.q2, 0),
+                                IF("'.$model->quarter.'" = "Q3", COALESCE(financialTargets.q3, 0),
+                                COALESCE(financialTargets.q4, 0)
+                                )
+                            )
+                        )';
+        $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
+
         $projects = Project::find()
                     ->select([
                         'project.id',
@@ -620,6 +709,7 @@ class AccomplishmentController extends \yii\web\Controller
                         'project.completion_date as completionDate',
                         'fund_source.title as fundSourceTitle',
                         'agency.code as agencyTitle',
+                        'accomplishment.remarks as remarks',
                         $financialTargetTotalPerQuarter.' as allocationsAsOf',
                         $financialTargetPerQuarter.'as allocationPerQtr',
                         $releasesTotalPerQuarter.'as releasesAsOf',
@@ -633,6 +723,16 @@ class AccomplishmentController extends \yii\web\Controller
                         $physicalTargetPerQuarter.'as physicalTargetPerQtr',
                         $physicalAccompTotalPerQuarter.'as physicalAccompTotalPerQuarter',
                         $physicalAccompPerQuarter.'as physicalAccompPerQuarter',
+                        $maleEmployedTarget.' as malesEmployedTarget',
+                        $femaleEmployedTarget.' as femalesEmployedTarget',
+                        $maleEmployedAccomp.' as malesEmployedActual',
+                        $femaleEmployedAccomp.' as femalesEmployedActual',
+                        $beneficiaryTarget.' as beneficiariesTarget',
+                        $groupBeneficiaryTarget.' as groupBeneficiariesTarget',
+                        $maleBeneficiaryAccomp.' as maleBeneficiariesActual',
+                        $femaleBeneficiaryAccomp.' as femaleBeneficiariesActual',
+                        $groupBeneficiaryAccomp.' as groupBeneficiariesActual',
+                        $isCompleted.' as completed',
                     ]);
                     $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
                     $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
@@ -640,6 +740,8 @@ class AccomplishmentController extends \yii\web\Controller
                     $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
                     $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
                     $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
+                    $projects = $projects->leftJoin('accomplishment', 'accomplishment.project_id = project.id');
+                    $projects = $projects->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
                     $projects = $projects->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
                     $projects = $projects->leftJoin(['financialAccompsQ1' => '('.$financialAccomps.')'], 'financialAccompsQ1.project_id = project.id and financialAccompsQ1.quarter = "Q1"');
                     $projects = $projects->leftJoin(['financialAccompsQ2' => '('.$financialAccomps.')'], 'financialAccompsQ2.project_id = project.id and financialAccompsQ2.quarter = "Q2"');
@@ -650,6 +752,22 @@ class AccomplishmentController extends \yii\web\Controller
                     $projects = $projects->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
                     $projects = $projects->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
                     $projects = $projects->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+                    $projects = $projects->leftJoin(['personEmployedAccompsQ1' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ1.project_id = project.id and personEmployedAccompsQ1.quarter = "Q1"');
+                    $projects = $projects->leftJoin(['personEmployedAccompsQ2' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ2.project_id = project.id and personEmployedAccompsQ2.quarter = "Q2"');
+                    $projects = $projects->leftJoin(['personEmployedAccompsQ3' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ3.project_id = project.id and personEmployedAccompsQ3.quarter = "Q3"');
+                    $projects = $projects->leftJoin(['personEmployedAccompsQ4' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ4.project_id = project.id and personEmployedAccompsQ4.quarter = "Q4"');
+                    $projects = $projects->leftJoin(['beneficiariesTargets' => '('.$beneficiariesTargets.')'], 'beneficiariesTargets.project_id = project.id');
+                    $projects = $projects->leftJoin(['groupBeneficiariesTargets' => '('.$groupBeneficiariesTargets.')'], 'groupBeneficiariesTargets.project_id = project.id');
+                    $projects = $projects->leftJoin(['maleEmployedTargets' => '('.$maleEmployedTargets.')'], 'maleEmployedTargets.project_id = project.id');
+                    $projects = $projects->leftJoin(['femaleEmployedTargets' => '('.$femaleEmployedTargets.')'], 'femaleEmployedTargets.project_id = project.id');
+                    $projects = $projects->leftJoin(['beneficiariesAccompsQ1' => '('.$beneficiariesAccomps.')'], 'beneficiariesAccompsQ1.project_id = project.id and beneficiariesAccompsQ1.quarter = "Q1"');
+                    $projects = $projects->leftJoin(['beneficiariesAccompsQ2' => '('.$beneficiariesAccomps.')'], 'beneficiariesAccompsQ2.project_id = project.id and beneficiariesAccompsQ2.quarter = "Q2"');
+                    $projects = $projects->leftJoin(['beneficiariesAccompsQ3' => '('.$beneficiariesAccomps.')'], 'beneficiariesAccompsQ3.project_id = project.id and beneficiariesAccompsQ3.quarter = "Q3"');
+                    $projects = $projects->leftJoin(['beneficiariesAccompsQ4' => '('.$beneficiariesAccomps.')'], 'beneficiariesAccompsQ4.project_id = project.id and beneficiariesAccompsQ4.quarter = "Q4"');
+                    $projects = $projects->leftJoin(['groupBeneficiariesAccompsQ1' => '('.$groupBeneficiariesAccomps.')'], 'groupBeneficiariesAccompsQ1.project_id = project.id and groupBeneficiariesAccompsQ1.quarter = "Q1"');
+                    $projects = $projects->leftJoin(['groupBeneficiariesAccompsQ2' => '('.$groupBeneficiariesAccomps.')'], 'groupBeneficiariesAccompsQ2.project_id = project.id and groupBeneficiariesAccompsQ2.quarter = "Q2"');
+                    $projects = $projects->leftJoin(['groupBeneficiariesAccompsQ3' => '('.$groupBeneficiariesAccomps.')'], 'groupBeneficiariesAccompsQ3.project_id = project.id and groupBeneficiariesAccompsQ3.quarter = "Q3"');
+                    $projects = $projects->leftJoin(['groupBeneficiariesAccompsQ4' => '('.$groupBeneficiariesAccomps.')'], 'groupBeneficiariesAccompsQ4.project_id = project.id and groupBeneficiariesAccompsQ4.quarter = "Q4"');
                     $projects = $projects->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
                     $projects = $projects->andWhere(['project.id' => $projectIDs]);
         
@@ -665,7 +783,7 @@ class AccomplishmentController extends \yii\web\Controller
 
         $projects = $projects->asArray()->all();
 
-        echo '<pre>'; print_r($projects); exit;
+        //echo '<pre>'; print_r($projects); exit;
             
         $filename = 'Accomplishment '.$year;
 
@@ -673,17 +791,19 @@ class AccomplishmentController extends \yii\web\Controller
         {
             header("Content-type: application/vnd.ms-excel");
             header("Content-Disposition: attachment; filename=".$filename.".xls");
-            return $this->renderPartial('accomplishment/_report-file', [
+            return $this->renderPartial('_report-file', [
                 'type' => $type,
                 'model' => $model,
                 'projects' => $projects,
+                'genders' => $genders
             ]);
         }else if($type == 'pdf')
         {
-            $content = $this->renderPartial('accomplishment/_report-file', [
+            $content = $this->renderPartial('_report-file', [
                 'type' => $type,
                 'model' => $model,
                 'projects' => $projects,
+                'genders' => $genders
             ]);
 
             $pdf = new Pdf([
@@ -721,10 +841,11 @@ class AccomplishmentController extends \yii\web\Controller
                 $headers->add('Content-Type', 'application/pdf');
                 return $pdf->render();
         }else if($type == 'print'){
-            return $this->renderAjax('accomplishment/_report-file', [
+            return $this->renderAjax('_report-file', [
                 'type' => $type,
                 'model' => $model,
                 'projects' => $projects,
+                'genders' => $genders
             ]);
         }
     }
