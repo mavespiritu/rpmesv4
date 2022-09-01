@@ -22186,17 +22186,17 @@ class SummaryController extends \yii\web\Controller
                         )';
         
         $maleEmployedTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(maleEmployedTargets.q1, 0),
-                                IF("'.$model->quarter.'" = "Q2", COALESCE(maleEmployedTargets.q2, 0),
-                                    IF("'.$model->quarter.'" = "Q3", COALESCE(maleEmployedTargets.q3, 0),
-                                    COALESCE(maleEmployedTargets.q4, 0)
-                                    )
-                                )
-                            )';
-        
+                        IF("'.$model->quarter.'" = "Q2", COALESCE(maleEmployedTargets.q1, 0) + COALESCE(maleEmployedTargets.q2, 0),
+                            IF("'.$model->quarter.'" = "Q3", COALESCE(maleEmployedTargets.q1, 0) + COALESCE(maleEmployedTargets.q2, 0) + COALESCE(maleEmployedTargets.q3, 0),
+                            COALESCE(maleEmployedTargets.q1, 0) + COALESCE(maleEmployedTargets.q2, 0) + COALESCE(maleEmployedTargets.q3, 0) + COALESCE(maleEmployedTargets.q4, 0)
+                            )
+                        )
+                    )';
+
         $femaleEmployedTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(femaleEmployedTargets.q1, 0),
-                                IF("'.$model->quarter.'" = "Q2", COALESCE(femaleEmployedTargets.q2, 0),
-                                    IF("'.$model->quarter.'" = "Q3", COALESCE(femaleEmployedTargets.q3, 0),
-                                    COALESCE(femaleEmployedTargets.q4, 0)
+                                IF("'.$model->quarter.'" = "Q2", COALESCE(femaleEmployedTargets.q1, 0) + COALESCE(femaleEmployedTargets.q2, 0),
+                                    IF("'.$model->quarter.'" = "Q3", COALESCE(femaleEmployedTargets.q1, 0) + COALESCE(femaleEmployedTargets.q2, 0) + COALESCE(femaleEmployedTargets.q3, 0),
+                                    COALESCE(femaleEmployedTargets.q1, 0) + COALESCE(femaleEmployedTargets.q2, 0) + COALESCE(femaleEmployedTargets.q3, 0) + COALESCE(femaleEmployedTargets.q4, 0)
                                     )
                                 )
                             )';
@@ -22208,7 +22208,7 @@ class SummaryController extends \yii\web\Controller
                                     )
                                 )
                             )';
-
+            
         $femaleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.female, 0),
                                     IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0),
                                         IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0),
@@ -22216,23 +22216,23 @@ class SummaryController extends \yii\web\Controller
                                         )
                                     )
                                 )';
-
+            
         $beneficiaryTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(beneficiariesTargets.q1, 0),
-                                IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesTargets.q2, 0),
-                                    IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesTargets.q3, 0),
-                                    COALESCE(beneficiariesTargets.q4, 0)
+                                IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesTargets.q1, 0) + COALESCE(beneficiariesTargets.q2, 0),
+                                    IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesTargets.q1, 0) + COALESCE(beneficiariesTargets.q2, 0) + COALESCE(beneficiariesTargets.q3, 0),
+                                    COALESCE(beneficiariesTargets.q1, 0) + COALESCE(beneficiariesTargets.q2, 0) + COALESCE(beneficiariesTargets.q3, 0) + COALESCE(beneficiariesTargets.q4, 0)
                                     )
                                 )
                             )';
-        
+            
         $groupBeneficiaryTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(groupBeneficiariesTargets.q1, 0),
-                                IF("'.$model->quarter.'" = "Q2", COALESCE(groupBeneficiariesTargets.q2, 0),
-                                    IF("'.$model->quarter.'" = "Q3", COALESCE(groupBeneficiariesTargets.q3, 0),
-                                    COALESCE(groupBeneficiariesTargets.q4, 0)
+                                IF("'.$model->quarter.'" = "Q2", COALESCE(groupBeneficiariesTargets.q1, 0) + COALESCE(groupBeneficiariesTargets.q2, 0),
+                                    IF("'.$model->quarter.'" = "Q3", COALESCE(groupBeneficiariesTargets.q1, 0) + COALESCE(groupBeneficiariesTargets.q2, 0) + COALESCE(groupBeneficiariesTargets.q3, 0),
+                                    COALESCE(groupBeneficiariesTargets.q1, 0) + COALESCE(groupBeneficiariesTargets.q2, 0) + COALESCE(groupBeneficiariesTargets.q3, 0) + COALESCE(groupBeneficiariesTargets.q4, 0)
                                     )
                                 )
                             )';
-
+            
         $maleBeneficiaryAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(beneficiariesAccompsQ1.male, 0),
                                     IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesAccompsQ1.male, 0) + COALESCE(beneficiariesAccompsQ2.male, 0),
                                         IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesAccompsQ1.male, 0) + COALESCE(beneficiariesAccompsQ2.male, 0) + COALESCE(beneficiariesAccompsQ3.male, 0),
@@ -22248,7 +22248,7 @@ class SummaryController extends \yii\web\Controller
                                             )
                                         )
                                     )';
-        
+            
         $groupBeneficiaryAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(groupBeneficiariesAccompsQ1.value, 0),
                                         IF("'.$model->quarter.'" = "Q2", COALESCE(groupBeneficiariesAccompsQ1.value, 0) + COALESCE(groupBeneficiariesAccompsQ2.value, 0),
                                             IF("'.$model->quarter.'" = "Q3", COALESCE(groupBeneficiariesAccompsQ1.value, 0) + COALESCE(groupBeneficiariesAccompsQ2.value, 0) + COALESCE(groupBeneficiariesAccompsQ3.value, 0),
