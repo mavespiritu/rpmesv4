@@ -65,4 +65,12 @@ class Accomplishment extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Project::className(), ['id' => 'project_id']);
     }
+    public function getSubmitter()
+    {
+        return $this->hasOne(UserInfo::className(), ['user_id' => 'submitted_by']);
+    }
+    public function getSubmitterName()
+    {
+        return $this->submitter ? $this->submitter->fullName : '';
+    }
 }
