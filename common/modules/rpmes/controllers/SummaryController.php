@@ -27265,7 +27265,6 @@ class SummaryController extends \yii\web\Controller
                                             $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalTarget;
                                             $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalActual;
                                         }
-                                        //echo "<pre>"; print_r($physical); exit;
                                     }else{
                                         $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0;
                                         $physicalTarget = $thirdLevels['content']['projectPhysicalTarget'] * $weight;
@@ -27282,7 +27281,6 @@ class SummaryController extends \yii\web\Controller
 
                                         $totalPhysical['target'] += $physicalTarget;
                                         $totalPhysical['actual'] += $physicalActual;
-                                        //echo "<pre>"; print_r($projects); exit;
                                     }
                                     
                                 }
