@@ -23,12 +23,14 @@
     }
 </style>
 <?php } ?>
+<h5 class="text-center" style="text-align:center;">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+        RPMES Form 2: ACCOMPLISHMENTS
+    </h5>
 <table class="table table-condensed table-bordered table-striped table-condensed table-responsive">
     <thead>
-    <thead>
         <tr>
-            <td rowspan=4 style="width: 3%;">&nbsp;</td>
-            <td rowspan=4 colspan=2 style="width: 7%;">
+            <td rowspan=3 >&nbsp;</td>
+            <td rowspan=3 colspan=2>
                 <b>
                 (a) Project ID <br>
                 (b) Name of Project <br>
@@ -94,12 +96,49 @@
     </thead>
     <tbody>
         <?php if(!empty($projects)){ ?>
-            <?php $i = 1; ?>
-            <?php foreach ($projects as $project){ ?>
-                <td>Submitted by: <br><?= $model->getSubmitterName() ?></td>
-            <?php } ?>  
-            <?php $i++; ?>
+            <?php $idx = 1; ?>
+            <?php foreach($projects as $project){ ?>
+                <tr>
+                    <td align=center>Submitted by: <br><?= $project['submitterName'] ?> at <?= date("F j, Y H:i:s", strtotime($project['date_submitted'])) ?></td>
+                    <td align=center><?= $idx ?></td>
+                    <td>
+                        (a) <?= $project['projectNo'] ?> <br>
+                        (b) <?= $project['projectTitle'] ?> <br>
+                        (c) <?= date("F j, Y ", strtotime($project['startDate'])) ?> to <?= date("F j, Y", strtotime($project['completionDate'])) ?> <br>
+                        (d) <?= $project['locationTitle'] ?> <br>
+                        (e) <?= $project['fundSourceTitle'] ?> <br>
+                    </td>
+                    <td align=right><?= number_format($project['allocationsAsOf'], 2) ?></td>
+                    <td align=right><b><?= number_format($project['allocationPerQtr'], 2) ?></b></td>
+                    <td align=right><?= number_format($project['releasesAsOf'], 2) ?></td>
+                    <td align=right><b><?= number_format($project['releasesPerQtr'], 2) ?></b></td>
+                    <td align=right><?= number_format($project['obligationsAsOf'], 2) ?></td>
+                    <td align=right><b><?= number_format($project['obligationsPerQtr'], 2) ?></b></td>
+                    <td align=right><?= number_format($project['expendituresAsOf'], 2) ?></td>
+                    <td align=right><b><?= number_format($project['expendituresPerQtr'], 2) ?></b></td>
+                    <td><?= $project['dataType'] != "" ? $project['indicator'].'<br>('.$project['dataType'].')' : $project['indicator'].'<br>(No Data Type)' ?></td>
+                    <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalTargetTotalPerQtr'], 2).'%' : number_format($project['physicalTargetTotalPerQtr'], 0) ?></td>
+                    <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalTargetPerQtr'], 2).'%' : number_format($project['physicalTargetPerQtr'], 0) ?></td>
+                    <td align=center><b><?= $project['isPercent'] > true ? number_format($project['physicalAccompTotalPerQuarter'], 2).'%' : number_format($project['physicalAccompTotalPerQuarter'], 0) ?></b></td>
+                    <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalAccompPerQuarter'], 2).'%' : number_format($project['physicalAccompPerQuarter'], 0) ?></td>
+                    <td align=center><?= number_format($project['malesEmployedTarget'], 0) ?></td>
+                    <td align=center><?= number_format($project['femalesEmployedTarget'], 0) ?></td>
+                    <td align=center><b><?= number_format(($project['malesEmployedTarget'] + $project['femalesEmployedTarget']), 0) ?></b></td>
+                    <td align=center><?= number_format($project['malesEmployedActual'], 0) ?></td>
+                    <td align=center><?= number_format($project['femalesEmployedActual'], 0) ?></td>
+                    <td align=center><b><?= number_format(($project['malesEmployedActual'] + $project['femalesEmployedActual']), 0) ?></b></td>
+                    <td align=center><?= number_format($project['beneficiariesTarget'], 0 ) ?></td>
+                    <td align=center><?= number_format($project['groupBeneficiariesTarget'], 0 ) ?></td>
+                    <td align=center><?= number_format($project['maleBeneficiariesActual'], 0) ?></td>
+                    <td align=center><?= number_format($project['femaleBeneficiariesActual'], 0) ?></td>
+                    <td align=center><b><?= number_format(($project['maleBeneficiariesActual'] + $project['femaleBeneficiariesActual']), 0) ?></b></td>
+                    <td align=center><?= number_format($project['groupBeneficiariesActual'], 0) ?></td>
+                    <td align=center><?= number_format($project['groupBeneficiariesActual'], 0) ?></td>
+                    <td align=center><?= $project['remarks'] == "" ? "No Remarks" : $project['remarks'] ?></td>
+                    <td align=center><?= $project['completed'] >= 1 ? 'Yes' : 'No' ?></td>
+                </tr>
+                <?php $idx ++ ?>
+            <?php } ?>
         <?php } ?>
     </tbody>
-
 </table>

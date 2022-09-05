@@ -55,6 +55,7 @@ use yii\helpers\ArrayHelper;
 use yii\db\Query;
 use yii\helpers\Json;
 use yii\data\Pagination;
+use kartik\mpdf\Pdf;
 
 class AccomplishmentController extends \yii\web\Controller
 {
@@ -463,6 +464,14 @@ class AccomplishmentController extends \yii\web\Controller
             ->groupBy(['project_barangay.project_id'])
             ->createCommand()->getRawSql();
 
+        $submitterName = Accomplishment::find()
+            ->select(['project_id', 'CONCAT(user_info.FIRST_M, " ", user_info.LAST_M) as name'])
+            ->leftJoin('user_info', 'user_info.user_id = accomplishment.submitted_by')
+            ->leftJoin('project', 'project.id = accomplishment.project_id')
+            ->where(['project.draft' => 'No', 'accomplishment.year' => $model->year, 'accomplishment.quarter' => $model->quarter])
+            ->groupBy(['accomplishment.project_id'])
+            ->createCommand()->getRawSql();
+
         $financialTargetTotalPerQuarter = 'IF(project.data_type <> "Cumulative",
                                             IF("'.$model->quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
                                                 IF("'.$model->quarter.'" = "Q2", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0),
@@ -704,12 +713,15 @@ class AccomplishmentController extends \yii\web\Controller
                         'project.id',
                         'project.data_type as dataType',
                         'project.project_no as projectNo',
+                        'project.title as projectTitle',
                         'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
+                        'submitterName.name as submitterName',
                         'project.start_date as startDate',
                         'project.completion_date as completionDate',
                         'fund_source.title as fundSourceTitle',
                         'agency.code as agencyTitle',
                         'accomplishment.remarks as remarks',
+                        'accomplishment.date_submitted as date_submitted',
                         $financialTargetTotalPerQuarter.' as allocationsAsOf',
                         $financialTargetPerQuarter.'as allocationPerQtr',
                         $releasesTotalPerQuarter.'as releasesAsOf',
@@ -733,11 +745,13 @@ class AccomplishmentController extends \yii\web\Controller
                         $femaleBeneficiaryAccomp.' as femaleBeneficiariesActual',
                         $groupBeneficiaryAccomp.' as groupBeneficiariesActual',
                         $isCompleted.' as completed',
+                        'LOCATE("%", physicalTargets.indicator) as isPercent',
                     ]);
                     $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
                     $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
                     $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
                     $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
+                    $projects = $projects->leftJoin(['submitterName' => '('.$submitterName.')'], 'submitterName.project_id = project.id');
                     $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
                     $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
                     $projects = $projects->leftJoin('accomplishment', 'accomplishment.project_id = project.id');

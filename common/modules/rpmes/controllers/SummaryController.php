@@ -21790,30 +21790,22 @@ class SummaryController extends \yii\web\Controller
                                         $physicalTarget = $thirdLevels['content']['projectPhysicalTarget'] * $weight;
                                         $physicalActual = $thirdLevels['content']['projectPhysicalAccomp'] * $weight;
 
-                                        $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalTarget;
-                                        $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalActual;
-
                                         $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
                                         $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
-
-                                        $physical['target'][$firstLevel]['value'] += $physicalTarget;
-                                        $physical['actual'][$firstLevel]['value'] += $physicalActual;
-
-                                        $totalPhysical['target'] += $physicalTarget;
-                                        $totalPhysical['actual'] += $physicalActual;
-                                        //echo "<pre>"; print_r($projects); exit;
                                     }
                                     
                                 }
-                                foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels)
-                                    {   
-                                        $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0;
-                                        $physicalTarget = $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] * $weight;
-                                        $physicalActual = $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] * $weight;
-                                    
-                                        $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
-                                        $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
-                                    }
+                                if(!empty($thirdLevels['thirdLevels'])){
+                                    foreach($secondLevels['secondLevels'] as $thirdLevel => $thirdLevels)
+                                        {   
+                                            $weight = $secondLevels['content']['financialTargetTotal'] > 0 ? $thirdLevels['content']['financialTargetTotal'] / $secondLevels['content']['financialTargetTotal'] : 0;
+                                            $physicalTarget = $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] * $weight;
+                                            $physicalActual = $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] * $weight;
+                                        
+                                            $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
+                                            $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
+                                        }
+                                }
                             }else{
                                 $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0;
                                 $physicalTarget = $secondLevels['content']['projectPhysicalTarget'] * $weight;
@@ -22200,7 +22192,7 @@ class SummaryController extends \yii\web\Controller
                                     )
                                 )
                             )';
-                        
+
         $maleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.male, 0),
                                 IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0),
                                     IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0),
@@ -22208,7 +22200,7 @@ class SummaryController extends \yii\web\Controller
                                     )
                                 )
                             )';
-            
+
         $femaleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.female, 0),
                                     IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0),
                                         IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0),
@@ -22216,7 +22208,7 @@ class SummaryController extends \yii\web\Controller
                                         )
                                     )
                                 )';
-            
+
         $beneficiaryTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(beneficiariesTargets.q1, 0),
                                 IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesTargets.q1, 0) + COALESCE(beneficiariesTargets.q2, 0),
                                     IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesTargets.q1, 0) + COALESCE(beneficiariesTargets.q2, 0) + COALESCE(beneficiariesTargets.q3, 0),
@@ -22224,7 +22216,7 @@ class SummaryController extends \yii\web\Controller
                                     )
                                 )
                             )';
-            
+
         $groupBeneficiaryTarget = 'IF("'.$model->quarter.'" = "Q1", COALESCE(groupBeneficiariesTargets.q1, 0),
                                 IF("'.$model->quarter.'" = "Q2", COALESCE(groupBeneficiariesTargets.q1, 0) + COALESCE(groupBeneficiariesTargets.q2, 0),
                                     IF("'.$model->quarter.'" = "Q3", COALESCE(groupBeneficiariesTargets.q1, 0) + COALESCE(groupBeneficiariesTargets.q2, 0) + COALESCE(groupBeneficiariesTargets.q3, 0),
@@ -22232,7 +22224,7 @@ class SummaryController extends \yii\web\Controller
                                     )
                                 )
                             )';
-            
+
         $maleBeneficiaryAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(beneficiariesAccompsQ1.male, 0),
                                     IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesAccompsQ1.male, 0) + COALESCE(beneficiariesAccompsQ2.male, 0),
                                         IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesAccompsQ1.male, 0) + COALESCE(beneficiariesAccompsQ2.male, 0) + COALESCE(beneficiariesAccompsQ3.male, 0),
@@ -22240,7 +22232,7 @@ class SummaryController extends \yii\web\Controller
                                         )
                                     )
                                 )';
-            
+
         $femaleBeneficiaryAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(beneficiariesAccompsQ1.female, 0),
                                         IF("'.$model->quarter.'" = "Q2", COALESCE(beneficiariesAccompsQ1.female, 0) + COALESCE(beneficiariesAccompsQ2.female, 0),
                                             IF("'.$model->quarter.'" = "Q3", COALESCE(beneficiariesAccompsQ1.female, 0) + COALESCE(beneficiariesAccompsQ2.female, 0) + COALESCE(beneficiariesAccompsQ3.female, 0),
@@ -22248,7 +22240,7 @@ class SummaryController extends \yii\web\Controller
                                             )
                                         )
                                     )';
-            
+
         $groupBeneficiaryAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(groupBeneficiariesAccompsQ1.value, 0),
                                         IF("'.$model->quarter.'" = "Q2", COALESCE(groupBeneficiariesAccompsQ1.value, 0) + COALESCE(groupBeneficiariesAccompsQ2.value, 0),
                                             IF("'.$model->quarter.'" = "Q3", COALESCE(groupBeneficiariesAccompsQ1.value, 0) + COALESCE(groupBeneficiariesAccompsQ2.value, 0) + COALESCE(groupBeneficiariesAccompsQ3.value, 0),
@@ -27270,17 +27262,9 @@ class SummaryController extends \yii\web\Controller
                                         $physicalTarget = $thirdLevels['content']['projectPhysicalTarget'] * $weight;
                                         $physicalActual = $thirdLevels['content']['projectPhysicalAccomp'] * $weight;
 
-                                        $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalTarget;
-                                        $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] += $physicalActual;
-
                                         $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
                                         $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
 
-                                        $physical['target'][$firstLevel]['value'] += $physicalTarget;
-                                        $physical['actual'][$firstLevel]['value'] += $physicalActual;
-
-                                        $totalPhysical['target'] += $physicalTarget;
-                                        $totalPhysical['actual'] += $physicalActual;
                                     }
                                     
                                 }
@@ -27295,17 +27279,12 @@ class SummaryController extends \yii\web\Controller
                                     }
                             }else{
                                 $weight = $firstLevels['content']['financialTargetTotal'] > 0 ? $secondLevels['content']['financialTargetTotal'] / $firstLevels['content']['financialTargetTotal'] : 0;
-                                $physicalTarget = $secondLevels['content']['projectPhysicalTarget'] * $weight;
-                                $physicalActual = $secondLevels['content']['projectPhysicalAccomp'] * $weight;
-
-                                $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalTarget;
-                                $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] += $physicalActual;
+                                $physicalTarget = $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['value'] * $weight;
+                                $physicalActual = $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['value'] * $weight;
 
                                 $physical['target'][$firstLevel]['value'] += $physicalTarget;
                                 $physical['actual'][$firstLevel]['value'] += $physicalActual;
 
-                                $totalPhysical['target'] += $physicalTarget;
-                                $totalPhysical['actual'] += $physicalActual;echo "<pre>"; print_r($physical); exit;
                             }
                         }
                         foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){  
