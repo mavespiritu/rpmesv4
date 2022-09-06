@@ -46,6 +46,7 @@ class Project extends \yii\db\ActiveRecord
 {
     public $quarter;
     public $status;
+    public $category_id;
     /**
      * {@inheritdoc}
      */
@@ -64,7 +65,7 @@ class Project extends \yii\db\ActiveRecord
             [['period', 'title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCreateUser'],
             [['title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCarryOverUser'],
             [['typhoon'], 'validateTyphoon', 'skipOnEmpty' => false, 'skipOnError' => false],
-            [['source_id', 'year', 'agency_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id', 'submitted_by'], 'integer'],
+            [['source_id', 'year', 'agency_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id', 'submitted_by','category_id'], 'integer'],
             [['title', 'description', 'data_type', 'period', 'other_mode'], 'string'],
             [['start_date', 'completion_date', 'date_submitted', 'program_id', 'draft', 'complete', 'status'], 'safe'],
             [['project_no'], 'string', 'max' => 20],
@@ -123,7 +124,8 @@ class Project extends \yii\db\ActiveRecord
             'draft' => 'Draft?',
             'complete' => 'Completed?',
             'quarter' => 'Quarter',
-            'status' => 'Implementation Status'
+            'status' => 'Implementation Status',
+            'category_id' => 'Category',
         ];
     }
 

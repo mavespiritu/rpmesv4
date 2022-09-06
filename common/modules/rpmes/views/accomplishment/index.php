@@ -25,6 +25,8 @@
                         'years' => $years,
                         'agencies' => $agencies,
                         'quarters' => $quarters,
+                        'categories' => $categories,
+                        'sectors' => $sectors,
                     ]) ?>
                     <br>
                     <?php if(!empty($getData)){ ?>

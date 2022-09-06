@@ -128,6 +128,12 @@ class AccomplishmentController extends \yii\web\Controller
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
         $genders = ['M' => 'Male', 'F' => 'Female'];
 
+        $categories = Category::find()->all();
+        $categories = ArrayHelper::map($categories, 'id', 'title');
+
+        $sectors = Sector::find()->all();
+        $sectors = ArrayHelper::map($sectors, 'id', 'title');
+
         if($model->load(Yii::$app->request->get()))
         {   
             $agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : $model->agency_id;
@@ -361,6 +367,8 @@ class AccomplishmentController extends \yii\web\Controller
             'model' => $model,
             'years' => $years,
             'agencies' => $agencies,
+            'categories' => $categories,
+            'sectors' => $sectors,
             'quarters' => $quarters,
             'genders' => $genders,
             'physical' => $physical,
