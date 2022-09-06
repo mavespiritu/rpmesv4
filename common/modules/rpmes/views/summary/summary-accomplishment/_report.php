@@ -240,10 +240,10 @@ DisableButtonAsset::register($this);
                                     <?php } ?>
                                     <td align=right><?= number_format($thirdLevels['content']['malesEmployedTarget'], 0) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['femalesEmployedTarget'], 0) ?></td>
-                                    <td align=right><?= number_format($thirdLevels['content']['malesEmployedTarget'] + $secondLevels['content']['femalesEmployedTarget'], 0) ?></td>
+                                    <td align=right><?= number_format($thirdLevels['content']['malesEmployedTarget'] + $thirdLevels['content']['femalesEmployedTarget'], 0) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['malesEmployedActual'], 0) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['femalesEmployedActual'], 0) ?></td>
-                                    <td align=right><?= number_format($thirdLevels['content']['malesEmployedActual'] + $secondLevels['content']['femalesEmployedActual'], 0) ?></td>
+                                    <td align=right><?= number_format($thirdLevels['content']['malesEmployedActual'] + $thirdLevels['content']['femalesEmployedActual'], 0) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['beneficiariesTarget'], 0) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['groupBeneficiariesTarget'], 0) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['maleBeneficiariesActual'], 0) ?></td>
