@@ -21844,19 +21844,6 @@ class SummaryController extends \yii\web\Controller
                     }
                 }
             }
-            // foreach($data as $firstLevel => $firstLevels){
-                                            
-            //     $weight = $total['content']['financialTargetTotal'] > 0 ? $firstLevels['content']['financialTargetTotal'] / $total['content']['financialTargetTotal'] : 0;
-                
-            //     $physicalTarget = $firstLevels['content']['projectPhysicalTarget'] * $weight;
-            //     $physicalActual = $firstLevels['content']['projectPhysicalAccomp'] * $weight;
-                
-            //     $physical['target'][$firstLevel]['value'] = $physicalTarget;
-            //     $physical['actual'][$firstLevel]['value'] = $physicalActual;
-                
-            //     $totalPhysical['target'] += $physicalTarget;
-            //     $totalPhysical['actual'] += $physicalActual;
-            // }
 
             //echo "<pre>"; print_r($projects); exit;
 

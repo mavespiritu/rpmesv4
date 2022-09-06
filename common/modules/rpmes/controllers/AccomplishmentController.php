@@ -351,7 +351,7 @@ class AccomplishmentController extends \yii\web\Controller
                             'Project[year]' => $getData['year'], 
                             'Project[agency_id]' => $getData['agency_id'], 
                             'Project[quarter]' => $getData['quarter'], 
-                        ]);
+                        ]) ;
                 }
             }catch(\Exception $e){
                 $transaction->rollBack();

@@ -45,7 +45,7 @@
             <td colspan=6 align=center><b>No. of Persons Employed</b></td>
             <td colspan=7 align=center><b>No. of Beneficiaries</b></td>
             <td rowspan=3 align=center><b>Remarks</b></td>
-            <td rowspan=3 align=center><b>Action</b></td>
+            <td rowspan=3 align=center><b>Is Project Completed?</b></td>
         </tr>
         <tr>
             <td colspan=2 align=center><b>Allocation</b></td>
