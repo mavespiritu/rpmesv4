@@ -149,23 +149,57 @@ class AccomplishmentController extends \yii\web\Controller
             }
 
             $getData = Yii::$app->request->get('Project');
+            $categoryIDs = ProjectCategory::find();
+
+            $categoryTitles = ProjectCategory::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
+                ->leftJoin('category', 'category.id = project_category.category_id')
+                ->leftJoin('project', 'project.id = project_category.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_category.project_id'])
+                ->createCommand()->getRawSql();
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ProjectCategory::find();
+
+            $categoryTitles = ProjectCategory::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
+                ->leftJoin('category', 'category.id = project_category.category_id')
+                ->leftJoin('project', 'project.id = project_category.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_category.project_id'])
+                ->createCommand()->getRawSql();
 
             $projectIDs = Yii::$app->user->can('AgencyUser') ? 
                         Submission::findOne(['year' => $model->year, 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
                         Plan::find()
                         ->select(['project.id as id'])
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year])
-                        ->all() :
+                        ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year]) :
                         [] :
                         Plan::find()
                         ->select(['project.id as id'])
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year])
-                        ->all();
+                        ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year]);
 
+            if($model->sector_id != '')
+            {
+                $projectIDs = $projectIDs->leftJoin('sector', 'sector.id = project.sector_id');
+                $projectIDs = $projectIDs->andWhere(['sector.id' => $model->sector_id]);
+            }
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+            if($model->category_id != '')
+            {
+                $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
+                $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
+            }
+            $projectIDs = $projectIDs->asArray()->all();
+            
             $projectIDs = !empty($projectIDs) ? ArrayHelper::map($projectIDs, 'id', 'id') : [];
-
+            
             $projectsPaging = Project::find();
             $projectsPaging->andWhere(['id' => $projectIDs]);
             $countProjects = clone $projectsPaging;
