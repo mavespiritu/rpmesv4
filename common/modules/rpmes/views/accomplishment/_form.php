@@ -29,6 +29,8 @@ function renderSummary($page)
     return 'Showing <b>'.$firstNumber.'-'.$lastNumber.'</b> of <b>'.$total.'</b> items.';
 }
 ?>
+<br>
+<hr>
 <div class="pull-left">
     <?= $this->render('_menu', [
         'model' => $model

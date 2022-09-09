@@ -159,17 +159,6 @@ class AccomplishmentController extends \yii\web\Controller
                 ->groupBy(['project_category.project_id'])
                 ->createCommand()->getRawSql();
 
-            $categoryIDs = $categoryIDs->all();
-            $categoryIDs = ProjectCategory::find();
-
-            $categoryTitles = ProjectCategory::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
-                ->leftJoin('category', 'category.id = project_category.category_id')
-                ->leftJoin('project', 'project.id = project_category.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_category.project_id'])
-                ->createCommand()->getRawSql();
-
             $projectIDs = Yii::$app->user->can('AgencyUser') ? 
                         Submission::findOne(['year' => $model->year, 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
                         Plan::find()
@@ -443,13 +432,15 @@ class AccomplishmentController extends \yii\web\Controller
         }
     }
 
-    public function actionDownloadAccomplishment($type, $model, $year, $quarter, $agency_id)
+    public function actionDownloadAccomplishment($type, $model, $year, $quarter, $agency_id, $category_id, $sector_id)
     {
         $model = $type == 'print' ? json_decode(str_replace('\'', '"', $model), true) : json_decode($model, true);
         $model = (object) $model;
         $model->year = $year;
         $model->quarter = $quarter;
         $model->agency_id = $agency_id;
+        $model->category_id = $category_id;
+        $model->sector_id = $sector_id;
 
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
         $genders = ['M' => 'Male', 'F' => 'Female'];
@@ -470,6 +461,15 @@ class AccomplishmentController extends \yii\web\Controller
         $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
         $accompsSubmitter = Accomplishment::find()->where(['year' => $model->year, 'quarter' => $model->quarter])->createCommand()->getRawSql();
         $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
+        $categoryIDs = ProjectCategory::find();
+
+        $categoryTitles = ProjectCategory::find()
+            ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
+            ->leftJoin('category', 'category.id = project_category.category_id')
+            ->leftJoin('project', 'project.id = project_category.project_id')
+            ->where(['project.draft' => 'No'])
+            ->groupBy(['project_category.project_id'])
+            ->createCommand()->getRawSql();
 
         $regionTitles = ProjectRegion::find()
             ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
@@ -750,6 +750,9 @@ class AccomplishmentController extends \yii\web\Controller
                         )';
         $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
 
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
         $projects = Project::find()
                     ->select([
                         'project.id',
@@ -797,7 +800,9 @@ class AccomplishmentController extends \yii\web\Controller
                     $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
                     $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
                     $projects = $projects->leftJoin('accomplishment', 'accomplishment.project_id = project.id');
+                    $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
                     $projects = $projects->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+                    $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id');
                     $projects = $projects->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
                     $projects = $projects->leftJoin(['financialAccompsQ1' => '('.$financialAccomps.')'], 'financialAccompsQ1.project_id = project.id and financialAccompsQ1.quarter = "Q1"');
                     $projects = $projects->leftJoin(['financialAccompsQ2' => '('.$financialAccomps.')'], 'financialAccompsQ2.project_id = project.id and financialAccompsQ2.quarter = "Q2"');
@@ -835,6 +840,16 @@ class AccomplishmentController extends \yii\web\Controller
                     if($model->agency_id != '')
                     {
                         $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
+                    }
+
+                    if($model->category_id != '')
+                    {
+                        $projects = $projects->andWhere(['project_category.category_id' => $model->category_id]);  
+                    }
+
+                    if($model->sector_id != '')
+                    {
+                        $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
                     }
 
         $projects = $projects->asArray()->all();
