@@ -15,10 +15,14 @@ use Yii;
  * @property string|null $agreement_reached
  * @property string|null $next_step
  * @property int|null $submitted_by
- * @property string|null $submitted_date
+ * @property string|null $date_submitted
  */
 class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
 {
+    public $agency_id;
+    public $sector_id;
+    public $region_id;
+    public $province_id;
     /**
      * {@inheritdoc}
      */
@@ -33,9 +37,9 @@ class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['year', 'project_id', 'submitted_by'], 'integer'],
+            [['year', 'project_id', 'submitted_by','agency_id', 'sector_id', 'region_id', 'province_id'], 'integer'],
             [['quarter', 'agreement_reached', 'next_step'], 'string'],
-            [['pss_date', 'submitted_date'], 'safe'],
+            [['pss_date', 'date_submitted'], 'safe'],
         ];
     }
 
@@ -48,12 +52,27 @@ class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
             'id' => 'ID',
             'year' => 'Year',
             'quarter' => 'Quarter',
-            'project_id' => 'Project ID',
+            'project_id' => 'Project',
+            'projectTitle' => 'Project',
             'pss_date' => 'Pss Date',
             'agreement_reached' => 'Agreement Reached',
             'next_step' => 'Next Step',
             'submitted_by' => 'Submitted By',
-            'submitted_date' => 'Submitted Date',
+            'date_submitted' => 'Date Submitted',
+            'agency_id' => 'Agency',
+            'sector_id' => 'Sector',
+            'region_id' => 'Region',
+            'province_id' => 'Province',
         ];
+    }
+
+    public function getProject()
+    {
+        return $this->hasOne(Project::className(), ['id' => 'project_id']);
+    }
+
+    public function getProjectTitle()
+    {
+        return $this->project ? $this->project->title : 'No Project';
     }
 }

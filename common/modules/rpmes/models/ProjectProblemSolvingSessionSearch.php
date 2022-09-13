@@ -11,6 +11,7 @@ use common\modules\rpmes\models\ProjectProblemSolvingSession;
  */
 class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
 {
+    public $projectTitle;
     /**
      * {@inheritdoc}
      */
@@ -18,7 +19,7 @@ class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
     {
         return [
             [['id', 'year', 'project_id', 'submitted_by'], 'integer'],
-            [['quarter', 'pss_date', 'agreement_reached', 'next_step', 'submitted_date'], 'safe'],
+            [['quarter', 'pss_date', 'agreement_reached', 'next_step', 'projectTitle', 'date_submitted'], 'safe'],
         ];
     }
 
@@ -40,12 +41,26 @@ class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
      */
     public function search($params)
     {
-        $query = ProjectProblemSolvingSession::find();
+        $query = ProjectProblemSolvingSession::find()
+                    ->joinWith('project');
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+        ]);
+
+        $dataProvider->setSort([
+            'attributes' => [
+                'id',
+                'year',
+                'quarter',
+                'projectTitle' => [
+                    'asc' => ['concat(project.title)' => SORT_ASC],
+                    'desc' => ['concat(project.title)' => SORT_DESC],
+                ],
+                'pss_date'
+            ]
         ]);
 
         $this->load($params);
@@ -63,7 +78,7 @@ class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
             'project_id' => $this->project_id,
             'pss_date' => $this->pss_date,
             'submitted_by' => $this->submitted_by,
-            'submitted_date' => $this->submitted_date,
+            'date_submitted' => $this->date_submitted,
         ]);
 
         $query->andFilterWhere(['like', 'quarter', $this->quarter])

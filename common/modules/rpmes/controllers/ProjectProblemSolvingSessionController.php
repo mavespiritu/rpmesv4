@@ -4,8 +4,14 @@ namespace common\modules\rpmes\controllers;
 
 use Yii;
 use common\modules\rpmes\models\ProjectProblemSolvingSession;
-use common\modules\rpmes\models\Project;
 use common\modules\rpmes\models\ProjectProblemSolvingSessionSearch;
+use common\modules\rpmes\models\Project;
+use common\modules\rpmes\models\Agency;
+use common\modules\rpmes\models\Sector;
+use common\modules\rpmes\models\ProjectRegion;
+use common\modules\rpmes\models\ProjectProvince;
+use common\models\Region;
+use common\models\Province;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -49,12 +55,41 @@ class ProjectProblemSolvingSessionController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new ProjectProblemSolvingSessionSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+        $model = new ProjectProblemSolvingSession();
+
+        $projects = Project::find()->select(['project.id','CONCAT(agency.code,'.'": ",'.'project.title) as title','agency.code']);
+        $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
+        $projects = $projects->andWhere(['project.draft' => 'No']);
+        $projects = $projects->orderBy(['agency.code' => SORT_ASC])->asArray()->all();
+        $projects = ArrayHelper::map($projects, 'id', 'title');
+
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+
+        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
+
+        $agencies = Agency::find()->select(['id', 'code as title']);
+        $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
+        $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        $sectors = Sector::find()->all();
+        $sectors = ArrayHelper::map($sectors, 'id', 'title');
+
+        $regions = Region::find()->orderBy(['region_sort' => SORT_ASC])->all();
+        $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
+
+        $provinces = [];
 
         return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
+            'model' => $model,
+            'projects' => $projects,
+            'quarters' => $quarters,
+            'agencies' => $agencies,
+            'sectors' => $sectors,
+            'regions' => $regions,
+            'provinces' => $provinces,
+            'years' => $years
         ]);
     }
 
@@ -86,11 +121,28 @@ class ProjectProblemSolvingSessionController extends Controller
         $projects = $projects->orderBy(['agency.code' => SORT_ASC])->asArray()->all();
         $projects = ArrayHelper::map($projects, 'id', 'title');
 
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+
         $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
-        array_unique($years);
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+        $agencies = Agency::find()->select(['id', 'code as title']);
+        $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
+        $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        $sectors = Sector::find()->all();
+        $sectors = ArrayHelper::map($sectors, 'id', 'title');
+
+        $regions = Region::find()->orderBy(['region_sort' => SORT_ASC])->all();
+        $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
+
+        $provinces = [];
+
+        if ($model->load(Yii::$app->request->post())) {
+            $model->submitted_by = Yii::$app->user->id;
+            $model->date_submitted = date('Y-m-d H:i:s');
+            $model->save();
             \Yii::$app->getSession()->setFlash('success', 'Record Saved');
             return $this->redirect(['index']);
         }
@@ -98,7 +150,12 @@ class ProjectProblemSolvingSessionController extends Controller
         return $this->render('create', [
             'model' => $model,
             'projects' => $projects,
-            'years' => $years,
+            'quarters' => $quarters,
+            'agencies' => $agencies,
+            'sectors' => $sectors,
+            'regions' => $regions,
+            'provinces' => $provinces,
+            'years' => $years
         ]);
     }
 

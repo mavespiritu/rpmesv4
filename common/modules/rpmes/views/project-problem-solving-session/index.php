@@ -11,35 +11,26 @@ $this->title = 'Project Problem Solving Sessions';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-problem-solving-session-index">
-
-    <p>
-        <?= Html::a('<i class=\"fa fa-plus\"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
-
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <?= GridView::widget([
-        'options' => [
-            'class' => 'table-responsive',
-        ],
-        'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
-        'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
-            'year',
-            'quarter',
-            'project_id',
-            'pss_date',
-            //'agreement_reached:ntext',
-            //'next_step:ntext',
-            //'submitted_by',
-            //'submitted_date',
-
-            ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
-        ],
-    ]); ?>
-
-
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Summary of Financial and Physical Accomplishment</h3>
+                </div>
+                <div class="box-body">
+                    <?= $this->render('_search', [
+                        'model' => $model,
+                        'quarters' => $quarters,
+                        'years' => $years,
+                        'agencies' => $agencies,
+                        'sectors' => $sectors,
+                        'regions' => $regions,
+                        'provinces' => $provinces,
+                    ]) ?>
+                    <hr>
+                    <div id="summary-summary-accomplishment-table"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

@@ -58,10 +58,10 @@
 </div>
 <?php
     $script = '
-        function printSummary(model, year, quarter, agency_id)
+        function printSummary(model, year, quarter, agency_id, category_id, sector_id)
         {
             var printWindow = window.open(
-                "'.Url::to(['/rpmes/accomplishment/download-accomplishment']).'?type=print&model=" + model + "&year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id, 
+                "'.Url::to(['/rpmes/accomplishment/download-accomplishment']).'?type=print&model=" + model + "&year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id + "&category_id=" + category_id + "&sector_id=" + sector_id, 
                 "Print",
                 "left=200", 
                 "top=200", 

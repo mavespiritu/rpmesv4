@@ -20,9 +20,9 @@ DisableButtonAsset::register($this);
         'options' => ['class' => 'btn btn-success btn-sm'],
         'dropdown' => [
             'items' => [
-                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/accomplishment/download-accomplishment', 'type' => 'excel', 'model' => json_encode($model), 'year' => $model->year,'quarter' => $model->quarter, 'agency_id' => $model->agency_id])],
-                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/accomplishment/download-accomplishment', 'type' => 'pdf', 'model' => json_encode($model), 'year' => $model->year, 'quarter' => $model->quarter, 'agency_id' => $model->agency_id])],
+                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/accomplishment/download-accomplishment', 'type' => 'excel', 'model' => json_encode($model), 'year' => $model->year,'quarter' => $model->quarter, 'agency_id' => $model->agency_id, 'category_id' => $model->category_id, 'sector_id' => $model->sector_id])],
+                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/accomplishment/download-accomplishment', 'type' => 'pdf', 'model' => json_encode($model), 'year' => $model->year, 'quarter' => $model->quarter, 'agency_id' => $model->agency_id, 'category_id' => $model->category_id, 'sector_id' => $model->sector_id])],
             ],
         ],
     ]); ?>
-<?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummary("'.str_replace('"', '\'', json_encode($model)).'","'.$model->year.'","'.$model->quarter.'","'.$model->agency_id.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+<?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummary("'.str_replace('"', '\'', json_encode($model)).'","'.$model->year.'","'.$model->quarter.'","'.$model->agency_id.'","'.$model->category_id.'","'.$model->sector_id.'")', 'class' => 'btn btn-danger btn-sm']) ?>

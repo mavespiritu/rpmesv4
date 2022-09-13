@@ -52,12 +52,34 @@ DisableButtonAsset::register($this);
                 ])->label('Quarter *');
             ?>
         </div>
+
         <div class="col-md-3 col-xs-12">
-            <br>
-            <label for="">&nbsp;</label>
-            <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+            <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
+                'data' => $categories,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Category');
+            ?>
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
+                'data' => $sectors,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Sector');
+            ?>
+        </div>
+    </div>
+    <div class="form-group pull-right">
+        <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+    </div>
+    
     
     <?php ActiveForm::end(); ?>
 
