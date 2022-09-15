@@ -18,7 +18,18 @@ DisableButtonAsset::register($this);
     	'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
 
-    <?= $form->field($model, 'year')->textInput() ?>
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <?= $form->field($model, 'year')->widget(Select2::classname(), [
+                'data' => $years,
+                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'quarter-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Quarter *');
+            ?>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-md-12 col-xs-12">
@@ -37,7 +48,7 @@ DisableButtonAsset::register($this);
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <?= $form->field($model, 'project_id')->widget(Select2::classname(), [
-                'data' => $projects,
+                'data' => $selectedProjects,
                 'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'project-select'],
                 'pluginOptions' => [
                     'allowClear' =>  true,

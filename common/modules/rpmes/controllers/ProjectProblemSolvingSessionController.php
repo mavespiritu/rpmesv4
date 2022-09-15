@@ -10,8 +10,14 @@ use common\modules\rpmes\models\Agency;
 use common\modules\rpmes\models\Sector;
 use common\modules\rpmes\models\ProjectRegion;
 use common\modules\rpmes\models\ProjectProvince;
+use common\modules\rpmes\models\ProjectTarget;
+use common\modules\rpmes\models\ProjectException;
+use common\modules\rpmes\models\ProjectCitymun;
+use common\modules\rpmes\models\ProjectBarangay;
 use common\models\Region;
 use common\models\Province;
+use common\models\Citymun;
+use common\models\Barangay;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -80,6 +86,124 @@ class ProjectProblemSolvingSessionController extends Controller
         $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
 
         $provinces = [];
+
+        if($model->load(Yii::$app->request->post()))
+        {
+            $projectIDs = ProjectProblemSolvingSession::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
+            $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
+
+            $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year])->createCommand()->getRawSql();
+            $causes = ProjectException::find()->select(['project_id', 'causes'])->where(['year' => $model->year, 'quarter' => $model->quarter])->groupBy(['project_id'])->createCommand()->getRawSql();
+
+            $financialTotal = 'IF(project.data_type = "Cumulative",
+                                IF(COALESCE(financials.q4, 0) <= 0,
+                                    IF(COALESCE(financials.q3, 0) <= 0,
+                                        IF(COALESCE(financials.q2, 0) <= 0,
+                                             COALESCE(financials.q1, 0)
+                                                , COALESCE(financials.q2, 0)
+                                                )
+                                            , COALESCE(financials.q3, 0)
+                                            )
+                                        , COALESCE(financials.q4, 0))
+                                    ,   
+                                    COALESCE(financials.q1, 0) +
+                                    COALESCE(financials.q2, 0) +
+                                    COALESCE(financials.q3, 0) +
+                                    COALESCE(financials.q4, 0)
+                                    )';
+
+            $regionTitles = ProjectRegion::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
+                ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
+                ->leftJoin('project', 'project.id = project_region.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_region.project_id'])
+                ->createCommand()->getRawSql();
+
+            $provinceTitles = ProjectProvince::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
+                ->leftJoin('project', 'project.id = project_province.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_province.project_id'])
+                ->createCommand()->getRawSql();
+
+            $citymunTitles = ProjectCitymun::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
+                ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                ->leftJoin('project', 'project.id = project_citymun.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_citymun.project_id'])
+                ->createCommand()->getRawSql();
+            
+            $barangayTitles = ProjectBarangay::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
+                ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
+                ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
+                ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                ->leftJoin('project', 'project.id = project_barangay.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_barangay.project_id'])
+                ->createCommand()->getRawSql();
+
+            $projects = Project::find()
+                            ->select([
+                                'project.id',
+                                'project.title as projectTitle',
+                                'project.data_type as dataType',
+                                'sector.title as sectorTitle',
+                                'sub_sector.title as subSectorTitle',
+                                'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
+                                'agency.code as agencyTitle',
+                                'COALESCE('.$financialTotal.', 0) as totalCost',
+                                'causes.causes as cause',
+                                'project_problem_solving_session.pss_date as pssDate',
+                                'project_problem_solving_session.agreement_reached as agreementReached',
+                                'project_problem_solving_session.next_step as nextStep',      
+                            ]);
+            $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
+            $projects = $projects->leftJoin('project_problem_solving_session', 'project_problem_solving_session.project_id = project.program_id');
+            $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
+            $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
+            $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['financials' => '('.$financials.')'], 'financials.project_id = project.id');
+            $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
+            $projects = $projects->leftJoin(['causes' => '('.$causes.')'], 'causes.project_id = project.id');
+            $projects = $projects->andWhere(['project.year' => $model['year'], 'project.draft' => 'No']);
+            $projects = $projects->andWhere(['project.id' => $projectIDs]);
+
+            if($model['agency_id'] != '')
+            {
+                $projects = $projects->andWhere(['agency.id' => $model['agency_id']]);
+            }
+
+            if($model['sector_id'] != '')
+            {
+                $projects = $projects->andWhere(['sector.id' => $model['sector_id']]);
+            }
+
+            if($model['region_id'] != '')
+            {
+                $regionIDs = $regionIDs->andWhere(['region_id' => $model['region_id']]);
+            }
+
+            if($model['province_id'] != '')
+            {
+                $provinceIDs = $provinceIDs->andWhere(['province_id' => $model['province_id']]);
+            }
+
+            $projects = $projects->asArray()->all();
+            //echo "<pre>"; print_r($projects); exit;
+
+            return $this->renderAjax('_report', [
+                'model' => $model,
+                'projects' => $projects,
+            ]);
+
+        }
 
         return $this->render('index', [
             'model' => $model,

@@ -37,6 +37,7 @@ class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['year', 'quarter'], 'required', 'on' => 'index'],
             [['year', 'project_id', 'submitted_by','agency_id', 'sector_id', 'region_id', 'province_id'], 'integer'],
             [['quarter', 'agreement_reached', 'next_step'], 'string'],
             [['pss_date', 'date_submitted'], 'safe'],
