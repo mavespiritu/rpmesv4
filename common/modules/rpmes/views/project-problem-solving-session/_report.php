@@ -15,7 +15,7 @@ DisableButtonAsset::register($this);
 ?>
 <div class="project-problem-solving-session-table" style="height: 600px;">
     </h5>
-    <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
+    <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive">
         <thead>
             <tr>
                 <td>#</td>
@@ -42,10 +42,11 @@ DisableButtonAsset::register($this);
                         <td align=center><?= $project['cause'] ?></td>
                         <td align=center><?= $project['locationTitle'] ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
-                        <td align=center><?= date('F j, Y', strtotime($project['locationTitle'])) ?></td>
+                        <td align=center><?= date('F j, Y', $project['pssDate']) ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
                         <td align=center><?= $project['agreementReached'] ?></td>
                         <td align=center><?= $project['nextStep'] ?></td>
+                        <td align=center></td>
                     </tr>
                     <?php $idx ++ ?>
             <?php } ?>
