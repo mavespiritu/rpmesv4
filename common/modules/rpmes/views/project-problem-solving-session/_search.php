@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
-
+use yii\web\View;
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\ProjectProblemSolvingSessionSearch */
 /* @var $form yii\widgets\ActiveForm */
@@ -101,3 +101,35 @@ use kartik\select2\Select2;
     <?php ActiveForm::end(); ?>
 
 </div>
+<?php
+    $script = '
+    $("#search-project-problem-solving-session-form").on("beforeSubmit", function (e) {
+        e.preventDefault();
+     
+        var form = $(this);
+        var formData = form.serialize();
+        
+        $.ajax({
+            url: form.attr("action"),
+            type: form.attr("method"),
+            data: formData,
+            beforeSend: function(){
+                $("#project-problem-solving-session-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+            },
+            success: function (data) {
+                console.log(this.data);
+                $("#project-problem-solving-session-table").empty();
+                $("#project-problem-solving-session-table").hide();
+                $("#project-problem-solving-session-table").fadeIn("slow");
+                $("#project-problem-solving-session-table").html(data);
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        });      
+
+        return false;
+    });
+    ';
+
+    $this->registerJs($script, View::POS_END);

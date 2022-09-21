@@ -18,17 +18,17 @@ DisableButtonAsset::register($this);
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive">
         <thead>
             <tr>
-                <td>#</td>
-                <td>Name of Project / Total PRoject Cost</td>
-                <td>Sector / Subsector </td>
-                <td>Issue Details</td>
-                <td>Location</td>
-                <td>Implementing Agency</td>
-                <td>Date of PSS / Facilitation Meeting</td>
-                <td>Concerned Agencies</td>
-                <td>Agreements Reached</td>
-                <td>Next Steps</td>
-                <td>Actions</td>
+                <td align=center><b>#</td>
+                <td align=center><b>Name of Project / Total PRoject Cost</td>
+                <td align=center><b>Sector / Subsector </td>
+                <td align=center><b>Issue Details</td>
+                <td align=center><b>Location</td>
+                <td align=center><b>Implementing Agency</td>
+                <td align=center><b>Date of PSS / Facilitation Meeting</td>
+                <td align=center><b>Concerned Agencies</td>
+                <td align=center><b>Agreements Reached</td>
+                <td align=center><b>Next Steps</td>
+                <td align=center><b>Actions</td>
             </tr>   
         </thead>
         <tbody>
@@ -42,7 +42,7 @@ DisableButtonAsset::register($this);
                         <td align=center><?= $project['cause'] ?></td>
                         <td align=center><?= $project['locationTitle'] ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
-                        <td align=center><?= date('F j, Y', $project['pssDate']) ?></td>
+                        <td align=center><?= date('F j, Y', strtotime($project['pssDate'])) ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
                         <td align=center><?= $project['agreementReached'] ?></td>
                         <td align=center><?= $project['nextStep'] ?></td>
