@@ -26,7 +26,7 @@ DisableButtonAsset::register($this);
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
         <thead>
             <tr>
-                <td colspan=5 rowspan=3 align=center><b>Project Details</b><br>a. Project Title<br>b. Sector/Subsector<br>c. Fund Source<br>d. Project Schedule<br>e. Category</td>
+                <td colspan=7 rowspan=3 align=center><b>Project Details</b><br>a. Project Title<br>b. Sector/Subsector<br>c. Fund Source<br>d. Project Schedule<br>e. Category</td>
                 <td rowspan=3 align=center><b>Output Indicator</b></td>
                 <td colspan=6 align=center><b>Financial Status of Reporting Period</b></td>
                 <td colspan=4 align=center><b>Physical Status as of Reporting Period</b></td>
@@ -85,7 +85,7 @@ DisableButtonAsset::register($this);
         </thead>
         <tbody>
         <tr style="font-weight: bolder;">
-        <td colspan=5>Grand Total</td>
+        <td colspan=7>Grand Total</td>
             <td>&nbsp;</td>
             <td align=right><?= number_format($total['allocations'], 2) ?></td>
             <td align=right><?= number_format($total['releases'], 2) ?></td>
@@ -121,7 +121,7 @@ DisableButtonAsset::register($this);
             <?php $i = 1; ?>
             <?php foreach($data as $firstLevel => $firstLevels){ ?>
                     <tr style="font-weight: bolder;">
-                    <td colspan=5><?= $i ?>. <?= $firstLevel ?></td>
+                    <td colspan=7><?= $i ?>. <?= $firstLevel ?></td>
                     <td>&nbsp;</td>
                     <td align=right><?= number_format($firstLevels['content']['allocations'], 2) ?></td>
                     <td align=right><?= number_format($firstLevels['content']['releases'], 2) ?></td>
@@ -158,7 +158,7 @@ DisableButtonAsset::register($this);
                     <?php foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){ ?>
                         <tr style="font-weight: bolder;">
                             <td align=right>&nbsp;</td>
-                            <td colspan=4><?= $i.'.'.$j ?>.<?= str_replace("*","<br>", $secondLevel) ?></td>
+                            <td colspan=6><?= $i.'.'.$j ?>.<?= str_replace("*","<br>", $secondLevel) ?></td>
                             <td align=right>&nbsp;</td>
                             <td align=right><?= number_format($secondLevels['content']['allocations'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['releases'], 2) ?></td>
@@ -201,9 +201,9 @@ DisableButtonAsset::register($this);
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
                                     <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
-                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'. $thirdLevel.'</td>' ?>
+                                            <?= '<td colspan=4>'.$i.'.'.$j.'.'.$k.'.'. $thirdLevel.'</td>' ?>
                                             <?php }else{ ?>
-                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.
+                                            <?= '<td colspan=4>'.$i.'.'.$j.'.'.$k.
                                                 '<br>a. '.$thirdLevels['content']['projectTitle'].
                                                 '<br>b. '.$thirdLevels['content']['sectorTitle'].' / '.$thirdLevels['content']['subSectorTitle'].
                                                 '<br>c. '.$thirdLevels['content']['fundSourceTitle'].
@@ -270,9 +270,9 @@ DisableButtonAsset::register($this);
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
                                             <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
-                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'.$l.'. '. $fourthLevel.'</td>' ?>
+                                            <?= '<td colspan=4>'.$i.'.'.$j.'.'.$k.'.'.$l.'. '. $fourthLevel.'</td>' ?>
                                             <?php }else{ ?>
-                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'.$l.
+                                            <?= '<td colspan=4>'.$i.'.'.$j.'.'.$k.'.'.$l.
                                                 '<br>a. '.$fourthLevels['content']['projectTitle'].
                                                 '<br>b. '.$fourthLevels['content']['sectorTitle'].' / '.$fourthLevels['content']['subSectorTitle'].
                                                 '<br>c. '.$fourthLevels['content']['fundSourceTitle'].
@@ -329,7 +329,7 @@ DisableButtonAsset::register($this);
                                         <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
                                             <?php $m = 1; ?>
                                             <?php foreach($fourthLevels['fourthLevels'] as $fifthlevel => $fifthlevels){ ?>
-                                                <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
+                                                <?php if(!empty($fifthlevels['fifthlevels'])){ ?>
                                                 <?= '<tr style="font-weight: bolder;">'; ?>
                                                 <?php }else{ ?>
                                                 <?= '<tr>'; ?>
@@ -338,9 +338,10 @@ DisableButtonAsset::register($this);
                                                     <td align=right>&nbsp;</td>
                                                     <td align=right>&nbsp;</td>
                                                     <?php if(!empty($fifthlevels['fifthlevels'])){ ?>
-                                                    <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'.$l.'.'.$m.'. '. $fifthlevel.'</td>' ?>
+                                                    <?= '<td colspan=3>'.$i.'.'.$j.'.'.$k.'.'.$l.'.'.$m.'. '. $fifthlevel.'</td>' ?>
                                                     <?php }else{ ?>
-                                                    <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'.$l.'.'.$m.
+                                                    <?= '<td align=right>&nbsp;</td>' ?>
+                                                    <?= '<td colspan=3>'.$i.'.'.$j.'.'.$k.'.'.$l.'.'.$m.
                                                         '<br>a. '.$fifthlevels['content']['projectTitle'].
                                                         '<br>b. '.$fifthlevels['content']['sectorTitle'].' / '.$fifthlevels['content']['subSectorTitle'].
                                                         '<br>c. '.$fifthlevels['content']['fundSourceTitle'].
