@@ -89,7 +89,7 @@ class ProjectProblemSolvingSessionController extends Controller
 
         if($model->load(Yii::$app->request->post()))
         {
-            $projectIDs = ProjectProblemSolvingSession::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
+            $projectIDs = ProjectProblemSolvingSession::find()->select(['project_id'])->where(['year' => $model->year, 'quarter' => $model->quarter])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
 
             $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
@@ -197,7 +197,7 @@ class ProjectProblemSolvingSessionController extends Controller
 
             $projects = Project::find()
                         ->select([
-                            'project.id',
+                            'project.id as id',
                             'project.title as projectTitle',
                             'project.data_type as dataType',
                             'sector.title as sectorTitle',
@@ -210,6 +210,7 @@ class ProjectProblemSolvingSessionController extends Controller
                             $physicalAccompTotalPerQuarter. 'as physicalAccompTotalPerQuarter',
                             $slippage. 'as slippage',
                             'causes.causes as cause',
+                            'project_problem_solving_session.id as pssId',
                             'project_problem_solving_session.pss_date as pssDate',
                             'project_problem_solving_session.agreement_reached as agreementReached',
                             'project_problem_solving_session.next_step as nextStep',
@@ -358,14 +359,46 @@ class ProjectProblemSolvingSessionController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        
+        $projects = Project::find()->select(['project.id','CONCAT(agency.code,'.'": ",'.'project.title) as title','agency.code']);
+        $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
+        $projects = $projects->andWhere(['project.draft' => 'No']);
+        $projects = $projects->orderBy(['agency.code' => SORT_ASC])->asArray()->all();
+        $projects = ArrayHelper::map($projects, 'id', 'title');
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+
+        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
+
+        $agencies = Agency::find()->select(['id', 'code as title']);
+        $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
+        $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        $sectors = Sector::find()->all();
+        $sectors = ArrayHelper::map($sectors, 'id', 'title');
+
+        $regions = Region::find()->orderBy(['region_sort' => SORT_ASC])->all();
+        $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
+
+        $provinces = [];
+
+        if ($model->load(Yii::$app->request->post())) {
             \Yii::$app->getSession()->setFlash('success', 'Record Updated');
+            $model->save();
             return $this->redirect(['index']);
         }
 
         return $this->render('update', [
             'model' => $model,
+            'projects' => $projects,
+            'quarters' => $quarters,
+            'agencies' => $agencies,
+            'sectors' => $sectors,
+            'regions' => $regions,
+            'provinces' => $provinces,
+            'years' => $years
         ]);
     }
 

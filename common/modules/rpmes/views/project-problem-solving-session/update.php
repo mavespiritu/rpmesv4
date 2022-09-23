@@ -12,8 +12,15 @@ $this->params['breadcrumbs'][] = 'Update';
 <div class="project-problem-solving-session-update">
     <div class="row">
         <div class="col-md-6 col-xs-12">
-            <?= $this->render('_form', [
+            <?= $this->render('_form-update', [
                 'model' => $model,
+                'projects' => $projects,
+                'quarters' => $quarters,
+                'agencies' => $agencies,
+                'sectors' => $sectors,
+                'regions' => $regions,
+                'provinces' => $provinces,
+                'years' => $years
             ]) ?>
         </div>
     </div>

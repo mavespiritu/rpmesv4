@@ -26,7 +26,7 @@ DisableButtonAsset::register($this);
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
-                ])->label('Quarter *');
+                ])->label('Year *');
             ?>
         </div>
     </div>

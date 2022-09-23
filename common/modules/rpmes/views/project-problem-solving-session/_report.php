@@ -15,19 +15,19 @@ DisableButtonAsset::register($this);
 ?>
 <div class="project-problem-solving-session-table" style="height: 600px;">
     </h5>
-    <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive">
+    <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 2000px;">
         <thead>
             <tr>
                 <td align=center><b>#</td>
-                <td align=center><b>Name of Project / Total PRoject Cost</td>
-                <td align=center><b>Sector / Subsector </td>
-                <td align=center><b>Issue Details</td>
-                <td align=center><b>Location</td>
+                <td colspan=2 align=center><b>Name of Project / Total PRoject Cost</td>
+                <td colspan=2 align=center><b>Sector / Subsector </td>
+                <td colspan=2 align=center><b>Issue Details</td>
+                <td colspan=2 align=center><b>Location</td>
                 <td align=center><b>Implementing Agency</td>
                 <td align=center><b>Date of PSS / Facilitation Meeting</td>
                 <td align=center><b>Concerned Agencies</td>
-                <td align=center><b>Agreements Reached</td>
-                <td align=center><b>Next Steps</td>
+                <td colspan=2 align=center><b>Agreements Reached</td>
+                <td colspan=2 align=center><b>Next Steps</td>
                 <td align=center><b>Actions</td>
             </tr>   
         </thead>
@@ -37,16 +37,25 @@ DisableButtonAsset::register($this);
                 <?php foreach($projects as $project){ ?>
                     <tr>
                         <td align=center><?= $idx ?></td>
-                        <td align=center><?= $project['projectTitle'].' / '. number_format($project['totalCost'], 2) ?></td>
-                        <td align=center><?= $project['sectorTitle']. ' / '.$project['subSectorTitle'] ?></td>
-                        <td align=center><?= $project['cause'] ?></td>
-                        <td align=center><?= $project['locationTitle'] ?></td>
+                        <td colspan=2 align=center><?= $project['projectTitle'].' / '. number_format($project['totalCost'], 2) ?></td>
+                        <td colspan=2 align=center><?= $project['sectorTitle']. ' / '.$project['subSectorTitle'] ?></td>
+                        <td colspan=2 align=center><?= $project['cause'] ?></td>
+                        <td colspan=2 align=center><?= $project['locationTitle'] ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
                         <td align=center><?= date('F j, Y', strtotime($project['pssDate'])) ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
-                        <td align=center><?= $project['agreementReached'] ?></td>
-                        <td align=center><?= $project['nextStep'] ?></td>
-                        <td align=center></td>
+                        <td colspan=2 align=center><?= $project['agreementReached'] ?></td>
+                        <td colspan=2 align=center><?= $project['nextStep'] ?></td>
+                        <td align=center>
+                            <?php echo Html::a('<i class="fa fa-edit"></i>Edit', array('project-problem-solving-session/update', 'id'=>$project['pssId']), array('class'=>'btn btn-success btn-xs btn-block')); ?>
+				            <?= Html::a('<i class="fa fa-trash"></i>Delete', ['delete', 'id' => $project['pssId']], [
+                                'class' => 'btn btn-danger btn-xs btn-block',
+                                'data' => [
+                                    'confirm' => 'Are you sure you want to delete this item?',
+                                    'method' => 'post',
+                                ],
+                            ]) ?>
+                        </td>
                     </tr>
                     <?php $idx ++ ?>
             <?php } ?>
