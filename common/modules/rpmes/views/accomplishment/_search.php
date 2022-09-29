@@ -29,19 +29,7 @@ DisableButtonAsset::register($this);
                 ])->label('Year *');
             ?>
         </div>
-        <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('SuperAdministrator')){ ?>
-            <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
-                    'data' => $agencies,
-                    'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'agency-select'],
-                    'pluginOptions' => [
-                        'allowClear' =>  true,
-                    ],
-                ])->label('Agency *');
-            ?>
-            </div>
-        <?php } ?>
-        
+
         <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'quarter')->widget(Select2::classname(), [
                 'data' => $quarters,
@@ -52,6 +40,19 @@ DisableButtonAsset::register($this);
                 ])->label('Quarter *');
             ?>
         </div>
+        
+        <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('SuperAdministrator')){ ?>
+            <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
+                    'data' => $agencies,
+                    'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'agency-select'],
+                    'pluginOptions' => [
+                        'allowClear' =>  true,
+                    ],
+                ])->label('Agency');
+            ?>
+            </div>
+        <?php } ?>
 
         <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
