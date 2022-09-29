@@ -26,7 +26,7 @@ DisableButtonAsset::register($this);
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
         <thead>
             <tr>
-                <td colspan=5 rowspan=3 align=center><b>Project Details</b><br>a. Project Title<br>b. Sector/Subsector<br>c. Fund Source<br>d. Project Schedule<br>e. Category</td>
+                <td colspan=7 rowspan=3 align=center><b>Project Details</b><br>a. Project Title<br>b. Sector/Subsector<br>c. Fund Source<br>d. Project Schedule<br>e. Category</td>
                 <td rowspan=3 align=center><b>Output Indicator</b></td>
                 <td colspan=6 align=center><b>Financial Status of Reporting Period</b></td>
                 <td colspan=4 align=center><b>Physical Status as of Reporting Period</b></td>
@@ -85,7 +85,7 @@ DisableButtonAsset::register($this);
         </thead>
         <tbody>
         <tr style="font-weight: bolder;">
-        <td colspan=5>Grand Total</td>
+        <td colspan=7>Grand Total</td>
             <td>&nbsp;</td>
             <td align=right><?= number_format($total['allocations'], 2) ?></td>
             <td align=right><?= number_format($total['releases'], 2) ?></td>
@@ -121,7 +121,7 @@ DisableButtonAsset::register($this);
             <?php $i = 1; ?>
             <?php foreach($data as $firstLevel => $firstLevels){ ?>
                     <tr style="font-weight: bolder;">
-                    <td colspan=5><?= $i ?>. <?= $firstLevel ?></td>
+                    <td colspan=7><?= $i ?>. <?= $firstLevel ?></td>
                     <td>&nbsp;</td>
                     <td align=right><?= number_format($firstLevels['content']['allocations'], 2) ?></td>
                     <td align=right><?= number_format($firstLevels['content']['releases'], 2) ?></td>
@@ -158,7 +158,7 @@ DisableButtonAsset::register($this);
                     <?php foreach($firstLevels['firstLevels'] as $secondLevel => $secondLevels){ ?>
                         <tr style="font-weight: bolder;">
                             <td align=right>&nbsp;</td>
-                            <td colspan=4><?= $i.'.'.$j ?>.<?= str_replace("*","<br>", $secondLevel) ?></td>
+                            <td colspan=6><?= $i.'.'.$j ?>.<?= str_replace("*","<br>", $secondLevel) ?></td>
                             <td align=right>&nbsp;</td>
                             <td align=right><?= number_format($secondLevels['content']['allocations'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['releases'], 2) ?></td>
@@ -201,9 +201,9 @@ DisableButtonAsset::register($this);
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
                                     <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
-                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'. $thirdLevel.'</td>' ?>
+                                            <?= '<td colspan=4>'.$i.'.'.$j.'.'.$k.'.'. $thirdLevel.'</td>' ?>
                                             <?php }else{ ?>
-                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.
+                                            <?= '<td colspan=4>'.$i.'.'.$j.'.'.$k.
                                                 '<br>a. '.$thirdLevels['content']['projectTitle'].
                                                 '<br>b. '.$thirdLevels['content']['sectorTitle'].' / '.$thirdLevels['content']['subSectorTitle'].
                                                 '<br>c. '.$thirdLevels['content']['fundSourceTitle'].
@@ -270,9 +270,9 @@ DisableButtonAsset::register($this);
                                             <td align=right>&nbsp;</td>
                                             <td align=right>&nbsp;</td>
                                             <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
-                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'.$l.'. '. $fourthLevel.'</td>' ?>
+                                            <?= '<td colspan=4>'.$i.'.'.$j.'.'.$k.'.'.$l.'. '. $fourthLevel.'</td>' ?>
                                             <?php }else{ ?>
-                                            <?= '<td colspan=2>'.$i.'.'.$j.'.'.$k.'.'.$l.
+                                            <?= '<td colspan=4>'.$i.'.'.$j.'.'.$k.'.'.$l.
                                                 '<br>a. '.$fourthLevels['content']['projectTitle'].
                                                 '<br>b. '.$fourthLevels['content']['sectorTitle'].' / '.$fourthLevels['content']['subSectorTitle'].
                                                 '<br>c. '.$fourthLevels['content']['fundSourceTitle'].
@@ -326,6 +326,78 @@ DisableButtonAsset::register($this);
                                             <td align=right><?= number_format($fourthLevels['content']['completed'] + $fourthLevels['content']['behindSchedule'] + $fourthLevels['content']['onSchedule'] + $fourthLevels['content']['aheadOnSchedule'] + $fourthLevels['content']['notYetStartedWithTarget'] + $fourthLevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
                                             <td>&nbsp;</td>
                                         </tr>
+                                        <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
+                                            <?php $m = 1; ?>
+                                            <?php foreach($fourthLevels['fourthLevels'] as $fifthlevel => $fifthlevels){ ?>
+                                                <?php if(!empty($fifthlevels['fifthlevels'])){ ?>
+                                                <?= '<tr style="font-weight: bolder;">'; ?>
+                                                <?php }else{ ?>
+                                                <?= '<tr>'; ?>
+                                                <?php } ?>
+                                                    <td align=right>&nbsp;</td>
+                                                    <td align=right>&nbsp;</td>
+                                                    <td align=right>&nbsp;</td>
+                                                    <?php if(!empty($fifthlevels['fifthlevels'])){ ?>
+                                                    <?= '<td colspan=3>'.$i.'.'.$j.'.'.$k.'.'.$l.'.'.$m.'. '. $fifthlevel.'</td>' ?>
+                                                    <?php }else{ ?>
+                                                    <?= '<td align=right>&nbsp;</td>' ?>
+                                                    <?= '<td colspan=3>'.$i.'.'.$j.'.'.$k.'.'.$l.'.'.$m.
+                                                        '<br>a. '.$fifthlevels['content']['projectTitle'].
+                                                        '<br>b. '.$fifthlevels['content']['sectorTitle'].' / '.$fifthlevels['content']['subSectorTitle'].
+                                                        '<br>c. '.$fifthlevels['content']['fundSourceTitle'].
+                                                        '<br>d. '.date('F j, Y', strtotime($fifthlevels['content']['projectStartDate'])).' to '.date('F j, Y', strtotime($fifthlevels['content']['projectCompletionDate'])).
+                                                        '<br>e. '.$fifthlevels['content']['categoryTitle'].
+                                                        '<br>f. '.$fifthlevels['content']['locationTitle'].
+                                                    '</td>' ?>
+                                                    <?php } ?>
+                                                    <?php if(!empty($fifthlevels['fifthlevels'])){ ?>
+                                                    <?= '<td align=right>&nbsp;</td>' ?>
+                                                    <?php }else{ ?>
+                                                    <?= '<td align=right>'. $fifthlevels['content']['indicator'].'</td>' ?>
+                                                    <?php } ?>
+                                                    <td align=right><?= number_format($fifthlevels['content']['allocations'], 2) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['releases'], 2) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['obligations'], 2) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['expenditures'], 2) ?></td>
+                                                    <td align=right><?= $fifthlevels['content']['allocations'] > 0 ? number_format(($fifthlevels['content']['releases'] / $fifthlevels['content']['allocations']) * 100, 2) : number_format(0, 2) ?></td>
+                                                    <td align=right><?= $fifthlevels['content']['releases'] > 0 ? number_format(($fifthlevels['content']['expenditures'] / $fifthlevels['content']['releases']) * 100, 2) : number_format(0, 2) ?></td>
+                                                    <?php if(!empty($fifthlevels['fifthlevels'])){ ?>
+                                                    <?= '<td align=right>'. number_format($physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'], 2).'</td>' ?>
+                                                    <?= '<td align=right>'. number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'], 2).'</td>' ?>
+                                                    <?php }else{ ?>
+                                                    <?= '<td align=right>'. number_format($fifthlevels['content']['projectPhysicalTarget'], 2).'</td>' ?>
+                                                    <?= '<td align=right>'. number_format($fifthlevels['content']['projectPhysicalAccomp'], 2).'</td>' ?>
+                                                    <?php } ?>
+                                                    <?php if(!empty($fifthlevels['fifthlevels'])){ ?>
+                                                    <td align=right><?= $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] >= 0 ? number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'], 2) : '('.number_format(abs($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value']), 2).')' ?></td>
+                                                    <td align=right><?= $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] > 0 ? number_format(($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] / $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value']) * 100, 2) : number_format(0, 2) ?></td>
+                                                    <?php }else{ ?>
+                                                    <td align=right><?= number_format(($fifthlevels['content']['projectPhysicalAccomp'] - $fifthlevels['content']['projectPhysicalTarget']), 2)?></td>
+                                                    <td align=right><?= $fifthlevels['content']['projectPhysicalTarget'] > 0 ? number_format(($fifthlevels['content']['projectPhysicalAccomp'] / $fifthlevels['content']['projectPhysicalTarget']) * 100, 2) : number_format(0, 2) ?></td>
+                                                    <?php } ?>
+                                                    <td align=right><?= number_format($fifthlevels['content']['malesEmployedTarget'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['femalesEmployedTarget'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['malesEmployedTarget'] + $fifthlevels['content']['femalesEmployedTarget'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['malesEmployedActual'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['femalesEmployedActual'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['malesEmployedActual'] + $fifthlevels['content']['femalesEmployedActual'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['beneficiariesTarget'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['groupBeneficiariesTarget'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['maleBeneficiariesActual'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['femaleBeneficiariesActual'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['groupBeneficiariesActual'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['completed'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['behindSchedule'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['onSchedule'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['aheadOnSchedule'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['notYetStartedWithTarget'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
+                                                    <td align=right><?= number_format($fifthlevels['content']['completed'] + $fifthlevels['content']['behindSchedule'] + $fifthlevels['content']['onSchedule'] + $fifthlevels['content']['aheadOnSchedule'] + $fifthlevels['content']['notYetStartedWithTarget'] + $fifthlevels['content']['notYetStartedWithNoTarget'], 0) ?></td>
+                                                    <td>&nbsp;</td>
+                                                </tr>
+                                                <?php $m++ ?>
+                                            <?php } ?>
+                                        <?php } ?>
                                         <?php $l++ ?>
                                     <?php } ?>
                                 <?php } ?>

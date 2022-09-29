@@ -18,6 +18,7 @@ class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
     public function rules()
     {
         return [
+            [['year', 'quarter'], 'required'],
             [['id', 'year', 'project_id', 'submitted_by'], 'integer'],
             [['quarter', 'pss_date', 'agreement_reached', 'next_step', 'projectTitle', 'date_submitted'], 'safe'],
         ];

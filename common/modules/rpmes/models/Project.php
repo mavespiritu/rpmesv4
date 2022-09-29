@@ -47,6 +47,8 @@ class Project extends \yii\db\ActiveRecord
     public $quarter;
     public $status;
     public $category_id;
+    public $region_id;
+    public $province_id;
     /**
      * {@inheritdoc}
      */
@@ -65,16 +67,17 @@ class Project extends \yii\db\ActiveRecord
             [['period', 'title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCreateUser'],
             [['title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCarryOverUser'],
             [['typhoon'], 'validateTyphoon', 'skipOnEmpty' => false, 'skipOnError' => false],
-            [['source_id', 'year', 'agency_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id', 'submitted_by','category_id'], 'integer'],
+            [['source_id', 'year', 'agency_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id', 'submitted_by','category_id','region_id','province_id'], 'integer'],
             [['title', 'description', 'data_type', 'period', 'other_mode'], 'string'],
             [['start_date', 'completion_date', 'date_submitted', 'program_id', 'draft', 'complete', 'status'], 'safe'],
             [['project_no'], 'string', 'max' => 20],
             [['typhoon'], 'string', 'max' => 100],
             [['agency_id'], 'exist', 'skipOnError' => true, 'targetClass' => Agency::className(), 'targetAttribute' => ['agency_id' => 'id']],
             [['year', 'quarter'], 'required', 'on' => 'accomplishmentUser'],
-            [['year', 'agency_id','quarter'], 'required', 'on' => 'accomplishmentAdmin'],
+            [['year','quarter'], 'required', 'on' => 'accomplishmentAdmin'],
             [['year', 'quarter'], 'required', 'on' => 'projectExceptionUser'],
             [['year', 'agency_id','quarter'], 'required', 'on' => 'projectExceptionAdmin'],
+            [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
             /* [['source_id'], 'required',  'when' => function($model){
                 return ($model->period == 'Carry-Over');
             }], */
@@ -126,6 +129,8 @@ class Project extends \yii\db\ActiveRecord
             'quarter' => 'Quarter',
             'status' => 'Implementation Status',
             'category_id' => 'Category',
+            'region_id' => 'Region',
+            'province_id' => 'Province',
         ];
     }
 
