@@ -49,8 +49,8 @@
                         'url' => '#',
                         'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles)),
                         'items' => [
-                            ['label' => 'Form 4: Monitoring Plans', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'Form 4: Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'Monitoring Plans', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                     ],
                     ['label' => 'Form 5: Summary Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],
