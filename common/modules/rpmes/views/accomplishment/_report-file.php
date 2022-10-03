@@ -109,18 +109,18 @@
                         (e) <?= $project['fundSourceTitle'] ?> <br>
                     </td>
                     <td align=right><?= number_format($project['allocationsAsOf'], 2) ?></td>
-                    <td align=right><b><?= number_format($project['allocationPerQtr'], 2) ?></b></td>
+                    <td align=right><b><?= number_format(floatval($project['allocationPerQtr']), 2) ?></b></td>
                     <td align=right><?= number_format($project['releasesAsOf'], 2) ?></td>
-                    <td align=right><b><?= number_format($project['releasesPerQtr'], 2) ?></b></td>
+                    <td align=right><b><?= number_format(floatval($project['releasesPerQtr']), 2) ?></b></td>
                     <td align=right><?= number_format($project['obligationsAsOf'], 2) ?></td>
-                    <td align=right><b><?= number_format($project['obligationsPerQtr'], 2) ?></b></td>
+                    <td align=right><b><?= number_format(floatval($project['obligationsPerQtr']), 2) ?></b></td>
                     <td align=right><?= number_format($project['expendituresAsOf'], 2) ?></td>
-                    <td align=right><b><?= number_format($project['expendituresPerQtr'], 2) ?></b></td>
+                    <td align=right><b><?= number_format(floatval($project['expendituresPerQtr']), 2) ?></b></td>
                     <td><?= $project['dataType'] != "" ? $project['indicator'].'<br>('.$project['dataType'].')' : $project['indicator'].'<br>(No Data Type)' ?></td>
                     <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalTargetTotalPerQtr'], 2).'%' : number_format($project['physicalTargetTotalPerQtr'], 0) ?></td>
                     <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalTargetPerQtr'], 2).'%' : number_format($project['physicalTargetPerQtr'], 0) ?></td>
                     <td align=center><b><?= $project['isPercent'] > true ? number_format($project['physicalAccompTotalPerQuarter'], 2).'%' : number_format($project['physicalAccompTotalPerQuarter'], 0) ?></b></td>
-                    <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalAccompPerQuarter'], 2).'%' : number_format($project['physicalAccompPerQuarter'], 0) ?></td>
+                    <td align=center><?= $project['isPercent'] > true ? number_format(floatval($project['physicalAccompPerQuarter']), 2).'%' : number_format(floatval($project['physicalAccompPerQuarter']), 0) ?></td>
                     <td align=center><?= number_format($project['malesEmployedTarget'], 0) ?></td>
                     <td align=center><?= number_format($project['femalesEmployedTarget'], 0) ?></td>
                     <td align=center><b><?= number_format(($project['malesEmployedTarget'] + $project['femalesEmployedTarget']), 0) ?></b></td>

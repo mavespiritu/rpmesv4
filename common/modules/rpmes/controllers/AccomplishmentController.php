@@ -186,12 +186,6 @@ class AccomplishmentController extends \yii\web\Controller
                 $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
             }
 
-            if($model->category_id != '')
-            {
-                $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
-                $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
-            }
-
             if($model->agency_id != '')
             {
                 $projectIDs = $projectIDs->leftJoin('agency', 'agency.id = project.agency_id');
@@ -857,14 +851,14 @@ class AccomplishmentController extends \yii\web\Controller
 
                     if($model->category_id != '')
                     {
-                        $projects = $projects->andWhere(['project_category.category_id' => $model->category_id]);  
+                        $projects = $projects->andWhere(['project_category.category_id' => $model->category_id]);
                     }
 
                     if($model->sector_id != '')
                     {
                         $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
                     }
-
+                    
         $projects = $projects->asArray()->all();
 
         //echo '<pre>'; print_r($projects); exit;
