@@ -771,7 +771,9 @@ class AccomplishmentController extends \yii\web\Controller
                         'project.start_date as startDate',
                         'project.completion_date as completionDate',
                         'fund_source.title as fundSourceTitle',
+                        'categoryTitles.title as categoryTitle',
                         'agency.code as agencyTitle',
+                        'sector.title as sectorTitle',
                         'accomplishment.remarks as remarks',
                         'accomplishment.date_submitted as date_submitted',
                         $financialTargetTotalPerQuarter.' as allocationsAsOf',
@@ -804,6 +806,7 @@ class AccomplishmentController extends \yii\web\Controller
                     $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
                     $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
                     $projects = $projects->leftJoin(['submitterName' => '('.$submitterName.')'], 'submitterName.project_id = project.id');
+                    $projects = $projects->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
                     $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
                     $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
                     $projects = $projects->leftJoin('accomplishment', 'accomplishment.project_id = project.id');
@@ -838,6 +841,8 @@ class AccomplishmentController extends \yii\web\Controller
                     $projects = $projects->leftJoin(['groupBeneficiariesAccompsQ4' => '('.$groupBeneficiariesAccomps.')'], 'groupBeneficiariesAccompsQ4.project_id = project.id and groupBeneficiariesAccompsQ4.quarter = "Q4"');
                     $projects = $projects->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
                     $projects = $projects->andWhere(['project.id' => $projectIDs]);
+
+                    $reportName = 'RPMES_'.$model->year.'_'.$model->quarter;
         
                     if(Yii::$app->user->can('AgencyUser'))
                     {
@@ -858,12 +863,46 @@ class AccomplishmentController extends \yii\web\Controller
                     {
                         $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
                     }
-                    
+
         $projects = $projects->asArray()->all();
 
         //echo '<pre>'; print_r($projects); exit;
+                    $i=0;
+                    if($model->agency_id != '')
+                    {
+                        foreach($projects as $project){
+
+                            $reportName = $reportName.'_'.$project['agencyTitle'];
+                                $i++;
+                            if ($i = 1){ $i=0; break; }
+                        }
+                    }
+
+                    if($model->category_id != '')
+                    {
+                        foreach($projects as $project){
+
+                            $reportName = $reportName.'_'.$project['categoryTitle'];
+                                $i++;
+                            if ($i = 1){ $i=0; break; }
+                        }
+                    }
+
+                    if($model->sector_id != '')
+                    {
+                        foreach($projects as $project){
+
+                            $reportName = $reportName.'_'.$project['sectorTitle'];
+                                $i++;
+                            if ($i = 1){ $i=0; break; }
+                        }
+                    }
+
+                    $reportName = strtoupper($reportName.'_Summary_Accomplishment');
+
+        //echo $reportName; exit;
             
-        $filename = 'Accomplishment '.$year;
+        $filename = $reportName;
 
         if($type == 'excel')
         {
