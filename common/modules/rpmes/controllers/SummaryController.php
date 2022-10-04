@@ -17151,16 +17151,6 @@ class SummaryController extends \yii\web\Controller
                             $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
                         }
             
-                        if($model->region_id != '')
-                        {
-                            $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
-                        }
-            
-                        if($model->province_id != '')
-                        {
-                            $provinceIDs = $provinceIDs->andWhere(['province_id' => $model->province_id]);
-                        }
-            
                         if($model->fund_source_id != '')
                         {
                             $projects = $projects->andWhere(['fund_source.id' => $model->fund_source_id]);
@@ -22748,6 +22738,7 @@ class SummaryController extends \yii\web\Controller
                         ->select([
                             'project.id as id',
                             'project.data_type as dataType',
+                            'project.period as period',
                             'agency.code as agencyTitle',
                             'program.title as programTitle',
                             'category.title as categoryTitle',
@@ -22762,6 +22753,8 @@ class SummaryController extends \yii\web\Controller
                             'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
                             'categoryTitles.title as categoryTitle',
                             'IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title) as provinceTitle',
+                            'regionTitles.title as regionTitle',
+                            'provinceTitles.title as provinceTitle2',
                             'IF(kraTitles.title is null, "No KRA", kraTitles.title) as kraTitle',
                             'IF(sdgGoalTitles.title is null, "No SDG Goals", sdgGoalTitles.title)  as sdgGoalTitle',
                             'IF(rdpChapterTitles.title is null, "No RDP Chapters", rdpChapterTitles.title) as chapterTitle',
@@ -22859,16 +22852,6 @@ class SummaryController extends \yii\web\Controller
                             $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
                         }
             
-                        if($model->region_id != '')
-                        {
-                            $regionIDs = $regionIDs->andWhere(['region_id' => $model->region_id]);
-                        }
-            
-                        if($model->province_id != '')
-                        {
-                            $provinceIDs = $provinceIDs->andWhere(['province_id' => $model->province_id]);
-                        }
-            
                         if($model->fund_source_id != '')
                         {
                             $projects = $projects->andWhere(['fund_source.id' => $model->fund_source_id]);
@@ -22914,6 +22897,101 @@ class SummaryController extends \yii\web\Controller
             if($model->grouping == '_sector_by_sub_sector_by_agency'){ $projects = $projects->groupBy(['sectorTitle', 'subSectorTitle', 'agencyTitle','id']); }
 
             $projects = $projects->asArray()->all();
+
+            $reportName = 'RPMES_'.$model->year.'_'.$model->quarter;
+            $i = 0;
+
+            if($model->agency_id != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.$project['agencyTitle'];
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            if($model->category_id != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.$project['categoryTitle'];
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            if($model->sector_id != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.$project['sectorTitle'];
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            if($model->sub_sector_id != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.$project['subSectorTitle'];
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            if($model->region_id != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.$project['regionTitle'];
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            if($model->province_id != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.str_replace(", ","_",$project['provinceTitle2']);
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            if($model->fund_source_id != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.$project['fundSourceTitle'];
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            if($model->period != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.$project['period'];
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            if($model->grouping != '')
+            {
+                foreach($projects as $project){
+
+                    $reportName = $reportName.'_'.$model->grouping;
+                        $i++;
+                    if ($i = 1){ $i=0; break; }
+                }
+            }
+
+            $reportName = strtoupper($reportName.'_Summary_Accomplishment');
 
             //echo '<pre>'; print_r($projects); exit;
             
@@ -27955,7 +28033,7 @@ class SummaryController extends \yii\web\Controller
         $smallCaps = range('a', 'z');
         $numbers = range('1', '100');
 
-        $filename = 'Summary Accomplishment '.$year;
+        $filename = $reportName;
 
         if($type == 'excel')
         {
