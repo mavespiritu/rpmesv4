@@ -40,7 +40,7 @@ class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
             [['year', 'quarter','project_id', 'pss_date', 'agreement_reached', 'next_step'], 'required'],
             [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
             [['year', 'project_id', 'submitted_by','agency_id', 'sector_id', 'region_id', 'province_id'], 'integer'],
-            [['quarter', 'agreement_reached', 'next_step'], 'string'],
+            [['quarter', 'agreement_reached', 'next_step', 'slippage'], 'string'],
             [['pss_date', 'date_submitted'], 'safe'],
         ];
     }
@@ -65,6 +65,7 @@ class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
             'sector_id' => 'Sector',
             'region_id' => 'Region',
             'province_id' => 'Province',
+            'slippage' => 'Slippage',
         ];
     }
 
