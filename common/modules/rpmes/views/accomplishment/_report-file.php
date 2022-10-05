@@ -108,32 +108,32 @@
                         (d) <?= $project['locationTitle'] ?> <br>
                         (e) <?= $project['fundSourceTitle'] ?> <br>
                     </td>
-                    <td align=right><?= number_format($project['allocationsAsOf'], 2) ?></td>
-                    <td align=right><b><?= number_format($project['allocationPerQtr'], 2) ?></b></td>
-                    <td align=right><?= number_format($project['releasesAsOf'], 2) ?></td>
-                    <td align=right><b><?= number_format($project['releasesPerQtr'], 2) ?></b></td>
-                    <td align=right><?= number_format($project['obligationsAsOf'], 2) ?></td>
-                    <td align=right><b><?= number_format($project['obligationsPerQtr'], 2) ?></b></td>
-                    <td align=right><?= number_format($project['expendituresAsOf'], 2) ?></td>
-                    <td align=right><b><?= number_format($project['expendituresPerQtr'], 2) ?></b></td>
+                    <td align=right><?= number_format(floatval($project['allocationsAsOf']), 2) ?></td>
+                    <td align=right><b><?= number_format(floatval($project['allocationPerQtr']), 2) ?></b></td>
+                    <td align=right><?= number_format(floatval($project['releasesAsOf']), 2) ?></td>
+                    <td align=right><b><?= number_format(floatval($project['releasesPerQtr']), 2) ?></b></td>
+                    <td align=right><?= number_format(floatval($project['obligationsAsOf']), 2) ?></td>
+                    <td align=right><b><?= number_format(floatval($project['obligationsPerQtr']), 2) ?></b></td>
+                    <td align=right><?= number_format(floatval($project['expendituresAsOf']), 2) ?></td>
+                    <td align=right><b><?= number_format(floatval($project['expendituresPerQtr']), 2) ?></b></td>
                     <td><?= $project['dataType'] != "" ? $project['indicator'].'<br>('.$project['dataType'].')' : $project['indicator'].'<br>(No Data Type)' ?></td>
-                    <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalTargetTotalPerQtr'], 2).'%' : number_format($project['physicalTargetTotalPerQtr'], 0) ?></td>
-                    <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalTargetPerQtr'], 2).'%' : number_format($project['physicalTargetPerQtr'], 0) ?></td>
-                    <td align=center><b><?= $project['isPercent'] > true ? number_format($project['physicalAccompTotalPerQuarter'], 2).'%' : number_format($project['physicalAccompTotalPerQuarter'], 0) ?></b></td>
-                    <td align=center><?= $project['isPercent'] > true ? number_format($project['physicalAccompPerQuarter'], 2).'%' : number_format($project['physicalAccompPerQuarter'], 0) ?></td>
-                    <td align=center><?= number_format($project['malesEmployedTarget'], 0) ?></td>
-                    <td align=center><?= number_format($project['femalesEmployedTarget'], 0) ?></td>
-                    <td align=center><b><?= number_format(($project['malesEmployedTarget'] + $project['femalesEmployedTarget']), 0) ?></b></td>
-                    <td align=center><?= number_format($project['malesEmployedActual'], 0) ?></td>
-                    <td align=center><?= number_format($project['femalesEmployedActual'], 0) ?></td>
-                    <td align=center><b><?= number_format(($project['malesEmployedActual'] + $project['femalesEmployedActual']), 0) ?></b></td>
-                    <td align=center><?= number_format($project['beneficiariesTarget'], 0 ) ?></td>
-                    <td align=center><?= number_format($project['groupBeneficiariesTarget'], 0 ) ?></td>
-                    <td align=center><?= number_format($project['maleBeneficiariesActual'], 0) ?></td>
-                    <td align=center><?= number_format($project['femaleBeneficiariesActual'], 0) ?></td>
-                    <td align=center><b><?= number_format(($project['maleBeneficiariesActual'] + $project['femaleBeneficiariesActual']), 0) ?></b></td>
-                    <td align=center><?= number_format($project['groupBeneficiariesActual'], 0) ?></td>
-                    <td align=center><?= number_format($project['groupBeneficiariesActual'], 0) ?></td>
+                    <td align=center><?= $project['isPercent'] > true ? number_format(floatval($project['physicalTargetTotalPerQtr']), 2).'%' : number_format(intval($project['physicalTargetTotalPerQtr']), 0) ?></td>
+                    <td align=center><?= $project['isPercent'] > true ? number_format(floatval($project['physicalTargetPerQtr']), 2).'%' : number_format(intval($project['physicalTargetPerQtr']), 0) ?></td>
+                    <td align=center><b><?= $project['isPercent'] > true ? number_format(floatval($project['physicalAccompTotalPerQuarter']), 2).'%' : number_format(intval($project['physicalAccompTotalPerQuarter']), 0) ?></b></td>
+                    <td align=center><?= $project['isPercent'] > true ? number_format(floatval($project['physicalAccompPerQuarter']), 2).'%' : number_format(intval($project['physicalAccompPerQuarter']), 0) ?></td>
+                    <td align=center><?= number_format(intval($project['malesEmployedTarget']), 0) ?></td>
+                    <td align=center><?= number_format(intval($project['femalesEmployedTarget']), 0) ?></td>
+                    <td align=center><b><?= number_format((intval($project['malesEmployedTarget']) + intval($project['femalesEmployedTarget'])), 0) ?></b></td>
+                    <td align=center><?= number_format(intval($project['malesEmployedActual']), 0) ?></td>
+                    <td align=center><?= number_format(intval($project['femalesEmployedActual']), 0) ?></td>
+                    <td align=center><b><?= number_format((intval($project['malesEmployedActual']) + intval($project['femalesEmployedActual'])), 0) ?></b></td>
+                    <td align=center><?= number_format(intval($project['beneficiariesTarget']), 0 ) ?></td>
+                    <td align=center><?= number_format(intval($project['groupBeneficiariesTarget']), 0 ) ?></td>
+                    <td align=center><?= number_format(intval($project['maleBeneficiariesActual']), 0) ?></td>
+                    <td align=center><?= number_format(intval($project['femaleBeneficiariesActual']), 0) ?></td>
+                    <td align=center><b><?= number_format((intval($project['maleBeneficiariesActual']) + intval($project['femaleBeneficiariesActual'])), 0) ?></b></td>
+                    <td align=center><?= number_format(intval($project['groupBeneficiariesActual']), 0) ?></td>
+                    <td align=center><?= number_format(intval($project['groupBeneficiariesActual']), 0) ?></td>
                     <td align=center><?= $project['remarks'] == "" ? "No Remarks" : $project['remarks'] ?></td>
                     <td align=center><?= $project['completed'] >= 1 ? 'Yes' : 'No' ?></td>
                 </tr>
