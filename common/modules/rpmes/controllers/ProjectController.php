@@ -1455,8 +1455,8 @@ class ProjectController extends Controller
                 $lastNumber = $lastProject ? intval(substr($lastProject->project_no, -4)): '0001';
                 $project_no = $lastProject ? $agency->code.'-'.substr($model->year, -2).'-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT) : $agency->code.'-'.substr($model->year, -2).'-'.str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
                 $model->project_no = $model->project_no == '' ? $project_no : $model->project_no;
-                $model->submitted_by = Yii::$app->user->id;
-                $model->date_submitted = date("Y-m-d H:i:s");
+                //$model->submitted_by = Yii::$app->user->id;
+                //$model->date_submitted = date("Y-m-d H:i:s");
                 $model->draft = 'No';
                 try {
                     if ($flag = $model->save(false)) {
