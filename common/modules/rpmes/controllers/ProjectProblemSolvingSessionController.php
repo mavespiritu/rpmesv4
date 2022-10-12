@@ -330,6 +330,67 @@ class ProjectProblemSolvingSessionController extends Controller
         $provinces = [];
 
         if ($model->load(Yii::$app->request->post())) {
+
+            $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
+            $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
+
+            $physicalAccompTotalPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0),
+                                                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0),
+                                                        COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)
+                                                      )
+                                                  )
+                                              )';
+
+            $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Default",
+                                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0),
+                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0),
+                                                        COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)
+                                                        )
+                                                    )
+                                                )
+                                            ,   
+                                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                                                    IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                                                        IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                                                        COALESCE(physicalTargets.q4, 0)
+                                                        )
+                                                    )
+                                                )
+                                            )';
+
+            $isPercent = 'LOCATE("%", physicalTargets.indicator)';
+            $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompTotalPerQuarter.' - '.$physicalTargetTotalPerQuarter.', IF('.$physicalTargetTotalPerQuarter.' > 0, (('.$physicalAccompTotalPerQuarter.'/'.$physicalTargetTotalPerQuarter.') * 100) -100 , 0))';
+
+            $projects = Project::find()
+            ->select([
+                'project.id as id',
+                'project.title as projectTitle',
+                'project.data_type as dataType',
+                $physicalTargetTotalPerQuarter. 'as physicalTargetTotalPerQuarter',
+                $physicalAccompTotalPerQuarter. 'as physicalAccompTotalPerQuarter',
+                $slippage. 'as slippage',            
+            ]);
+            $projects = $projects->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
+            $projects = $projects->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
+            $projects = $projects->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
+            $projects = $projects->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+            $projects = $projects->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+            $projects = $projects->andWhere(['project.id' => $model->project_id]);
+
+            $projects = $projects->asArray()->all();
+
+            //echo '<pre>'; print_r($projects); exit;
+
+            $i=0;
+            foreach($projects as $project){
+
+                $model->slippage = number_format($project['slippage'], 2);
+                    $i++;
+                if ($i = 1){ $i=0; break; }
+            }
+
             $model->submitted_by = Yii::$app->user->id;
             $model->date_submitted = date('Y-m-d H:i:s');
             $model->save();
