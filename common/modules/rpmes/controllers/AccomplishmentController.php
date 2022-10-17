@@ -138,15 +138,15 @@ class AccomplishmentController extends \yii\web\Controller
         {   
             $agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : $model->agency_id;
 
-            $submissionModel = Submission::findOne(['report' => 'Accomplishment', 'year' => $model->year, 'quarter' => $model->quarter]) ?
-                               Submission::findOne(['report' => 'Accomplishment', 'year' => $model->year, 'quarter' => $model->quarter]) : new Submission();
+            $submissionModel = Submission::findOne(['agency_id' => $model->agency_id, 'report' => 'Accomplishment', 'year' => $model->year, 'quarter' => $model->quarter]) ?
+                               Submission::findOne(['agency_id' => $model->agency_id, 'report' => 'Accomplishment', 'year' => $model->year, 'quarter' => $model->quarter]) : new Submission();
             $dueDate = DueDate::findOne(['report' => 'Accomplishment', 'quarter' => $model->quarter, 'year' => $model->year]);
-            // if(Yii::$app->user->can('AgencyUser')){
-            //     if(Yii::$app->user->identity->userinfo->AGENCY_C != $model->agency_id)
-            //     {
-            //         throw new ForbiddenHttpException('Not allowed to access');
-            //     }
-            // }
+            if(Yii::$app->user->can('AgencyUser')){
+                if(Yii::$app->user->identity->userinfo->AGENCY_C != $model->agency_id)
+                {
+                    throw new ForbiddenHttpException('Not allowed to access');
+                }
+            }
 
             $getData = Yii::$app->request->get('Project');
             $categoryIDs = ProjectCategory::find();
@@ -160,16 +160,16 @@ class AccomplishmentController extends \yii\web\Controller
                 ->createCommand()->getRawSql();
 
             $projectIDs = Yii::$app->user->can('AgencyUser') ? 
-                        Submission::findOne(['year' => $model->year, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
+                        Submission::findOne(['year' => $model->year, 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
                         Plan::find()
                         ->select(['project.id as id'])
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'plan.year' => $model->year]) :
+                        ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year]):
                         [] :
                         Plan::find()
                         ->select(['project.id as id'])
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'plan.year' => $model->year]);
+                        ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year]);
 
             if($model->sector_id != '')
             {
@@ -179,23 +179,17 @@ class AccomplishmentController extends \yii\web\Controller
 
             $categoryIDs = $categoryIDs->all();
             $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
+            
             if($model->category_id != '')
             {
                 $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
                 $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
             }
 
-            if($model->agency_id != '')
-            {
-                $projectIDs = $projectIDs->leftJoin('agency', 'agency.id = project.agency_id');
-                $projectIDs = $projectIDs->andWhere(['agency.id' => $model->agency_id]);
-            }
-
             $projectIDs = $projectIDs->asArray()->all();
-            
+
             $projectIDs = !empty($projectIDs) ? ArrayHelper::map($projectIDs, 'id', 'id') : [];
-            
+
             $projectsPaging = Project::find();
             $projectsPaging->andWhere(['id' => $projectIDs]);
             $countProjects = clone $projectsPaging;
@@ -206,15 +200,15 @@ class AccomplishmentController extends \yii\web\Controller
                 ->all();
 
             $projects =  Yii::$app->user->can('AgencyUser') ? 
-                        Submission::findOne(['year' => $model->year, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
+                        Submission::findOne(['year' => $model->year, 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
                         Plan::find()
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'plan.year' => $model->year])
+                        ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year])
                         ->all() :
                         [] :
                         Plan::find()
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'plan.year' => $model->year])
+                        ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year])
                         ->all();
             
             if(!empty($projects))
