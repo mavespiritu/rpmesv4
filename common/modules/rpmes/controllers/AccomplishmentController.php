@@ -159,7 +159,9 @@ class AccomplishmentController extends \yii\web\Controller
                 ->groupBy(['project_category.project_id'])
                 ->createCommand()->getRawSql();
 
-            $projectIDs = Yii::$app->user->can('AgencyUser') ? 
+            if($model->scenario == 'accomplishmentUser'){
+
+                $projectIDs = Yii::$app->user->can('AgencyUser') ? 
                         Submission::findOne(['year' => $model->year, 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
                         Plan::find()
                         ->select(['project.id as id'])
@@ -170,6 +172,26 @@ class AccomplishmentController extends \yii\web\Controller
                         ->select(['project.id as id'])
                         ->leftJoin('project', 'project.id = plan.project_id')
                         ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year]);
+            }else{
+
+                $projectIDs = Yii::$app->user->can('AgencyUser') ? 
+                        Submission::findOne(['year' => $model->year, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
+                        Plan::find()
+                        ->select(['project.id as id'])
+                        ->leftJoin('project', 'project.id = plan.project_id')
+                        ->where(['project.draft' => 'No', 'plan.year' => $model->year]) :
+                        [] :
+                        Plan::find()
+                        ->select(['project.id as id'])
+                        ->leftJoin('project', 'project.id = plan.project_id')
+                        ->where(['project.draft' => 'No', 'plan.year' => $model->year]);
+
+                if($model->agency_id != '')
+                    {
+                        $projectIDs = $projectIDs->leftJoin('agency', 'agency.id = project.agency_id');
+                        $projectIDs = $projectIDs->andWhere(['agency.id' => $model->agency_id]);
+                    }
+            }
 
             if($model->sector_id != '')
             {
@@ -199,7 +221,9 @@ class AccomplishmentController extends \yii\web\Controller
                 ->orderBy(['id' => SORT_ASC])
                 ->all();
 
-            $projects =  Yii::$app->user->can('AgencyUser') ? 
+                if($model->scenario == 'accomplishmentUser'){
+
+                    $projects =  Yii::$app->user->can('AgencyUser') ? 
                         Submission::findOne(['year' => $model->year, 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
                         Plan::find()
                         ->leftJoin('project', 'project.id = plan.project_id')
@@ -210,6 +234,38 @@ class AccomplishmentController extends \yii\web\Controller
                         ->leftJoin('project', 'project.id = plan.project_id')
                         ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year])
                         ->all();
+                }else{
+
+                    $projects =  Yii::$app->user->can('AgencyUser') ? 
+                        Submission::findOne(['year' => $model->year, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
+                        Plan::find()
+                        ->leftJoin('project', 'project.id = plan.project_id')
+                        ->where(['project.draft' => 'No', 'plan.year' => $model->year]) :
+                        [] :
+                        Plan::find()
+                        ->leftJoin('project', 'project.id = plan.project_id')
+                        ->where(['project.draft' => 'No', 'plan.year' => $model->year]);
+
+                    if($model->sector_id != '')
+                    {
+                        $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
+                        $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
+                    }
+
+                    if($model->agency_id != '')
+                    {
+                        $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
+                        $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
+                    }
+
+                    if($model->category_id != '')
+                    {
+                        $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id');
+                        $projects = $projects->andWhere(['project_category.category_id' => $model->category_id]);  
+                    }
+
+                    $projects = $projects->all();
+                }
             
             if(!empty($projects))
             {
