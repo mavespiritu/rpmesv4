@@ -159,6 +159,14 @@ class AccomplishmentController extends \yii\web\Controller
                 ->groupBy(['project_category.project_id'])
                 ->createCommand()->getRawSql();
 
+            if($model->category_id != '')
+            {
+                $categoryIDs = $categoryIDs->andWhere(['category_id' => $model->category_id]);
+            }
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
             if($model->scenario == 'accomplishmentUser'){
 
                 $projectIDs = Yii::$app->user->can('AgencyUser') ? 
@@ -172,6 +180,21 @@ class AccomplishmentController extends \yii\web\Controller
                         ->select(['project.id as id'])
                         ->leftJoin('project', 'project.id = plan.project_id')
                         ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year]);
+
+                        if($model->sector_id != '')
+                        {
+                            $projectIDs = $projectIDs->leftJoin('sector', 'sector.id = project.sector_id');
+                            $projectIDs = $projectIDs->andWhere(['sector.id' => $model->sector_id]);
+                        }
+
+                        if($model->category_id != '')
+                        {
+                            $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
+                            $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
+                        }
+
+                        $projectIDs = $projectIDs->all();
+
             }else{
 
                 $projectIDs = Yii::$app->user->can('AgencyUser') ? 
@@ -191,24 +214,21 @@ class AccomplishmentController extends \yii\web\Controller
                         $projectIDs = $projectIDs->leftJoin('agency', 'agency.id = project.agency_id');
                         $projectIDs = $projectIDs->andWhere(['agency.id' => $model->agency_id]);
                     }
-            }
 
-            if($model->sector_id != '')
-            {
-                $projectIDs = $projectIDs->leftJoin('sector', 'sector.id = project.sector_id');
-                $projectIDs = $projectIDs->andWhere(['sector.id' => $model->sector_id]);
-            }
+                if($model->sector_id != '')
+                    {
+                        $projectIDs = $projectIDs->leftJoin('sector', 'sector.id = project.sector_id');
+                        $projectIDs = $projectIDs->andWhere(['sector.id' => $model->sector_id]);
+                    }
+                    
+                if($model->category_id != '')
+                    {
+                        $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
+                        $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
+                    }
 
-            $categoryIDs = $categoryIDs->all();
-            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-            
-            if($model->category_id != '')
-            {
-                $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
-                $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
+                    $projectIDs = $projectIDs->all();
             }
-
-            $projectIDs = $projectIDs->asArray()->all();
 
             $projectIDs = !empty($projectIDs) ? ArrayHelper::map($projectIDs, 'id', 'id') : [];
 
