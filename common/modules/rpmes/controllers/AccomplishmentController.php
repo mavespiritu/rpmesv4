@@ -174,26 +174,14 @@ class AccomplishmentController extends \yii\web\Controller
                         Plan::find()
                         ->select(['project.id as id'])
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year]):
+                        ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year])
+                        ->all():
                         [] :
                         Plan::find()
                         ->select(['project.id as id'])
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year]);
-
-                        if($model->sector_id != '')
-                        {
-                            $projectIDs = $projectIDs->leftJoin('sector', 'sector.id = project.sector_id');
-                            $projectIDs = $projectIDs->andWhere(['sector.id' => $model->sector_id]);
-                        }
-
-                        if($model->category_id != '')
-                        {
-                            $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
-                            $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
-                        }
-
-                        $projectIDs = $projectIDs->all();
+                        ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year])
+                        ->all();
 
             }else{
 
@@ -227,7 +215,7 @@ class AccomplishmentController extends \yii\web\Controller
                         $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
                     }
 
-                    $projectIDs = $projectIDs->all();
+                $projectIDs = $projectIDs->all();
             }
 
             $projectIDs = !empty($projectIDs) ? ArrayHelper::map($projectIDs, 'id', 'id') : [];
