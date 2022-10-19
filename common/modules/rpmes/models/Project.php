@@ -74,7 +74,7 @@ class Project extends \yii\db\ActiveRecord
             [['typhoon'], 'string', 'max' => 100],
             [['agency_id'], 'exist', 'skipOnError' => true, 'targetClass' => Agency::className(), 'targetAttribute' => ['agency_id' => 'id']],
             [['year', 'quarter','agency_id'], 'required', 'on' => 'accomplishmentUser'],
-            [['year','quarter','agency_id'], 'required', 'on' => 'accomplishmentAdmin'],
+            [['year','quarter'], 'required', 'on' => 'accomplishmentAdmin'],
             [['year', 'quarter'], 'required', 'on' => 'projectExceptionUser'],
             [['year', 'agency_id','quarter'], 'required', 'on' => 'projectExceptionAdmin'],
             [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
