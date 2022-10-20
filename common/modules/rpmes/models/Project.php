@@ -394,9 +394,9 @@ class Project extends \yii\db\ActiveRecord
                break;
             case 'Maintained':
                      if($quarter == 'Q1'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) : intval($q1); }
-                else if($quarter == 'Q2'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) : intval($q1) + intval($q2); }
-                else if($quarter == 'Q3'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) + floatval($q3) : intval($q1) + intval($q2) + intval($q3); }
-                else if($quarter == 'Q4'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4) : intval($q1) + intval($q2) + intval($q3) + intval($q4); }
+                else if($quarter == 'Q2'){ $value = $this->indicatorUnitOfMeasure ? $q2 ? floatval($q2) : floatval($q1) : 0;}
+                else if($quarter == 'Q3'){ $value = $this->indicatorUnitOfMeasure ? $q2 ? $q3 ? floatval($q3) : floatval($q2) : floatval($q1) : 0;}
+                else if($quarter == 'Q4'){ $value = $this->indicatorUnitOfMeasure ? $q2 ? $q3 ? $q4 ? floatval($q4) : floatval($q3) : floatval($q2) : floatval($q1) : 0;}
                 break;
         }
 
