@@ -55,18 +55,10 @@ DisableButtonAsset::register($this);
                 'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
                 'pluginOptions' => [
                     'autoclose'=>true,
-                    'format' => 'yyyy-mm-dd'
+                    'format' => 'yyyy-mm-dd',
+                    'startDate' => '0d'
                 ],
-                'pluginEvents' => [
-                    'changeDate' => "function(e) {
-                        const dateReceived = $('#project-result-deadline');
-                        const dateActed = $('#project-result-deadline-kvdate');
-                        dateActed.val('');
-                        dateActed.kvDatepicker('update', '');
-                        dateActed.kvDatepicker('setStartDate', dateReceived.val());
-                    }",
-                ]
-            ])->label('Deadline *'); ?>
+    ])->label('Deadline *'); ?>
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>

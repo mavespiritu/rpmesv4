@@ -68,7 +68,7 @@ class ProjectResultController extends Controller
             $projectIDs = ProjectResult::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
 
-            $projects = Project::find()
+            $projects = Project ::find()
                         ->select([
                             'project.id as id',
                             'project.title as projectTitle',

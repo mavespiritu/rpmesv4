@@ -25,7 +25,7 @@ DisableButtonAsset::register($this);
                 <td colspan=2 align=center><b>Results Indicator/Target</td>
                 <td colspan=2 align=center><b>Observed Results</td>
                 <td colspan=2 align=center><b>Deadline</td>
-                <td align=center><b>Status</td>
+                <td align=center>Is Project Complete</td>
             </tr>   
         </thead>
         <tbody>
@@ -49,25 +49,6 @@ DisableButtonAsset::register($this);
                         <td colspan=2 align=center><?= $project['resultsIndicator'] ?></td>
                         <td colspan=2 align=center><?= $project['observedResults'] ?></td>
                         <td colspan=2 align=center><?= date('F j, Y', strtotime($project['deadline'])) ?></td>
-                        <td align=center>
-                            <?= $form->field($project, 'action')->widget(Switchery::className(), [
-                                'options' => [
-                                    'label' => false,
-                                    'title' => 'Toggle if project is completed',
-                                ],
-                                'clientOptions' => [
-                                    'color' => '#5fbeaa',
-                                    'size' => 'small'
-                                ],
-                            'clientEvents' => [
-                                    'change' => new JsExpression('function() {
-                                        this.checked == true ? this.value = 1 : this.value = 0;
-                                        updateAccomplishmentTable();
-                                        enableInputFields(this.value, '.$model->id.');
-                                    }'),
-                                ]
-                            ])->label('Project is completed?') ?>
-                        </td>
                     </tr>
                     <?php $idx ++ ?>
             <?php } ?>
