@@ -228,8 +228,8 @@
                                         <?= '<td align=right>'. number_format($physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'], 2).'</td>' ?>
                                         <?= '<td align=right>'. number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'], 2).'</td>' ?>
                                         <?php }else{ ?>
-                                        <?= '<td align=right>'. number_format($thirdLevels['content']['projectPhysicalTarget'], 2).'</td>' ?>
-                                        <?= '<td align=right>'. number_format($thirdLevels['content']['projectPhysicalAccomp'], 2).'</td>' ?>
+                                        <?= '<td align=right>'. number_format(floatval($thirdLevels['content']['projectPhysicalTarget']), 2).'</td>' ?>
+                                        <?= '<td align=right>'. number_format(floatval($thirdLevels['content']['projectPhysicalAccomp']), 2).'</td>' ?>
                                         <?php } ?>
                                         <?php if(!empty($thirdLevels['thirdLevels'])){ ?>
                                         <td align=right><?= $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] >= 0 ? number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'], 2) : number_format(abs($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['value']), 2)?></td>
@@ -296,8 +296,8 @@
                                         <?= '<td align=right>'. number_format($physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'], 2).'</td>' ?>
                                         <?= '<td align=right>'. number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'], 2).'</td>' ?>
                                         <?php }else{ ?>
-                                        <?= '<td align=right>'. number_format($fourthLevels['content']['projectPhysicalTarget'], 2).'</td>' ?>
-                                        <?= '<td align=right>'. number_format($fourthLevels['content']['projectPhysicalAccomp'], 2).'</td>' ?>
+                                        <?= '<td align=right>'. number_format(floatval($fourthLevels['content']['projectPhysicalTarget']), 2).'</td>' ?>
+                                        <?= '<td align=right>'. number_format(floatval($fourthLevels['content']['projectPhysicalAccomp']), 2).'</td>' ?>
                                         <?php } ?>
                                         <?php if(!empty($fourthLevels['fourthLevels'])){ ?>
                                         <td align=right><?= $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'] >= 0 ? number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'], 2) : '('.number_format(abs($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['value']), 2).')' ?></td>
@@ -365,8 +365,8 @@
                                                 <?= '<td align=right>'. number_format($physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'], 2).'</td>' ?>
                                                 <?= '<td align=right>'. number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'], 2).'</td>' ?>
                                                 <?php }else{ ?>
-                                                <?= '<td align=right>'. number_format($fifthlevels['content']['projectPhysicalTarget'], 2).'</td>' ?>
-                                                <?= '<td align=right>'. number_format($fifthlevels['content']['projectPhysicalAccomp'], 2).'</td>' ?>
+                                                <?= '<td align=right>'. number_format(floatval($fifthlevels['content']['projectPhysicalTarget']), 2).'</td>' ?>
+                                                <?= '<td align=right>'. number_format(floatval($fifthlevels['content']['projectPhysicalAccomp']), 2).'</td>' ?>
                                                 <?php } ?>
                                                 <?php if(!empty($fifthlevels['fifthlevels'])){ ?>
                                                 <td align=right><?= $physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] >= 0 ? number_format($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'], 2) : '('.number_format(abs($physical['actual'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value'] - $physical['target'][$firstLevel]['firstLevels'][$secondLevel]['secondLevels'][$thirdLevel]['thirdLevels'][$fourthLevel]['fourthLevels'][$fifthlevel]['value']), 2).')' ?></td>
