@@ -6,6 +6,8 @@ use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 use yii\web\View;
 use yii\bootstrap\ButtonDropdown;
+use dosamigos\switchery\Switchery;
+use yii\web\JsExpression;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 DisableButtonAsset::register($this);
 /* @var $this yii\web\View */
@@ -25,7 +27,7 @@ DisableButtonAsset::register($this);
                 <td colspan=2 align=center><b>Results Indicator/Target</td>
                 <td colspan=2 align=center><b>Observed Results</td>
                 <td colspan=2 align=center><b>Deadline</td>
-                <td align=center>Is Project Complete</td>
+                <td align=center><b>Is Project Complete</td>
             </tr>   
         </thead>
         <tbody>
@@ -44,11 +46,12 @@ DisableButtonAsset::register($this);
                             ]) ?>
                         </td>
                         <td align=center><?= $idx ?></td>
-                        <td colspan=2 align=center><?= $project['projectTitle']?></td>
-                        <td colspan=2 align=center><?= $project['objective']?></td>
+                        <td colspan=2 align=center><?= $project['projectTitle'] ?></td>
+                        <td colspan=2 align=center><?= $project['objective'] ?></td>
                         <td colspan=2 align=center><?= $project['resultsIndicator'] ?></td>
                         <td colspan=2 align=center><?= $project['observedResults'] ?></td>
                         <td colspan=2 align=center><?= date('F j, Y', strtotime($project['deadline'])) ?></td>
+                        <td colspan=2 align=center><?= intval($project['action']) == 0 ? 'No' : 'Yes' ?></td>
                     </tr>
                     <?php $idx ++ ?>
             <?php } ?>

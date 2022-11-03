@@ -35,9 +35,9 @@ class ProjectResult extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['year', 'project_id', 'objective', 'results_indicator', 'observed_results', 'deadline'], 'required'],
+            [['year', 'project_id', 'objective', 'results_indicator', 'observed_results', 'deadline', 'action'], 'required'],
             [['project_id', 'submitted_by','agency_id'], 'integer'],
-            [['objective', 'results_indicator', 'observed_results'], 'string'],
+            [['objective', 'results_indicator', 'observed_results', 'action'], 'string'],
             [['year'], 'required', 'on' => 'projectResult'],
             [['deadline', 'date_submitted', 'year'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
@@ -59,6 +59,7 @@ class ProjectResult extends \yii\db\ActiveRecord
             'deadline' => 'Deadline',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',
+            'action' => 'Action',
         ];
     }
 

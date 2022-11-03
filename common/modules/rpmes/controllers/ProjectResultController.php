@@ -77,7 +77,8 @@ class ProjectResultController extends Controller
                             'project_result.objective as objective',
                             'project_result.results_indicator as resultsIndicator',
                             'project_result.observed_results as observedResults',
-                            'project_result.deadline as deadline',                
+                            'project_result.deadline as deadline',
+                            'project_result.action as action',
                         ]);
             $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
             $projects = $projects->leftJoin('project_result', 'project_result.project_id = project.id');

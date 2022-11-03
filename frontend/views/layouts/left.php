@@ -53,7 +53,7 @@
                             ['label' => 'Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                     ],
-                    //['label' => 'Form 4: Project Results', 'icon' => 'folder', 'url' => ['/rpmes/project-result'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
+                    ['label' => 'Form 4: Project Results', 'icon' => 'folder', 'url' => ['/rpmes/project-result'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Form 5: Summary Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 6: Behind Schedule', 'icon' => 'folder', 'url' => ['/rpmes/project-status'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Form 7: Project Finding', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
