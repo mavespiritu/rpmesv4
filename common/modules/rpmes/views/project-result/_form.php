@@ -60,6 +60,8 @@ DisableButtonAsset::register($this);
                 ],
     ])->label('Deadline *'); ?>
 
+    <?= $form->field($model, 'action')->checkBox(['uncheck' => 0, 'checked' => 1])->label('Is Project Complete *:'); ?>
+
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
     </div>
