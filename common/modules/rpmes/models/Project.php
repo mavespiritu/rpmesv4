@@ -230,10 +230,10 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
                 break;
             case 'Cumulative':
-                    if($quarter == 'Q1'){ $value = floatval($q1); }
-               else if($quarter == 'Q2'){ $value = $q2 ? floatval($q2) : floatval($q1);}
-               else if($quarter == 'Q3'){ $value = $q2 ? $q3 ? floatval($q3) : floatval($q2) : floatval($q1);}
-               else if($quarter == 'Q4'){ $value = $q2 ? $q3 ? $q4 ? floatval($q4) : floatval($q3) : floatval($q2) : floatval($q1);}
+                     if($quarter == 'Q1'){ $value = $q1 != 0 ? floatval($q1) : 0; }
+                else if($quarter == 'Q2'){ $value = $q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0);}
+                else if($quarter == 'Q3'){ $value = $q3 != 0 ? floatval($q3) : ($q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0));}
+                else if($quarter == 'Q4'){ $value = $q4 != 0 ? floatval($q4) : ($q3 != 0 ? floatval($q3) : ($q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0)));}
                break;
         }
 
@@ -258,11 +258,11 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
                 break;
             case 'Cumulative':
-                     if($quarter == 'Q1'){ $value = floatval($q1); }
-                else if($quarter == 'Q2'){ $value = $q2 ? floatval($q2) : floatval($q1);}
-                else if($quarter == 'Q3'){ $value = $q2 ? $q3 ? floatval($q3) : floatval($q2) : floatval($q1);}
-                else if($quarter == 'Q4'){ $value = $q2 ? $q3 ? $q4 ? floatval($q4) : floatval($q3) : floatval($q2) : floatval($q1);}
-                break;
+                     if($quarter == 'Q1'){ $value = $q1 != 0 ? floatval($q1) : 0; }
+                else if($quarter == 'Q2'){ $value = $q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0);}
+                else if($quarter == 'Q3'){ $value = $q3 != 0 ? floatval($q3) : ($q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0));}
+                else if($quarter == 'Q4'){ $value = $q4 != 0 ? floatval($q4) : ($q3 != 0 ? floatval($q3) : ($q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0)));}
+               break;
         }
 
         return $value;
@@ -286,10 +286,10 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4); }
                 break;
             case 'Cumulative':
-                    if($quarter == 'Q1'){ $value = floatval($q1); }
-               else if($quarter == 'Q2'){ $value = $q2 ? floatval($q2) : floatval($q1);}
-               else if($quarter == 'Q3'){ $value = $q2 ? $q3 ? floatval($q3) : floatval($q2) : floatval($q1);}
-               else if($quarter == 'Q4'){ $value = $q2 ? $q3 ? $q4 ? floatval($q4) : floatval($q3) : floatval($q2) : floatval($q1);}
+                     if($quarter == 'Q1'){ $value = $q1 != 0 ? floatval($q1) : 0; }
+                else if($quarter == 'Q2'){ $value = $q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0);}
+                else if($quarter == 'Q3'){ $value = $q3 != 0 ? floatval($q3) : ($q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0));}
+                else if($quarter == 'Q4'){ $value = $q4 != 0 ? floatval($q4) : ($q3 != 0 ? floatval($q3) : ($q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0)));}
                break;
         }
 
@@ -387,10 +387,10 @@ class Project extends \yii\db\ActiveRecord
                 else if($quarter == 'Q4'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) + floatval($q2) + floatval($q3) + floatval($q4) : intval($q1) + intval($q2) + intval($q3) + intval($q4); }
                 break;
             case 'Cumulative':
-                    if($quarter == 'Q1'){ $value = $this->indicatorUnitOfMeasure ? floatval($q1) : intval($q1); }
-               else if($quarter == 'Q2'){ $value = $this->indicatorUnitOfMeasure ? $q2 ? floatval($q2) : floatval($q1) : 0;}
-               else if($quarter == 'Q3'){ $value = $this->indicatorUnitOfMeasure ? $q2 ? $q3 ? floatval($q3) : floatval($q2) : floatval($q1) : 0;}
-               else if($quarter == 'Q4'){ $value = $this->indicatorUnitOfMeasure ? $q2 ? $q3 ? $q4 ? floatval($q4) : floatval($q3) : floatval($q2) : floatval($q1) : 0;}
+                     if($quarter == 'Q1'){ $value = $q1 != 0 ? floatval($q1) : 0; }
+                else if($quarter == 'Q2'){ $value = $q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0);}
+                else if($quarter == 'Q3'){ $value = $q3 != 0 ? floatval($q3) : ($q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0));}
+                else if($quarter == 'Q4'){ $value = $q4 != 0 ? floatval($q4) : ($q3 != 0 ? floatval($q3) : ($q2 != 0 ? floatval($q2) : ($q1 != 0 ? floatval($q1) : 0)));}
                break;
             case 'Maintained':
                      if($quarter == 'Q1'){ $value = $q1 != 0 ? floatval($q1) : 0; }
