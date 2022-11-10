@@ -59,7 +59,7 @@ class ProjectResult extends \yii\db\ActiveRecord
             'deadline' => 'Deadline',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',
-            'action' => 'Action',
+            'action' => '',
         ];
     }
 
