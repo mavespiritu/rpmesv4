@@ -37,7 +37,6 @@ class ProjectResult extends \yii\db\ActiveRecord
         return [
             [['project_id', 'submitted_by','agency_id'], 'integer'],
             [['objective', 'results_indicator', 'observed_results', 'action'], 'string'],
-            [['year'], 'required', 'on' => 'projectResult'],
             [['deadline', 'date_submitted', 'year'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
         ];

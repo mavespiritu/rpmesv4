@@ -78,6 +78,7 @@ class Project extends \yii\db\ActiveRecord
             [['year', 'quarter'], 'required', 'on' => 'projectExceptionUser'],
             [['year', 'agency_id','quarter'], 'required', 'on' => 'projectExceptionAdmin'],
             [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
+            [['year','agency_id'], 'required', 'on' => 'projectResult'],
             /* [['source_id'], 'required',  'when' => function($model){
                 return ($model->period == 'Carry-Over');
             }], */

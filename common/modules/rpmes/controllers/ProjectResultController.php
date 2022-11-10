@@ -63,6 +63,7 @@ class ProjectResultController extends Controller
         
         $model = new Project();
 
+        $model->scenario='projectResult';
         $model->year = date("Y");
         $model->agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : null;
 
