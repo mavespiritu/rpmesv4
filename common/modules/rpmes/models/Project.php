@@ -895,6 +895,14 @@ class Project extends \yii\db\ActiveRecord
         return $dateSubmitted;
     }
 
+    public function getProjectResultDeadline()
+    {
+        $projectResult = ProjectResult::findOne(['project_id' => $this->id, 'year' => $this->year]);
+        $deadline = $projectResult ? date("F j, Y", strtotime($projectResult->deadline)) : 'No Deadline';
+
+        return $deadline;
+    }
+
     public function getLocation()
     {
         $barangays = ProjectBarangay::findAll(['project_id' => $this->id, 'year' => $this->year]);

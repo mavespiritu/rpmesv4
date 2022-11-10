@@ -35,7 +35,6 @@ class ProjectResult extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['year', 'project_id', 'objective', 'results_indicator', 'observed_results', 'deadline', 'action'], 'required'],
             [['project_id', 'submitted_by','agency_id'], 'integer'],
             [['objective', 'results_indicator', 'observed_results', 'action'], 'string'],
             [['year'], 'required', 'on' => 'projectResult'],

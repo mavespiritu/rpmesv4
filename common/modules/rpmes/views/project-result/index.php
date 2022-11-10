@@ -28,7 +28,18 @@ $this->params['breadcrumbs'][] = $this->title;
                     ]) ?>
                     <br><br>
                     <hr>
-                    <div id="project-result-table"></div>
+                    <?php if(!empty($getData)){ ?>
+                        <?= $this->render('_report', [
+                            'model' => $model,
+                            'years' => $years,
+                            'agencies' => $agencies,
+                            'projectResults' => $projectResults,
+                            'projectsModels' => $projectsModels,
+                            'projectsPages' => $projectsPages,
+                            'getData' => $getData,
+                            'agency_id' => $agency_id
+                        ]); ?>
+                    <?php } ?>
                 </div>
             </div>
         </div>

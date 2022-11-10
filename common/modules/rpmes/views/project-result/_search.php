@@ -13,7 +13,8 @@ use yii\web\View;
 <div class="project-result-search">
 
     <?php $form = ActiveForm::begin([
-       'id' => 'search-project-result-form'
+    	'options' => ['class' => 'disable-submit-buttons'],
+        'method' => 'get'
     ]); ?>
 
 <div class="row">
