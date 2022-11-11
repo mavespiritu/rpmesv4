@@ -59,19 +59,19 @@ function renderSummary($page)
                             </td>
                             <td align=center>
                                 <?= $form->field($projectResults[$model->id], "[$model->id]objective")->widget(CKEditor::className(), [
-                                    'options' => ['rows' => 6, 'style' => 'resize: none;'],
+                                    'options' => ['rows' => 6, 'style' => 'resize: none;','disabled' => $model->isCompleted == true ? true : false],
                                     'preset' => 'basic'
                                 ])->label(false) ?>
                             </td>
                             <td align=center>
                                 <?= $form->field($projectResults[$model->id], "[$model->id]results_indicator")->widget(CKEditor::className(), [
-                                    'options' => ['rows' => 6, 'style' => 'resize: none;'],
+                                    'options' => ['rows' => 6, 'style' => 'resize: none;', 'disabled' => $model->isCompleted == true ? true : false],
                                     'preset' => 'basic'
                                 ])->label(false) ?>
                             </td>
                             <td align=center>
                                 <?= $form->field($projectResults[$model->id], "[$model->id]observed_results")->widget(CKEditor::className(), [
-                                    'options' => ['rows' => 6, 'style' => 'resize: none;'],
+                                    'options' => ['rows' => 6, 'style' => 'resize: none;','disabled' => $model->isCompleted == true ? true : false],
                                     'preset' => 'basic'
                                 ])->label(false) ?>
                             </td>
@@ -88,7 +88,6 @@ function renderSummary($page)
                                     'clientEvents' => [
                                             'change' => new JsExpression('function() {
                                                 this.checked == true ? this.value = 1 : this.value = 0;
-                                                updateProjectResultTable();
                                                 enableInputFields(this.value, '.$model->id.');
                                             }'),
                                         ]
@@ -116,6 +115,15 @@ function renderSummary($page)
     $script = '
     function updateProjectResultTable(){
         $(".project-result-table").freezeTable("update");
+    }
+    function enableInputFields(toggle, id)
+    {
+        if(toggle == 1)
+        {
+            $("#projectResults-"+id+"-observed_results").prop("disabled", true);
+        }else{
+            $("#projectResults-"+id+"-observed_results").prop("disabled", false);
+        }
     }
     $(document).ready(function(){
         $(".project-result-table").freezeTable({
