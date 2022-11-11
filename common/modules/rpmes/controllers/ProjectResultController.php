@@ -7,6 +7,7 @@ use common\modules\rpmes\models\Agency;
 use common\modules\rpmes\models\Plan;
 use common\modules\rpmes\models\Project;
 use common\modules\rpmes\models\ProjectResult;
+use common\modules\rpmes\models\Accomplishment;
 use common\modules\rpmes\models\ProjectResultSearch;
 use common\modules\rpmes\models\MultipleModel;
 use yii\web\Controller;
@@ -54,6 +55,7 @@ class ProjectResultController extends Controller
     public function actionIndex()
     {
         $projectResults = [];
+        $accomplishment = [];
         $getData = [];
 
         $projectsModels = null;
@@ -70,6 +72,8 @@ class ProjectResultController extends Controller
         $years = ProjectResult::find()->select(['distinct(year) as year'])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
+
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
 
         $agencies = Agency::find()->select(['id', 'code as title']);
         $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
@@ -96,6 +100,15 @@ class ProjectResultController extends Controller
                         ->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'id', 'id');
 
+            $projectsPaging = Project::find();
+            $projectsPaging->andWhere(['id' => $projectIDs]);
+            $countProjects = clone $projectsPaging;
+            $projectsPages = new Pagination(['totalCount' => $countProjects->count()]);
+            $projectsModels = $projectsPaging->offset($projectsPages->offset)
+                ->limit($projectsPages->limit)
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+
             $projects = Yii::$app->user->can('AgencyUser') ? Plan::find()
                         ->leftJoin('project', 'project.id = plan.project_id')
                         ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year])
@@ -105,33 +118,35 @@ class ProjectResultController extends Controller
                         ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year])
                         ->all();
 
-            $selectedIDs = [];
-
             if($projects)
             {
                 foreach($projects as $project)
                 {
-                        $resultModel = ProjectResult::findOne(['project_id' => $project->project_id, 'year' => $model->year]) ? 
-                        ProjectResult::findOne(['project_id' => $project->project_id, 'year' => $model->year,]) : new ProjectResult();
-                        $resultModel->project_id = $project->project_id;
-                        $resultModel->year = $model->year;
-                        $resultModel->submitted_by = Yii::$app->user->id;
-                        $projectResults[$project->project_id] = $resultModel;
-                        $selectedIDs[] = $project->project_id;
+
+                    $resultModel = ProjectResult::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) ?
+                    ProjectResult::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) : new ProjectResult();
+
+                    $resultModel->project_id = $project->project_id;
+                    $resultModel->year = $project->year;
+                    $resultModel->quarter = $model->quarter;
+
+                    $projectResults[$project->project_id] = $resultModel;
+
+                    $accomplishmentAccomp = Accomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) ?
+                    Accomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) : new Accomplishment();
+
+                    $accomplishmentAccomp->project_id = $project->project_id;
+                    $accomplishmentAccomp->year = $project->year;
+                    $accomplishmentAccomp->quarter = $model->quarter;
+                    $accomplishmentAccomp->action = $project->project->isCompleted == true ? 1 : 0;
+
+                    $accomplishment[$project->project_id] = $accomplishmentAccomp;
                 }
             }
-
-            $projectsPaging = Project::find();
-            $projectsPaging->andWhere(['id' => $selectedIDs]);
-            $countProjects = clone $projectsPaging;
-            $projectsPages = new Pagination(['totalCount' => $countProjects->count()]);
-            $projectsModels = $projectsPaging->offset($projectsPages->offset)
-                ->limit($projectsPages->limit)
-                ->orderBy(['id' => SORT_ASC])
-                ->all();
         }
         if(
-            MultipleModel::loadMultiple($projectResults, Yii::$app->request->post())
+            MultipleModel::loadMultiple($projectResults, Yii::$app->request->post()) &&
+            MultipleModel::loadMultiple($accomplishment, Yii::$app->request->post())
         )
         {
 
@@ -150,6 +165,17 @@ class ProjectResultController extends Controller
                     }
                 }
 
+                if(!empty($accomplishment))
+                {
+                    foreach($accomplishment as $accomp)
+                    {
+                        if(!($flag = $accomp->save())){
+                            $transaction->rollBack();
+                            break;
+                        }
+                    }
+                }
+
                 if($flag)
                 {
                     $transaction->commit();
@@ -157,12 +183,15 @@ class ProjectResultController extends Controller
                         \Yii::$app->getSession()->setFlash('success', 'Project Results Saved');
                         return Yii::$app->user->can('AgencyUser') ? isset($getData['page']) ? 
                             $this->redirect(['/rpmes/project-result/', 
-                            'Project[year]' => $getData['year'], 
+                            'Project[year]' => $getData['year'],
+                            'Project[quarter]' => $getData['quarter'],  
                             'page' => $getData['page'],
                         ]) : $this->redirect(['/rpmes/project-result/', 
                             'Project[year]' => $getData['year'], 
+                            'Project[quarter]' => $getData['quarter'],
                         ]) : $this->redirect(['/rpmes/project-result/', 
                             'Project[year]' => $getData['year'], 
+                            'Project[quarter]' => $getData['quarter'],
                             'Project[agency_id]' => $getData['agency_id'], 
                         ]);
                 }
@@ -173,8 +202,10 @@ class ProjectResultController extends Controller
 
         return $this->render('index', [
             'model' => $model,
+            'quarters' => $quarters,
             'years' => $years,
             'agencies' => $agencies,
+            'accomplishment' => $accomplishment,
             'projectResults' => $projectResults,
             'projectsModels' => $projectsModels,
             'projectsPages' => $projectsPages,

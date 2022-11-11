@@ -18,7 +18,7 @@ use yii\web\View;
     ]); ?>
 
 <div class="row">
-        <div class="col-md-6 col-xs-12">
+        <div class="col-md-4 col-xs-12">
             <?= $form->field($model, 'year')->widget(Select2::classname(), [
                 'data' => $years,
                 'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
@@ -28,7 +28,17 @@ use yii\web\View;
                 ])->label('Year *');
             ?>
         </div>
-        <div class="col-md-6 col-xs-12">
+        <div class="col-md-4 col-xs-12">
+            <?= $form->field($model, 'quarter')->widget(Select2::classname(), [
+                'data' => $quarters,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'quarter-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Quarter *');
+            ?>
+        </div>
+        <div class="col-md-4 col-xs-12">
             <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
                 'data' => $agencies,
                 'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'quarter-select'],

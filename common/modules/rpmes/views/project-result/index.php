@@ -24,6 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= $this->render('_search', [
                         'model' => $model,
                         'years' => $years,
+                        'quarters' => $quarters,
                         'agencies' => $agencies,
                     ]) ?>
                     <br><br>
@@ -32,7 +33,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?= $this->render('_report', [
                             'model' => $model,
                             'years' => $years,
+                            'quarters' => $quarters,
                             'agencies' => $agencies,
+                            'accomplishment' => $accomplishment,
                             'projectResults' => $projectResults,
                             'projectsModels' => $projectsModels,
                             'projectsPages' => $projectsPages,

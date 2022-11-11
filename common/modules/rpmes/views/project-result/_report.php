@@ -41,7 +41,6 @@ function renderSummary($page)
                     <td align=center><b>Objective</td>
                     <td align=center><b>Results Indicator</td>
                     <td align=center><b>Observed Results</td>
-                    <td align=center><b>Deadline</td>
                     <td align=center><b>Action</td>
                 </tr>   
             </thead>
@@ -51,7 +50,13 @@ function renderSummary($page)
                     <?php foreach($projectsModels as $model){ ?>
                         <tr>
                             <td align=center><?= $idx ?></td>
-                            <td align=center><?= $model->title ?></td>
+                            <td align=left> 
+                                    (a) <?= $model->project_no ?> <br>
+                                    (b) <?= $model->title ?> <br>
+                                    (c) <?= $model->startDate ?> to <?= $model->completionDate ?> <br>
+                                    (d) <?= $model->location ?> <br>
+                                    (e) <?= $model->fundSourceTitle ?> <br>
+                            </td>
                             <td align=center>
                                 <?= $form->field($projectResults[$model->id], "[$model->id]objective")->widget(CKEditor::className(), [
                                     'options' => ['rows' => 6, 'style' => 'resize: none;'],
@@ -71,18 +76,7 @@ function renderSummary($page)
                                 ])->label(false) ?>
                             </td>
                             <td align=center>
-                                <?= $form->field($projectResults[$model->id], "[$model->id]deadline")->widget(DatePicker::className(), [
-                                    'type' => DatePicker::TYPE_COMPONENT_APPEND,
-                                    'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
-                                    'pluginOptions' => [
-                                        'autoclose'=>true,
-                                        'format' => 'yyyy-mm-dd',
-                                        'startDate' => '0d'
-                                ],
-                                ])->label('');?>
-                            </td>
-                            <td align=center>
-                                    <?= $form->field($projectResults[$model->id], "[$model->id]action")->widget(Switchery::className(), [
+                                    <?= $form->field($accomplishment[$model->id], "[$model->id]action")->widget(Switchery::className(), [
                                         'options' => [
                                             'label' => false,
                                             'title' => 'Toggle if project is completed',
