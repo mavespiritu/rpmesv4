@@ -41,7 +41,7 @@ function renderSummary($page)
                     <td align=center><b>Objective</td>
                     <td align=center><b>Results Indicator</td>
                     <td align=center><b>Observed Results</td>
-                    <td align=center><b>Action</td>
+                    <td align=center><b>Is Project Completed?</td>
                 </tr>   
             </thead>
             <tbody>
@@ -58,22 +58,16 @@ function renderSummary($page)
                                     (e) <?= $model->fundSourceTitle ?> <br>
                             </td>
                             <td align=center>
-                                <?= $form->field($projectResults[$model->id], "[$model->id]objective")->widget(CKEditor::className(), [
-                                    'options' => ['rows' => 6, 'style' => 'resize: none;','disabled' => $model->isCompleted == true ? true : false],
-                                    'preset' => 'basic'
-                                ])->label(false) ?>
+                                <?= $form->field($projectResults[$model->id], "[$model->id]objective")->textArea(['rows' => '3', 'style' => 'resize: none;',
+                                            'disabled' => $model->isCompleted == true ? true : false])->label(false) ?>
                             </td>
                             <td align=center>
-                                <?= $form->field($projectResults[$model->id], "[$model->id]results_indicator")->widget(CKEditor::className(), [
-                                    'options' => ['rows' => 6, 'style' => 'resize: none;', 'disabled' => $model->isCompleted == true ? true : false],
-                                    'preset' => 'basic'
-                                ])->label(false) ?>
+                                <?= $form->field($projectResults[$model->id], "[$model->id]results_indicator")->textArea(['rows' => '3', 'style' => 'resize: none;',
+                                            'disabled' => $model->isCompleted == true ? true : false])->label(false) ?>
                             </td>
                             <td align=center>
-                                <?= $form->field($projectResults[$model->id], "[$model->id]observed_results")->widget(CKEditor::className(), [
-                                    'options' => ['rows' => 6, 'style' => 'resize: none;','disabled' => $model->isCompleted == true ? true : false],
-                                    'preset' => 'basic'
-                                ])->label(false) ?>
+                                <?= $form->field($projectResults[$model->id], "[$model->id]observed_results")->textArea(['rows' => '3', 'style' => 'resize: none;',
+                                            'disabled' => $model->isCompleted == true ? true : false])->label(false) ?>
                             </td>
                             <td align=center>
                                     <?= $form->field($accomplishment[$model->id], "[$model->id]action")->widget(Switchery::className(), [
@@ -91,7 +85,7 @@ function renderSummary($page)
                                                 enableInputFields(this.value, '.$model->id.');
                                             }'),
                                         ]
-                                    ])->label('Project is completed?') ?>
+                                    ])->label(false) ?>
                                 </td>
                         </tr>
                         <?php $idx ++ ?>
@@ -120,9 +114,13 @@ function renderSummary($page)
     {
         if(toggle == 1)
         {
-            $("#projectResults-"+id+"-observed_results").prop("disabled", true);
+            $("#projectresult-"+id+"-objective").prop("disabled", true);
+            $("#projectresult-"+id+"-results_indicator").prop("disabled", true);
+            $("#projectresult-"+id+"-observed_results").prop("disabled", true);
         }else{
-            $("#projectResults-"+id+"-observed_results").prop("disabled", false);
+            $("#projectresult-"+id+"-objective").prop("disabled", false);
+            $("#projectresult-"+id+"-results_indicator").prop("disabled", false);
+            $("#projectresult-"+id+"-observed_results").prop("disabled", false);
         }
     }
     $(document).ready(function(){

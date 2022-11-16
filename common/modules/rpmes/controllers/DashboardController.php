@@ -95,6 +95,36 @@ class DashboardController extends \yii\web\Controller
         $exceptionQ3 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q3']);
         $exceptionQ4 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q4']);
 
+        $agencies = Agency::find()->select(['id', 'code as title'])->orderBy(['code' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        $countPerProject = [];
+
+        if($agencies)
+        {
+            foreach($agencies as $agency)
+            {
+                $count = Project::find(['agency_id' => $agencies->id])->count();
+
+                $resultModel->project_id = $project->project_id;
+                $resultModel->year = $project->year;
+                $resultModel->quarter = $model->quarter;
+
+                $projectResults[$project->project_id] = $resultModel;
+
+                $accomplishmentAccomp = Accomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) ?
+                Accomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) : new Accomplishment();
+
+                $accomplishmentAccomp->project_id = $project->project_id;
+                $accomplishmentAccomp->year = $project->year;
+                $accomplishmentAccomp->quarter = $model->quarter;
+
+                $accomplishmentAccomp->action = $project->project->isCompleted == true ? 1 : 0;
+
+                $accomplishment[$project->project_id] = $accomplishmentAccomp;
+            }
+        }
+
         return $this->render('index',[
             'monitoringPlan' => $monitoringPlan,
             'accompQ1' => $accompQ1,
