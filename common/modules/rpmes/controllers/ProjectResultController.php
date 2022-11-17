@@ -8,6 +8,7 @@ use common\modules\rpmes\models\Plan;
 use common\modules\rpmes\models\Project;
 use common\modules\rpmes\models\ProjectResult;
 use common\modules\rpmes\models\Accomplishment;
+use common\modules\rpmes\models\PRojectOutcome;
 use common\modules\rpmes\models\ProjectResultSearch;
 use common\modules\rpmes\models\MultipleModel;
 use yii\web\Controller;
@@ -56,6 +57,7 @@ class ProjectResultController extends Controller
     {
         $projectResults = [];
         $accomplishment = [];
+        $projectOutcome = [];
         $getData = [];
 
         $projectsModels = null;
@@ -141,12 +143,21 @@ class ProjectResultController extends Controller
                     $accomplishmentAccomp->action = $project->project->isCompleted == true ? 1 : 0;
 
                     $accomplishment[$project->project_id] = $accomplishmentAccomp;
+
+                    $projectOutcomeModel = ProjectOutcome::findOne(['project_id' => $project->project_id, 'year' => $project->year]) ?
+                    ProjectOutcome::findOne(['project_id' => $project->project_id, 'year' => $project->year]) : new ProjectOutcome();
+
+                    $projectOutcomeModel->project_id = $project->project_id;
+                    $projectOutcomeModel->year = $project->year;
+
+                    $projectOutcome[$project->project_id] = $projectOutcomeModel;
                 }
             }
         }
         if(
             MultipleModel::loadMultiple($projectResults, Yii::$app->request->post()) &&
-            MultipleModel::loadMultiple($accomplishment, Yii::$app->request->post())
+            MultipleModel::loadMultiple($accomplishment, Yii::$app->request->post()) &&
+            MultipleModel::loadMultiple($projectOutcome, Yii::$app->request->post())
         )
         {
 
@@ -170,6 +181,17 @@ class ProjectResultController extends Controller
                     foreach($accomplishment as $accomp)
                     {
                         if(!($flag = $accomp->save())){
+                            $transaction->rollBack();
+                            break;
+                        }
+                    }
+                }
+
+                if(!empty($projectOutcome))
+                {
+                    foreach($projectOutcome as $projectOut)
+                    {
+                        if(!($flag = $projectOut->save())){
                             $transaction->rollBack();
                             break;
                         }
@@ -207,6 +229,7 @@ class ProjectResultController extends Controller
             'agencies' => $agencies,
             'accomplishment' => $accomplishment,
             'projectResults' => $projectResults,
+            'projectOutcome' => $projectOutcome,
             'projectsModels' => $projectsModels,
             'projectsPages' => $projectsPages,
             'getData' => $getData,

@@ -95,35 +95,30 @@ class DashboardController extends \yii\web\Controller
         $exceptionQ3 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q3']);
         $exceptionQ4 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q4']);
 
-        $agencies = Agency::find()->select(['id', 'code as title'])->orderBy(['code' => SORT_ASC])->asArray()->all();
-        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+        $agencyId = Agency::find()->select(['id'])->orderBy(['code' => SORT_ASC])->all();
 
-        $countPerProject = [];
+        $agencies = Agency::find()->select(['code as title']);
+        $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
 
-        if($agencies)
+        $countPerProjectMaintained = [];
+        $countPerProjectCumulative = [];
+        $countPerProjectDefault = [];
+
+        //echo '<pre>'; print_r($agencies); exit;
+
+        if($agencyId)
         {
-            foreach($agencies as $agency)
+            foreach($agencyId as $agency)
             {
-                $count = Project::find(['agency_id' => $agencies->id])->count();
+                $count = Project::find(['agency_id' => $agency->id, 'data_type' => 'Maintained'])->count();
 
-                $resultModel->project_id = $project->project_id;
-                $resultModel->year = $project->year;
-                $resultModel->quarter = $model->quarter;
+                $countPerProjectMaintained[$agency->id] = $count;
 
-                $projectResults[$project->project_id] = $resultModel;
-
-                $accomplishmentAccomp = Accomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) ?
-                Accomplishment::findOne(['project_id' => $project->project_id, 'year' => $project->year, 'quarter' => $model->quarter]) : new Accomplishment();
-
-                $accomplishmentAccomp->project_id = $project->project_id;
-                $accomplishmentAccomp->year = $project->year;
-                $accomplishmentAccomp->quarter = $model->quarter;
-
-                $accomplishmentAccomp->action = $project->project->isCompleted == true ? 1 : 0;
-
-                $accomplishment[$project->project_id] = $accomplishmentAccomp;
             }
         }
+
+        echo '<pre>'; print_r($countPerProjectMaintained); exit;
+
 
         return $this->render('index',[
             'monitoringPlan' => $monitoringPlan,
@@ -135,6 +130,8 @@ class DashboardController extends \yii\web\Controller
             'exceptionQ2' => $exceptionQ2,
             'exceptionQ3' => $exceptionQ3,
             'exceptionQ4' => $exceptionQ4,
+            'agencies' => $agencies,
+            'countPerProjectMaintained' => $countPerProjectMaintained
         ]);
     }
 

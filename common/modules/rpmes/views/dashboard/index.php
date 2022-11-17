@@ -180,7 +180,8 @@
     </div>
 </div>
 <?php
-$cars = array('Volvo', 'BMW', 'Toyota', 'Honda' ,'Ford','Mitsubishi','Suzuki', 'Morris Garage', 'Maserati');
+$agenc = $agencies;
+$count = $countPerProjectMaintained;
 $script = "
 Highcharts.chart('container', {
     chart: {
@@ -191,7 +192,7 @@ Highcharts.chart('container', {
     },
     
     xAxis: {
-        categories: ['".implode("','", $cars)."'],
+        categories: ['".implode("','", $agenc)."'],
         title: {
             text: null
         }
@@ -232,8 +233,8 @@ Highcharts.chart('container', {
         enabled: false
     },
     series: [{
-        name: 'Year 2019',
-        data: [631, 727, 3202, 721, 26, 500, 300, 12873, 1]
+        name: 'Maintained',
+        data: [".implode(",", $count)."]
     }, {
         name: 'Year 2020',
         data: [814, 841, 3714, 726, 31, 500, 200, 21637, 1]

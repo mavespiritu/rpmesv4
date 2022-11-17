@@ -40,6 +40,7 @@ function renderSummary($page)
                     <td align=center><b>Project Title</td>
                     <td align=center><b>Objective</td>
                     <td align=center><b>Results Indicator</td>
+                    <td align=center><b>Target</td>
                     <td align=center><b>Observed Results</td>
                     <td align=center><b>Is Project Completed?</td>
                 </tr>   
@@ -62,7 +63,11 @@ function renderSummary($page)
                                             'disabled' => $model->isCompleted == true ? true : false])->label(false) ?>
                             </td>
                             <td align=center>
-                                <?= $form->field($projectResults[$model->id], "[$model->id]results_indicator")->textArea(['rows' => '3', 'style' => 'resize: none;',
+                                <?= $form->field($projectOutcome[$model->id], "[$model->id]performance_indicator")->textArea(['rows' => '3', 'style' => 'resize: none;',
+                                            'disabled' => $model->isCompleted == true ? true : false])->label(false) ?>
+                            </td>
+                            <td align=center>
+                                <?= $form->field($projectOutcome[$model->id], "[$model->id]target")->textArea(['rows' => '3', 'style' => 'resize: none;',
                                             'disabled' => $model->isCompleted == true ? true : false])->label(false) ?>
                             </td>
                             <td align=center>

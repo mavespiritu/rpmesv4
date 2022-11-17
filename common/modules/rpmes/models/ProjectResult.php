@@ -36,7 +36,7 @@ class ProjectResult extends \yii\db\ActiveRecord
     {
         return [
             [['project_id', 'submitted_by','agency_id'], 'integer'],
-            [['objective', 'results_indicator', 'observed_results', 'action', 'quarter'], 'string'],
+            [['objective', 'observed_results', 'action', 'quarter'], 'string'],
             [[ 'date_submitted', 'year'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
         ];
@@ -53,7 +53,6 @@ class ProjectResult extends \yii\db\ActiveRecord
             'year' => 'Year',
             'project_id' => 'Project ID',
             'objective' => 'Objective',
-            'results_indicator' => 'Results Indicator',
             'observed_results' => 'Observed Results',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',

@@ -34,6 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             'agencies' => $agencies,
                             'accomplishment' => $accomplishment,
                             'projectResults' => $projectResults,
+                            'projectOutcome' => $projectOutcome,
                             'projectsModels' => $projectsModels,
                             'projectsPages' => $projectsPages,
                             'getData' => $getData,
