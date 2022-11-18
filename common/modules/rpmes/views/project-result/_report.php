@@ -120,11 +120,13 @@ function renderSummary($page)
         if(toggle == 1)
         {
             $("#projectresult-"+id+"-objective").prop("disabled", true);
-            $("#projectresult-"+id+"-results_indicator").prop("disabled", true);
+            $("#projectoutcome-"+id+"-performance_indicator").prop("disabled", true);
+            $("#projectoutcome-"+id+"-target").prop("disabled", true);
             $("#projectresult-"+id+"-observed_results").prop("disabled", true);
         }else{
             $("#projectresult-"+id+"-objective").prop("disabled", false);
-            $("#projectresult-"+id+"-results_indicator").prop("disabled", false);
+            $("#projectoutcome-"+id+"-performance_indicator").prop("disabled", false);
+            $("#projectoutcome-"+id+"-target").prop("disabled", false);
             $("#projectresult-"+id+"-observed_results").prop("disabled", false);
         }
     }
