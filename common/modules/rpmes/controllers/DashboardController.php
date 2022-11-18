@@ -117,7 +117,7 @@ class DashboardController extends \yii\web\Controller
             }
         }
 
-        echo '<pre>'; print_r($countPerProjectMaintained); exit;
+        //echo '<pre>'; print_r($countPerProjectMaintained); exit;
 
 
         return $this->render('index',[

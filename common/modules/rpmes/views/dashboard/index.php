@@ -14,55 +14,6 @@
 
     $HtmlHelper = new HtmlHelper();
 ?>
-<style>
-.highcharts-figure,
-.highcharts-data-table table {
-    min-width: 310px;
-    max-width: 800px;
-    margin: 1em auto;
-}
-
-#container {
-    height: 400px;
-}
-
-.highcharts-data-table table {
-    font-family: Verdana, sans-serif;
-    border-collapse: collapse;
-    border: 1px solid #ebebeb;
-    margin: 10px auto;
-    text-align: center;
-    width: 100%;
-    max-width: 500px;
-}
-
-.highcharts-data-table caption {
-    padding: 1em 0;
-    font-size: 1.2em;
-    color: #555;
-}
-
-.highcharts-data-table th {
-    font-weight: 600;
-    padding: 0.5em;
-}
-
-.highcharts-data-table td,
-.highcharts-data-table th,
-.highcharts-data-table caption {
-    padding: 0.5em;
-}
-
-.highcharts-data-table thead tr,
-.highcharts-data-table tr:nth-child(even) {
-    background: #f8f8f8;
-}
-
-.highcharts-data-table tr:hover {
-    background: #f1f7ff;
-}
-
-</style>
 <div class="dashboard-index">
     <div class="row">
         <div class="col-md-8 col-xs-12">
@@ -154,99 +105,8 @@
                     <h4>Recent Activities</h4>
                     <p>This section is under maintenance.</p>
                 </div>
-            </div>
-            
-        </div>
-        <div class="col-md-12 col-xs-12">
-            <div class="box box-solid">
-                <div class="box-body">
-                    <script src="https://code.highcharts.com/highcharts.js"></script>
-                    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-                    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-                    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
-
-                    <figure class="highcharts-figure">
-                        <div id="container"></div>
-                        <p class="highcharts-description">
-                            Bar chart showing horizontal columns. This chart type is often
-                            beneficial for smaller screens, as the user can scroll through the data
-                            vertically, and axis labels are easy to read.
-                        </p>
-                    </figure>
-                </div>
-            </div>
-            
+            </div>       
         </div>
     </div>
 </div>
-<?php
-$agenc = $agencies;
-$count = $countPerProjectMaintained;
-$script = "
-Highcharts.chart('container', {
-    chart: {
-        type: 'bar'
-    },
-    title: {
-        text: 'Projects'
-    },
-    
-    xAxis: {
-        categories: ['".implode("','", $agenc)."'],
-        title: {
-            text: null
-        }
-    },
-    yAxis: {
-        min: 0,
-        title: {
-            text: 'Projects',
-            align: 'high'
-        },
-        labels: {
-            overflow: 'justify'
-        }
-    },
-    tooltip: {
-        valueSuffix: 'projects'
-    },
-    plotOptions: {
-        bar: {
-            dataLabels: {
-                enabled: true
-            }
-        }
-    },
-    legend: {
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'top',
-        x: -40,
-        y: 80,
-        floating: true,
-        borderWidth: 1,
-        backgroundColor:
-            Highcharts.defaultOptions.legend.backgroundColor || '#FFFFFF',
-        shadow: true
-    },
-    credits: {
-        enabled: false
-    },
-    series: [{
-        name: 'Maintained',
-        data: [".implode(",", $count)."]
-    }, {
-        name: 'Year 2020',
-        data: [814, 841, 3714, 726, 31, 500, 200, 21637, 1]
-    }, {
-        name: 'Year 2021',
-        data: [1044, 944, 4170, 735, 40, 500, 300, 21876, 1]
-    }, {
-        name: 'Year 2022',
-        data: [1276, 1007, 4561, 746, 42, 500, 200, 25387, 1]
-    }]
-});";
-
-$this->registerJs($script, View::POS_END);
-?>
 
