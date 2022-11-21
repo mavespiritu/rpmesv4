@@ -31,7 +31,26 @@ CREATE TABLE `project_problem_solving_session` (
   `submitted_by` int(255) DEFAULT NULL,
   `date_submitted` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4;
+
+/*Table structure for table `project_result` */
+
+DROP TABLE IF EXISTS `project_result`;
+
+CREATE TABLE `project_result` (
+  `id` int(255) NOT NULL AUTO_INCREMENT,
+  `year` int(5) DEFAULT NULL,
+  `quarter` enum('Q1','Q2','Q3','Q4') DEFAULT NULL,
+  `project_id` int(255) NOT NULL,
+  `objective` text DEFAULT NULL,
+  `observed_results` text DEFAULT NULL,
+  `submitted_by` int(255) DEFAULT NULL,
+  `date_submitted` datetime DEFAULT NULL,
+  `action` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_project_result` (`project_id`),
+  CONSTRAINT `FK_project_result` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=504 DEFAULT CHARSET=utf8mb4;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

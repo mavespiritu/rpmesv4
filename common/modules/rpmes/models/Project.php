@@ -78,6 +78,7 @@ class Project extends \yii\db\ActiveRecord
             [['year', 'quarter'], 'required', 'on' => 'projectExceptionUser'],
             [['year', 'agency_id','quarter'], 'required', 'on' => 'projectExceptionAdmin'],
             [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
+            [['year', 'quarter', 'agency_id'], 'required', 'on' => 'projectResult'],
             /* [['source_id'], 'required',  'when' => function($model){
                 return ($model->period == 'Carry-Over');
             }], */
@@ -893,6 +894,14 @@ class Project extends \yii\db\ActiveRecord
         $dateSubmitted = $accomplishment ? date("F j, Y H:i:s", strtotime($accomplishment->date_submitted)) : 'No submission date';
 
         return $dateSubmitted;
+    }
+
+    public function getProjectResultDeadline()
+    {
+        $projectResult = ProjectResult::findOne(['project_id' => $this->id, 'year' => $this->year]);
+        $deadline = $projectResult ? date("F j, Y", strtotime($projectResult->deadline)) : 'No Deadline';
+
+        return $deadline;
     }
 
     public function getLocation()
