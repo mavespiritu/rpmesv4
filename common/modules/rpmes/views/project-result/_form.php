@@ -50,16 +50,6 @@ DisableButtonAsset::register($this);
 
     <?= $form->field($model, 'observed_results')->textarea(['rows' => 6]) ?>
 
-    <?= $form->field($model, 'deadline')->widget(DatePicker::className(), [
-                'type' => DatePicker::TYPE_COMPONENT_APPEND,
-                'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
-                'pluginOptions' => [
-                    'autoclose'=>true,
-                    'format' => 'yyyy-mm-dd',
-                    'startDate' => '0d'
-                ],
-    ])->label('Deadline *'); ?>
-
     <?= $form->field($model, 'action')->checkBox(['uncheck' => 0, 'checked' => 1])->label('Is Project Complete *:'); ?>
 
     <div class="form-group">

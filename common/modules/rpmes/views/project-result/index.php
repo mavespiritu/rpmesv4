@@ -11,9 +11,6 @@ $this->title = 'Project Results';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-result-index">
-    <p>
-        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
@@ -24,11 +21,26 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= $this->render('_search', [
                         'model' => $model,
                         'years' => $years,
+                        'quarters' => $quarters,
                         'agencies' => $agencies,
                     ]) ?>
                     <br><br>
                     <hr>
-                    <div id="project-result-table"></div>
+                    <?php if(!empty($getData)){ ?>
+                        <?= $this->render('_report', [
+                            'model' => $model,
+                            'years' => $years,
+                            'quarters' => $quarters,
+                            'agencies' => $agencies,
+                            'accomplishment' => $accomplishment,
+                            'projectResults' => $projectResults,
+                            'projectOutcome' => $projectOutcome,
+                            'projectsModels' => $projectsModels,
+                            'projectsPages' => $projectsPages,
+                            'getData' => $getData,
+                            'agency_id' => $agency_id
+                        ]); ?>
+                    <?php } ?>
                 </div>
             </div>
         </div>
