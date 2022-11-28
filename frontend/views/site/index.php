@@ -13,14 +13,12 @@ $this->title = 'eRPMES';
 ?>
 <div class='site-index'>
 
-    <div class='jumbotron'>
-        <h2>Welcome to eRPMES!</h2>
-    </div>
-    <div class='body-content container'>
-    <div class="acknowledgment-monitoring-report-search">
+        <h2 align=center>Welcome to eRPMES Dashboard!</h2>
 
+    <div class='body-content container'>
+<hr>
 <?php $form = ActiveForm::begin([
-    'id' => 'search-summary-monitoring-report-form'
+    'id' => 'search-dashboard-form'
 ]); ?>
 
 <div class="row">
@@ -96,7 +94,6 @@ $this->title = 'eRPMES';
                             $(".province-select").select2("val","");
                         });
                     }'
-
             ]
             ]);
         ?>
@@ -127,7 +124,9 @@ $this->title = 'eRPMES';
         <?= Html::submitButton('Generate Data', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;']) ?>
 </div>
 <div class="clearfix"></div>
+<hr>
 <?php ActiveForm::end(); ?>
+
         <div class='row'>
             <div class='col-lg-4'>
                 <h3 style='color: #3C8DBC;'><i class='fa fa-folder-open'></i>Events</h3>
@@ -137,20 +136,9 @@ $this->title = 'eRPMES';
             <div class='col-lg-6'>
                 <h3 style='color: #3C8DBC;'><i class='fa fa-map-marker'></i>Heat Map</h3>
 
-                <p>
-                    <script src="https://code.highcharts.com/highcharts.js"></script>
-                    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-                    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-                    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+                <div id="dashboard-table">
 
-                    <figure class="highcharts-figure">
-                        <div id="container"></div>
-                        <p class="highcharts-description">
-                            Project count per Municipality depending on Provinces and Regionwide Projects
-                        </p>
-                    </figure>
-                </p>
-                <div id="container"></div>
+                </div>
             </div>
             <div class='col-lg-2'>
                 <h3 style='color: #3C8DBC;'><i class='fa fa-area-chart'></i>Statistics</h3>
@@ -158,7 +146,7 @@ $this->title = 'eRPMES';
                 <p>Your data and statistics will be showcased through graphs and charts.</p>
             </div>
         </div>
-        <br>
+        <hr>
         <h2 class='text-center'>About</h2>
         <br>
         <div class='row'>
@@ -174,3 +162,36 @@ $this->title = 'eRPMES';
         </div>
     </div>
 </div>
+<?php
+    $script = '
+    $("#search-dashboard-form").on("beforeSubmit", function (e) {
+        e.preventDefault();
+     
+        var form = $(this);
+        var formData = form.serialize();
+        
+        $.ajax({
+            url: form.attr("action"),
+            type: form.attr("method"),
+            data: formData,
+            beforeSend: function(){
+                $("#dashboard-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+            },
+            success: function (data) {
+                console.log(this.data);
+                $("#dashboard-table").empty();
+                $("#dashboard-table").hide();
+                $("#dashboard-table").fadeIn("slow");
+                $("#dashboard-table").html(data);
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        });      
+
+        return false;
+    });
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>

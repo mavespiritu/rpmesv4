@@ -341,7 +341,7 @@ class SiteController extends Controller
 
                 //echo '<pre>'; print_r($projects); exit;
 
-                return $this->renderAjax('summary-accomplishment/_report', [
+                return $this->renderAjax('_heatmap', [
                     'model' => $model,
                     'projects' => $projects,
                 ]);
@@ -359,7 +359,6 @@ class SiteController extends Controller
             'regions' => $regions,
             'provinces' => $provinces,
             'fundSources' => $fundSources,
-            'status' => $status,
         ]);
     }
     /**
