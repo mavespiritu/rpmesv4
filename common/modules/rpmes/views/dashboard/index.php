@@ -105,8 +105,8 @@
                     <h4>Recent Activities</h4>
                     <p>This section is under maintenance.</p>
                 </div>
-            </div>       
+            </div>
+            
         </div>
     </div>
 </div>
-
