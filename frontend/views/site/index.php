@@ -33,13 +33,13 @@ $this->title = 'eRPMES';
         ?>
     </div>
     <div class="col-md-3 col-xs-12">
-        <?= $form->field($model, 'quarter')->widget(Select2::classname(), [
-            'data' => $quarters,
-            'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'quarter-select'],
+        <?= $form->field($model, 'province_id')->widget(Select2::classname(), [
+            'data' => $provinces,
+            'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'province-select'],
             'pluginOptions' => [
                 'allowClear' =>  true,
             ],
-            ])->label('Quarter *');
+            ]);
         ?>
     </div>
     <div class="col-md-3 col-xs-12">
@@ -66,47 +66,38 @@ $this->title = 'eRPMES';
 <div class="row">
     <div class="col-md-3 col-xs-12">
         <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
-            'data' => $sectors,
-            'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
-            'pluginOptions' => [
-                'allowClear' =>  true,
-            ],
-            ]);
-        ?>
+                'data' => $sectors,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                'pluginEvents'=>[
+                    'select2:select'=>'
+                        function(){
+                            $.ajax({
+                                url: "'.Url::to(['/rpmes/project/sub-sector-list']).'",
+                                data: {
+                                        id: this.value,
+                                    }
+                            }).done(function(result) {
+                                $(".sub-sector-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
+                                $(".sub-sector-select").select2("val","");
+                            });
+                        }'
+    
+                ]
+                ]);
+            ?>
     </div>
     <div class="col-md-3 col-xs-12">
-        <?= $form->field($model, 'region_id')->widget(Select2::classname(), [
-            'data' => $regions,
-            'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'region-select'],
-            'pluginOptions' => [
-                'allowClear' =>  true,
-            ],
-            'pluginEvents'=>[
-                'select2:select select2:unselect'=>'
-                    function(){
-                        $.ajax({
-                            url: "'.Url::to(['/rpmes/project/province-list-single']).'",
-                            data: {
-                                    id: this.value,
-                                }
-                        }).done(function(result) {
-                            $(".province-select").html("").select2({ data:result, multiple:false, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
-                            $(".province-select").select2("val","");
-                        });
-                    }'
-            ]
-            ]);
-        ?>
-    </div>
-    <div class="col-md-3 col-xs-12">
-        <?= $form->field($model, 'province_id')->widget(Select2::classname(), [
-            'data' => $provinces,
-            'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'province-select'],
-            'pluginOptions' => [
-                'allowClear' =>  true,
-            ],
-            ]);
-        ?>
+            <?= $form->field($model, 'sub_sector_id')->widget(Select2::classname(), [
+                'data' => $subSectors,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sub-sector-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ]);
+            ?>
     </div>
     <div class="col-md-3 col-xs-12">
         <?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [

@@ -95,7 +95,7 @@ class SiteController extends Controller
         $model = new Submission();
 
         $model->year = date("Y");
-        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+        //$quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
 
         //$status = ['C' => 'Completed', 'O' => 'On-going', 'N' => 'Not Yet Started'];
 
@@ -119,10 +119,8 @@ class SiteController extends Controller
         $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->asArray()->all();
         $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
 
-        $regions = Region::find()->orderBy(['region_sort' => SORT_ASC])->all();
-        $regions = ArrayHelper::map($regions, 'region_c', 'abbreviation');
-
-        $provinces = [];
+        $provinces = Province::find()->where(['region_c' => 01])->orderBy(['province_m' => SORT_ASC])->all();
+        $provinces = ArrayHelper::map($provinces, 'province_c', 'province_m');
 
         $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->orderBy(['title' => SORT_ASC])->asArray()->all();
         $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
@@ -350,13 +348,11 @@ class SiteController extends Controller
 
         return $this->render('index', [
             'model' => $model,
-            'quarters' => $quarters,
             'years' => $years,
             'agencies' => $agencies,
             'sectors' => $sectors,
             'subSectors' => $subSectors,
             'categories' => $categories,
-            'regions' => $regions,
             'provinces' => $provinces,
             'fundSources' => $fundSources,
         ]);
