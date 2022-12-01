@@ -26,6 +26,7 @@ DisableButtonAsset::register($this);
 
 <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
 <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
 
 <div id="graphs-table" style="height: 300px; overflow-y: scroll;">
@@ -131,8 +132,7 @@ DisableButtonAsset::register($this);
             legend.data.setAll(series.dataItems);
             
             series.appear(1000, 100);
-            
-            });
+        });
     ";
 
     $this->registerJs($script, View::POS_END);
