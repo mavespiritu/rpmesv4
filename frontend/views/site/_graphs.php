@@ -35,7 +35,7 @@ DisableButtonAsset::register($this);
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" style="width: 100%; height: 200px;" >
         <thead>
             <tr>
-                <td rowspan=2 align=center><b>Agencies</b></td>
+                <td rowspan=2 align=center><b>Sectors</b></td>
                 <td colspan=3 align=center><b>Project Status</b></td>
                 <td rowspan=2 align=center><b>Total</b></td>
             </tr>

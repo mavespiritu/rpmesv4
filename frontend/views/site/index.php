@@ -178,7 +178,7 @@ $this->title = 'eRPMES';
 
     function showHideFilter() {
         var x = document.getElementById("filterForm");
-        if (x.style.display === "none") {
+        if (x.style.display == "none") {
           x.style.display = "block";
         } else {
           x.style.display = "none";
