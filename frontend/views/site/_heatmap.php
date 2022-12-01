@@ -13,7 +13,7 @@ DisableButtonAsset::register($this);
 /* @var $form yii\widgets\ActiveForm */
 
 ?>
-<div id="dashboard-table">
+<div id="heatmap-table">
     <?php if(!empty($projects)){ ?>
         <?php foreach($projects as $project){ ?>
                 <?= $project['provinceTitle'] ?><br>
