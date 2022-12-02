@@ -359,25 +359,25 @@ class SiteController extends Controller
 
                 if($model->region_id != '')
                 {
-                    $projects = $projects->andWhere(['project.id' => $regionIDs]);
+                    $projectStatus = $projectStatus->andWhere(['project.id' => $regionIDs]);
                     $projectFinancial = $projectFinancial->andWhere(['project.id' => $regionIDs]);
                 }
 
                 if($model->province_id != '')
                 {
-                    $projects = $projects->andWhere(['project.id' => $provinceIDs]);
+                    $projectStatus = $projectStatus->andWhere(['project.id' => $provinceIDs]);
                     $projectFinancial = $projectFinancial->andWhere(['project.id' => $provinceIDs]);
                 }
 
                 if($model->category_id != '')
                 {
-                    $projects = $projects->andWhere(['project.id' => $categoryIDs]);
+                    $projectStatus = $projectStatus->andWhere(['project.id' => $categoryIDs]);
                     $projectFinancial = $projectFinancial->andWhere(['project.id' => $categoryIDs]);
                 }
 
                 if($model->fund_source_id != '')
                 {
-                    $projects = $projects->andWhere(['fund_source.id' => $model->fund_source_id]);
+                    $projectStatus = $projectStatus->andWhere(['fund_source.id' => $model->fund_source_id]);
                     $projectFinancial = $projectFinancial->andWhere(['fund_source.id' => $model->fund_source_id]);
                 }
 
