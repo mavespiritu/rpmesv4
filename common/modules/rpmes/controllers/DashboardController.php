@@ -95,31 +95,6 @@ class DashboardController extends \yii\web\Controller
         $exceptionQ3 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q3']);
         $exceptionQ4 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q4']);
 
-        $agencyId = Agency::find()->select(['id'])->orderBy(['code' => SORT_ASC])->all();
-
-        $agencies = Agency::find()->select(['code as title']);
-        $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
-
-        $countPerProjectMaintained = [];
-        $countPerProjectCumulative = [];
-        $countPerProjectDefault = [];
-
-        //echo '<pre>'; print_r($agencies); exit;
-
-        if($agencyId)
-        {
-            foreach($agencyId as $agency)
-            {
-                $count = Project::find(['agency_id' => $agency->id, 'data_type' => 'Maintained'])->count();
-
-                $countPerProjectMaintained[$agency->id] = $count;
-
-            }
-        }
-
-        //echo '<pre>'; print_r($countPerProjectMaintained); exit;
-
-
         return $this->render('index',[
             'monitoringPlan' => $monitoringPlan,
             'accompQ1' => $accompQ1,
@@ -130,9 +105,6 @@ class DashboardController extends \yii\web\Controller
             'exceptionQ2' => $exceptionQ2,
             'exceptionQ3' => $exceptionQ3,
             'exceptionQ4' => $exceptionQ4,
-            'agencies' => $agencies,
-            'countPerProjectMaintained' => $countPerProjectMaintained
         ]);
     }
-
 }
