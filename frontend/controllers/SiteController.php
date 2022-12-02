@@ -400,10 +400,13 @@ class SiteController extends Controller
                     }
                 }
 
-                foreach($projectFinancial as $financial)
-                    {
-                        $script .= "{ category: '".$financial['category']."', value: ".(($financial['value'] / $totalAllocation) * 1000)."}, ";
-                    }
+                if($projectFinancial)
+                {
+                    foreach($projectFinancial as $financial)
+                        {
+                            $script .= "{ category: '".$financial['category']."', value: ".(($financial['value'] / $totalAllocation) * 1000)."}, ";
+                        }
+                }
 
                 //echo $script; exit;
 
