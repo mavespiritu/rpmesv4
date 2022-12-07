@@ -55,7 +55,9 @@ use yii\helpers\Html;
                     </ul>
                 </li>
             <?php }else{ ?>
-                <li class="text-white"><?= Html::a('HOME', ['/site/index']) ?></li>
+                <li class="text-white"><?= Html::a('Summary Report', ['/site/index']) ?></li>
+                <li class="text-white"><?= Html::a('How to', ['/site/index']) ?></li>
+                <li class="text-white"><?= Html::a('Home', ['/site/index']) ?></li>
                 <li class="text-white"><?= Html::a('LOGIN', ['/user/login']) ?></li>
                 <li class="text-white"><?= Html::a('SIGNUP', ['/user/register']) ?></li>
             <?php } ?>

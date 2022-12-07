@@ -107,5 +107,4 @@ class DashboardController extends \yii\web\Controller
             'exceptionQ4' => $exceptionQ4,
         ]);
     }
-
 }

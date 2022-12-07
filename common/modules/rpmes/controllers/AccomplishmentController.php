@@ -138,15 +138,15 @@ class AccomplishmentController extends \yii\web\Controller
         {   
             $agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : $model->agency_id;
 
-            $submissionModel = Submission::findOne(['report' => 'Accomplishment', 'year' => $model->year, 'quarter' => $model->quarter]) ?
-                               Submission::findOne(['report' => 'Accomplishment', 'year' => $model->year, 'quarter' => $model->quarter]) : new Submission();
+            $submissionModel = Submission::findOne(['agency_id' => $model->agency_id, 'report' => 'Accomplishment', 'year' => $model->year, 'quarter' => $model->quarter]) ?
+                               Submission::findOne(['agency_id' => $model->agency_id, 'report' => 'Accomplishment', 'year' => $model->year, 'quarter' => $model->quarter]) : new Submission();
             $dueDate = DueDate::findOne(['report' => 'Accomplishment', 'quarter' => $model->quarter, 'year' => $model->year]);
-            // if(Yii::$app->user->can('AgencyUser')){
-            //     if(Yii::$app->user->identity->userinfo->AGENCY_C != $model->agency_id)
-            //     {
-            //         throw new ForbiddenHttpException('Not allowed to access');
-            //     }
-            // }
+            if(Yii::$app->user->can('AgencyUser')){
+                if(Yii::$app->user->identity->userinfo->AGENCY_C != $model->agency_id)
+                {
+                    throw new ForbiddenHttpException('Not allowed to access');
+                }
+            }
 
             $getData = Yii::$app->request->get('Project');
             $categoryIDs = ProjectCategory::find();
@@ -159,7 +159,33 @@ class AccomplishmentController extends \yii\web\Controller
                 ->groupBy(['project_category.project_id'])
                 ->createCommand()->getRawSql();
 
-            $projectIDs = Yii::$app->user->can('AgencyUser') ? 
+            if($model->category_id != '')
+            {
+                $categoryIDs = $categoryIDs->andWhere(['category_id' => $model->category_id]);
+            }
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+            if($model->scenario == 'accomplishmentUser'){
+
+                $projectIDs = Yii::$app->user->can('AgencyUser') ? 
+                        Submission::findOne(['year' => $model->year, 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
+                        Plan::find()
+                        ->select(['project.id as id'])
+                        ->leftJoin('project', 'project.id = plan.project_id')
+                        ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year])
+                        ->all():
+                        [] :
+                        Plan::find()
+                        ->select(['project.id as id'])
+                        ->leftJoin('project', 'project.id = plan.project_id')
+                        ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year])
+                        ->all();
+
+            }else{
+
+                $projectIDs = Yii::$app->user->can('AgencyUser') ? 
                         Submission::findOne(['year' => $model->year, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
                         Plan::find()
                         ->select(['project.id as id'])
@@ -171,37 +197,29 @@ class AccomplishmentController extends \yii\web\Controller
                         ->leftJoin('project', 'project.id = plan.project_id')
                         ->where(['project.draft' => 'No', 'plan.year' => $model->year]);
 
-            if($model->sector_id != '')
-            {
-                $projectIDs = $projectIDs->leftJoin('sector', 'sector.id = project.sector_id');
-                $projectIDs = $projectIDs->andWhere(['sector.id' => $model->sector_id]);
+                if($model->agency_id != '')
+                    {
+                        $projectIDs = $projectIDs->leftJoin('agency', 'agency.id = project.agency_id');
+                        $projectIDs = $projectIDs->andWhere(['agency.id' => $model->agency_id]);
+                    }
+
+                if($model->sector_id != '')
+                    {
+                        $projectIDs = $projectIDs->leftJoin('sector', 'sector.id = project.sector_id');
+                        $projectIDs = $projectIDs->andWhere(['sector.id' => $model->sector_id]);
+                    }
+                    
+                if($model->category_id != '')
+                    {
+                        $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
+                        $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
+                    }
+
+                $projectIDs = $projectIDs->all();
             }
 
-            $categoryIDs = $categoryIDs->all();
-            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-            if($model->category_id != '')
-            {
-                $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
-                $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
-            }
-
-            if($model->category_id != '')
-            {
-                $projectIDs = $projectIDs->leftJoin('project_category', 'project_category.project_id = project.id');
-                $projectIDs = $projectIDs->andWhere(['project_category.category_id' => $model->category_id]);  
-            }
-
-            if($model->agency_id != '')
-            {
-                $projectIDs = $projectIDs->leftJoin('agency', 'agency.id = project.agency_id');
-                $projectIDs = $projectIDs->andWhere(['agency.id' => $model->agency_id]);
-            }
-
-            $projectIDs = $projectIDs->asArray()->all();
-            
             $projectIDs = !empty($projectIDs) ? ArrayHelper::map($projectIDs, 'id', 'id') : [];
-            
+
             $projectsPaging = Project::find();
             $projectsPaging->andWhere(['id' => $projectIDs]);
             $countProjects = clone $projectsPaging;
@@ -211,17 +229,51 @@ class AccomplishmentController extends \yii\web\Controller
                 ->orderBy(['id' => SORT_ASC])
                 ->all();
 
-            $projects =  Yii::$app->user->can('AgencyUser') ? 
-                        Submission::findOne(['year' => $model->year, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
+                if($model->scenario == 'accomplishmentUser'){
+
+                    $projects =  Yii::$app->user->can('AgencyUser') ? 
+                        Submission::findOne(['year' => $model->year, 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
                         Plan::find()
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'plan.year' => $model->year])
+                        ->where(['project.draft' => 'No', 'project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'plan.year' => $model->year])
                         ->all() :
                         [] :
                         Plan::find()
                         ->leftJoin('project', 'project.id = plan.project_id')
-                        ->where(['project.draft' => 'No', 'plan.year' => $model->year])
+                        ->where(['project.draft' => 'No', 'project.agency_id' => $model->agency_id, 'plan.year' => $model->year])
                         ->all();
+                }else{
+
+                    $projects =  Yii::$app->user->can('AgencyUser') ? 
+                        Submission::findOne(['year' => $model->year, 'report' => 'Monitoring Plan', 'draft' => 'No']) ?
+                        Plan::find()
+                        ->leftJoin('project', 'project.id = plan.project_id')
+                        ->where(['project.draft' => 'No', 'plan.year' => $model->year]) :
+                        [] :
+                        Plan::find()
+                        ->leftJoin('project', 'project.id = plan.project_id')
+                        ->where(['project.draft' => 'No', 'plan.year' => $model->year]);
+
+                    if($model->sector_id != '')
+                    {
+                        $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
+                        $projects = $projects->andWhere(['sector.id' => $model->sector_id]);
+                    }
+
+                    if($model->agency_id != '')
+                    {
+                        $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
+                        $projects = $projects->andWhere(['agency.id' => $model->agency_id]);
+                    }
+
+                    if($model->category_id != '')
+                    {
+                        $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id');
+                        $projects = $projects->andWhere(['project_category.category_id' => $model->category_id]);  
+                    }
+
+                    $projects = $projects->all();
+                }
             
             if(!empty($projects))
             {
@@ -777,7 +829,9 @@ class AccomplishmentController extends \yii\web\Controller
                         'project.start_date as startDate',
                         'project.completion_date as completionDate',
                         'fund_source.title as fundSourceTitle',
+                        'categoryTitles.title as categoryTitle',
                         'agency.code as agencyTitle',
+                        'sector.title as sectorTitle',
                         'accomplishment.remarks as remarks',
                         'accomplishment.date_submitted as date_submitted',
                         $financialTargetTotalPerQuarter.' as allocationsAsOf',
@@ -810,6 +864,7 @@ class AccomplishmentController extends \yii\web\Controller
                     $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
                     $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
                     $projects = $projects->leftJoin(['submitterName' => '('.$submitterName.')'], 'submitterName.project_id = project.id');
+                    $projects = $projects->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
                     $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
                     $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
                     $projects = $projects->leftJoin('accomplishment', 'accomplishment.project_id = project.id');
@@ -844,6 +899,8 @@ class AccomplishmentController extends \yii\web\Controller
                     $projects = $projects->leftJoin(['groupBeneficiariesAccompsQ4' => '('.$groupBeneficiariesAccomps.')'], 'groupBeneficiariesAccompsQ4.project_id = project.id and groupBeneficiariesAccompsQ4.quarter = "Q4"');
                     $projects = $projects->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
                     $projects = $projects->andWhere(['project.id' => $projectIDs]);
+
+                    $reportName = 'RPMES_'.$model->year.'_'.$model->quarter;
         
                     if(Yii::$app->user->can('AgencyUser'))
                     {
@@ -857,7 +914,7 @@ class AccomplishmentController extends \yii\web\Controller
 
                     if($model->category_id != '')
                     {
-                        $projects = $projects->andWhere(['project_category.category_id' => $model->category_id]);  
+                        $projects = $projects->andWhere(['project_category.category_id' => $model->category_id]);
                     }
 
                     if($model->sector_id != '')
@@ -868,8 +925,42 @@ class AccomplishmentController extends \yii\web\Controller
         $projects = $projects->asArray()->all();
 
         //echo '<pre>'; print_r($projects); exit;
+                    $i=0;
+                    if($model->agency_id != '')
+                    {
+                        foreach($projects as $project){
+
+                            $reportName = $reportName.'_'.$project['agencyTitle'];
+                                $i++;
+                            if ($i = 1){ $i=0; break; }
+                        }
+                    }
+
+                    if($model->category_id != '')
+                    {
+                        foreach($projects as $project){
+
+                            $reportName = $reportName.'_'.$project['categoryTitle'];
+                                $i++;
+                            if ($i = 1){ $i=0; break; }
+                        }
+                    }
+
+                    if($model->sector_id != '')
+                    {
+                        foreach($projects as $project){
+
+                            $reportName = $reportName.'_'.$project['sectorTitle'];
+                                $i++;
+                            if ($i = 1){ $i=0; break; }
+                        }
+                    }
+
+                    $reportName = strtoupper($reportName.'_Summary_Accomplishment');
+
+        //echo $reportName; exit;
             
-        $filename = 'Accomplishment '.$year;
+        $filename = $reportName;
 
         if($type == 'excel')
         {
