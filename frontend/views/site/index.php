@@ -62,43 +62,6 @@ $this->title = 'eRPMES';
                 </div>
             </div>
         </div>
-
-        <div class='row'>
-            <div class='col-lg-6'>
-                <h3 style='color: #3C8DBC;'><i class='fa fa-map-marker'></i>Heat Map</h3>
-
-                <div id="heatmap-table">
-
-                </div>
-            </div>
-            <div class='col-lg-6'>
-                <h3 style='color: #3C8DBC;'><i class='fa fa-area-chart'></i>Statistics</h3>
-
-                
-
-            </div>
-        </div>
-        <div class='row'>
-            <div class='col-lg-12'>
-                <h3 style='color: #3C8DBC;'><i class='fa fa-folder-open'></i>Events</h3>
-
-                <p>Enroll your projects to keep track of progress physically and financially using the RPMES Forms.</p>
-            </div>
-        </div>
-        <hr>
-        <h2 class='text-center'>About</h2>
-        <br>
-        <div class='row'>
-            <div class='col-lg-4'>
-                <p align=center><?= Html::a('Contact Us', ['/site/contact'],['class' => 'btn btn-lg btn-primary'])?></p>
-            </div>
-            <div class='col-lg-4'>
-                <p align=center><?= Html::a('Visit RDC Website', ['https://ilocos.neda.gov.ph/rdc-2/'],['class' => 'btn btn-lg btn-primary'])?></p>
-            </div>
-            <div class='col-lg-4'>
-                <p align=center><?= Html::a('Like us on Facebook', ['https://www.facebook.com/nedaregion1'],['class' => 'btn btn-lg btn-primary'],['target' => '_blank'])?></p>
-            </div>
-        </div>
     </div>
 </div>
 <?php
