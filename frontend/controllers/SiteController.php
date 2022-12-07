@@ -6,7 +6,7 @@ use frontend\models\VerifyEmailForm;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\web\BadRequestHttpException;
-use yii\web\Controller;
+use yii\helpers\Json;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use frontend\models\PasswordResetRequestForm;
@@ -37,7 +37,7 @@ use yii\helpers\ArrayHelper;
 /**
  * Site controller
  */
-class SiteController extends Controller
+class SiteController extends \yii\web\Controller
 {
     /**
      * {@inheritdoc}
@@ -658,184 +658,109 @@ class SiteController extends Controller
         }
 
     }
-    /**
-     * Logs in a user.
-     *
-     * @return mixed
-     */
-    public function actionLogin()
+    
+    public function actionHeatMap($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
     {
-        if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
+        $data = [];
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+        $quarterIDs = Accomplishment::find();
+
+        $perProvince = ProjectProvince::find()
+        ->select(['province_id, count(project_province.id) as total'])
+        ->leftJoin('project', 'project.id = project_province.project_id');
+
+        if($year != '')
+        {
+            $perProvince = $perProvince->andWhere(['project.year' => $year]);
         }
 
-        $model = new LoginForm();
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
-        } else {
-            $model->password = '';
-
-            return $this->render('login', [
-                'model' => $model,
-            ]);
-        }
-    }
-
-    /**
-     * Logs out the current user.
-     *
-     * @return mixed
-     */
-    public function actionLogout()
-    {
-        Yii::$app->user->logout();
-
-        return $this->goHome();
-    }
-
-    /**
-     * Displays contact page.
-     *
-     * @return mixed
-     */
-    public function actionContact()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail(Yii::$app->params['adminEmail'])) {
-                Yii::$app->session->setFlash('success', 'Thank you for contacting us. We will respond to you as soon as possible.');
-            } else {
-                Yii::$app->session->setFlash('error', 'There was an error sending your message.');
-            }
-
-            return $this->refresh();
-        } else {
-            return $this->render('contact', [
-                'model' => $model,
-            ]);
-        }
-    }
-
-    /**
-     * Displays about page.
-     *
-     * @return mixed
-     */
-    public function actionAbout()
-    {
-        return $this->render('about');
-    }
-
-    /**
-     * Signs user up.
-     *
-     * @return mixed
-     */
-    public function actionSignup()
-    {
-        $model = new SignupForm();
-        if ($model->load(Yii::$app->request->post()) && $model->signup()) {
-            Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
-            return $this->goHome();
+        if($quarter != '')
+        {
+            $quarterIDs = $quarterIDs->andWhere(['quarter' => $quarter]);
         }
 
-        return $this->render('signup', [
-            'model' => $model,
-        ]);
-    }
+        if($agency_id != '')
+        {
+            $perProvince = $perProvince->andWhere(['project.agency_id' => $agency_id]);
+        }
 
-    /**
-     * Requests password reset.
-     *
-     * @return mixed
-     */
-    public function actionRequestPasswordReset()
-    {
-        $model = new PasswordResetRequestForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail()) {
-                Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
 
-                return $this->goHome();
-            } else {
-                Yii::$app->session->setFlash('error', 'Sorry, we are unable to reset password for the provided email address.');
+        if($sector_id != '')
+        {
+            $perProvince = $perProvince->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $perProvince = $perProvince->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $perProvince = $perProvince->andWhere(['project_province.province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $perProvince = $perProvince->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $quarterIDs = $quarterIDs->all();
+        $quarterIDs = ArrayHelper::map($quarterIDs, 'project_id', 'project_id');
+
+        if($quarter != '')
+        {
+            $perProvince = $perProvince->andWhere(['project.id' => $quarterIDs]);
+        }
+
+        if($category_id != '')
+        {
+            $perProvince = $perProvince->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $perProvince = $perProvince
+        ->groupBy(['province_id'])
+        ->createCommand()
+        ->getRawSql();
+
+        $keys = Province::find()
+            ->select([
+                'hc_key',
+                'province_m',
+                'perProvince.total as total'
+            ])
+            ->leftJoin(['perProvince' => '('.$perProvince.')'], 'perProvince.province_id = tblprovince.province_c')
+            ->asArray()
+            ->all();
+
+        if(!empty($keys))
+        {
+            $i = 0;
+            foreach($keys as $key)
+            {
+                $data[$i]['id'] = $key['hc_key'];
+                $data[$i]['value'] = number_format($key['total'], 0);
+                $data[$i]['scale'] = 0.5;
+                $data[$i]['labelShiftY'] = 2;
+                $data[$i]['zoomLevel'] = 5;
+                $data[$i]['title'] = '<p>'.$key['province_m'].' : '.number_format($key['total'], 0).' projects</p>';
+                $i++;
             }
         }
 
-        return $this->render('requestPasswordResetToken', [
-            'model' => $model,
-        ]);
-    }
+        $data = Json::encode($data);
 
-    /**
-     * Resets password.
-     *
-     * @param string $token
-     * @return mixed
-     * @throws BadRequestHttpException
-     */
-    public function actionResetPassword($token)
-    {
-        try {
-            $model = new ResetPasswordForm($token);
-        } catch (InvalidArgumentException $e) {
-            throw new BadRequestHttpException($e->getMessage());
-        }
-
-        if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
-            Yii::$app->session->setFlash('success', 'New password saved.');
-
-            return $this->goHome();
-        }
-
-        return $this->render('resetPassword', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Verify email address
-     *
-     * @param string $token
-     * @throws BadRequestHttpException
-     * @return yii\web\Response
-     */
-    public function actionVerifyEmail($token)
-    {
-        try {
-            $model = new VerifyEmailForm($token);
-        } catch (InvalidArgumentException $e) {
-            throw new BadRequestHttpException($e->getMessage());
-        }
-        if ($user = $model->verifyEmail()) {
-            if (Yii::$app->user->login($user)) {
-                Yii::$app->session->setFlash('success', 'Your email has been confirmed!');
-                return $this->goHome();
-            }
-        }
-
-        Yii::$app->session->setFlash('error', 'Sorry, we are unable to verify your account with provided token.');
-        return $this->goHome();
-    }
-
-    /**
-     * Resend verification email
-     *
-     * @return mixed
-     */
-    public function actionResendVerificationEmail()
-    {
-        $model = new ResendVerificationEmailForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail()) {
-                Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
-                return $this->goHome();
-            }
-            Yii::$app->session->setFlash('error', 'Sorry, we are unable to resend verification email for the provided email address.');
-        }
-
-        return $this->render('resendVerificationEmail', [
-            'model' => $model
+        return $this->renderAjax('_map',[
+            'data' => $data
         ]);
     }
 }
