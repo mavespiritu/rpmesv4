@@ -27,7 +27,7 @@ class Province extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['region_c', 'province_c', 'province_m'], 'required'],
+            [['region_c', 'province_c', 'province_m', 'hc_key'], 'required'],
             [['region_c', 'province_c'], 'string', 'max' => 2],
             [['province_m'], 'string', 'max' => 200],
             [['province_c'], 'unique'],
