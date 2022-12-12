@@ -1674,4 +1674,193 @@ class SiteController extends \yii\web\Controller
                 'fund_source_id' => $fund_source_id
             ]);
     }
+
+    public function actionBeneficiaries($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $data = [];
+
+        $accomplishment = BeneficiariesAccomplishment::find()
+                        ->select([
+                            'beneficiaries_accomplishment.project_id', 
+                            'sum(COALESCE(male,0)) as maleTotal',
+                            'sum(COALESCE(female, 0)) as femaleTotal'
+                        ])
+                        ->leftJoin('project', 'project.id = beneficiaries_accomplishment.project_id');
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+
+        if($year != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.year' => $year]);
+        }
+
+        if($quarter != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.quarter' => $quarter]);
+        }
+
+        if($agency_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
+        }
+
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
+
+        if($sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($province_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
+        }
+
+        if($category_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $accomplishment = $accomplishment
+        ->createCommand()
+        ->getRawSql();
+
+        $total = Project::find()
+            ->select([
+                'sum(COALESCE(accomplishment.maleTotal, 0)) as maleTotal',
+                'sum(COALESCE(accomplishment.femaleTotal, 0)) as femaleTotal',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.project_id = project.id')
+            ->asArray()
+            ->one();
+
+        $data['male'] = intval($total['maleTotal']) + intval($total['femaleTotal']) > 0 ? number_format(intval($total['maleTotal']) / (intval($total['maleTotal']) + intval($total['femaleTotal'])) * 100, 0) : 0;
+        $data['female'] = intval($total['maleTotal']) + intval($total['femaleTotal']) > 0 ? number_format(intval($total['femaleTotal']) / (intval($total['maleTotal']) + intval($total['femaleTotal'])) * 100, 0) : 0;
+
+        return $this->renderAjax('_beneficiaries',[
+            'data' => $data,
+            'year' => $year,
+            'quarter' => $quarter, 
+            'agency_id' => $agency_id, 
+            'category_id' => $category_id, 
+            'sector_id' => $sector_id, 
+            'sub_sector_id' => $sub_sector_id, 
+            'province_id' => $province_id, 
+            'fund_source_id' => $fund_source_id
+        ]);
+    }
+
+    public function actionBeneficiariesData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $data = [];
+
+        $accomplishment = BeneficiariesAccomplishment::find()
+                        ->select([
+                            'beneficiaries_accomplishment.project_id', 
+                            'sum(COALESCE(male,0)) as maleTotal',
+                            'sum(COALESCE(female, 0)) as femaleTotal'
+                        ])
+                        ->leftJoin('project', 'project.id = beneficiaries_accomplishment.project_id');
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+
+        if($year != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.year' => $year]);
+        }
+
+        if($quarter != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.quarter' => $quarter]);
+        }
+
+        if($agency_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
+        }
+
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
+
+        if($sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($province_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
+        }
+
+        if($category_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $accomplishment = $accomplishment
+        ->createCommand()
+        ->getRawSql();
+
+        $total = Project::find()
+            ->select([
+                'sum(COALESCE(accomplishment.maleTotal, 0)) as maleTotal',
+                'sum(COALESCE(accomplishment.femaleTotal, 0)) as femaleTotal',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.project_id = project.id')
+            ->asArray()
+            ->one();
+
+        return $this->renderAjax('_beneficiaries-data',[
+            'total' => $total,
+        ]);
+    }
 }

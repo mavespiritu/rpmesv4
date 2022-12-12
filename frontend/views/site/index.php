@@ -127,6 +127,22 @@ $this->title = 'eRPMES';
         });
     }
 
+    function loadBeneficiaries(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
+    {
+        $.ajax({
+            url: "'.Url::to(['/site/beneficiaries']).'?year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id + "&category_id=" + category_id + "&sector_id=" + sector_id + "&sub_sector_id=" + sub_sector_id + "&province_id=" + province_id + "&fund_source_id=" + fund_source_id,
+            beforeSend: function(){
+                $("#statistics").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+            },
+            success: function (data) { 
+                $("#statistics").empty();
+                $("#statistics").hide();
+                $("#statistics").fadeIn("slow");
+                $("#statistics").html(data);
+            }
+        });
+    }
+
     function previousGraph(action, year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
     {
         if(action === "employment")
@@ -140,6 +156,10 @@ $this->title = 'eRPMES';
         else if(action === "project-implementation")
         {
             loadProjectImplementation(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+        }
+        else if(action === "beneficiaries")
+        {
+            loadBeneficiaries(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
         }
     }
 
@@ -156,6 +176,10 @@ $this->title = 'eRPMES';
         else if(action === "project-implementation")
         {
             loadProjectImplementation(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+        }
+        else if(action === "beneficiaries")
+        {
+            loadBeneficiaries(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
         }
     }
 
