@@ -5,7 +5,7 @@ use yii\bootstrap\Modal;
 use yii\web\View;
 ?>
 <h4 class="text-center">Project Implementation By Status</h4>
-<div style="height: 95%; width: 100%">
+<div style="height: 90%; width: 100%">
 <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" style="width: 100%; height: 200px;" >
     <thead>
         <tr>
