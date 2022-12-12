@@ -39,6 +39,8 @@ if (class_exists('backend\assets\AppAsset')) {
         <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
         <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
         <script src="https://www.amcharts.com/lib/3/xy.js"></script>
+        <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+        <script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
         <script src="https://www.amcharts.com/lib/3/ammap.js"></script>
         <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
         <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
