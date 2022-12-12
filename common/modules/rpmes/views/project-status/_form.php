@@ -63,8 +63,8 @@ DisableButtonAsset::register($this);
                         <td colspan=2 align=center><?= $project['locationTitle'] ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
                         <td align=center><?= $project['releases'] > 0 ? number_format(($project['expenditures'] / $project['releases']) * 100, 2) : number_format(0, 2) ?></td>
-                        <td align=center><?= number_format($project['physicalTargetTotalPerQuarter'], 2) ?></td>
-                        <td align=center><?= number_format($project['physicalAccompTotalPerQuarter'], 2) ?></td>
+                        <td align=center><?= $project['physicalTargetTotalPerQuarter'] != '' ? number_format($project['physicalTargetTotalPerQuarter'], 2) : 0 ?></td>
+                        <td align=center><?= $project['physicalAccompTotalPerQuarter'] != '' ? number_format($project['physicalAccompTotalPerQuarter'], 2) : 0 ?></td>
                         <td align=center><?= number_format($project['slippage'], 2) ?>%</td>
                         <td colspan=2 align=center><?= $project['causes'] ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
