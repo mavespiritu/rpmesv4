@@ -184,8 +184,11 @@ $this->title = 'eRPMES';
     }
 
     $(document).ready(function(){
+        var result = "";
+        var classesOfDivs = ["employment", "disbursement-by-category", "project-implementation", "beneficiaries"];
+        var classnameSelected = classesOfDivs[Math.floor(Math.random()*classesOfDivs.length)];
+        nextGraph(classnameSelected, "","","","","","","","");
         loadHeatMap("","","","","","","","");
-        loadEmployment("","","","","","","","");
     });
 
     function showHideFilter() {
