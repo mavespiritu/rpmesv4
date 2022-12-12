@@ -40,14 +40,6 @@ use yii\web\View;
                 <?php $grandSectorsTotal += (intval($project['completed']) + intval($project['behindSchedule']) + intval($project['onSchedule']) + intval($project['aheadOnSchedule']) + intval($project['notYetStartedWithTarget']) +  intval($project['notYetStartedWithNoTarget'])) ?>
             <?php } ?>
         <?php } ?>
-
-        <tr>
-            <td align=right><b>Grand Total</b></td>
-            <td align=center><b><?= number_format($completedSectors, 0) ?></b></td>
-            <td align=center><b><?= number_format($ongoingSectors, 0) ?></b></td>
-            <td align=center><b><?= number_format($nysSectors, 0) ?></b></td>
-            <td align=right><b><?= number_format($grandSectorsTotal, 0) ?></b></td>
-        </tr>
     </tbody>
 </table>
 <br>
@@ -85,14 +77,6 @@ use yii\web\View;
                 <?php $grandCategoriesTotal += (intval($project['completed']) + intval($project['behindSchedule']) + intval($project['onSchedule']) + intval($project['aheadOnSchedule']) + intval($project['notYetStartedWithTarget']) +  intval($project['notYetStartedWithNoTarget'])) ?>
             <?php } ?>
         <?php } ?>
-
-        <tr>
-            <td align=right><b>Grand Total</b></td>
-            <td align=center><b><?= number_format($completedCategories, 0) ?></b></td>
-            <td align=center><b><?= number_format($ongoingCategories, 0) ?></b></td>
-            <td align=center><b><?= number_format($nysCategories, 0) ?></b></td>
-            <td align=right><b><?= number_format($grandCategoriesTotal, 0) ?></b></td>
-        </tr>
     </tbody>
 </table>
 </div>
