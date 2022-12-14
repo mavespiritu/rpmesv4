@@ -14,6 +14,7 @@ use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
 use common\modules\rpmes\models\Plan;
+use common\modules\rpmes\models\EventImage;
 use common\modules\rpmes\models\ProjectRegion;
 use common\modules\rpmes\models\ProjectProvince;
 use common\modules\rpmes\models\Project;
@@ -28,6 +29,7 @@ use common\modules\rpmes\models\Accomplishment;
 use common\modules\rpmes\models\ProjectTarget;
 use common\modules\rpmes\models\PhysicalAccomplishment;
 use common\modules\rpmes\models\FinancialAccomplishment;
+use common\modules\rpmes\models\BeneficiariesAccomplishment;
 use common\modules\rpmes\models\PersonEmployedAccomplishment;
 use common\models\Region;
 use common\models\Province;
@@ -87,6 +89,13 @@ class SiteController extends \yii\web\Controller
         ];
     }
 
+    public function actionLogout()
+    {
+        Yii::$app->user->logout();
+
+        return $this->goHome();
+    }
+
     /**
      * Displays homepage.
      *
@@ -127,297 +136,22 @@ class SiteController extends \yii\web\Controller
         $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->orderBy(['title' => SORT_ASC])->asArray()->all();
         $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
 
-        $model->year = date("Y");
-        $model->quarter = 'Q1';
+        return $this->render('index', [
+            'model' => $model,
+            'years' => $years,
+            'quarters' => $quarters,
+            'agencies' => $agencies,
+            'sectors' => $sectors,
+            'subSectors' => $subSectors,
+            'categories' => $categories,
+            'provinces' => $provinces,
+            'fundSources' => $fundSources,
+        ]);
+    }
 
-
-        $projectRaw = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
-        $projectRaw = ArrayHelper::map($projectRaw, 'project_id', 'project_id');
-
-        //echo '<pre>'; print_r($projectIDs); exit;
-
-        $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
-        $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
-        $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
-        $financialAccomps = FinancialAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
-        $financialTargets = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year])->createCommand()->getRawSql();
-        $personEmployedAccomps = PersonEmployedAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
-
-        $regionIDs = ProjectRegion::find();
-        $provinceIDs = ProjectProvince::find();
-        $categoryIDs = ProjectCategory::find();
-
-        $categoryTitles = ProjectCategory::find()
-            ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
-            ->leftJoin('category', 'category.id = project_category.category_id')
-            ->leftJoin('project', 'project.id = project_category.project_id')
-            ->where(['project.draft' => 'No'])
-            ->groupBy(['project_category.project_id'])
-            ->createCommand()->getRawSql();
-
-        $regionTitles = ProjectRegion::find()
-            ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
-            ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
-            ->leftJoin('project', 'project.id = project_region.project_id')
-            ->where(['project.draft' => 'No'])
-            ->groupBy(['project_region.project_id'])
-            ->createCommand()->getRawSql();
-
-        $provinceTitles = ProjectProvince::find()
-            ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
-            ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
-            ->leftJoin('project', 'project.id = project_province.project_id')
-            ->where(['project.draft' => 'No'])
-            ->groupBy(['project_province.project_id'])
-            ->createCommand()->getRawSql();
-        
-        $physicalTargetPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
-            IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
-                IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
-                COALESCE(physicalTargets.q4, 0)
-                )
-            )
-        )';
-
-        $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Cumulative",
-                    IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
-                        IF("'.$model->quarter.'" = "Q2", IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)),
-                            IF("'.$model->quarter.'" = "Q3", IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)),
-                            IF(COALESCE(physicalTargets.q4, 0) = 0, IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)), COALESCE(physicalTargets.q4, 0))
-                            )
-                        )
-                    )
-                ,   
-                IF("'.$model->quarter.'" = "Q1", (COALESCE(physicalTargets.q1, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                     IF("'.$model->quarter.'" = "Q2", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                         IF("'.$model->quarter.'" = "Q3", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                         ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
-                         )
-                     )
-                ) 
-                )';
-
-        $physicalTargetTotal = 'IF(project.data_type <> "Default",
-            IF(COALESCE(physicalTargets.q4, 0) <= 0,
-                IF(COALESCE(physicalTargets.q3, 0) <= 0,
-                    IF(COALESCE(physicalTargets.q2, 0) <= 0,
-                        COALESCE(physicalTargets.q1, 0)
-                    , COALESCE(physicalTargets.q2, 0))
-                , COALESCE(physicalTargets.q3, 0))
-            , COALESCE(physicalTargets.q4, 0))
-        ,   
-            COALESCE(physicalTargets.q1, 0) +
-            COALESCE(physicalTargets.q2, 0) +
-            COALESCE(physicalTargets.q3, 0) +
-            COALESCE(physicalTargets.q4, 0)
-        )'; 
-
-        $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Cumulative",
-                                IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                    IF("'.$model->quarter.'" = "Q2", IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)),
-                                        IF("'.$model->quarter.'" = "Q3", IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)),
-                                        IF(COALESCE(physicalAccompsQ4.value, 0) = 0, IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)), COALESCE(physicalAccompsQ4.value, 0))
-                                        )
-                                    )
-                                )
-                            ,   
-                            IF("'.$model->quarter.'" = "Q1", (COALESCE(physicalAccompsQ1.value, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                                 IF("'.$model->quarter.'" = "Q2", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                                     IF("'.$model->quarter.'" = "Q3", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                                     ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
-                                     )
-                                 )
-                            ) 
-                            )';
-
-        $physicalAccompPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                        IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
-                                            IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
-                                            COALESCE(physicalAccompsQ4.value, 0)
-                                            )
-                                        )
-                                    )';
-
-        $financialTargetTotalPerQuarter = 'IF(project.data_type <> "Cumulative",
-                                    IF("'.$model->quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
-                                        IF("'.$model->quarter.'" = "Q2", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0),
-                                            IF("'.$model->quarter.'" = "Q3", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0) + COALESCE(financialTargets.q3, 0),
-                                            COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0) + COALESCE(financialTargets.q3, 0) + COALESCE(financialTargets.q4, 0)
-                                            )
-                                        )
-                                    )
-                                ,   
-                                    IF("'.$model->quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
-                                        IF("'.$model->quarter.'" = "Q2", IF(COALESCE(financialTargets.q2, 0) = 0, COALESCE(financialTargets.q1, 0), COALESCE(financialTargets.q2, 0)),
-                                            IF("'.$model->quarter.'" = "Q3", IF(COALESCE(financialTargets.q3, 0) = 0, IF(COALESCE(financialTargets.q2, 0) = 0, COALESCE(financialTargets.q1, 0), COALESCE(financialTargets.q2, 0)), COALESCE(financialTargets.q3)),
-                                                IF(COALESCE(financialTargets.q4, 0) = 0, IF(COALESCE(financialTargets.q3, 0) = 0, IF(COALESCE(financialTargets.q2, 0) = 0, COALESCE(financialTargets.q1, 0), COALESCE(financialTargets.q2, 0)), COALESCE(financialTargets.q3)), COALESCE(financialTargets.q4, 0))
-                                            )
-                                        )
-                                    )
-                                )'; 
-                                $maleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.male, 0),
-                                IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0),
-                                    IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0),
-                                    COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0) + COALESCE(personEmployedAccompsQ4.male, 0)
-                                    )
-                                )
-                            )';
-
-        $femaleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.female, 0),
-                                    IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0),
-                                        IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0),
-                                        COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0) + COALESCE(personEmployedAccompsQ4.female, 0)
-                                        )
-                                    )
-                                )';
-        
-        $isPercent = 'LOCATE("%", physicalTargets.indicator)';
-
-        $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
-        $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
-        $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
-        $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
-        $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
-        $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
-        $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
-
-        $projectStatus = Project::find()
-            ->select([
-                'project.id as id',
-                'project.data_type as dataType',
-                'agency.code as agencyTitle',
-                'category.title as categoryTitle',
-                'project.project_no as projectNo',
-                'project.title as projectTitle',
-                'sector.title as sectorTitle',
-                'sub_sector.title as subSectorTitle',
-                'fund_source.title as fundSourceTitle',
-                'categoryTitles.title as categoryTitle',
-                'IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title) as provinceTitle',
-                'SUM('.$financialTargetTotalPerQuarter.') as allocations',
-                'SUM('.$isCompleted.') as completed',
-                'SUM('.$slippage.') as slippage',
-                'SUM('.$behindSchedule.') as behindSchedule',
-                'SUM('.$onSchedule.') as onSchedule',
-                'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
-                'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
-                'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
-            ]);
-            $projectStatus = $projectStatus->leftJoin('agency', 'agency.id = project.agency_id');
-            $projectStatus = $projectStatus->leftJoin('program', 'program.id = project.program_id');
-            $projectStatus = $projectStatus->leftJoin('sector', 'sector.id = project.sector_id');
-            $projectStatus = $projectStatus->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-            $projectStatus = $projectStatus->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-            $projectStatus = $projectStatus->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
-            $projectStatus = $projectStatus->leftJoin(['financialAccompsQ1' => '('.$financialAccomps.')'], 'financialAccompsQ1.project_id = project.id and financialAccompsQ1.quarter = "Q1"');
-            $projectStatus = $projectStatus->leftJoin(['financialAccompsQ2' => '('.$financialAccomps.')'], 'financialAccompsQ2.project_id = project.id and financialAccompsQ2.quarter = "Q2"');
-            $projectStatus = $projectStatus->leftJoin(['financialAccompsQ3' => '('.$financialAccomps.')'], 'financialAccompsQ3.project_id = project.id and financialAccompsQ3.quarter = "Q3"');
-            $projectStatus = $projectStatus->leftJoin(['financialAccompsQ4' => '('.$financialAccomps.')'], 'financialAccompsQ4.project_id = project.id and financialAccompsQ4.quarter = "Q4"');
-            $projectStatus = $projectStatus->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
-            $projectStatus = $projectStatus->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
-            $projectStatus = $projectStatus->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
-            $projectStatus = $projectStatus->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
-            $projectStatus = $projectStatus->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
-            $projectStatus = $projectStatus->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
-            $projectStatus = $projectStatus->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
-            $projectStatus = $projectStatus->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
-            $projectStatus = $projectStatus->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
-            $projectStatus = $projectStatus->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
-            $projectStatus = $projectStatus->andWhere(['project.id' => $projectRaw]);
-
-            $projectFinancial = Project::find()
-            ->select([
-                'categoryTitles.title as category',
-                'SUM('.$financialTargetTotalPerQuarter.') as value',
-            ]);
-            $projectFinancial = $projectFinancial->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
-            $projectFinancial = $projectFinancial->leftJoin('agency', 'agency.id = project.agency_id');
-            $projectFinancial = $projectFinancial->leftJoin('program', 'program.id = project.program_id');
-            $projectFinancial = $projectFinancial->leftJoin('sector', 'sector.id = project.sector_id');
-            $projectFinancial = $projectFinancial->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-            $projectFinancial = $projectFinancial->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-            $projectFinancial = $projectFinancial->leftJoin(['financialAccompsQ1' => '('.$financialAccomps.')'], 'financialAccompsQ1.project_id = project.id and financialAccompsQ1.quarter = "Q1"');
-            $projectFinancial = $projectFinancial->leftJoin(['financialAccompsQ2' => '('.$financialAccomps.')'], 'financialAccompsQ2.project_id = project.id and financialAccompsQ2.quarter = "Q2"');
-            $projectFinancial = $projectFinancial->leftJoin(['financialAccompsQ3' => '('.$financialAccomps.')'], 'financialAccompsQ3.project_id = project.id and financialAccompsQ3.quarter = "Q3"');
-            $projectFinancial = $projectFinancial->leftJoin(['financialAccompsQ4' => '('.$financialAccomps.')'], 'financialAccompsQ4.project_id = project.id and financialAccompsQ4.quarter = "Q4"');
-            $projectFinancial = $projectFinancial->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
-            $projectFinancial = $projectFinancial->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
-            $projectFinancial = $projectFinancial->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
-            $projectFinancial = $projectFinancial->andWhere(['project.id' => $projectRaw]);
-
-            $projectEmployment = Project::find()
-                ->select([
-                    'categoryTitles.title as category',
-                    'SUM('.$maleEmployedAccomp.') as malesEmployedActual',
-                    'SUM('.$femaleEmployedAccomp.') as femalesEmployedActual',
-                ]);
-                $projectEmployment = $projectEmployment->leftJoin('agency', 'agency.id = project.agency_id');
-                $projectEmployment = $projectEmployment->leftJoin('program', 'program.id = project.program_id');
-                $projectEmployment = $projectEmployment->leftJoin('sector', 'sector.id = project.sector_id');
-                $projectEmployment = $projectEmployment->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-                $projectEmployment = $projectEmployment->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-                $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ1' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ1.project_id = project.id and personEmployedAccompsQ1.quarter = "Q1"');
-                $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ2' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ2.project_id = project.id and personEmployedAccompsQ2.quarter = "Q2"');
-                $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ3' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ3.project_id = project.id and personEmployedAccompsQ3.quarter = "Q3"');
-                $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ4' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ4.project_id = project.id and personEmployedAccompsQ4.quarter = "Q4"');
-                $projectEmployment = $projectEmployment->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
-                $projectEmployment = $projectEmployment->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
-                $projectEmployment = $projectEmployment->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
-                $projectEmployment = $projectEmployment->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
-                $projectEmployment = $projectEmployment->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
-                $projectEmployment = $projectEmployment->andWhere(['project.id' => $projectRaw]);
-
-            $projectFinancial = $projectFinancial->groupBy(['category']);
-
-            $projectStatus = $projectStatus->groupBy(['sectorTitle']);
-
-            $projectStatus = $projectStatus->asArray()->all();
-
-            $projectFinancial = $projectFinancial->asArray()->all();
-
-            $projectEmployment = $projectEmployment->groupBy(['category']);
-                $projectEmployment = $projectEmployment->asArray()->all();
-
-            $totalAllocation = 0;
-            $script = "";
-
-            if($projectFinancial)
-            {
-                foreach($projectFinancial as $financial)
-                {
-                    $totalAllocation = $totalAllocation + $financial['value'];
-                }
-            }
-
-            if($projectFinancial)
-            {
-                foreach($projectFinancial as $financial)
-                    {
-                        $script .= "{ category: '".$financial['category']."', value: ".(($financial['value'] / $totalAllocation) * 1000)."}, ";
-                    }
-            }
-
-            $totalMaleEmployed = 0;
-                $totalFemaleEmployed = 0;
-                $scriptEmployment = "";
-
-                if($projectEmployment)
-                {
-                    foreach($projectEmployment as $employment)
-                    {
-                        $totalMaleEmployed = $totalMaleEmployed + $employment['malesEmployedActual'];
-                        $totalFemaleEmployed = $totalFemaleEmployed + $employment['femalesEmployedActual'];
-                    }
-                }
-
-                if($projectEmployment)
-                {
-                    foreach($projectEmployment as $employment)
-                        {
-                            $scriptEmployment .= "{ category: '".$employment['category']."', male: -".(($employment['malesEmployedActual'] / $totalMaleEmployed) * 100).", maleMax: -".$totalMaleEmployed.", female: ".(($employment['femalesEmployedActual'] / $totalFemaleEmployed) * 100).", femaleMax: ".$totalFemaleEmployed."}, ";
-                        }
-                }
-
+    public function actionsectors()
+    {
+        $model = new Submission();
 
         if($model->load(Yii::$app->request->post()))
         {
@@ -426,7 +160,9 @@ class SiteController extends \yii\web\Controller
 
             //echo '<pre>'; print_r($projectIDs); exit;
 
-            $personEmployedAccomps = PersonEmployedAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
+            $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
+            $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
+            $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
 
             $regionIDs = ProjectRegion::find();
             $provinceIDs = ProjectProvince::find();
@@ -455,58 +191,130 @@ class SiteController extends \yii\web\Controller
                 ->where(['project.draft' => 'No'])
                 ->groupBy(['project_province.project_id'])
                 ->createCommand()->getRawSql();
-
             
-                            
-            $maleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.male, 0),
-                                    IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0),
-                                        IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0),
-                                        COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0) + COALESCE(personEmployedAccompsQ4.male, 0)
-                                        )
-                                    )
-                                )';
+                $physicalTargetPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                IF("'.$model->quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                    IF("'.$model->quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                    COALESCE(physicalTargets.q4, 0)
+                    )
+                )
+            )';
 
-            $femaleEmployedAccomp = 'IF("'.$model->quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.female, 0),
-                                        IF("'.$model->quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0),
-                                            IF("'.$model->quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0),
-                                            COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0) + COALESCE(personEmployedAccompsQ4.female, 0)
+            $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                        IF("'.$model->quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                            IF("'.$model->quarter.'" = "Q2", IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)),
+                                IF("'.$model->quarter.'" = "Q3", IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)),
+                                IF(COALESCE(physicalTargets.q4, 0) = 0, IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)), COALESCE(physicalTargets.q4, 0))
+                                )
+                            )
+                        )
+                    ,   
+                    IF("'.$model->quarter.'" = "Q1", (COALESCE(physicalTargets.q1, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                         IF("'.$model->quarter.'" = "Q2", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             IF("'.$model->quarter.'" = "Q3", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                             )
+                         )
+                    ) 
+                    )';
+
+            $physicalTargetTotal = 'IF(project.data_type <> "Default",
+                IF(COALESCE(physicalTargets.q4, 0) <= 0,
+                    IF(COALESCE(physicalTargets.q3, 0) <= 0,
+                        IF(COALESCE(physicalTargets.q2, 0) <= 0,
+                            COALESCE(physicalTargets.q1, 0)
+                        , COALESCE(physicalTargets.q2, 0))
+                    , COALESCE(physicalTargets.q3, 0))
+                , COALESCE(physicalTargets.q4, 0))
+            ,   
+                COALESCE(physicalTargets.q1, 0) +
+                COALESCE(physicalTargets.q2, 0) +
+                COALESCE(physicalTargets.q3, 0) +
+                COALESCE(physicalTargets.q4, 0)
+            )'; 
+
+            $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                                    IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                        IF("'.$model->quarter.'" = "Q2", IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)),
+                                            IF("'.$model->quarter.'" = "Q3", IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)),
+                                            IF(COALESCE(physicalAccompsQ4.value, 0) = 0, IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)), COALESCE(physicalAccompsQ4.value, 0))
                                             )
                                         )
-                                    )';
+                                    )
+                                ,   
+                                IF("'.$model->quarter.'" = "Q1", (COALESCE(physicalAccompsQ1.value, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                     IF("'.$model->quarter.'" = "Q2", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         IF("'.$model->quarter.'" = "Q3", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                                         )
+                                     )
+                                ) 
+                                )';
 
-                
+            $physicalAccompPerQuarter = 'IF("'.$model->quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                            IF("'.$model->quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+                                                IF("'.$model->quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+                                                COALESCE(physicalAccompsQ4.value, 0)
+                                                )
+                                            )
+                                        )';
+            
+            $isPercent = 'LOCATE("%", physicalTargets.indicator)';
 
-                $projectEmployment = Project::find()
+            $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
+            $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
+            $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
+            $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
+            $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
+            $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
+            $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
+
+            $sectors = Project::find()
                 ->select([
-                    'categoryTitles.title as category',
-                    'SUM('.$maleEmployedAccomp.') as malesEmployedActual',
-                    'SUM('.$femaleEmployedAccomp.') as femalesEmployedActual',
+                    'project.id as id',
+                    'project.data_type as dataType',
+                    'agency.code as agencyTitle',
+                    'category.title as categoryTitle',
+                    'project.project_no as projectNo',
+                    'project.title as projectTitle',
+                    'sector.title as sectorTitle',
+                    'sub_sector.title as subSectorTitle',
+                    'fund_source.title as fundSourceTitle',
+                    'categoryTitles.title as categoryTitle',
+                    'IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title) as provinceTitle',
+                    'SUM('.$isCompleted.') as completed',
+                    'SUM('.$slippage.') as slippage',
+                    'SUM('.$behindSchedule.') as behindSchedule',
+                    'SUM('.$onSchedule.') as onSchedule',
+                    'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
+                    'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
+                    'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
                 ]);
-                $projectEmployment = $projectEmployment->leftJoin('agency', 'agency.id = project.agency_id');
-                $projectEmployment = $projectEmployment->leftJoin('program', 'program.id = project.program_id');
-                $projectEmployment = $projectEmployment->leftJoin('sector', 'sector.id = project.sector_id');
-                $projectEmployment = $projectEmployment->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-                $projectEmployment = $projectEmployment->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-                $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ1' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ1.project_id = project.id and personEmployedAccompsQ1.quarter = "Q1"');
-                $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ2' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ2.project_id = project.id and personEmployedAccompsQ2.quarter = "Q2"');
-                $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ3' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ3.project_id = project.id and personEmployedAccompsQ3.quarter = "Q3"');
-                $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ4' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ4.project_id = project.id and personEmployedAccompsQ4.quarter = "Q4"');
-                $projectEmployment = $projectEmployment->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
-                $projectEmployment = $projectEmployment->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
-                $projectEmployment = $projectEmployment->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
-                $projectEmployment = $projectEmployment->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
-                $projectEmployment = $projectEmployment->andWhere(['project.id' => $projectRaw]);
+                $sectors = $sectors->leftJoin('agency', 'agency.id = project.agency_id');
+                $sectors = $sectors->leftJoin('program', 'program.id = project.program_id');
+                $sectors = $sectors->leftJoin('sector', 'sector.id = project.sector_id');
+                $sectors = $sectors->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
+                $sectors = $sectors->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
+                $sectors = $sectors->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
+                $sectors = $sectors->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
+                $sectors = $sectors->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
+                $sectors = $sectors->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+                $sectors = $sectors->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+                $sectors = $sectors->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
+                $sectors = $sectors->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
+                $sectors = $sectors->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
+                $sectors = $sectors->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+                $sectors = $sectors->andWhere(['project.year' => $model->year, 'project.draft' => 'No']);
+                $sectors = $sectors->andWhere(['project.id' => $projectRaw]);
 
                 if($model->agency_id != '')
                 {
-                    $projectFinancial = $projectFinancial->andWhere(['agency.id' => $model->agency_id]);
-                    $projectEmployment = $projectEmployment->andWhere(['agency.id' => $model->agency_id]);
+                    $sectors = $sectors->andWhere(['agency.id' => $model->agency_id]);
                 }
     
                 if($model->sector_id != '')
                 {
-                    $projectFinancial = $projectFinancial->andWhere(['sector.id' => $model->sector_id]);
-                    $projectEmployment = $projectEmployment->andWhere(['sector.id' => $model->sector_id]);
+                    $sectors = $sectors->andWhere(['sector.id' => $model->sector_id]);
                 }
 
                 if($model->category_id != '')
@@ -535,596 +343,35 @@ class SiteController extends \yii\web\Controller
 
                 if($model->region_id != '')
                 {
-                    $projectFinancial = $projectFinancial->andWhere(['project.id' => $regionIDs]);
-                    $projectEmployment = $projectEmployment->andWhere(['project.id' => $regionIDs]);
+                    $projects = $projects->andWhere(['project.id' => $regionIDs]);
                 }
 
                 if($model->province_id != '')
                 {
-                    $projectFinancial = $projectFinancial->andWhere(['project.id' => $provinceIDs]);
-                    $projectEmployment = $projectEmployment->andWhere(['project.id' => $provinceIDs]);
+                    $projects = $projects->andWhere(['project.id' => $provinceIDs]);
                 }
 
                 if($model->category_id != '')
                 {
-                    $projectFinancial = $projectFinancial->andWhere(['project.id' => $categoryIDs]);
-                    $projectEmployment = $projectEmployment->andWhere(['project.id' => $categoryIDs]);
+                    $projects = $projects->andWhere(['project.id' => $categoryIDs]);
                 }
 
                 if($model->fund_source_id != '')
                 {
-                    $projectFinancial = $projectFinancial->andWhere(['fund_source.id' => $model->fund_source_id]);
-                    $projectEmployment = $projectEmployment->andWhere(['fund_source.id' => $model->fund_source_id]);
-                }
-               
-
-                $projectEmployment = $projectEmployment->groupBy(['category']);
-                $projectEmployment = $projectEmployment->asArray()->all();
-
-                $totalAllocation = 0;
-                $script = "";
-
-                if($projectFinancial)
-                {
-                    foreach($projectFinancial as $financial)
-                    {
-                        $totalAllocation = $totalAllocation + $financial['value'];
-                    }
+                    $projects = $projects->andWhere(['fund_source.id' => $model->fund_source_id]);
                 }
 
-                if($projectFinancial)
-                {
-                    foreach($projectFinancial as $financial)
-                        {
-                            $script .= "{ category: '".$financial['category']."', value: ".(($financial['value'] / $totalAllocation) * 1000)."}, ";
-                        }
-                }
+                $sectors = $sectors->groupBy(['agencyTitle']);
 
-                //echo '<pre>'; print_r($projectEmployment); exit;
+                $sectors = $sectors->asArray()->all();
 
-                $totalMaleEmployed = 0;
-                $totalFemaleEmployed = 0;
-                $scriptEmployment = "";
-
-                if($projectEmployment)
-                {
-                    foreach($projectEmployment as $employment)
-                    {
-                        $totalMaleEmployed = $totalMaleEmployed + $employment['malesEmployedActual'];
-                        $totalFemaleEmployed = $totalFemaleEmployed + $employment['femalesEmployedActual'];
-                    }
-                }
-
-                if($projectEmployment)
-                {
-                    foreach($projectEmployment as $employment)
-                        {
-                            $scriptEmployment .= "{ category: '".$employment['category']."', male: -".(($employment['malesEmployedActual'] / $totalMaleEmployed) * 100).", maleMax: -".$totalMaleEmployed.", female: ".(($employment['femalesEmployedActual'] / $totalFemaleEmployed) * 100).", femaleMax: ".$totalFemaleEmployed."}, ";
-                        }
-                }
-
-                //echo $script; exit;
+                //echo '<pre>'; print_r($projects); exit;
 
                 return $this->renderAjax('_graphs', [
                     'model' => $model,
-                    'projectStatus' => $projectStatus,
-                    'projectFinancial' => $projectFinancial,
-                    'script' => $script,
-                    'scriptEmployment' => $scriptEmployment,
-                    'totalAllocation' => $totalAllocation,
+                    'sectors' => $sectors,
                 ]);
         }
-        //echo $script; exit;
-
-        return $this->render('index', [
-            'model' => $model,
-            'years' => $years,
-            'quarters' => $quarters,
-            'agencies' => $agencies,
-            'sectors' => $sectors,
-            'subSectors' => $subSectors,
-            'categories' => $categories,
-            'provinces' => $provinces,
-            'fundSources' => $fundSources,
-            'projectFinancial' => $projectFinancial,
-            'scriptEmployment' => $scriptEmployment,
-            'script' => $script,
-        ]);
-    }
-
-    public function actionProjectBreakdown($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
-    {
-        $year = $year == ''? Date("Y") : $year;
-        $quarter = $quarter == ''? 'Q1' : $quarter;
-
-        $projectRaw = Plan::find()->select(['project_id'])->where(['year' => $year])->asArray()->all();
-        $projectRaw = ArrayHelper::map($projectRaw, 'project_id', 'project_id');
-
-        $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $year])->createCommand()->getRawSql();
-        $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $year])->createCommand()->getRawSql();
-        $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $year])->groupBy(['project_id'])->createCommand()->getRawSql();
-
-        $regionIDs = ProjectRegion::find();
-        $provinceIDs = ProjectProvince::find();
-        $categoryIDs = ProjectCategory::find();
-
-        $categoryTitles = ProjectCategory::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
-                ->leftJoin('category', 'category.id = project_category.category_id')
-                ->leftJoin('project', 'project.id = project_category.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_category.project_id'])
-                ->createCommand()->getRawSql();
-
-        $regionTitles = ProjectRegion::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
-                ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
-                ->leftJoin('project', 'project.id = project_region.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_region.project_id'])
-                ->createCommand()->getRawSql();
-
-        $provinceTitles = ProjectProvince::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
-                ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
-                ->leftJoin('project', 'project.id = project_province.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_province.project_id'])
-                ->createCommand()->getRawSql();
-            
-        $physicalTargetPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
-                IF("'.$quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
-                    IF("'.$quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
-                    COALESCE(physicalTargets.q4, 0)
-                    )
-                )
-            )';
-
-        $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Cumulative",
-                        IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
-                            IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)),
-                                IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)),
-                                IF(COALESCE(physicalTargets.q4, 0) = 0, IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)), COALESCE(physicalTargets.q4, 0))
-                                )
-                            )
-                        )
-                    ,   
-                    IF("'.$quarter.'" = "Q1", (COALESCE(physicalTargets.q1, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                         IF("'.$quarter.'" = "Q2", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                             IF("'.$quarter.'" = "Q3", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                             ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
-                             )
-                         )
-                    ) 
-                    )';
-
-        $physicalTargetTotal = 'IF(project.data_type <> "Default",
-                IF(COALESCE(physicalTargets.q4, 0) <= 0,
-                    IF(COALESCE(physicalTargets.q3, 0) <= 0,
-                        IF(COALESCE(physicalTargets.q2, 0) <= 0,
-                            COALESCE(physicalTargets.q1, 0)
-                        , COALESCE(physicalTargets.q2, 0))
-                    , COALESCE(physicalTargets.q3, 0))
-                , COALESCE(physicalTargets.q4, 0))
-            ,   
-                COALESCE(physicalTargets.q1, 0) +
-                COALESCE(physicalTargets.q2, 0) +
-                COALESCE(physicalTargets.q3, 0) +
-                COALESCE(physicalTargets.q4, 0)
-            )'; 
-
-        $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Cumulative",
-                                    IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                        IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)),
-                                            IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)),
-                                            IF(COALESCE(physicalAccompsQ4.value, 0) = 0, IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)), COALESCE(physicalAccompsQ4.value, 0))
-                                            )
-                                        )
-                                    )
-                                ,   
-                                IF("'.$quarter.'" = "Q1", (COALESCE(physicalAccompsQ1.value, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                                     IF("'.$quarter.'" = "Q2", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                                         IF("'.$quarter.'" = "Q3", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
-                                         ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
-                                         )
-                                     )
-                                ) 
-                                )';
-
-        $physicalAccompPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
-                                            IF("'.$quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
-                                                IF("'.$quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
-                                                COALESCE(physicalAccompsQ4.value, 0)
-                                                )
-                                            )
-                                        )';
-
-        $isPercent = 'LOCATE("%", physicalTargets.indicator)';
-        $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
-        $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
-        $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
-        $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
-        $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
-        $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
-        $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
-
-        $projectStatus = Project::find()
-                ->select([
-                    'project.id as id',
-                    'project.data_type as dataType',
-                    'agency.code as agencyTitle',
-                    'category.title as categoryTitle',
-                    'project.project_no as projectNo',
-                    'project.title as projectTitle',
-                    'sector.title as sectorTitle',
-                    'sub_sector.title as subSectorTitle',
-                    'fund_source.title as fundSourceTitle',
-                    'categoryTitles.title as categoryTitle',
-                    'IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title) as provinceTitle',
-                    'SUM('.$isCompleted.') as completed',
-                    'SUM('.$slippage.') as slippage',
-                    'SUM('.$behindSchedule.') as behindSchedule',
-                    'SUM('.$onSchedule.') as onSchedule',
-                    'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
-                    'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
-                    'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
-                ]);
-        $projectStatus = $projectStatus->leftJoin('agency', 'agency.id = project.agency_id');
-        $projectStatus = $projectStatus->leftJoin('program', 'program.id = project.program_id');
-        $projectStatus = $projectStatus->leftJoin('sector', 'sector.id = project.sector_id');
-        $projectStatus = $projectStatus->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-        $projectStatus = $projectStatus->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-        $projectStatus = $projectStatus->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
-        $projectStatus = $projectStatus->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
-        $projectStatus = $projectStatus->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
-        $projectStatus = $projectStatus->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
-        $projectStatus = $projectStatus->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
-        $projectStatus = $projectStatus->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
-        $projectStatus = $projectStatus->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
-        $projectStatus = $projectStatus->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
-        $projectStatus = $projectStatus->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
-        $projectStatus = $projectStatus->andWhere(['project.year' => $year, 'project.draft' => 'No']);
-        $projectStatus = $projectStatus->andWhere(['project.id' => $projectRaw]);
-
-        if($agency_id != '')
-        {
-            $projectStatus = $projectStatus->andWhere(['agency.id' => $agency_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $projectStatus = $projectStatus->andWhere(['sector.id' => $sector_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $projectStatus = $projectStatus->andWhere(['project.id' => $provinceIDs]);
-        }
-
-        if($category_id != '')
-        {
-            $projectStatus = $projectStatus->andWhere(['project.id' => $categoryIDs]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $projectStatus = $projectStatus->andWhere(['fund_source.id' => $fund_source_id]);
-        }
-        
-        $projectStatus = $projectStatus->groupBy(['sectorTitle']);
-        $projectStatus = $projectStatus->asArray()->all();
-
-        //echo '<pre>'; print_r($projectStatus); exit;
-
-        return $this->renderAjax('_graphs', [
-            'projectStatus' => $projectStatus,
-        ]);
-    }
-
-    public function actionProjectFinancial($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
-    {
-        $year = $year == ''? Date("Y") : $year;
-        $quarter = $quarter == ''? 'Q1' : $quarter;
-
-        $projectRaw = Plan::find()->select(['project_id'])->where(['year' => $year])->asArray()->all();
-        $projectRaw = ArrayHelper::map($projectRaw, 'project_id', 'project_id');
-
-        $financialAccomps = FinancialAccomplishment::find()->where(['year' => $year])->createCommand()->getRawSql();
-        $financialTargets = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $year])->createCommand()->getRawSql();
-
-        $regionIDs = ProjectRegion::find();
-        $provinceIDs = ProjectProvince::find();
-        $categoryIDs = ProjectCategory::find();
-
-        $categoryTitles = ProjectCategory::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
-                ->leftJoin('category', 'category.id = project_category.category_id')
-                ->leftJoin('project', 'project.id = project_category.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_category.project_id'])
-                ->createCommand()->getRawSql();
-
-        $regionTitles = ProjectRegion::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
-                ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
-                ->leftJoin('project', 'project.id = project_region.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_region.project_id'])
-                ->createCommand()->getRawSql();
-
-        $provinceTitles = ProjectProvince::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
-                ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
-                ->leftJoin('project', 'project.id = project_province.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_province.project_id'])
-                ->createCommand()->getRawSql();
-            
-        $financialTargetTotalPerQuarter = 'IF(project.data_type <> "Cumulative",
-                IF("'.$quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
-                    IF("'.$quarter.'" = "Q2", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0),
-                        IF("'.$quarter.'" = "Q3", COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0) + COALESCE(financialTargets.q3, 0),
-                        COALESCE(financialTargets.q1, 0) + COALESCE(financialTargets.q2, 0) + COALESCE(financialTargets.q3, 0) + COALESCE(financialTargets.q4, 0)
-                        )
-                    )
-                )
-            ,   
-                IF("'.$quarter.'" = "Q1", COALESCE(financialTargets.q1, 0),
-                    IF("'.$quarter.'" = "Q2", IF(COALESCE(financialTargets.q2, 0) = 0, COALESCE(financialTargets.q1, 0), COALESCE(financialTargets.q2, 0)),
-                        IF("'.$quarter.'" = "Q3", IF(COALESCE(financialTargets.q3, 0) = 0, IF(COALESCE(financialTargets.q2, 0) = 0, COALESCE(financialTargets.q1, 0), COALESCE(financialTargets.q2, 0)), COALESCE(financialTargets.q3)),
-                            IF(COALESCE(financialTargets.q4, 0) = 0, IF(COALESCE(financialTargets.q3, 0) = 0, IF(COALESCE(financialTargets.q2, 0) = 0, COALESCE(financialTargets.q1, 0), COALESCE(financialTargets.q2, 0)), COALESCE(financialTargets.q3)), COALESCE(financialTargets.q4, 0))
-                        )
-                    )
-                )
-            )';
-
-        $projectFinancial = Project::find()
-            ->select([
-                'categoryTitles.title as category',
-                'SUM('.$financialTargetTotalPerQuarter.') as value',
-            ]);
-            $projectFinancial = $projectFinancial->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
-            $projectFinancial = $projectFinancial->leftJoin('agency', 'agency.id = project.agency_id');
-            $projectFinancial = $projectFinancial->leftJoin('program', 'program.id = project.program_id');
-            $projectFinancial = $projectFinancial->leftJoin('sector', 'sector.id = project.sector_id');
-            $projectFinancial = $projectFinancial->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-            $projectFinancial = $projectFinancial->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-            $projectFinancial = $projectFinancial->leftJoin(['financialAccompsQ1' => '('.$financialAccomps.')'], 'financialAccompsQ1.project_id = project.id and financialAccompsQ1.quarter = "Q1"');
-            $projectFinancial = $projectFinancial->leftJoin(['financialAccompsQ2' => '('.$financialAccomps.')'], 'financialAccompsQ2.project_id = project.id and financialAccompsQ2.quarter = "Q2"');
-            $projectFinancial = $projectFinancial->leftJoin(['financialAccompsQ3' => '('.$financialAccomps.')'], 'financialAccompsQ3.project_id = project.id and financialAccompsQ3.quarter = "Q3"');
-            $projectFinancial = $projectFinancial->leftJoin(['financialAccompsQ4' => '('.$financialAccomps.')'], 'financialAccompsQ4.project_id = project.id and financialAccompsQ4.quarter = "Q4"');
-            $projectFinancial = $projectFinancial->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
-            $projectFinancial = $projectFinancial->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
-            $projectFinancial = $projectFinancial->andWhere(['project.year' => $year, 'project.draft' => 'No']);
-            $projectFinancial = $projectFinancial->andWhere(['project.id' => $projectRaw]);
-
-        if($agency_id != '')
-        {
-            $projectFinancial = $projectFinancial->andWhere(['agency.id' => $agency_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $projectFinancial = $projectFinancial->andWhere(['sector.id' => $sector_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $projectFinancial = $projectFinancial->andWhere(['project.id' => $provinceIDs]);
-        }
-
-        if($category_id != '')
-        {
-            $projectFinancial = $projectFinancial->andWhere(['project.id' => $categoryIDs]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $projectFinancial = $projectFinancial->andWhere(['fund_source.id' => $fund_source_id]);
-        }
-        
-        $projectFinancial = $projectFinancial->groupBy(['category']);
-        $projectFinancial = $projectFinancial->asArray()->all();
-
-        //echo '<pre>'; print_r($projectStatus); exit;
-
-        $totalAllocation = 0;
-        $scriptFinancial = "";
-        if($projectFinancial)
-        {
-            foreach($projectFinancial as $financial)
-            {
-                $totalAllocation = $totalAllocation + $financial['value'];
-            }
-        }
-        if($projectFinancial)
-        {
-            foreach($projectFinancial as $financial)
-                {
-                    $scriptFinancial .= "{ category: '".$financial['category']."', value: ".(($financial['value'] / $totalAllocation) * 1000)."}, ";
-                }
-        }
-
-        return $this->renderAjax('_financial', [
-            'scriptFinancial' => $scriptFinancial,
-        ]);
-
-    }
-
-    public function actionProjectEmployment($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
-    {
-        $year = $year == ''? Date("Y") : $year;
-        $quarter = $quarter == ''? 'Q1' : $quarter;
-
-        $projectRaw = Plan::find()->select(['project_id'])->where(['year' => $year])->asArray()->all();
-        $projectRaw = ArrayHelper::map($projectRaw, 'project_id', 'project_id');
-
-        $personEmployedAccomps = PersonEmployedAccomplishment::find()->where(['year' => $year])->createCommand()->getRawSql();
-
-        $regionIDs = ProjectRegion::find();
-        $provinceIDs = ProjectProvince::find();
-        $categoryIDs = ProjectCategory::find();
-
-        $categoryTitles = ProjectCategory::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.title ORDER BY category.title ASC SEPARATOR ", ") as title'])
-                ->leftJoin('category', 'category.id = project_category.category_id')
-                ->leftJoin('project', 'project.id = project_category.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_category.project_id'])
-                ->createCommand()->getRawSql();
-
-        $regionTitles = ProjectRegion::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
-                ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
-                ->leftJoin('project', 'project.id = project_region.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_region.project_id'])
-                ->createCommand()->getRawSql();
-
-        $provinceTitles = ProjectProvince::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
-                ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
-                ->leftJoin('project', 'project.id = project_province.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_province.project_id'])
-                ->createCommand()->getRawSql();
-            
-        $maleEmployedAccomp = 'IF("'.$quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.male, 0),
-                IF("'.$quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0),
-                    IF("'.$quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0),
-                    COALESCE(personEmployedAccompsQ1.male, 0) + COALESCE(personEmployedAccompsQ2.male, 0) + COALESCE(personEmployedAccompsQ3.male, 0) + COALESCE(personEmployedAccompsQ4.male, 0)
-                    )
-                )
-            )';
-
-        $femaleEmployedAccomp = 'IF("'.$quarter.'" = "Q1", COALESCE(personEmployedAccompsQ1.female, 0),
-                    IF("'.$quarter.'" = "Q2", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0),
-                        IF("'.$quarter.'" = "Q3", COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0),
-                        COALESCE(personEmployedAccompsQ1.female, 0) + COALESCE(personEmployedAccompsQ2.female, 0) + COALESCE(personEmployedAccompsQ3.female, 0) + COALESCE(personEmployedAccompsQ4.female, 0)
-                        )
-                    )
-                )';
-
-        $projectEmployment = Project::find()
-            ->select([
-                'categoryTitles.title as category',
-                'SUM('.$maleEmployedAccomp.') as malesEmployedActual',
-                'SUM('.$femaleEmployedAccomp.') as femalesEmployedActual',
-            ]);
-        $projectEmployment = $projectEmployment->leftJoin('agency', 'agency.id = project.agency_id');
-        $projectEmployment = $projectEmployment->leftJoin('program', 'program.id = project.program_id');
-        $projectEmployment = $projectEmployment->leftJoin('sector', 'sector.id = project.sector_id');
-        $projectEmployment = $projectEmployment->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-        $projectEmployment = $projectEmployment->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-        $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ1' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ1.project_id = project.id and personEmployedAccompsQ1.quarter = "Q1"');
-        $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ2' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ2.project_id = project.id and personEmployedAccompsQ2.quarter = "Q2"');
-        $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ3' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ3.project_id = project.id and personEmployedAccompsQ3.quarter = "Q3"');
-        $projectEmployment = $projectEmployment->leftJoin(['personEmployedAccompsQ4' => '('.$personEmployedAccomps.')'], 'personEmployedAccompsQ4.project_id = project.id and personEmployedAccompsQ4.quarter = "Q4"');
-        $projectEmployment = $projectEmployment->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
-        $projectEmployment = $projectEmployment->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
-        $projectEmployment = $projectEmployment->andWhere(['project.year' => $year, 'project.draft' => 'No']);
-        $projectEmployment = $projectEmployment->andWhere(['project.id' => $projectRaw]);
-
-        if($agency_id != '')
-        {
-            $projectEmployment = $projectEmployment->andWhere(['agency.id' => $agency_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $projectEmployment = $projectEmployment->andWhere(['sector.id' => $sector_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $projectEmployment = $projectEmployment->andWhere(['project.id' => $provinceIDs]);
-        }
-
-        if($category_id != '')
-        {
-            $projectEmployment = $projectEmployment->andWhere(['project.id' => $categoryIDs]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $projectEmployment = $projectEmployment->andWhere(['fund_source.id' => $fund_source_id]);
-        }
-        
-        $projectEmployment = $projectEmployment->groupBy(['category']);
-        $projectEmployment = $projectEmployment->asArray()->all();
-
-        //echo '<pre>'; print_r($projectEmployment); exit;
-
-        $totalMaleEmployed = 0;
-            $totalFemaleEmployed = 0;
-            $scriptEmployment = "";
-        if($projectEmployment)
-        {
-            foreach($projectEmployment as $employment)
-            {
-                $totalMaleEmployed = $totalMaleEmployed + $employment['malesEmployedActual'];
-                $totalFemaleEmployed = $totalFemaleEmployed + $employment['femalesEmployedActual'];
-            }
-        }
-        if($projectEmployment)
-        {
-            foreach($projectEmployment as $employment)
-                {
-                    $scriptEmployment .= "{ category: '".$employment['category']."', male: -".(($employment['malesEmployedActual'] / $totalMaleEmployed) * 100).", maleMax: -".$totalMaleEmployed.", female: ".(($employment['femalesEmployedActual'] / $totalFemaleEmployed) * 100).", femaleMax: ".$totalFemaleEmployed."}, ";
-                }
-        }
-
-        return $this->renderAjax('_employment', [
-            'scriptEmployment' => $scriptEmployment,
-        ]);
 
     }
     
@@ -1230,6 +477,1118 @@ class SiteController extends \yii\web\Controller
 
         return $this->renderAjax('_map',[
             'data' => $data
+        ]);
+    }
+
+    public function actionEmployment($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $data = [];
+
+        $accomplishment = Project::find()
+                        ->select([
+                            'project.id', 
+                            'project.sector_id', 
+                            'sum(COALESCE(male,0)) as maleTotal',
+                            'sum(COALESCE(female, 0)) as femaleTotal'
+                        ])
+                        ->leftJoin('person_employed_accomplishment', 'person_employed_accomplishment.project_id = project.id');
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+
+        if($year != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['person_employed_accomplishment.year' => $year]);
+        }
+
+        if($quarter != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['person_employed_accomplishment.quarter' => $quarter]);
+        }
+
+        if($agency_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
+        }
+
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
+
+        if($sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($province_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
+        }
+
+        if($category_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $accomplishment = $accomplishment
+        ->groupBy(['project.id', 'project.sector_id'])
+        ->createCommand()
+        ->getRawSql();
+
+        $sectors = Sector::find()
+            ->select([
+                'sector.title',
+                'sum(COALESCE(accomplishment.maleTotal, 0)) as maleTotal',
+                'sum(COALESCE(accomplishment.femaleTotal, 0)) as femaleTotal',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.sector_id = sector.id')
+            ->groupBy(['sector.id'])
+            ->asArray()
+            ->all();
+
+        $sectorsTotal = Sector::find()
+            ->select([
+                'sum(COALESCE(accomplishment.maleTotal, 0)) as maleTotal',
+                'sum(COALESCE(accomplishment.femaleTotal, 0)) as femaleTotal',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.sector_id = sector.id')
+            ->asArray()
+            ->one();
+
+        $data = [];
+
+        if(!empty($sectors))
+        {
+            $i = 0;
+            foreach($sectors as $sector)
+            {
+                $data[$i]['sector'] = $sector['title'];
+                $data[$i]['male'] = $sector['maleTotal'] > 0 ? (($sector['maleTotal']/($sector['maleTotal'] + $sector['femaleTotal']))*100): 0;
+                $data[$i]['maleRaw'] = $sector['maleTotal'];
+                $data[$i]['female'] = $sector['femaleTotal'] > 0 ? (($sector['femaleTotal']/($sector['maleTotal'] + $sector['femaleTotal']))*100): 0;
+                $data[$i]['femaleRaw'] = $sector['femaleTotal'];
+                $i++;
+            }
+        }
+
+        //echo "<pre>"; print_r($data); exit;
+
+        $data = Json::encode($data);
+
+        return $this->renderAjax('_employment',[
+            'data' => $data,
+            'sectorsTotal' => $sectorsTotal,
+            'year' => $year,
+            'quarter' => $quarter, 
+            'agency_id' => $agency_id, 
+            'category_id' => $category_id, 
+            'sector_id' => $sector_id, 
+            'sub_sector_id' => $sub_sector_id, 
+            'province_id' => $province_id, 
+            'fund_source_id' => $fund_source_id
+        ]);
+    }
+
+    public function actionEmploymentData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $data = [];
+
+        $accomplishment = Project::find()
+                        ->select([
+                            'project.id', 
+                            'project.sector_id', 
+                            'sum(COALESCE(male,0)) as maleTotal',
+                            'sum(COALESCE(female, 0)) as femaleTotal'
+                        ])
+                        ->leftJoin('person_employed_accomplishment', 'person_employed_accomplishment.project_id = project.id');
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+
+        if($year != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['person_employed_accomplishment.year' => $year]);
+        }
+
+        if($quarter != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['person_employed_accomplishment.quarter' => $quarter]);
+        }
+
+        if($agency_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
+        }
+
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
+
+        if($sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($province_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
+        }
+
+        if($category_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $accomplishment = $accomplishment
+        ->groupBy(['project.id', 'project.sector_id'])
+        ->createCommand()
+        ->getRawSql();
+
+        $sectors = Sector::find()
+            ->select([
+                'sector.title',
+                'sum(COALESCE(accomplishment.maleTotal, 0)) as maleTotal',
+                'sum(COALESCE(accomplishment.femaleTotal, 0)) as femaleTotal',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.sector_id = sector.id')
+            ->groupBy(['sector.id'])
+            ->asArray()
+            ->all();
+
+        $sectorsTotal = Sector::find()
+            ->select([
+                'sum(COALESCE(accomplishment.maleTotal, 0)) as maleTotal',
+                'sum(COALESCE(accomplishment.femaleTotal, 0)) as femaleTotal',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.sector_id = sector.id')
+            ->asArray()
+            ->one();
+
+        return $this->renderAjax('_employment-data',[
+            'sectors' => $sectors,
+            'sectorsTotal' => $sectorsTotal,
+        ]);
+    }
+
+    public function actionDisbursementByCategory($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $data = [];
+
+        $accomplishment = Project::find()
+                        ->select([
+                            'project.id', 
+                            'project.sector_id', 
+                            'sum(COALESCE(expenditures,0)) as total',
+                        ])
+                        ->leftJoin('financial_accomplishment', 'financial_accomplishment.project_id = project.id');
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+
+        if($year != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['financial_accomplishment.year' => $year]);
+        }
+
+        if($quarter != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['financial_accomplishment.quarter' => $quarter]);
+        }
+
+        if($agency_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
+        }
+
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
+
+        if($sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($province_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
+        }
+
+        if($category_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $accomplishment = $accomplishment
+        ->groupBy(['project.id', 'project.sector_id'])
+        ->createCommand()
+        ->getRawSql();
+
+        $sectors = Sector::find()
+            ->select([
+                'sector.title',
+                'sum(COALESCE(accomplishment.total, 0)) as total',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.sector_id = sector.id')
+            ->groupBy(['sector.id'])
+            ->asArray()
+            ->all();
+
+        $data = [];
+
+        if(!empty($sectors))
+        {
+            $i = 0;
+            foreach($sectors as $sector)
+            {
+                $data[$i]['sector'] = $sector['title'];
+                $data[$i]['value'] = $sector['total'];
+                $i++;
+            }
+        }
+
+        //echo "<pre>"; print_r($data); exit;
+
+        $data = Json::encode($data);
+
+        return $this->renderAjax('_disbursement-by-category',[
+            'data' => $data,
+            'year' => $year,
+            'quarter' => $quarter, 
+            'agency_id' => $agency_id, 
+            'category_id' => $category_id, 
+            'sector_id' => $sector_id, 
+            'sub_sector_id' => $sub_sector_id, 
+            'province_id' => $province_id, 
+            'fund_source_id' => $fund_source_id
+        ]);
+    }
+
+    public function actionDisbursementByCategoryData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $accomplishment = Project::find()
+                        ->select([
+                            'project.id', 
+                            'project.sector_id', 
+                            'sum(COALESCE(expenditures,0)) as total',
+                        ])
+                        ->leftJoin('financial_accomplishment', 'financial_accomplishment.project_id = project.id');
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+
+        if($year != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['financial_accomplishment.year' => $year]);
+        }
+
+        if($quarter != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['financial_accomplishment.quarter' => $quarter]);
+        }
+
+        if($agency_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
+        }
+
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
+
+        if($sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($province_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
+        }
+
+        if($category_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $accomplishment = $accomplishment
+        ->groupBy(['project.id', 'project.sector_id'])
+        ->createCommand()
+        ->getRawSql();
+
+        $sectors = Sector::find()
+            ->select([
+                'sector.title',
+                'sum(COALESCE(accomplishment.total, 0)) as total',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.sector_id = sector.id')
+            ->groupBy(['sector.id'])
+            ->asArray()
+            ->all();
+
+        return $this->renderAjax('_disbursement-by-category-data',[
+            'sectors' => $sectors,
+        ]);
+    }
+
+    public function actionProjectImplementation($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+            $categoryTitles = ProjectCategory::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.code ORDER BY category.code ASC SEPARATOR ", ") as title'])
+                ->leftJoin('category', 'category.id = project_category.category_id')
+                ->leftJoin('project', 'project.id = project_category.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_category.project_id'])
+                ->createCommand()->getRawSql();
+
+            $physicalTargets = ProjectTarget::find()
+                    ->andWhere(['target_type' => 'Physical']);
+
+            $physicalAccomps = PhysicalAccomplishment::find();
+
+            $accomps = Accomplishment::find()
+                    ->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted']);
+
+            if($year != '')
+            {
+                $physicalTargets = $physicalTargets->andWhere(['year' => $year]);
+                $physicalAccomps = $physicalAccomps->andWhere(['year' => $year]);
+                $accomps = $accomps->andWhere(['year' => $year]);
+            }
+
+            $physicalTargets = $physicalTargets->createCommand()->getRawSql();
+            $physicalAccomps = $physicalAccomps->createCommand()->getRawSql();
+            $accomps = $accomps->groupBy(['project_id'])->createCommand()->getRawSql();
+
+            $provinceIDs = ProjectProvince::find();
+            $categoryIDs = ProjectCategory::find();
+            
+            $physicalTargetPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                IF("'.$quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                    IF("'.$quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                    COALESCE(physicalTargets.q4, 0)
+                    )
+                )
+            )';
+
+            $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                        IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                            IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)),
+                                IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)),
+                                IF(COALESCE(physicalTargets.q4, 0) = 0, IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)), COALESCE(physicalTargets.q4, 0))
+                                )
+                            )
+                        )
+                    ,   
+                    IF("'.$quarter.'" = "Q1", (COALESCE(physicalTargets.q1, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                         IF("'.$quarter.'" = "Q2", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             IF("'.$quarter.'" = "Q3", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                             )
+                         )
+                    ) 
+                    )';
+
+            $physicalTargetTotal = 'IF(project.data_type <> "Default",
+                IF(COALESCE(physicalTargets.q4, 0) <= 0,
+                    IF(COALESCE(physicalTargets.q3, 0) <= 0,
+                        IF(COALESCE(physicalTargets.q2, 0) <= 0,
+                            COALESCE(physicalTargets.q1, 0)
+                        , COALESCE(physicalTargets.q2, 0))
+                    , COALESCE(physicalTargets.q3, 0))
+                , COALESCE(physicalTargets.q4, 0))
+            ,   
+                COALESCE(physicalTargets.q1, 0) +
+                COALESCE(physicalTargets.q2, 0) +
+                COALESCE(physicalTargets.q3, 0) +
+                COALESCE(physicalTargets.q4, 0)
+            )'; 
+
+            $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                                    IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                        IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)),
+                                            IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)),
+                                            IF(COALESCE(physicalAccompsQ4.value, 0) = 0, IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)), COALESCE(physicalAccompsQ4.value, 0))
+                                            )
+                                        )
+                                    )
+                                ,   
+                                IF("'.$quarter.'" = "Q1", (COALESCE(physicalAccompsQ1.value, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                     IF("'.$quarter.'" = "Q2", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         IF("'.$quarter.'" = "Q3", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                                         )
+                                     )
+                                ) 
+                                )';
+
+            $physicalAccompPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                            IF("'.$quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+                                                IF("'.$quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+                                                COALESCE(physicalAccompsQ4.value, 0)
+                                                )
+                                            )
+                                        )';
+            
+            $isPercent = 'LOCATE("%", physicalTargets.indicator)';
+
+            $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
+            $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
+            $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
+            $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
+            $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
+            $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
+            $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
+
+            $sectors = Project::find()
+                ->select([
+                    'project.id as id',
+                    'sector.title as sectorTitle',
+                    'SUM('.$isCompleted.') as completed',
+                    'SUM('.$slippage.') as slippage',
+                    'SUM('.$behindSchedule.') as behindSchedule',
+                    'SUM('.$onSchedule.') as onSchedule',
+                    'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
+                    'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
+                    'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
+                ]);
+            $sectors = $sectors->leftJoin('sector', 'sector.id = project.sector_id');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+            $sectors = $sectors->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+            $sectors = $sectors->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+            $sectors = $sectors->andWhere(['project.draft' => 'No']);
+            
+            $categories = Project::find()
+                ->select([
+                    'project.id as id',
+                    'categoryTitles.title as categoryTitle',
+                    'SUM('.$isCompleted.') as completed',
+                    'SUM('.$slippage.') as slippage',
+                    'SUM('.$behindSchedule.') as behindSchedule',
+                    'SUM('.$onSchedule.') as onSchedule',
+                    'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
+                    'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
+                    'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
+                ]);
+            $categories = $categories->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
+            $categories = $categories->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
+            $categories = $categories->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
+            $categories = $categories->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
+            $categories = $categories->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+            $categories = $categories->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+            $categories = $categories->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+            $categories = $categories->andWhere(['project.draft' => 'No']);
+
+            if($year != '')
+            {
+                $sectors = $sectors->andWhere(['project.year' => $year]);
+                $categories = $categories->andWhere(['project.year' => $year]);
+            }
+
+            if($agency_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.agency_id' => $agency_id]);
+                $categories = $categories->andWhere(['project.agency_id' => $agency_id]);
+            }
+
+            if($category_id != '')
+            {
+                $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+            }
+
+            if($sector_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.sector_id' => $sector_id]);
+                $categories = $categories->andWhere(['project.sector_id' => $sector_id]);
+            }
+
+            if($sub_sector_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+                $categories = $categories->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+            }
+
+            if($province_id != '')
+            {
+                $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+            }
+
+            if($fund_source_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.fund_source_id' => $fund_source_id]);
+                $categories = $categories->andWhere(['project.fund_source_id' => $fund_source_id]);
+            }
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+            $provinceIDs = $provinceIDs->all();
+            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+            if($province_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.id' => $province_id]);
+                $categories = $categories->andWhere(['project.id' => $province_id]);
+            }
+
+            if($category_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.id' => $categoryIDs]);
+                $categories = $categories->andWhere(['project.id' => $categoryIDs]);
+            }
+
+            $sectors = $sectors->groupBy(['sectorTitle']);
+            $categories = $categories->groupBy(['categoryTitle']);
+
+            $sectors = $sectors->asArray()->all();
+            $categories = $categories->asArray()->all();
+
+
+            return $this->renderAjax('_project-implementation', [
+                'sectors' => $sectors,
+                'categories' => $categories,
+                'year' => $year,
+                'quarter' => $quarter, 
+                'agency_id' => $agency_id, 
+                'category_id' => $category_id, 
+                'sector_id' => $sector_id, 
+                'sub_sector_id' => $sub_sector_id, 
+                'province_id' => $province_id, 
+                'fund_source_id' => $fund_source_id
+            ]);
+    }
+    public function actionProjectImplementationData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+            $categoryTitles = ProjectCategory::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.code ORDER BY category.code ASC SEPARATOR ", ") as title'])
+                ->leftJoin('category', 'category.id = project_category.category_id')
+                ->leftJoin('project', 'project.id = project_category.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_category.project_id'])
+                ->createCommand()->getRawSql();
+
+            $physicalTargets = ProjectTarget::find()
+                    ->andWhere(['target_type' => 'Physical']);
+
+            $physicalAccomps = PhysicalAccomplishment::find();
+
+            $accomps = Accomplishment::find()
+                    ->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted']);
+
+            if($year != '')
+            {
+                $physicalTargets = $physicalTargets->andWhere(['year' => $year]);
+                $physicalAccomps = $physicalAccomps->andWhere(['year' => $year]);
+                $accomps = $accomps->andWhere(['year' => $year]);
+            }
+
+            $physicalTargets = $physicalTargets->createCommand()->getRawSql();
+            $physicalAccomps = $physicalAccomps->createCommand()->getRawSql();
+            $accomps = $accomps->groupBy(['project_id'])->createCommand()->getRawSql();
+
+            $provinceIDs = ProjectProvince::find();
+            $categoryIDs = ProjectCategory::find();
+            
+            $physicalTargetPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                IF("'.$quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                    IF("'.$quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                    COALESCE(physicalTargets.q4, 0)
+                    )
+                )
+            )';
+
+            $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                        IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                            IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)),
+                                IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)),
+                                IF(COALESCE(physicalTargets.q4, 0) = 0, IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)), COALESCE(physicalTargets.q4, 0))
+                                )
+                            )
+                        )
+                    ,   
+                    IF("'.$quarter.'" = "Q1", (COALESCE(physicalTargets.q1, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                         IF("'.$quarter.'" = "Q2", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             IF("'.$quarter.'" = "Q3", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                             )
+                         )
+                    ) 
+                    )';
+
+            $physicalTargetTotal = 'IF(project.data_type <> "Default",
+                IF(COALESCE(physicalTargets.q4, 0) <= 0,
+                    IF(COALESCE(physicalTargets.q3, 0) <= 0,
+                        IF(COALESCE(physicalTargets.q2, 0) <= 0,
+                            COALESCE(physicalTargets.q1, 0)
+                        , COALESCE(physicalTargets.q2, 0))
+                    , COALESCE(physicalTargets.q3, 0))
+                , COALESCE(physicalTargets.q4, 0))
+            ,   
+                COALESCE(physicalTargets.q1, 0) +
+                COALESCE(physicalTargets.q2, 0) +
+                COALESCE(physicalTargets.q3, 0) +
+                COALESCE(physicalTargets.q4, 0)
+            )'; 
+
+            $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                                    IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                        IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)),
+                                            IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)),
+                                            IF(COALESCE(physicalAccompsQ4.value, 0) = 0, IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)), COALESCE(physicalAccompsQ4.value, 0))
+                                            )
+                                        )
+                                    )
+                                ,   
+                                IF("'.$quarter.'" = "Q1", (COALESCE(physicalAccompsQ1.value, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                     IF("'.$quarter.'" = "Q2", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         IF("'.$quarter.'" = "Q3", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                                         )
+                                     )
+                                ) 
+                                )';
+
+            $physicalAccompPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                            IF("'.$quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+                                                IF("'.$quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+                                                COALESCE(physicalAccompsQ4.value, 0)
+                                                )
+                                            )
+                                        )';
+            
+            $isPercent = 'LOCATE("%", physicalTargets.indicator)';
+
+            $isCompleted = 'COALESCE(accomps.isCompleted, 0)';
+            $slippage = 'IF('.$isPercent.' > 0, '.$physicalAccompPerQuarter.' - '.$physicalTargetPerQuarter.', IF('.$physicalTargetPerQuarter.' > 0, (('.$physicalAccompPerQuarter.'/'.$physicalTargetPerQuarter.') * 100) -100 , 0))';
+            $behindSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
+            $onSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
+            $aheadOnSchedule = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
+            $notYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
+            $notYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF('.$physicalAccompTotalPerQuarter.' = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
+
+            $sectors = Project::find()
+                ->select([
+                    'project.id as id',
+                    'sector.title as sectorTitle',
+                    'SUM('.$isCompleted.') as completed',
+                    'SUM('.$slippage.') as slippage',
+                    'SUM('.$behindSchedule.') as behindSchedule',
+                    'SUM('.$onSchedule.') as onSchedule',
+                    'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
+                    'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
+                    'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
+                ]);
+            $sectors = $sectors->leftJoin('sector', 'sector.id = project.sector_id');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+            $sectors = $sectors->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+            $sectors = $sectors->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+            $sectors = $sectors->andWhere(['project.draft' => 'No']);
+            
+            $categories = Project::find()
+                ->select([
+                    'project.id as id',
+                    'categoryTitles.title as categoryTitle',
+                    'SUM('.$isCompleted.') as completed',
+                    'SUM('.$slippage.') as slippage',
+                    'SUM('.$behindSchedule.') as behindSchedule',
+                    'SUM('.$onSchedule.') as onSchedule',
+                    'SUM('.$aheadOnSchedule.') as aheadOnSchedule',
+                    'SUM('.$notYetStartedWithTarget.') as notYetStartedWithTarget',
+                    'SUM('.$notYetStartedWithNoTarget.') as notYetStartedWithNoTarget',
+                ]);
+            $categories = $categories->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
+            $categories = $categories->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
+            $categories = $categories->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
+            $categories = $categories->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
+            $categories = $categories->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+            $categories = $categories->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+            $categories = $categories->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+            $categories = $categories->andWhere(['project.draft' => 'No']);
+
+            if($year != '')
+            {
+                $sectors = $sectors->andWhere(['project.year' => $year]);
+                $categories = $categories->andWhere(['project.year' => $year]);
+            }
+
+            if($agency_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.agency_id' => $agency_id]);
+                $categories = $categories->andWhere(['project.agency_id' => $agency_id]);
+            }
+
+            if($category_id != '')
+            {
+                $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+            }
+
+            if($sector_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.sector_id' => $sector_id]);
+                $categories = $categories->andWhere(['project.sector_id' => $sector_id]);
+            }
+
+            if($sub_sector_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+                $categories = $categories->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+            }
+
+            if($province_id != '')
+            {
+                $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+            }
+
+            if($fund_source_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.fund_source_id' => $fund_source_id]);
+                $categories = $categories->andWhere(['project.fund_source_id' => $fund_source_id]);
+            }
+
+            $categoryIDs = $categoryIDs->all();
+            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+            $provinceIDs = $provinceIDs->all();
+            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+            if($province_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.id' => $province_id]);
+                $categories = $categories->andWhere(['project.id' => $province_id]);
+            }
+
+            if($category_id != '')
+            {
+                $sectors = $sectors->andWhere(['project.id' => $categoryIDs]);
+                $categories = $categories->andWhere(['project.id' => $categoryIDs]);
+            }
+
+            $sectors = $sectors->groupBy(['sectorTitle']);
+            $categories = $categories->groupBy(['categoryTitle']);
+
+            $sectors = $sectors->asArray()->all();
+            $categories = $categories->asArray()->all();
+
+
+            return $this->renderAjax('_project-implementation-data', [
+                'sectors' => $sectors,
+                'categories' => $categories,
+                'year' => $year,
+                'quarter' => $quarter, 
+                'agency_id' => $agency_id, 
+                'category_id' => $category_id, 
+                'sector_id' => $sector_id, 
+                'sub_sector_id' => $sub_sector_id, 
+                'province_id' => $province_id, 
+                'fund_source_id' => $fund_source_id
+            ]);
+    }
+
+    public function actionBeneficiaries($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $data = [];
+
+        $accomplishment = BeneficiariesAccomplishment::find()
+                        ->select([
+                            'beneficiaries_accomplishment.project_id', 
+                            'sum(COALESCE(male,0)) as maleTotal',
+                            'sum(COALESCE(female, 0)) as femaleTotal'
+                        ])
+                        ->leftJoin('project', 'project.id = beneficiaries_accomplishment.project_id');
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+
+        if($year != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.year' => $year]);
+        }
+
+        if($quarter != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.quarter' => $quarter]);
+        }
+
+        if($agency_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
+        }
+
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
+
+        if($sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($province_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
+        }
+
+        if($category_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $accomplishment = $accomplishment
+        ->createCommand()
+        ->getRawSql();
+
+        $total = Project::find()
+            ->select([
+                'sum(COALESCE(accomplishment.maleTotal, 0)) as maleTotal',
+                'sum(COALESCE(accomplishment.femaleTotal, 0)) as femaleTotal',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.project_id = project.id')
+            ->asArray()
+            ->one();
+
+        $data['male'] = intval($total['maleTotal']) + intval($total['femaleTotal']) > 0 ? number_format(intval($total['maleTotal']) / (intval($total['maleTotal']) + intval($total['femaleTotal'])) * 100, 0) : 0;
+        $data['female'] = intval($total['maleTotal']) + intval($total['femaleTotal']) > 0 ? number_format(intval($total['femaleTotal']) / (intval($total['maleTotal']) + intval($total['femaleTotal'])) * 100, 0) : 0;
+
+        $data['maleRaw'] = number_format(intval($total['maleTotal'], 0), 0);
+        $data['femaleRaw'] = number_format(intval($total['femaleTotal'], 0), 0);
+
+        return $this->renderAjax('_beneficiaries',[
+            'data' => $data,
+            'year' => $year,
+            'quarter' => $quarter, 
+            'agency_id' => $agency_id, 
+            'category_id' => $category_id, 
+            'sector_id' => $sector_id, 
+            'sub_sector_id' => $sub_sector_id, 
+            'province_id' => $province_id, 
+            'fund_source_id' => $fund_source_id
+        ]);
+    }
+
+    public function actionBeneficiariesData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $data = [];
+
+        $accomplishment = BeneficiariesAccomplishment::find()
+                        ->select([
+                            'beneficiaries_accomplishment.project_id', 
+                            'sum(COALESCE(male,0)) as maleTotal',
+                            'sum(COALESCE(female, 0)) as femaleTotal'
+                        ])
+                        ->leftJoin('project', 'project.id = beneficiaries_accomplishment.project_id');
+
+        $categoryIDs = ProjectCategory::find();
+        $provinceIDs = ProjectProvince::find();
+
+        if($year != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.year' => $year]);
+        }
+
+        if($quarter != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.quarter' => $quarter]);
+        }
+
+        if($agency_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
+        }
+
+        if($category_id != '')
+        {
+            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
+        }
+
+        if($sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
+        }
+
+        if($sub_sector_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
+        }
+
+        if($province_id != '')
+        {
+            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
+        }
+
+        if($fund_source_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
+        }
+
+        $categoryIDs = $categoryIDs->all();
+        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
+
+        $provinceIDs = $provinceIDs->all();
+        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
+
+        if($province_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
+        }
+
+        if($category_id != '')
+        {
+            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
+        }
+        
+        $accomplishment = $accomplishment
+        ->createCommand()
+        ->getRawSql();
+
+        $total = Project::find()
+            ->select([
+                'sum(COALESCE(accomplishment.maleTotal, 0)) as maleTotal',
+                'sum(COALESCE(accomplishment.femaleTotal, 0)) as femaleTotal',
+            ])
+            ->leftJoin(['accomplishment' => '('.$accomplishment.')'], 'accomplishment.project_id = project.id')
+            ->asArray()
+            ->one();
+
+        return $this->renderAjax('_beneficiaries-data',[
+            'total' => $total,
+        ]);
+    }
+
+    public function actionEvent($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    {
+        $images = EventImage::find()
+                        ->select([
+                            'image'
+                        ])->asArray()->all();
+
+        //echo "<pre>"; print_r($images); exit;
+
+        return $this->renderAjax('_event',[
+            'year' => $year,
+            'quarter' => $quarter, 
+            'agency_id' => $agency_id, 
+            'category_id' => $category_id, 
+            'sector_id' => $sector_id, 
+            'sub_sector_id' => $sub_sector_id, 
+            'province_id' => $province_id, 
+            'fund_source_id' => $fund_source_id,
+            'images' => $images
         ]);
     }
 }
