@@ -34,6 +34,7 @@ use common\models\Region;
 use common\models\Province;
 use common\models\Citymun;
 use common\modules\rpmes\models\ProjectCitymun;
+use yii\helpers\Html;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -1861,6 +1862,29 @@ class SiteController extends \yii\web\Controller
 
         return $this->renderAjax('_beneficiaries-data',[
             'total' => $total,
+        ]);
+    }
+
+    public function actionImageSlider()
+    {
+        $all_files = glob('../../frontend/web/slider/*.*');
+
+        $images = [];
+
+        for ($i=0; $i<count($all_files); $i++)
+        {
+        $image_name = $all_files[$i];
+        $supported_format = array('gif','jpg','jpeg','png');
+        $ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
+        if (in_array($ext, $supported_format))
+            {
+                $image_name = substr($image_name, 3, strlen($image_name) - 1);
+                $images[] = Html::img($image_name);
+            }
+        }
+
+        return $this->renderAjax('_slider', [
+            'images' => $images
         ]);
     }
 }
