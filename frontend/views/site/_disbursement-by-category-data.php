@@ -3,7 +3,7 @@
 <table class="table table-bordered table-striped table-hover table-condensed">
     <thead>
         <tr>
-            <th>Category</th>
+            <th>Sector</th>
             <td align=right><b>Total</b></td>
         </tr>
     </thead>
