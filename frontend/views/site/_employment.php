@@ -30,143 +30,91 @@ root.setThemes([
 
 // Create chart
 // https://www.amcharts.com/docs/v5/charts/xy-chart/
-var chart = root.container.children.push(
-  am5xy.XYChart.new(root, {
-    panX: false,
-    panY: false,
-    wheelX: "panX",
-    wheelY: "zoomX",
-    layout: root.horizontalLayout,
-    arrangeTooltips: false
-  })
-);
+var chart = root.container.children.push(am5xy.XYChart.new(root, {
+  panX: false,
+  panY: false,
+  wheelX: "panX",
+  wheelY: "zoomX",
+  layout: root.verticalLayout
+}));
 
-// Use only absolute numbers
-root.numberFormatter.set("numberFormat", "#.#s'%");
+// Add scrollbar
+// https://www.amcharts.com/docs/v5/charts/xy-chart/scrollbars/
+chart.set("scrollbarX", am5.Scrollbar.new(root, {
+  orientation: "horizontal"
+}));
 
-// Add legend
-// https://www.amcharts.com/docs/v5/charts/xy-chart/legend-xy-series/
-var legend = chart.children.push(
-  am5.Legend.new(root, {
-    centerY: am5.p50,
-    y: am5.p50,
-    //useDefaultMarker: true,
-    layout: root.verticalLayout
-  })
-);
-
-legend.markers.template.setAll({
-  width: 50,
-  height: 50
-})
-
-// Data
 var data = <?= $data ?>;
+
 
 // Create axes
 // https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
-var yAxis = chart.yAxes.push(
-  am5xy.CategoryAxis.new(root, {
-    categoryField: "category",
-    renderer: am5xy.AxisRendererY.new(root, {
-      inversed: true,
-      cellStartLocation: 0.1,
-      cellEndLocation: 0.9
-    })
-  })
-);
+var xAxis = chart.xAxes.push(am5xy.CategoryAxis.new(root, {
+  categoryField: "sector",
+  renderer: am5xy.AxisRendererX.new(root, {}),
+  tooltip: am5.Tooltip.new(root, {})
+}));
 
-var yRenderer = yAxis.get("renderer");
-yRenderer.grid.template.setAll({
-  visible: false
-});
+xAxis.data.setAll(data);
 
-yAxis.data.setAll(data);
+var yAxis = chart.yAxes.push(am5xy.ValueAxis.new(root, {
+  min: 0,
+  max: 100,
+  numberFormat: "#.##'%'",
+  strictMinMax: true,
+  calculateTotals: true,
+  renderer: am5xy.AxisRendererY.new(root, {})
+}));
 
-var xAxis = chart.xAxes.push(
-  am5xy.ValueAxis.new(root, {
-    calculateTotals: true,
-    min: -100,
-    max: 100,
-    renderer: am5xy.AxisRendererX.new(root, {
-      minGridDistance: 80
-    })
-  })
-);
 
-var xRenderer = xAxis.get("renderer");
-xRenderer.grid.template.setAll({
-  visible: false
-});
+// Add legend
+// https://www.amcharts.com/docs/v5/charts/xy-chart/legend-xy-series/
+var legend = chart.children.push(am5.Legend.new(root, {
+  centerX: am5.p50,
+  x: am5.p50
+}));
 
-var rangeDataItem = xAxis.makeDataItem({
-  value: 0
-});
-
-var range = xAxis.createAxisRange(rangeDataItem);
-
-range.get("grid").setAll({
-  stroke: am5.color(0xeeeeee),
-  strokeOpacity: 1,
-  location: 1,
-  visible: true
-});
 
 // Add series
 // https://www.amcharts.com/docs/v5/charts/xy-chart/series/
-function createSeries(field, name, color, icon, inlegend) {
-  var series = chart.series.push(
-    am5xy.ColumnSeries.new(root, {
-      xAxis: xAxis,
-      yAxis: yAxis,
-      name: name,
-      valueXField: field,
-      categoryYField: "category",
-      sequencedInterpolation: true,
-      fill: color,
-      stroke: color,
-      clustered: false
-    })
-  );
+function makeSeries(name, fieldName) {
+  var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+    name: name,
+    stacked: true,
+    xAxis: xAxis,
+    yAxis: yAxis,
+    valueYField: fieldName,
+    valueYShow: "valueYTotalPercent",
+    categoryXField: "sector"
+  }));
 
   series.columns.template.setAll({
-    height: 50,
-    fillOpacity: 0,
-    strokeOpacity: 0
+    tooltipText: "{name}, {categoryX}:{valueYTotalPercent.formatNumber('#.##')}%",
+    tooltipY: am5.percent(10)
   });
-  
-  if (icon) {
-    series.columns.template.set("fillPattern", am5.PathPattern.new(root, {
-      color: color,
-      repetition: "repeat-x",
-      width: 50,
-      height: 50,
-      fillOpacity: 0,
-      svgPath: icon
-    }));
-  }
-
   series.data.setAll(data);
+
+  // Make stuff animate on load
+  // https://www.amcharts.com/docs/v5/concepts/animations/
   series.appear();
 
-  if (inlegend) {
-    legend.data.push(series);
-  }
+  series.bullets.push(function () {
+    return am5.Bullet.new(root, {
+      sprite: am5.Label.new(root, {
+        text: "{valueYTotalPercent.formatNumber('#.##')}%",
+        fill: root.interfaceColors.get("alternativeText"),
+        centerY: am5.p50,
+        centerX: am5.p50,
+        populateText: true
+      })
+    });
+  });
 
-  return series;
+  legend.data.push(series);
 }
 
-var femaleColor = am5.color(0xf25f5c);
-var maleColor = am5.color(0x247ba0);
-var placeholderColor = am5.color(0xeeeeee);
-
-var maleIcon = "M 25.1 10.7 c 2.1 0 3.7 -1.7 3.7 -3.7 c 0 -2.1 -1.7 -3.7 -3.7 -3.7 c -2.1 0 -3.7 1.7 -3.7 3.7 C 21.4 9 23 10.7 25.1 10.7 z M 28.8 11.5 H 25.1 h -3.7 c -2.8 0 -4.7 2.5 -4.7 4.8 V 27.7 c 0 2.2 3.1 2.2 3.1 0 V 17.2 h 0.6 v 28.6 c 0 3 4.2 2.9 4.3 0 V 29.3 h 0.7 h 0.1 v 16.5 c 0.2 3.1 4.3 2.8 4.3 0 V 17.2 h 0.5 v 10.5 c 0 2.2 3.2 2.2 3.2 0 V 16.3 C 33.5 14 31.6 11.5 28.8 11.5 z";
-var femaleIcon = "M 18.4 15.1 L 15.5 25.5 c -0.6 2.3 2.1 3.2 2.7 1 l 2.6 -9.6 h 0.7 l -4.5 16.9 H 21.3 v 12.7 c 0 2.3 3.2 2.3 3.2 0 V 33.9 h 1 v 12.7 c 0 2.3 3.1 2.3 3.1 0 V 33.9 h 4.3 l -4.6 -16.9 h 0.8 l 2.6 9.6 c 0.7 2.2 3.3 1.3 2.7 -1 l -2.9 -10.4 c -0.4 -1.2 -1.8 -3.3 -4.2 -3.4 h -4.7 C 20.1 11.9 18.7 13.9 18.4 15.1 z M 28.6 7.2 c 0 -2.1 -1.6 -3.7 -3.7 -3.7 c -2 0 -3.7 1.7 -3.7 3.7 c 0 2.1 1.6 3.7 3.7 3.7 C 27 10.9 28.6 9.2 28.6 7.2 z";
-
-createSeries("maleMax", "Male", placeholderColor, maleIcon, false);
-createSeries("male", "Male", maleColor, maleIcon, true);
-createSeries("femaleMax", "Female", placeholderColor, femaleIcon, false);
-createSeries("female", "Female", femaleColor, femaleIcon, true);
+makeSeries("Male", "male");
+makeSeries("Female", "female");
 
 
 // Make stuff animate on load
@@ -177,11 +125,11 @@ chart.appear(1000, 100);
 </script>
 
 <!-- HTML -->
-<h4 class="text-center">Employment Generated Per Category By Sex</h4>
+<h4 class="text-center">Employment Generated Per Sector By Sex</h4>
 <div id="employment"></div>
 <div class="row">
   <div class="col-md-12 col-xs-12">
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('image-slider', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i> Previous Graph</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('image-slider', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i>Previous</button></div>
     <div class="col-md-6 col-xs-12">
       <button class="btn btn-block btn-default" id="employment-button" value="<?= Url::to(['/site/employment-data', 
                 'year' => $year,
@@ -194,7 +142,7 @@ chart.appear(1000, 100);
                 'fund_source_id' => $fund_source_id
       ]) ?>">View Tabular Data</button>
     </div>
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('disbursement-by-category', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i> Next Graph</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('disbursement-by-category', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i>Next</button></div>
   </div>
 </div>
 
@@ -202,7 +150,7 @@ chart.appear(1000, 100);
   Modal::begin([
     'id' => 'employment-modal',
     'size' => "modal-md",
-    'header' => '<div id="employment-modal-header"><h4>Employment Generated Per Category By Sex</h4></div>',
+    'header' => '<div id="employment-modal-header"><h4>Employment Generated Per Sector By Sex</h4></div>',
     'options' => ['tabindex' => false],
   ]);
   echo '<div id="employment-modal-content"></div>';

@@ -94,7 +94,7 @@ yAxis1.data.setAll(generateCategories(colSize));
 
 yAxis1.children.unshift(
   am5.Label.new(root, {
-    text: "[#247ba0]Male[/]\n[#247ba0]<?= $data['male'] ?>[/][#999999]/100%[/]",
+    text: "[#247ba0]Male[/]\n[#247ba0]<?= $data['male'] ?>[/][#999999]/100%[/]\n[#247ba0]<?= $data['maleRaw'] ?>",
     fontSize: 32,
     y: am5.p50,
     centerY: am5.p50
@@ -113,7 +113,7 @@ yAxis2.data.setAll(generateCategories(colSize));
 
 yAxis2.children.unshift(
   am5.Label.new(root, {
-    text: "[#f25f5c]Female[/]\n[#f25f5c]<?= $data['female'] ?>[/][#999999]/100%[/]",
+    text: "[#f25f5c]Female[/]\n[#f25f5c]<?= $data['female'] ?>[/][#999999]/100%[/]\n[#f25f5c]<?= $data['femaleRaw'] ?>",
     fontSize: 32,
     y: am5.p50,
     centerY: am5.p50
@@ -190,7 +190,7 @@ chart.appear(1000, 100);
 <div id="beneficiaries"></div>
 <div class="row">
   <div class="col-md-12 col-xs-12">
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('project-implementation', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i> Previous Graph</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('project-implementation', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i>Previous</button></div>
     <div class="col-md-6 col-xs-12">
       <button class="btn btn-block btn-default" id="beneficiaries-button" value="<?= Url::to(['/site/beneficiaries-data', 
                 'year' => $year,
@@ -203,7 +203,7 @@ chart.appear(1000, 100);
                 'fund_source_id' => $fund_source_id
       ]) ?>">View Tabular Data</button>
     </div>
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('image-slider', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i> Next Graph</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('image-slider', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i>Next</button></div>
   </div>
 </div>
 

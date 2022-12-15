@@ -76,6 +76,7 @@
                             ['label' => 'Sub-Sectors', 'icon' => 'folder', 'url' => ['/rpmes/sub-sector'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                             ['label' => 'Sub-Sectors By Sectors', 'icon' => 'folder', 'url' => ['/rpmes/sub-sector-per-sector'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                             ['label' => 'Fund Sources', 'icon' => 'folder', 'url' => ['/rpmes/fund-source'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
+                            ['label' => 'Event Upload', 'icon' => 'folder', 'url' => ['/rpmes/event-image'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                             [
                                 'label' => 'RDP-related',
                                 'icon' => 'folder',
