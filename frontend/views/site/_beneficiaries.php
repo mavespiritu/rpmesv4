@@ -197,7 +197,7 @@ chart.appear(1000, 100);
                 'quarter' => $quarter
       ]) ?>">View Tabular Data</button>
     </div>
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('image-slider', '<?= $year ?>', '<?= $quarter ?>')"><i class="fa fa-forward"></i>Next</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('physical', '<?= $year ?>', '<?= $quarter ?>')"><i class="fa fa-forward"></i>Next</button></div>
   </div>
 </div>
 

@@ -1069,6 +1069,261 @@ class SiteController extends \yii\web\Controller
         ]);
     }
 
+    public function actionPhysical($year, $quarter)
+    {
+            $categoryTitles = ProjectCategory::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.code ORDER BY category.code ASC SEPARATOR ", ") as title'])
+                ->leftJoin('category', 'category.id = project_category.category_id')
+                ->leftJoin('project', 'project.id = project_category.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_category.project_id'])
+                ->createCommand()->getRawSql();
+
+            $physicalTargets = ProjectTarget::find()->andWhere(['target_type' => 'Physical']);
+            $physicalAccomps = PhysicalAccomplishment::find();
+            $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted']);
+
+            if($year != '')
+            {
+                $physicalTargets = $physicalTargets->andWhere(['year' => $year]);
+                $physicalAccomps = $physicalAccomps->andWhere(['year' => $year]);
+                $accomps = $accomps->andWhere(['year' => $year]);
+            }
+
+            $physicalTargets = $physicalTargets->createCommand()->getRawSql();
+            $physicalAccomps = $physicalAccomps->createCommand()->getRawSql();
+            $accomps = $accomps->groupBy(['project_id'])->createCommand()->getRawSql();
+
+            $provinceIDs = ProjectProvince::find();
+            $categoryIDs = ProjectCategory::find();
+            
+            $physicalTargetPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                IF("'.$quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                    IF("'.$quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                    COALESCE(physicalTargets.q4, 0)
+                    )
+                )
+            )';
+
+            $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                        IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                            IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)),
+                                IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)),
+                                IF(COALESCE(physicalTargets.q4, 0) = 0, IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)), COALESCE(physicalTargets.q4, 0))
+                                )
+                            )
+                        )
+                    ,   
+                    IF("'.$quarter.'" = "Q1", (COALESCE(physicalTargets.q1, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                         IF("'.$quarter.'" = "Q2", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             IF("'.$quarter.'" = "Q3", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                             )
+                         )
+                    ) 
+                    )';
+
+            $physicalTargetTotal = 'IF(project.data_type <> "Default",
+                IF(COALESCE(physicalTargets.q4, 0) <= 0,
+                    IF(COALESCE(physicalTargets.q3, 0) <= 0,
+                        IF(COALESCE(physicalTargets.q2, 0) <= 0,
+                            COALESCE(physicalTargets.q1, 0)
+                        , COALESCE(physicalTargets.q2, 0))
+                    , COALESCE(physicalTargets.q3, 0))
+                , COALESCE(physicalTargets.q4, 0))
+            ,   
+                COALESCE(physicalTargets.q1, 0) +
+                COALESCE(physicalTargets.q2, 0) +
+                COALESCE(physicalTargets.q3, 0) +
+                COALESCE(physicalTargets.q4, 0)
+            )'; 
+
+            $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                                    IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                        IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)),
+                                            IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)),
+                                            IF(COALESCE(physicalAccompsQ4.value, 0) = 0, IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)), COALESCE(physicalAccompsQ4.value, 0))
+                                            )
+                                        )
+                                    )
+                                ,   
+                                IF("'.$quarter.'" = "Q1", (COALESCE(physicalAccompsQ1.value, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                     IF("'.$quarter.'" = "Q2", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         IF("'.$quarter.'" = "Q3", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                                         )
+                                     )
+                                ) 
+                                )';
+
+            $physicalAccompPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                            IF("'.$quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+                                                IF("'.$quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+                                                COALESCE(physicalAccompsQ4.value, 0)
+                                                )
+                                            )
+                                        )';
+
+            $sectors = Project::find()
+                ->select([
+                    'project.id as id',
+                    'sector.title as sectorTitle',
+                    'SUM('.$physicalAccompTotalPerQuarter.') as physicalAccompTotalPerQuarter',
+                    'SUM('.$physicalTargetTotalPerQuarter.') as physicalTargetTotalPerQuarter',
+                ]);
+            $sectors = $sectors->leftJoin('sector', 'sector.id = project.sector_id');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+            $sectors = $sectors->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+            $sectors = $sectors->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+            $sectors = $sectors->andWhere(['project.draft' => 'No']);
+
+            if($year != '')
+            {
+                $sectors = $sectors->andWhere(['project.year' => $year]);
+            }
+
+            $sectors = $sectors->groupBy(['sectorTitle']);
+
+            $sectors = $sectors->asArray()->all();
+
+
+            return $this->renderAjax('_physical', [
+                'sectors' => $sectors,
+                'year' => $year,
+                'quarter' => $quarter, 
+            ]);
+    }
+    public function actionPhysicalData($year, $quarter)
+    {
+            $categoryTitles = ProjectCategory::find()
+                ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.code ORDER BY category.code ASC SEPARATOR ", ") as title'])
+                ->leftJoin('category', 'category.id = project_category.category_id')
+                ->leftJoin('project', 'project.id = project_category.project_id')
+                ->where(['project.draft' => 'No'])
+                ->groupBy(['project_category.project_id'])
+                ->createCommand()->getRawSql();
+
+            $physicalTargets = ProjectTarget::find()->andWhere(['target_type' => 'Physical']);
+            $physicalAccomps = PhysicalAccomplishment::find();
+            $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted']);
+
+            if($year != '')
+            {
+                $physicalTargets = $physicalTargets->andWhere(['year' => $year]);
+                $physicalAccomps = $physicalAccomps->andWhere(['year' => $year]);
+                $accomps = $accomps->andWhere(['year' => $year]);
+            }
+
+            $physicalTargets = $physicalTargets->createCommand()->getRawSql();
+            $physicalAccomps = $physicalAccomps->createCommand()->getRawSql();
+            $accomps = $accomps->groupBy(['project_id'])->createCommand()->getRawSql();
+
+            $provinceIDs = ProjectProvince::find();
+            $categoryIDs = ProjectCategory::find();
+            
+            $physicalTargetPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                IF("'.$quarter.'" = "Q2", COALESCE(physicalTargets.q2, 0),
+                    IF("'.$quarter.'" = "Q3", COALESCE(physicalTargets.q3, 0),
+                    COALESCE(physicalTargets.q4, 0)
+                    )
+                )
+            )';
+
+            $physicalTargetTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                        IF("'.$quarter.'" = "Q1", COALESCE(physicalTargets.q1, 0),
+                            IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)),
+                                IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)),
+                                IF(COALESCE(physicalTargets.q4, 0) = 0, IF(COALESCE(physicalTargets.q3, 0) = 0, IF(COALESCE(physicalTargets.q2, 0) = 0, COALESCE(physicalTargets.q1, 0), COALESCE(physicalTargets.q2, 0)), COALESCE(physicalTargets.q3, 0)), COALESCE(physicalTargets.q4, 0))
+                                )
+                            )
+                        )
+                    ,   
+                    IF("'.$quarter.'" = "Q1", (COALESCE(physicalTargets.q1, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                         IF("'.$quarter.'" = "Q2", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             IF("'.$quarter.'" = "Q3", ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                             ((COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                             )
+                         )
+                    ) 
+                    )';
+
+            $physicalTargetTotal = 'IF(project.data_type <> "Default",
+                IF(COALESCE(physicalTargets.q4, 0) <= 0,
+                    IF(COALESCE(physicalTargets.q3, 0) <= 0,
+                        IF(COALESCE(physicalTargets.q2, 0) <= 0,
+                            COALESCE(physicalTargets.q1, 0)
+                        , COALESCE(physicalTargets.q2, 0))
+                    , COALESCE(physicalTargets.q3, 0))
+                , COALESCE(physicalTargets.q4, 0))
+            ,   
+                COALESCE(physicalTargets.q1, 0) +
+                COALESCE(physicalTargets.q2, 0) +
+                COALESCE(physicalTargets.q3, 0) +
+                COALESCE(physicalTargets.q4, 0)
+            )'; 
+
+            $physicalAccompTotalPerQuarter = 'IF(project.data_type = "Cumulative",
+                                    IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                        IF("'.$quarter.'" = "Q2", IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)),
+                                            IF("'.$quarter.'" = "Q3", IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)),
+                                            IF(COALESCE(physicalAccompsQ4.value, 0) = 0, IF(COALESCE(physicalAccompsQ3.value, 0) = 0, IF(COALESCE(physicalAccompsQ2.value, 0) = 0, COALESCE(physicalAccompsQ1.value, 0), COALESCE(physicalAccompsQ2.value, 0)), COALESCE(physicalAccompsQ3.value, 0)), COALESCE(physicalAccompsQ4.value, 0))
+                                            )
+                                        )
+                                    )
+                                ,   
+                                IF("'.$quarter.'" = "Q1", (COALESCE(physicalAccompsQ1.value, 0) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                     IF("'.$quarter.'" = "Q2", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         IF("'.$quarter.'" = "Q3", ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100,
+                                         ((COALESCE(physicalAccompsQ1.value, 0) + COALESCE(physicalAccompsQ2.value, 0) + COALESCE(physicalAccompsQ3.value, 0) + COALESCE(physicalAccompsQ4.value, 0)) / (COALESCE(physicalTargets.q1, 0) + COALESCE(physicalTargets.q2, 0) + COALESCE(physicalTargets.q3, 0) + COALESCE(physicalTargets.q4, 0))) * 100
+                                         )
+                                     )
+                                ) 
+                                )';
+
+            $physicalAccompPerQuarter = 'IF("'.$quarter.'" = "Q1", COALESCE(physicalAccompsQ1.value, 0),
+                                            IF("'.$quarter.'" = "Q2", COALESCE(physicalAccompsQ2.value, 0),
+                                                IF("'.$quarter.'" = "Q3", COALESCE(physicalAccompsQ3.value, 0),
+                                                COALESCE(physicalAccompsQ4.value, 0)
+                                                )
+                                            )
+                                        )';
+
+            $sectors = Project::find()
+                ->select([
+                    'project.id as id',
+                    'sector.title as sectorTitle',
+                    'SUM('.$physicalAccompTotalPerQuarter.') as physicalAccompTotalPerQuarter',
+                    'SUM('.$physicalTargetTotalPerQuarter.') as physicalTargetTotalPerQuarter',
+                ]);
+            $sectors = $sectors->leftJoin('sector', 'sector.id = project.sector_id');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ1' => '('.$physicalAccomps.')'], 'physicalAccompsQ1.project_id = project.id and physicalAccompsQ1.quarter = "Q1"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ2' => '('.$physicalAccomps.')'], 'physicalAccompsQ2.project_id = project.id and physicalAccompsQ2.quarter = "Q2"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
+            $sectors = $sectors->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
+            $sectors = $sectors->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+            $sectors = $sectors->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+            $sectors = $sectors->andWhere(['project.draft' => 'No']);
+
+            if($year != '')
+            {
+                $sectors = $sectors->andWhere(['project.year' => $year]);
+            }
+
+            $sectors = $sectors->groupBy(['sectorTitle']);
+
+            $sectors = $sectors->asArray()->all();
+
+
+            return $this->renderAjax('_physical-data', [
+                'sectors' => $sectors,
+                'year' => $year,
+                'quarter' => $quarter, 
+            ]);
+    }
+
     public function actionImageSlider($year, $quarter)
     {
         $all_files = glob('../../frontend/web/slider/*.*');

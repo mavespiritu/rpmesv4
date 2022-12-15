@@ -51,7 +51,7 @@ $this->title = 'eRPMES';
                     <div class="col-md-4 col-xs-12">
                         <div class="panel panel-default">
                             <div class="panel-body">
-                                <h4><i class='fa fa-map-marker'></i> Project Map</h4>
+                                <h4><i class='fa fa-map-marker'></i> Project Distribution per Province</h4>
                                 <div id="map" style="height: 70vh;"></div>
                             </div>
                         </div>
@@ -143,6 +143,22 @@ $this->title = 'eRPMES';
         });
     }
 
+    function loadPhysical(year, quarter)
+    {
+        $.ajax({
+            url: "'.Url::to(['/site/physical']).'?year=" + year + "&quarter=" + quarter,
+            beforeSend: function(){
+                $("#statistics").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+            },
+            success: function (data) { 
+                $("#statistics").empty();
+                $("#statistics").hide();
+                $("#statistics").fadeIn("slow");
+                $("#statistics").html(data);
+            }
+        });
+    }
+
     function loadImageSlider(year, quarter)
     {
         $.ajax({
@@ -177,6 +193,10 @@ $this->title = 'eRPMES';
         {
             loadBeneficiaries(year, quarter);
         }
+        else if(action === "physical")
+        {
+            loadPhysical(year, quarter);
+        }
         else if(action === "image-slider")
         {
             loadImageSlider(year, quarter);
@@ -201,6 +221,10 @@ $this->title = 'eRPMES';
         {
             loadBeneficiaries(year, quarter);
         }
+        else if(action === "physical")
+        {
+            loadPhysical(year, quarter);
+        }
         else if(action === "image-slider")
         {
             loadImageSlider(year, quarter);
@@ -209,7 +233,7 @@ $this->title = 'eRPMES';
 
     $(document).ready(function(){
         var result = "";
-        var classesOfDivs = ["employment", "disbursement-by-category", "project-implementation", "beneficiaries", "event"];
+        var classesOfDivs = ["employment", "disbursement-by-category", "project-implementation", "beneficiaries", "physical", "event"];
         var classnameSelected = classesOfDivs[Math.floor(Math.random()*classesOfDivs.length)];
         //nextGraph(classnameSelected, "","");
         loadImageSlider("","");
