@@ -87,7 +87,7 @@ class EventImageController extends Controller
             $model->save();
 
             $image = UploadedFile::getInstance($model, 'image');
-            $imageName = $model->title.'-'.Date("Ymd").'.'.$image->getExtension();
+            $imageName = str_replace(' ', '_', $model->title).'-'.Date("Ymd").'.'.$image->getExtension();
             $image->saveAs(Yii::getAlias('@eventImagePath').'/'.$imageName);
             $model->image = $imageName;
             $model->save();
@@ -131,7 +131,10 @@ class EventImageController extends Controller
     public function actionDelete($id)
     {
         $data = EventImage::findOne($id);
-        unlink(Yii::getAlias('@eventImagePath').'/'.$data->image);
+        if(file_exists(Yii::getAlias('@eventImagePath').'/'.$data->image) == 1)
+        {
+            unlink(Yii::getAlias('@eventImagePath').'/'.$data->image);
+        }
         $this->findModel($id)->delete();
         \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
         return $this->redirect(['index']);
