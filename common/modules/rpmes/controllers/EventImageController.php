@@ -130,6 +130,8 @@ class EventImageController extends Controller
      */
     public function actionDelete($id)
     {
+        $data = EventImage::findOne($id);
+        unlink(Yii::getAlias('@eventImagePath').'/'.$data->image);
         $this->findModel($id)->delete();
         \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
         return $this->redirect(['index']);
