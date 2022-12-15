@@ -115,38 +115,10 @@ class SiteController extends \yii\web\Controller
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
 
-        $agencies = Agency::find()->select(['id', 'code as title']);
-        $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
-        $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
-        $agencies = ArrayHelper::map($agencies, 'id', 'title');
-
-        $categories = Category::find()->all();
-        $categories = ArrayHelper::map($categories, 'id', 'title');
-
-        $sectors = Sector::find()->all();
-        $sectors = ArrayHelper::map($sectors, 'id', 'title');
-
-        $subSectors = [];
-
-        $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->asArray()->all();
-        $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
-
-        $provinces = Province::find()->where(['region_c' => 01])->orderBy(['province_m' => SORT_ASC])->all();
-        $provinces = ArrayHelper::map($provinces, 'province_c', 'province_m');
-
-        $fundSources = FundSource::find()->select(['id', 'concat(title," (",code,")") as title'])->orderBy(['title' => SORT_ASC])->asArray()->all();
-        $fundSources = ArrayHelper::map($fundSources, 'id', 'title');
-
         return $this->render('index', [
             'model' => $model,
             'years' => $years,
             'quarters' => $quarters,
-            'agencies' => $agencies,
-            'sectors' => $sectors,
-            'subSectors' => $subSectors,
-            'categories' => $categories,
-            'provinces' => $provinces,
-            'fundSources' => $fundSources,
         ]);
     }
 
@@ -376,7 +348,7 @@ class SiteController extends \yii\web\Controller
 
     }
     
-    public function actionHeatMap($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionHeatMap($year, $quarter)
     {
         $data = [];
 
@@ -396,52 +368,6 @@ class SiteController extends \yii\web\Controller
         if($quarter != '')
         {
             $quarterIDs = $quarterIDs->andWhere(['quarter' => $quarter]);
-        }
-
-        if($agency_id != '')
-        {
-            $perProvince = $perProvince->andWhere(['project.agency_id' => $agency_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $perProvince = $perProvince->andWhere(['project.sector_id' => $sector_id]);
-        }
-
-        if($sub_sector_id != '')
-        {
-            $perProvince = $perProvince->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-        }
-
-        if($province_id != '')
-        {
-            $perProvince = $perProvince->andWhere(['project_province.province_id' => $province_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $perProvince = $perProvince->andWhere(['project.fund_source_id' => $fund_source_id]);
-        }
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        $quarterIDs = $quarterIDs->all();
-        $quarterIDs = ArrayHelper::map($quarterIDs, 'project_id', 'project_id');
-
-        if($quarter != '')
-        {
-            $perProvince = $perProvince->andWhere(['project.id' => $quarterIDs]);
-        }
-
-        if($category_id != '')
-        {
-            $perProvince = $perProvince->andWhere(['project.id' => $categoryIDs]);
         }
         
         $perProvince = $perProvince
@@ -481,7 +407,7 @@ class SiteController extends \yii\web\Controller
         ]);
     }
 
-    public function actionEmployment($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionEmployment($year, $quarter)
     {
         $data = [];
 
@@ -494,9 +420,6 @@ class SiteController extends \yii\web\Controller
                         ])
                         ->leftJoin('person_employed_accomplishment', 'person_employed_accomplishment.project_id = project.id');
 
-        $categoryIDs = ProjectCategory::find();
-        $provinceIDs = ProjectProvince::find();
-
         if($year != '')
         {
             $accomplishment = $accomplishment->andWhere(['person_employed_accomplishment.year' => $year]);
@@ -505,52 +428,6 @@ class SiteController extends \yii\web\Controller
         if($quarter != '')
         {
             $accomplishment = $accomplishment->andWhere(['person_employed_accomplishment.quarter' => $quarter]);
-        }
-
-        if($agency_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
-        }
-
-        if($sub_sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
-        }
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
-        }
-
-        if($category_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
         }
         
         $accomplishment = $accomplishment
@@ -603,16 +480,10 @@ class SiteController extends \yii\web\Controller
             'sectorsTotal' => $sectorsTotal,
             'year' => $year,
             'quarter' => $quarter, 
-            'agency_id' => $agency_id, 
-            'category_id' => $category_id, 
-            'sector_id' => $sector_id, 
-            'sub_sector_id' => $sub_sector_id, 
-            'province_id' => $province_id, 
-            'fund_source_id' => $fund_source_id
         ]);
     }
 
-    public function actionEmploymentData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionEmploymentData($year, $quarter)
     {
         $data = [];
 
@@ -625,9 +496,6 @@ class SiteController extends \yii\web\Controller
                         ])
                         ->leftJoin('person_employed_accomplishment', 'person_employed_accomplishment.project_id = project.id');
 
-        $categoryIDs = ProjectCategory::find();
-        $provinceIDs = ProjectProvince::find();
-
         if($year != '')
         {
             $accomplishment = $accomplishment->andWhere(['person_employed_accomplishment.year' => $year]);
@@ -636,52 +504,6 @@ class SiteController extends \yii\web\Controller
         if($quarter != '')
         {
             $accomplishment = $accomplishment->andWhere(['person_employed_accomplishment.quarter' => $quarter]);
-        }
-
-        if($agency_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
-        }
-
-        if($sub_sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
-        }
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
-        }
-
-        if($category_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
         }
         
         $accomplishment = $accomplishment
@@ -715,7 +537,7 @@ class SiteController extends \yii\web\Controller
         ]);
     }
 
-    public function actionDisbursementByCategory($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionDisbursementByCategory($year, $quarter)
     {
         $data = [];
 
@@ -727,9 +549,6 @@ class SiteController extends \yii\web\Controller
                         ])
                         ->leftJoin('financial_accomplishment', 'financial_accomplishment.project_id = project.id');
 
-        $categoryIDs = ProjectCategory::find();
-        $provinceIDs = ProjectProvince::find();
-
         if($year != '')
         {
             $accomplishment = $accomplishment->andWhere(['financial_accomplishment.year' => $year]);
@@ -738,52 +557,6 @@ class SiteController extends \yii\web\Controller
         if($quarter != '')
         {
             $accomplishment = $accomplishment->andWhere(['financial_accomplishment.quarter' => $quarter]);
-        }
-
-        if($agency_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
-        }
-
-        if($sub_sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
-        }
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
-        }
-
-        if($category_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
         }
         
         $accomplishment = $accomplishment
@@ -822,16 +595,10 @@ class SiteController extends \yii\web\Controller
             'data' => $data,
             'year' => $year,
             'quarter' => $quarter, 
-            'agency_id' => $agency_id, 
-            'category_id' => $category_id, 
-            'sector_id' => $sector_id, 
-            'sub_sector_id' => $sub_sector_id, 
-            'province_id' => $province_id, 
-            'fund_source_id' => $fund_source_id
         ]);
     }
 
-    public function actionDisbursementByCategoryData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionDisbursementByCategoryData($year, $quarter)
     {
         $accomplishment = Project::find()
                         ->select([
@@ -841,9 +608,6 @@ class SiteController extends \yii\web\Controller
                         ])
                         ->leftJoin('financial_accomplishment', 'financial_accomplishment.project_id = project.id');
 
-        $categoryIDs = ProjectCategory::find();
-        $provinceIDs = ProjectProvince::find();
-
         if($year != '')
         {
             $accomplishment = $accomplishment->andWhere(['financial_accomplishment.year' => $year]);
@@ -852,52 +616,6 @@ class SiteController extends \yii\web\Controller
         if($quarter != '')
         {
             $accomplishment = $accomplishment->andWhere(['financial_accomplishment.quarter' => $quarter]);
-        }
-
-        if($agency_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
-        }
-
-        if($sub_sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
-        }
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
-        }
-
-        if($category_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
         }
         
         $accomplishment = $accomplishment
@@ -920,7 +638,7 @@ class SiteController extends \yii\web\Controller
         ]);
     }
 
-    public function actionProjectImplementation($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionProjectImplementation($year, $quarter)
     {
             $categoryTitles = ProjectCategory::find()
                 ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.code ORDER BY category.code ASC SEPARATOR ", ") as title'])
@@ -1075,58 +793,6 @@ class SiteController extends \yii\web\Controller
             {
                 $sectors = $sectors->andWhere(['project.year' => $year]);
                 $categories = $categories->andWhere(['project.year' => $year]);
-            }
-
-            if($agency_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.agency_id' => $agency_id]);
-                $categories = $categories->andWhere(['project.agency_id' => $agency_id]);
-            }
-
-            if($category_id != '')
-            {
-                $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-            }
-
-            if($sector_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.sector_id' => $sector_id]);
-                $categories = $categories->andWhere(['project.sector_id' => $sector_id]);
-            }
-
-            if($sub_sector_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-                $categories = $categories->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-            }
-
-            if($province_id != '')
-            {
-                $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-            }
-
-            if($fund_source_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.fund_source_id' => $fund_source_id]);
-                $categories = $categories->andWhere(['project.fund_source_id' => $fund_source_id]);
-            }
-
-            $categoryIDs = $categoryIDs->all();
-            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-            $provinceIDs = $provinceIDs->all();
-            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-            if($province_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.id' => $province_id]);
-                $categories = $categories->andWhere(['project.id' => $province_id]);
-            }
-
-            if($category_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.id' => $categoryIDs]);
-                $categories = $categories->andWhere(['project.id' => $categoryIDs]);
             }
 
             $sectors = $sectors->groupBy(['sectorTitle']);
@@ -1141,15 +807,9 @@ class SiteController extends \yii\web\Controller
                 'categories' => $categories,
                 'year' => $year,
                 'quarter' => $quarter, 
-                'agency_id' => $agency_id, 
-                'category_id' => $category_id, 
-                'sector_id' => $sector_id, 
-                'sub_sector_id' => $sub_sector_id, 
-                'province_id' => $province_id, 
-                'fund_source_id' => $fund_source_id
             ]);
     }
-    public function actionProjectImplementationData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionProjectImplementationData($year, $quarter)
     {
             $categoryTitles = ProjectCategory::find()
                 ->select(['project_id', 'GROUP_CONCAT(DISTINCT category.code ORDER BY category.code ASC SEPARATOR ", ") as title'])
@@ -1306,58 +966,6 @@ class SiteController extends \yii\web\Controller
                 $categories = $categories->andWhere(['project.year' => $year]);
             }
 
-            if($agency_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.agency_id' => $agency_id]);
-                $categories = $categories->andWhere(['project.agency_id' => $agency_id]);
-            }
-
-            if($category_id != '')
-            {
-                $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-            }
-
-            if($sector_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.sector_id' => $sector_id]);
-                $categories = $categories->andWhere(['project.sector_id' => $sector_id]);
-            }
-
-            if($sub_sector_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-                $categories = $categories->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-            }
-
-            if($province_id != '')
-            {
-                $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-            }
-
-            if($fund_source_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.fund_source_id' => $fund_source_id]);
-                $categories = $categories->andWhere(['project.fund_source_id' => $fund_source_id]);
-            }
-
-            $categoryIDs = $categoryIDs->all();
-            $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-            $provinceIDs = $provinceIDs->all();
-            $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-            if($province_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.id' => $province_id]);
-                $categories = $categories->andWhere(['project.id' => $province_id]);
-            }
-
-            if($category_id != '')
-            {
-                $sectors = $sectors->andWhere(['project.id' => $categoryIDs]);
-                $categories = $categories->andWhere(['project.id' => $categoryIDs]);
-            }
-
             $sectors = $sectors->groupBy(['sectorTitle']);
             $categories = $categories->groupBy(['categoryTitle']);
 
@@ -1370,16 +978,10 @@ class SiteController extends \yii\web\Controller
                 'categories' => $categories,
                 'year' => $year,
                 'quarter' => $quarter, 
-                'agency_id' => $agency_id, 
-                'category_id' => $category_id, 
-                'sector_id' => $sector_id, 
-                'sub_sector_id' => $sub_sector_id, 
-                'province_id' => $province_id, 
-                'fund_source_id' => $fund_source_id
             ]);
     }
 
-    public function actionBeneficiaries($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionBeneficiaries($year, $quarter)
     {
         $data = [];
 
@@ -1391,9 +993,6 @@ class SiteController extends \yii\web\Controller
                         ])
                         ->leftJoin('project', 'project.id = beneficiaries_accomplishment.project_id');
 
-        $categoryIDs = ProjectCategory::find();
-        $provinceIDs = ProjectProvince::find();
-
         if($year != '')
         {
             $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.year' => $year]);
@@ -1402,52 +1001,6 @@ class SiteController extends \yii\web\Controller
         if($quarter != '')
         {
             $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.quarter' => $quarter]);
-        }
-
-        if($agency_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
-        }
-
-        if($sub_sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
-        }
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
-        }
-
-        if($category_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
         }
         
         $accomplishment = $accomplishment
@@ -1473,16 +1026,10 @@ class SiteController extends \yii\web\Controller
             'data' => $data,
             'year' => $year,
             'quarter' => $quarter, 
-            'agency_id' => $agency_id, 
-            'category_id' => $category_id, 
-            'sector_id' => $sector_id, 
-            'sub_sector_id' => $sub_sector_id, 
-            'province_id' => $province_id, 
-            'fund_source_id' => $fund_source_id
         ]);
     }
 
-    public function actionBeneficiariesData($year, $quarter, $agency_id, $category_id, $sector_id, $sub_sector_id, $province_id, $fund_source_id)
+    public function actionBeneficiariesData($year, $quarter)
     {
         $data = [];
 
@@ -1494,9 +1041,6 @@ class SiteController extends \yii\web\Controller
                         ])
                         ->leftJoin('project', 'project.id = beneficiaries_accomplishment.project_id');
 
-        $categoryIDs = ProjectCategory::find();
-        $provinceIDs = ProjectProvince::find();
-
         if($year != '')
         {
             $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.year' => $year]);
@@ -1505,52 +1049,6 @@ class SiteController extends \yii\web\Controller
         if($quarter != '')
         {
             $accomplishment = $accomplishment->andWhere(['beneficiaries_accomplishment.quarter' => $quarter]);
-        }
-
-        if($agency_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.agency_id' => $agency_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sector_id' => $sector_id]);
-        }
-
-        if($sub_sector_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-        }
-
-        if($province_id != '')
-        {
-            $provinceIDs = $provinceIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.fund_source_id' => $fund_source_id]);
-        }
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        if($province_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $province_id]);
-        }
-
-        if($category_id != '')
-        {
-            $accomplishment = $accomplishment->andWhere(['project.id' => $categoryIDs]);
         }
         
         $accomplishment = $accomplishment
@@ -1571,7 +1069,7 @@ class SiteController extends \yii\web\Controller
         ]);
     }
 
-    public function actionImageSlider()
+    public function actionImageSlider($year, $quarter)
     {
         $all_files = glob('../../frontend/web/slider/*.*');
 
@@ -1588,9 +1086,20 @@ class SiteController extends \yii\web\Controller
                 $images[] = Html::img($image_name);
             }
         }
+        if($year == '')
+        {
+            $year = date("Y");
+        }
+        if($quarter)
+        {
+            $quarter = 'Q1';
+        }
+        
 
         return $this->renderAjax('_slider', [
-            'images' => $images
+            'images' => $images,
+            'year' => $year,
+            'quarter' => $quarter
         ]);
     }
 }

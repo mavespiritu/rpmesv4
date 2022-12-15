@@ -34,12 +34,6 @@ $this->title = 'eRPMES';
                             'model' => $model,
                             'years' => $years,
                             'quarters' => $quarters,
-                            'agencies' => $agencies,
-                            'categories' => $categories,
-                            'sectors' => $sectors,
-                            'subSectors' => $subSectors,
-                            'provinces' => $provinces,
-                            'fundSources' => $fundSources,
                         ]) ?>
                     </div>
                 </div>
@@ -69,10 +63,10 @@ $this->title = 'eRPMES';
 </div>
 <?php
     $script = '
-    function loadHeatMap(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
+    function loadHeatMap(year, quarter)
     {
         $.ajax({
-            url: "'.Url::to(['/site/heat-map']).'?year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id + "&category_id=" + category_id + "&sector_id=" + sector_id + "&sub_sector_id=" + sub_sector_id + "&province_id=" + province_id + "&fund_source_id=" + fund_source_id,
+            url: "'.Url::to(['/site/heat-map']).'?year=" + year + "&quarter=" + quarter,
             beforeSend: function(){
                 $("#map").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
@@ -85,10 +79,10 @@ $this->title = 'eRPMES';
         });
     }
 
-    function loadEmployment(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
+    function loadEmployment(year, quarter)
     {
         $.ajax({
-            url: "'.Url::to(['/site/employment']).'?year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id + "&category_id=" + category_id + "&sector_id=" + sector_id + "&sub_sector_id=" + sub_sector_id + "&province_id=" + province_id + "&fund_source_id=" + fund_source_id,
+            url: "'.Url::to(['/site/employment']).'?year=" + year + "&quarter=" + quarter,
             beforeSend: function(){
                 $("#statistics").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
@@ -101,10 +95,10 @@ $this->title = 'eRPMES';
         });
     }
 
-    function loadDisbursementByCategory(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
+    function loadDisbursementByCategory(year, quarter)
     {
         $.ajax({
-            url: "'.Url::to(['/site/disbursement-by-category']).'?year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id + "&category_id=" + category_id + "&sector_id=" + sector_id + "&sub_sector_id=" + sub_sector_id + "&province_id=" + province_id + "&fund_source_id=" + fund_source_id,
+            url: "'.Url::to(['/site/disbursement-by-category']).'?year=" + year + "&quarter=" + quarter,
             beforeSend: function(){
                 $("#statistics").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
@@ -117,10 +111,10 @@ $this->title = 'eRPMES';
         });
     }
 
-    function loadProjectImplementation(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
+    function loadProjectImplementation(year, quarter)
     {
         $.ajax({
-            url: "'.Url::to(['/site/project-implementation']).'?year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id + "&category_id=" + category_id + "&sector_id=" + sector_id + "&sub_sector_id=" + sub_sector_id + "&province_id=" + province_id + "&fund_source_id=" + fund_source_id,
+            url: "'.Url::to(['/site/project-implementation']).'?year=" + year + "&quarter=" + quarter,
             beforeSend: function(){
                 $("#statistics").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
@@ -133,10 +127,10 @@ $this->title = 'eRPMES';
         });
     }
 
-    function loadBeneficiaries(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
+    function loadBeneficiaries(year, quarter)
     {
         $.ajax({
-            url: "'.Url::to(['/site/beneficiaries']).'?year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id + "&category_id=" + category_id + "&sector_id=" + sector_id + "&sub_sector_id=" + sub_sector_id + "&province_id=" + province_id + "&fund_source_id=" + fund_source_id,
+            url: "'.Url::to(['/site/beneficiaries']).'?year=" + year + "&quarter=" + quarter,
             beforeSend: function(){
                 $("#statistics").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
@@ -149,10 +143,10 @@ $this->title = 'eRPMES';
         });
     }
 
-    function loadImageSlider()
+    function loadImageSlider(year, quarter)
     {
         $.ajax({
-            url: "'.Url::to(['/site/image-slider']).'",
+            url: "'.Url::to(['/site/image-slider']).'?year=" + year + "&quarter=" + quarter,
             beforeSend: function(){
                 $("#statistics").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
@@ -165,51 +159,51 @@ $this->title = 'eRPMES';
         });
     }
 
-    function previousGraph(action, year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
+    function previousGraph(action, year, quarter)
     {
         if(action === "employment")
         {
-            loadEmployment(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+            loadEmployment(year, quarter);
         }
         else if(action === "disbursement-by-category")
         {
-            loadDisbursementByCategory(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+            loadDisbursementByCategory(year, quarter);
         }
         else if(action === "project-implementation")
         {
-            loadProjectImplementation(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+            loadProjectImplementation(year, quarter);
         }
         else if(action === "beneficiaries")
         {
-            loadBeneficiaries(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+            loadBeneficiaries(year, quarter);
         }
         else if(action === "image-slider")
         {
-            loadImageSlider("","","","","","","","");
+            loadImageSlider(year, quarter);
         }
     }
 
-    function nextGraph(action, year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id)
+    function nextGraph(action, year, quarter)
     {
         if(action === "employment")
         {
-            loadEmployment(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+            loadEmployment(year, quarter);
         }
         else if(action === "disbursement-by-category")
         {
-            loadDisbursementByCategory(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+            loadDisbursementByCategory(year, quarter);
         }
         else if(action === "project-implementation")
         {
-            loadProjectImplementation(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+            loadProjectImplementation(year, quarter);
         }
         else if(action === "beneficiaries")
         {
-            loadBeneficiaries(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+            loadBeneficiaries(year, quarter);
         }
         else if(action === "image-slider")
         {
-            loadImageSlider("","","","","","","","");
+            loadImageSlider(year, quarter);
         }
     }
 
@@ -217,9 +211,9 @@ $this->title = 'eRPMES';
         var result = "";
         var classesOfDivs = ["employment", "disbursement-by-category", "project-implementation", "beneficiaries", "event"];
         var classnameSelected = classesOfDivs[Math.floor(Math.random()*classesOfDivs.length)];
-        //nextGraph(classnameSelected, "","","","","","","","");
-        loadImageSlider();
-        loadHeatMap("","","","","","","","");
+        //nextGraph(classnameSelected, "","");
+        loadImageSlider("","");
+        loadHeatMap("","");
     });
     function showHideFilter() {
         var x = document.getElementById("filterForm");
@@ -237,12 +231,6 @@ $this->title = 'eRPMES';
         
         var year = $("#submission-year").val();
         var quarter = $("#submission-quarter").val();
-        var agency_id = $("#submission-agency_id").val();
-        var category_id = $("#submission-category_id").val();
-        var sector_id = $("#submission-sector_id").val();
-        var sub_sector_id = $("#submission-sub_sector_id").val();
-        var province_id = $("#submission-province_id").val();
-        var fund_source_id = $("#submission-fund_source_id").val();
         $.ajax({
             url: form.attr("action"),
             type: form.attr("method"),
@@ -251,8 +239,8 @@ $this->title = 'eRPMES';
                 $("#graphs-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
             success: function (data) {
-                loadHeatMap(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
-                loadEmployment(year, quarter, agency_id, category_id, sector_id, sub_sector_id, province_id, fund_source_id);
+                loadHeatMap(year, quarter);
+                loadEmployment(year, quarter);
             },
             error: function (err) {
                 console.log(err);

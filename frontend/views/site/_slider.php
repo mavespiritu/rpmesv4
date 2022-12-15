@@ -14,10 +14,10 @@ use yii\web\View;
 </div>
 <div class="row">
   <div class="col-md-12 col-xs-12">
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('beneficiaries', '', '','', '', '', '', '', '')"><i class="fa fa-backward"></i> Previous</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('beneficiaries', '<?= $year ?>', '<?= $quarter ?>')"><i class="fa fa-backward"></i> Previous</button></div>
     <div class="col-md-6 col-xs-12">
       
     </div>
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('employment', '', '','', '', '', '', '', '')"><i class="fa fa-forward"></i> Next</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('employment', '<?= $year ?>', '<?= $quarter ?>')"><i class="fa fa-forward"></i> Next</button></div>
   </div>
 </div>

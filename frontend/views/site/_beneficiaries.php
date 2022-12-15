@@ -190,20 +190,14 @@ chart.appear(1000, 100);
 <div id="beneficiaries"></div>
 <div class="row">
   <div class="col-md-12 col-xs-12">
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('project-implementation', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i>Previous</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('project-implementation', '<?= $year ?>', '<?= $quarter ?>')"><i class="fa fa-backward"></i>Previous</button></div>
     <div class="col-md-6 col-xs-12">
       <button class="btn btn-block btn-default" id="beneficiaries-button" value="<?= Url::to(['/site/beneficiaries-data', 
                 'year' => $year,
-                'quarter' => $quarter, 
-                'agency_id' => $agency_id, 
-                'category_id' => $category_id, 
-                'sector_id' => $sector_id, 
-                'sub_sector_id' => $sub_sector_id, 
-                'province_id' => $province_id, 
-                'fund_source_id' => $fund_source_id
+                'quarter' => $quarter
       ]) ?>">View Tabular Data</button>
     </div>
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('image-slider', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i>Next</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('image-slider', '<?= $year ?>', '<?= $quarter ?>')"><i class="fa fa-forward"></i>Next</button></div>
   </div>
 </div>
 
