@@ -6,7 +6,7 @@ use yii\web\View;
 ?>
 <h4 class="text-center">Project Implementation By Status</h4>
 <div style="height: 90%; width: 100%">
-<table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" style="width: 100%; height: 200px;" >
+<table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" style="width: 100%; height: 200px; font-size: 15px;" >
     <thead>
         <tr>
             <td rowspan=2 align=center style="width: 40%"><b>Sector</b></td>
@@ -43,7 +43,7 @@ use yii\web\View;
     </tbody>
 </table>
 <br>
-<table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" style="width: 100%; height: 200px;" >
+<table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" style="width: 100%; height: 200px; font-size: 15px;" >
     <thead>
         <tr>
             <td rowspan=2 align=center style="width: 40%"><b>Categories</b></td>
@@ -82,7 +82,7 @@ use yii\web\View;
 </div>
 <div class="row">
   <div class="col-md-12 col-xs-12">
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('disbursement-by-category', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i> Previous Graph</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('disbursement-by-category', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i> Previous</button></div>
     <div class="col-md-6 col-xs-12">
       <button class="btn btn-block btn-default" id="implementation-button" value="<?= Url::to(['/site/project-implementation-data', 
                 'year' => $year,
@@ -95,7 +95,7 @@ use yii\web\View;
                 'fund_source_id' => $fund_source_id
       ]) ?>">View Tabular Data</button>
     </div>
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('beneficiaries', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i> Next Graph</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('beneficiaries', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i> Next</button></div>
   </div>
 </div>
 

@@ -16,6 +16,12 @@ $this->title = 'eRPMES';
   display : none;
 }
 </style>
+
+<script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/percent.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+<script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+
 <div class='site-index'>
 
         <h3 align=center>The Region 1 RPMES Dashboard</h3>
@@ -209,13 +215,12 @@ $this->title = 'eRPMES';
 
     $(document).ready(function(){
         var result = "";
-        var classesOfDivs = ["employment", "disbursement-by-category", "project-implementation", "beneficiaries"];
+        var classesOfDivs = ["employment", "disbursement-by-category", "project-implementation", "beneficiaries", "event"];
         var classnameSelected = classesOfDivs[Math.floor(Math.random()*classesOfDivs.length)];
         //nextGraph(classnameSelected, "","","","","","","","");
         loadImageSlider();
         loadHeatMap("","","","","","","","");
     });
-
     function showHideFilter() {
         var x = document.getElementById("filterForm");
         if (x.style.display == "none") {
@@ -224,7 +229,6 @@ $this->title = 'eRPMES';
           x.style.display = "none";
         }
       }
-
     $("#search-dashboard-form").on("beforeSubmit", function (e) {
         e.preventDefault();
      
@@ -239,7 +243,6 @@ $this->title = 'eRPMES';
         var sub_sector_id = $("#submission-sub_sector_id").val();
         var province_id = $("#submission-province_id").val();
         var fund_source_id = $("#submission-fund_source_id").val();
-
         $.ajax({
             url: form.attr("action"),
             type: form.attr("method"),
@@ -255,7 +258,6 @@ $this->title = 'eRPMES';
                 console.log(err);
             }
         });
-
         return false;
     });
     ';

@@ -39,10 +39,17 @@ var chart = root.container.children.push(
 var series = chart.series.push(
   am5percent.PieSeries.new(root, {
     valueField: "value",
-    categoryField: "category",
+    categoryField: "sector",
     endAngle: 270
   })
 );
+
+var bgColor = root.interfaceColors.get("background");
+
+series.slices.template.setAll({
+  tooltipText:
+    "{sector}: {valuePercentTotal.formatNumber('0.00')}% ({value})"
+});
 
 series.states.create("hidden", {
   endAngle: -90
@@ -58,11 +65,11 @@ series.appear(1000, 100);
 </script>
 
 <!-- HTML -->
-<h4 class="text-center">Total Expenditure Per Category</h4>
+<h4 class="text-center">Total Expenditure Per Sector</h4>
 <div id="disbursement"></div>
 <div class="row">
   <div class="col-md-12 col-xs-12">
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('employment', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i> Previous Graph</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="previousGraph('employment', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-backward"></i> Previous</button></div>
     <div class="col-md-6 col-xs-12">
       <button class="btn btn-block btn-default" id="disbursement-button" value="<?= Url::to(['/site/disbursement-by-category-data', 
                 'year' => $year,
@@ -75,7 +82,7 @@ series.appear(1000, 100);
                 'fund_source_id' => $fund_source_id
       ]) ?>">View Tabular Data</button>
     </div>
-    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('project-implementation', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i> Next Graph</button></div>
+    <div class="col-md-3 col-xs-12"><button class="btn btn-block btn-default" onclick="nextGraph('project-implementation', '<?= $year ?>', '<?= $quarter ?>', '<?= $agency_id ?>', '<?= $category_id ?>', '<?= $sector_id ?>', '<?= $sub_sector_id ?>', '<?= $province_id ?>', '<?= $fund_source_id ?>')"><i class="fa fa-forward"></i> Next</button></div>
   </div>
 </div>
 
@@ -83,7 +90,7 @@ series.appear(1000, 100);
   Modal::begin([
     'id' => 'disbursement-modal',
     'size' => "modal-md",
-    'header' => '<div id="disbursement-modal-header"><h4>Total Expenditures Per Category</h4></div>',
+    'header' => '<div id="disbursement-modal-header"><h4>Total Expenditures Per Sector</h4></div>',
     'options' => ['tabindex' => false],
   ]);
   echo '<div id="disbursement-modal-content"></div>';

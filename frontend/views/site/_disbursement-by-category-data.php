@@ -8,18 +8,14 @@
         </tr>
     </thead>
     <tbody>
-    <?php if(!empty($categories)){ ?>
-        <?php foreach($categories as $category){ ?>
+    <?php if(!empty($sectors)){ ?>
+        <?php foreach($sectors as $sector){ ?>
             <tr>
-                <td><?= $category['code'] ?></td>
-                <td align=right><?= number_format($category['total'], 2) ?></td>
+                <td><?= $sector['title'] ?></td>
+                <td align=right><?= number_format($sector['total'], 2) ?></td>
             </tr>
-            <?php $total += $category['total']; ?> 
+            <?php $total += $sector['total']; ?> 
         <?php } ?>
     <?php } ?>
-    <tr>
-        <td align=right><b>Total</b></td>
-        <td align=right><b><?= number_format($total, 2) ?></b></td>
-    </tr>
     </tbody>
 </table>
