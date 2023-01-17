@@ -14,7 +14,7 @@ use common\components\helpers\HtmlHelper;
 /* @var $searchModel common\modules\rpmes\models\ProjectProblemSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Project Problems';
+$this->title = 'Key Lessons';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-problem-index">
@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Project Problems/Issues</h3>
+                    <h3 class="box-title">Key Lessons</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search', [

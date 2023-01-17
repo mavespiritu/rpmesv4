@@ -525,6 +525,7 @@ class AccomplishmentController extends \yii\web\Controller
         $beneficiariesAccomps = BeneficiariesAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
         $groupBeneficiariesAccomps = GroupAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
         $accompsSubmitter = Accomplishment::find()->where(['year' => $model->year, 'quarter' => $model->quarter])->createCommand()->getRawSql();
+        $accomplishmentPerQuarter = Accomplishment::find()->where(['year' => $model->year, 'quarter' => $model->quarter])->createCommand()->getRawSql();
         $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
         $categoryIDs = ProjectCategory::find();
 
@@ -832,8 +833,8 @@ class AccomplishmentController extends \yii\web\Controller
                         'categoryTitles.title as categoryTitle',
                         'agency.code as agencyTitle',
                         'sector.title as sectorTitle',
-                        'accomplishment.remarks as remarks',
-                        'accomplishment.date_submitted as date_submitted',
+                        'accomplishmentPerQuarter.remarks as remarks',
+                        'accomplishmentPerQuarter.date_submitted as date_submitted',
                         $financialTargetTotalPerQuarter.' as allocationsAsOf',
                         $financialTargetPerQuarter.'as allocationPerQtr',
                         $releasesTotalPerQuarter.'as releasesAsOf',
@@ -867,9 +868,10 @@ class AccomplishmentController extends \yii\web\Controller
                     $projects = $projects->leftJoin(['categoryTitles' => '('.$categoryTitles.')'], 'categoryTitles.project_id = project.id');
                     $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
                     $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
-                    $projects = $projects->leftJoin('accomplishment', 'accomplishment.project_id = project.id');
+                    //$projects = $projects->leftJoin('accomplishment', 'accomplishment.project_id = project.id');
                     $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
                     $projects = $projects->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+                    $projects = $projects->leftJoin(['accomplishmentPerQuarter' => '('.$accomplishmentPerQuarter.')'], 'accomplishmentPerQuarter.project_id = project.id');
                     $projects = $projects->leftJoin('project_category', 'project_category.project_id = project.id');
                     $projects = $projects->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
                     $projects = $projects->leftJoin(['financialAccompsQ1' => '('.$financialAccomps.')'], 'financialAccompsQ1.project_id = project.id and financialAccompsQ1.quarter = "Q1"');

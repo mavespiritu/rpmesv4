@@ -173,39 +173,38 @@ class PlanController extends \yii\web\Controller
         $projects = clone $projectsPaging;
         $projects = $projects->all();
         $projectIds = [];
+
+        $totals['financials']['Q1'] = 0;
+        $totals['financials']['Q2'] = 0;
+        $totals['financials']['Q3'] = 0;
+        $totals['financials']['Q4'] = 0;
+        $totals['physicals']['Q1'] = 0;
+        $totals['physicals']['Q2'] = 0;
+        $totals['physicals']['Q3'] = 0;
+        $totals['physicals']['Q4'] = 0;
+        $totals['maleEmployed']['Q1'] = 0;
+        $totals['maleEmployed']['Q2'] = 0;
+        $totals['maleEmployed']['Q3'] = 0;
+        $totals['maleEmployed']['Q4'] = 0;
+        $totals['femaleEmployed']['Q1'] = 0;
+        $totals['femaleEmployed']['Q2'] = 0;
+        $totals['femaleEmployed']['Q3'] = 0;
+        $totals['femaleEmployed']['Q4'] = 0;
+        $totals['beneficiaries']['Q1'] = 0;
+        $totals['beneficiaries']['Q2'] = 0;
+        $totals['beneficiaries']['Q3'] = 0;
+        $totals['beneficiaries']['Q4'] = 0;
+        $totals['groupBeneficiaries']['Q1'] = 0;
+        $totals['groupBeneficiaries']['Q2'] = 0;
+        $totals['groupBeneficiaries']['Q3'] = 0;
+        $totals['groupBeneficiaries']['Q4'] = 0;
+
         if(!empty($projects))
         {
             foreach($projects as $project)
             {
                 $projectIds[$project['id']] = $project;
-                
-                $totals['financials']['Q1'] = 0;
-                $totals['financials']['Q2'] = 0;
-                $totals['financials']['Q3'] = 0;
-                $totals['financials']['Q4'] = 0;
-                $totals['physicals']['Q1'] = 0;
-                $totals['physicals']['Q2'] = 0;
-                $totals['physicals']['Q3'] = 0;
-                $totals['physicals']['Q4'] = 0;
-                $totals['maleEmployed']['Q1'] = 0;
-                $totals['maleEmployed']['Q2'] = 0;
-                $totals['maleEmployed']['Q3'] = 0;
-                $totals['maleEmployed']['Q4'] = 0;
-                $totals['femaleEmployed']['Q1'] = 0;
-                $totals['femaleEmployed']['Q2'] = 0;
-                $totals['femaleEmployed']['Q3'] = 0;
-                $totals['femaleEmployed']['Q4'] = 0;
-                $totals['beneficiaries']['Q1'] = 0;
-                $totals['beneficiaries']['Q2'] = 0;
-                $totals['beneficiaries']['Q3'] = 0;
-                $totals['beneficiaries']['Q4'] = 0;
-                $totals['groupBeneficiaries']['Q1'] = 0;
-                $totals['groupBeneficiaries']['Q2'] = 0;
-                $totals['groupBeneficiaries']['Q3'] = 0;
-                $totals['groupBeneficiaries']['Q4'] = 0;
-            }
-            foreach($projects as $project)
-            {
+
                 $totals['financials']['Q1'] += $project->financialTarget ? floatval($project->financialTarget->q1) : 0;
                 $totals['financials']['Q2'] += $project->financialTarget ? floatval($project->financialTarget->q2) : 0;
                 $totals['financials']['Q3'] += $project->financialTarget ? floatval($project->financialTarget->q3) : 0;
