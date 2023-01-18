@@ -78,7 +78,7 @@ class AcknowledgmentController extends \yii\web\Controller
                     [
                         'actions' => ['monitoring-plan', 'monitoring-report'],
                         'allow' => true,
-                        'roles' => ['Administrator', 'SuperAdministrator'],
+                        'roles' => ['Administrator', 'SuperAdministrator', 'AgencyUser'],
                     ],
                 ],
             ],
@@ -115,6 +115,8 @@ class AcknowledgmentController extends \yii\web\Controller
             {
                 $submissions = $submissions->andWhere(['id' => $model->agency_id]);
             }
+
+            $submissions = Yii::$app->user->can('AgencyUser') ? $submissions->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $submissions;
 
             $submissions = $submissions->orderBy(['code' => SORT_ASC])->all();
 
@@ -219,6 +221,8 @@ class AcknowledgmentController extends \yii\web\Controller
             {
                 $submissions = $submissions->andWhere(['id' => $model->agency_id]);
             }
+
+            $submissions = Yii::$app->user->can('AgencyUser') ? $submissions->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $submissions;
 
             $submissions = $submissions->orderBy(['code' => SORT_ASC])->all();
 

@@ -79,6 +79,9 @@ class Project extends \yii\db\ActiveRecord
             [['year', 'agency_id','quarter'], 'required', 'on' => 'projectExceptionAdmin'],
             [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
             [['year', 'quarter', 'agency_id'], 'required', 'on' => 'projectResult'],
+            [['year', 'quarter', 'agency_id', 'id'], 'required', 'on' => 'projectResultAdmin'],
+            [['year'], 'required', 'on' => 'searchSubmissionLog'],
+            [['year', 'agency_id'], 'required', 'on' => 'searchSubmissionLogAdmin'],
             /* [['source_id'], 'required',  'when' => function($model){
                 return ($model->period == 'Carry-Over');
             }], */
@@ -104,7 +107,7 @@ class Project extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => 'ID',
+            'id' => 'Project',
             'source_id' => 'Source Project',
             'project_no' => 'Project No',
             'year' => 'Year',

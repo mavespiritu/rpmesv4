@@ -57,7 +57,7 @@ $this->title = 'eRPMES';
                     <div class="col-md-4 col-xs-12">
                         <div class="panel panel-default">
                             <div class="panel-body">
-                                <h4><i class='fa fa-map-marker'></i> Project Map</h4>
+                                <h4><i class='fa fa-map-marker'></i> Project Distribution by Provinces</h4>
                                 <div id="map" style="height: 70vh;"></div>
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 use yii\web\View;
@@ -8,6 +9,9 @@ use yii\web\View;
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\ProjectResultSearch */
 /* @var $form yii\widgets\ActiveForm */
+
+$projectsUrl = \yii\helpers\Url::to(['/rpmes/project-result/project-list']);
+
 ?>
 
 <div class="project-result-search">
@@ -17,18 +21,70 @@ use yii\web\View;
         'method' => 'get'
     ]); ?>
 
-<div class="row">
-        <div class="col-md-4 col-xs-12">
+    <div class="row">
+        <?php if(Yii::$app->user->can('Administrator')){ ?>
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
+                'data' => $agencies,
+                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'agency-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                'pluginEvents'=>[
+                    'select2:select'=>'
+                        function(){
+                            $.ajax({
+                                url: "'.$projectsUrl.'",
+                                data: {
+                                        agency_id: this.value,
+                                        year: $("#project-year").val(),
+                                    }
+                            }).done(function(result) {
+                                $(".project-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select One", allowClear: true});
+                                $(".project-select").select2("val","");
+                            });
+                        }'
+                ]
+                ])->label('Agency');
+            ?>
+        </div>
+        <?php } ?>
+        <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'year')->widget(Select2::classname(), [
                 'data' => $years,
                 'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
+                'pluginEvents'=>[
+                    'select2:select'=>'
+                        function(){
+                            $.ajax({
+                                url: "'.$projectsUrl.'",
+                                data: {
+                                        agency_id: $("#project-agency_id").val(),
+                                        year: this.value,
+                                    }
+                            }).done(function(result) {
+                                $(".project-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select One", allowClear: true});
+                                $(".project-select").select2("val","");
+                            });
+                        }'
+                ]
                 ])->label('Year *');
             ?>
         </div>
-        <div class="col-md-4 col-xs-12">
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'id')->widget(Select2::classname(), [
+                'data' => $projects,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'project-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Project *');
+            ?>
+        </div>
+        <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'quarter')->widget(Select2::classname(), [
                 'data' => $quarters,
                 'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'quarter-select'],
@@ -38,20 +94,10 @@ use yii\web\View;
                 ])->label('Quarter *');
             ?>
         </div>
-        <div class="col-md-4 col-xs-12">
-            <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
-                'data' => $agencies,
-                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'quarter-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Agency');
-            ?>
-        </div>
     </div>
 
     <div class="pull-right">
-        <?= Html::submitButton('Generate Data', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;']) ?>
+        <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

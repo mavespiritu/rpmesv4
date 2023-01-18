@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Summary of Project Results</h3>
+                    <h3 class="box-title">Project Results Form</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search', [
@@ -23,22 +23,15 @@ $this->params['breadcrumbs'][] = $this->title;
                         'years' => $years,
                         'quarters' => $quarters,
                         'agencies' => $agencies,
+                        'projects' => $projects,
                     ]) ?>
                     <br><br>
                     <hr>
-                    <?php if(!empty($getData)){ ?>
-                        <?= $this->render('_report', [
-                            'model' => $model,
-                            'years' => $years,
-                            'quarters' => $quarters,
-                            'agencies' => $agencies,
-                            'accomplishment' => $accomplishment,
-                            'projectResults' => $projectResults,
-                            'projectOutcome' => $projectOutcome,
-                            'projectsModels' => $projectsModels,
-                            'projectsPages' => $projectsPages,
-                            'getData' => $getData,
-                            'agency_id' => $agency_id
+                    <?php if(!empty($outcomes)){ ?>
+                        <?= $this->render('_form', [
+                            'project' => $project,
+                            'outcomes' => $outcomes,
+                            'resultModels' => $resultModels
                         ]); ?>
                     <?php } ?>
                 </div>

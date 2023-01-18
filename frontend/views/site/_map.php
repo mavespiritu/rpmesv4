@@ -8,7 +8,6 @@ var map = AmCharts.makeChart( "heat", {
   "responsive": {
     "enabled": true
   },
-
   "dataProvider": {
     "map": "philippinesLow",
     "areas": <?= $data ?>,

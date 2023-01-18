@@ -29,6 +29,7 @@ DisableButtonAsset::register($this);
                 ])->label('Year *');
             ?>
         </div>
+        <?php if(Yii::$app->user->can('Administrator')){ ?>
         <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
                     'data' => $agencies,
@@ -39,10 +40,11 @@ DisableButtonAsset::register($this);
                 ]);
             ?>
         </div>
+        <?php } ?>
         <div class="col-md-3 col-xs-12">
             <br>
             <label for="">&nbsp;</label>
-            <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+            <?= Html::submitButton('Generate List', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
         </div>
     </div>
     <?php ActiveForm::end(); ?>

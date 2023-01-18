@@ -199,45 +199,20 @@ class PlanController extends \yii\web\Controller
         $totals['groupBeneficiaries']['Q3'] = 0;
         $totals['groupBeneficiaries']['Q4'] = 0;
 
-        if(!empty($projects))
-        {
-            foreach($projects as $project)
-            {
-                $projectIds[$project['id']] = $project;
-
-                $totals['financials']['Q1'] += $project->financialTarget ? floatval($project->financialTarget->q1) : 0;
-                $totals['financials']['Q2'] += $project->financialTarget ? floatval($project->financialTarget->q2) : 0;
-                $totals['financials']['Q3'] += $project->financialTarget ? floatval($project->financialTarget->q3) : 0;
-                $totals['financials']['Q4'] += $project->financialTarget ? floatval($project->financialTarget->q4) : 0;
-                $totals['physicals']['Q1'] += $project->physicalTarget ? intval($project->physicalTarget->q1) : 0;
-                $totals['physicals']['Q2'] += $project->physicalTarget ? intval($project->physicalTarget->q2) : 0;
-                $totals['physicals']['Q3'] += $project->physicalTarget ? intval($project->physicalTarget->q3) : 0;
-                $totals['physicals']['Q4'] += $project->physicalTarget ? intval($project->physicalTarget->q4) : 0;
-                $totals['maleEmployed']['Q1'] += $project->maleEmployedTarget ? intval($project->maleEmployedTarget->q1) : 0;
-                $totals['maleEmployed']['Q2'] += $project->maleEmployedTarget ? intval($project->maleEmployedTarget->q2) : 0;
-                $totals['maleEmployed']['Q3'] += $project->maleEmployedTarget ? intval($project->maleEmployedTarget->q3) : 0;
-                $totals['maleEmployed']['Q4'] += $project->maleEmployedTarget ? intval($project->maleEmployedTarget->q4) : 0;
-                $totals['femaleEmployed']['Q1'] += $project->femaleEmployedTarget ? intval($project->femaleEmployedTarget->q1) : 0;
-                $totals['femaleEmployed']['Q2'] += $project->femaleEmployedTarget ? intval($project->femaleEmployedTarget->q2) : 0;
-                $totals['femaleEmployed']['Q3'] += $project->femaleEmployedTarget ? intval($project->femaleEmployedTarget->q3) : 0;
-                $totals['femaleEmployed']['Q4'] += $project->femaleEmployedTarget ? intval($project->femaleEmployedTarget->q4) : 0;
-                $totals['beneficiaries']['Q1'] += $project->beneficiaryTarget ? intval($project->beneficiaryTarget->q1) : 0;
-                $totals['beneficiaries']['Q2'] += $project->beneficiaryTarget ? intval($project->beneficiaryTarget->q2) : 0;
-                $totals['beneficiaries']['Q3'] += $project->beneficiaryTarget ? intval($project->beneficiaryTarget->q3) : 0;
-                $totals['beneficiaries']['Q4'] += $project->beneficiaryTarget ? intval($project->beneficiaryTarget->q4) : 0;
-                $totals['groupBeneficiaries']['Q1'] += $project->groupTarget ? intval($project->groupTarget->q1) : 0;
-                $totals['groupBeneficiaries']['Q2'] += $project->groupTarget ? intval($project->groupTarget->q2) : 0;
-                $totals['groupBeneficiaries']['Q3'] += $project->groupTarget ? intval($project->groupTarget->q3) : 0;
-                $totals['groupBeneficiaries']['Q4'] += $project->groupTarget ? intval($project->groupTarget->q4) : 0;
-            }
-        }
-
         $projectsPages = new Pagination(['totalCount' => $countProjects->count()]);
         
         $projectsModels = $projectsPaging->offset($projectsPages->offset)
             ->limit($projectsPages->limit)
             ->orderBy(['id' => SORT_DESC])
             ->all();
+
+        if($projectsModels)
+        {
+            foreach($projectsModels as $project)
+            {
+                $projectIds[$project->id] = $project;
+            }
+        }
         
         if(Yii::$app->request->get())
         {

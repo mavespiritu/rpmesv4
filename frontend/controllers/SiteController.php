@@ -466,6 +466,7 @@ class SiteController extends \yii\web\Controller
             {
                 $data[$i]['id'] = $key['hc_key'];
                 $data[$i]['value'] = number_format($key['total'], 0);
+                $data[$i]['label'] = ['text' => number_format($key['total'], 0), 'align' => 'center', 'verticalAlign' => 'middle', 'x' => 0, 'y' => 0];
                 $data[$i]['scale'] = 0.5;
                 $data[$i]['labelShiftY'] = 2;
                 $data[$i]['zoomLevel'] = 5;

@@ -35,10 +35,12 @@ class ProjectResult extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['objective', 'observed_results'], 'required'],
             [['project_id', 'submitted_by','agency_id'], 'integer'],
             [['objective', 'observed_results', 'action', 'quarter'], 'string'],
             [[ 'date_submitted', 'year'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
+            [['project_outcome_id'], 'exist', 'skipOnError' => true, 'targetClass' => ProjectOutcome::className(), 'targetAttribute' => ['project_outcome_id' => 'id']],
         ];
     }
 
@@ -52,6 +54,7 @@ class ProjectResult extends \yii\db\ActiveRecord
             'quarter' => 'Quarter',
             'year' => 'Year',
             'project_id' => 'Project ID',
+            'project_outcome_id' => 'Project Outcome ID',
             'objective' => 'Objective',
             'observed_results' => 'Observed Results',
             'submitted_by' => 'Submitted By',
@@ -68,5 +71,15 @@ class ProjectResult extends \yii\db\ActiveRecord
     public function getProject()
     {
         return $this->hasOne(Project::className(), ['id' => 'project_id']);
+    }
+
+    /**
+     * Gets query for [[ProjectOutcome]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectOutcome()
+    {
+        return $this->hasOne(ProjectOutcome::className(), ['id' => 'project_outcome_id']);
     }
 }

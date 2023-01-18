@@ -85,6 +85,10 @@ class DashboardController extends \yii\web\Controller
     }
     public function actionIndex()
     {
+        $logModel = new Project();
+        $logModel->scenario = Yii::$app->user->can('Administrator') ? 'searchSubmissionLogAdmin' : 'searchSubmissionLog';
+        $logModel->year = date("Y");
+
         $monitoringPlan = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
         $accompQ1 = DueDate::findOne(['report' => 'Accomplishment', 'year' => date("Y"), 'quarter' => 'Q1']);
         $accompQ2 = DueDate::findOne(['report' => 'Accomplishment', 'year' => date("Y"), 'quarter' => 'Q2']);
@@ -94,6 +98,15 @@ class DashboardController extends \yii\web\Controller
         $exceptionQ2 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q2']);
         $exceptionQ3 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q3']);
         $exceptionQ4 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q4']);
+
+        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
+        array_unique($years);
+
+        $agencies = Agency::find()->select(['id', 'code as title']);
+        $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
+        $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
 
         return $this->render('index',[
             'monitoringPlan' => $monitoringPlan,
@@ -105,6 +118,39 @@ class DashboardController extends \yii\web\Controller
             'exceptionQ2' => $exceptionQ2,
             'exceptionQ3' => $exceptionQ3,
             'exceptionQ4' => $exceptionQ4,
+            'years' => $years,
+            'agencies' => $agencies,
+            'logModel' => $logModel,
+        ]);
+    }
+
+    public function actionSubmissionLog($year, $agency_id)
+    {
+        $agency_id = Yii::$app->user->can('Administrator') ? $agency_id : Yii::$app->user->identity->userinfo('AGENCY_C');
+
+        $projectTotal = Project::find()->where(['draft' => 'No', 'year' => $year, 'agency_id' => $agency_id])->count();
+
+        $monitoringPlan = Submission::findOne(['report' => 'Monitoring Plan', 'year' => $year, 'agency_id' => $agency_id]);
+        $accompQ1 = Submission::findOne(['report' => 'Accomplishment', 'year' => $year, 'quarter' => 'Q1', 'agency_id' => $agency_id]);
+        $accompQ2 = Submission::findOne(['report' => 'Accomplishment', 'year' => $year, 'quarter' => 'Q2', 'agency_id' => $agency_id]);
+        $accompQ3 = Submission::findOne(['report' => 'Accomplishment', 'year' => $year, 'quarter' => 'Q3', 'agency_id' => $agency_id]);
+        $accompQ4 = Submission::findOne(['report' => 'Accomplishment', 'year' => $year, 'quarter' => 'Q4', 'agency_id' => $agency_id]);
+        $exceptionQ1 = Submission::findOne(['report' => 'Project Exception', 'year' => $year, 'quarter' => 'Q1', 'agency_id' => $agency_id]);
+        $exceptionQ2 = Submission::findOne(['report' => 'Project Exception', 'year' => $year, 'quarter' => 'Q2', 'agency_id' => $agency_id]);
+        $exceptionQ3 = Submission::findOne(['report' => 'Project Exception', 'year' => $year, 'quarter' => 'Q3', 'agency_id' => $agency_id]);
+        $exceptionQ4 = Submission::findOne(['report' => 'Project Exception', 'year' => $year, 'quarter' => 'Q4', 'agency_id' => $agency_id]);
+
+        return $this->renderAjax('submission_log',[
+            'monitoringPlan' => $monitoringPlan,
+            'accompQ1' => $accompQ1,
+            'accompQ2' => $accompQ2,
+            'accompQ3' => $accompQ3,
+            'accompQ4' => $accompQ4,
+            'exceptionQ1' => $exceptionQ1,
+            'exceptionQ2' => $exceptionQ2,
+            'exceptionQ3' => $exceptionQ3,
+            'exceptionQ4' => $exceptionQ4,
+            'projectTotal' => $projectTotal,
         ]);
     }
 }

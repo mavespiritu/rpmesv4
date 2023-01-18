@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 use kartik\date\DatePicker;
@@ -18,43 +19,40 @@ DisableButtonAsset::register($this);
     	'options' => ['class' => 'disable-submit-buttons'],
     ]); ?>
 
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <?= $form->field($model, 'year')->widget(Select2::classname(), [
-                'data' => $years,
-                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'quarter-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Year *');
-            ?>
-        </div>
-    </div>
+    <h4><?= $project->project_no.': '.$project->title ?></h4>
 
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <?= $form->field($model, 'project_id')->widget(Select2::classname(), [
-                'data' => $projects,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'project-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-            ])->label('Project *:');
-            ?>
-        </div>
-    </div>
+    <h5>List of Specific Project Outcome</h5>
+    <table class="table table-condensed table-responsive table-hover table-striped table-bordered">
+        <thead>
+            <tr>
+                <td align=center><b>#</td>
+                <td align=center><b>Objective</td>
+                <td align=center><b>Results Indicator</td>
+                <td align=center><b>Target</td>
+                <td align=center><b>Observed Results</td>
+            </tr>   
+        </thead>
+        <tbody>
+        <?php if($outcomes){ ?>
+            <?php $i = 1; ?>
+            <?php foreach($outcomes as $outcome){ ?>
+                <tr>
+                    <td align=center><?= $i ?></td>
+                    <td> <?= $form->field($resultModels[$outcome->id], "[$outcome->id]objective")->textArea(['rows' => '3', 'style' => 'resize: none;'])->label(false) ?></td>
+                    <td><?= $outcome->performance_indicator ?></td>
+                    <td><?= $outcome->target ?></td>
+                    <td> <?= $form->field($resultModels[$outcome->id], "[$outcome->id]observed_results")->textArea(['rows' => '3', 'style' => 'resize: none;'])->label(false) ?></td>
+                </tr>
+                <?php $i++ ?>
+            <?php } ?>
+        <?php } ?>
+        </tbody>
+    </table>
 
-    <?= $form->field($model, 'objective')->textarea(['rows' => 6]) ?>
-
-    <?= $form->field($model, 'results_indicator')->textarea(['rows' => 6]) ?>
-
-    <?= $form->field($model, 'observed_results')->textarea(['rows' => 6]) ?>
-
-    <?= $form->field($model, 'action')->checkBox(['uncheck' => 0, 'checked' => 1])->label('Is Project Complete *:'); ?>
-
-    <div class="form-group">
+    <div class="form-group pull-right">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
     </div>
+    <div class="clearfix"></div>
 
     <?php ActiveForm::end(); ?>
 

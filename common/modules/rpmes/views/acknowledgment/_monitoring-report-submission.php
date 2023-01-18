@@ -14,7 +14,7 @@ use yii\web\View;
                 <table style="width: 100%;">
                     <tr>
                         <td align=right style="width: 50%; vertical-align: top;">Submitted By:</td>
-                        <td align=right style="width: 50%; vertical-align: top;"><?= $agency->getMonitoringReportSubmission($getData['year'], $q) ? '<span class="label label-success">'.$agency->getMonitoringReportSubmission($getData['year'], $q)->submitter.'</span>' : '<span class="label label-danger">No submission</span>' ?></td>
+                        <td align=right style="width: 50%; vertical-align: top;"><?= $agency->getMonitoringReportSubmission($getData['year'], $q) ? '<span class="text-green">'.$agency->getMonitoringReportSubmission($getData['year'], $q)->submitter.'</span>' : '<span class="text-red">No submission</span>' ?></td>
                     </tr>
                     <tr>
                         <td align=right style="vertical-align: top;">Date Submitted:</td>
@@ -22,7 +22,7 @@ use yii\web\View;
                     </tr>
                     <tr>
                         <td align=right style="vertical-align: top;">Acknowledged By:</td>
-                        <td align=right style="vertical-align: top;"><?= $agency->getMonitoringReportAcknowledgment($getData['year'], $q) ? '<span class="label label-success">'.$agency->getMonitoringReportAcknowledgment($getData['year'], $q)->acknowledger.'</span>' : '<span class="label label-danger">No acknowledgment</span>' ?></td>
+                        <td align=right style="vertical-align: top;"><?= $agency->getMonitoringReportAcknowledgment($getData['year'], $q) ? '<span class="text-green">'.$agency->getMonitoringReportAcknowledgment($getData['year'], $q)->acknowledger.'</span>' : '<span class="text-red">No acknowledgment</span>' ?></td>
                     </tr>
                     <tr>
                         <td align=right style="vertical-align: top;">Date Acknowledged:</td>
@@ -30,12 +30,12 @@ use yii\web\View;
                     </tr>
                 </table>
                 <br>
-                <?= $agency->getMonitoringReportSubmission($getData['year'], $q) ? Html::button('<i class="fa fa-edit"></i> Acknowledge', ['value' => Url::to(['/rpmes/acknowledgment/acknowledge-monitoring-report', 'id' => $agency->getMonitoringReportSubmission($getData['year'], $q)->id]), 'class' => 'btn btn-primary btn-xs btn-block', 'id' => 'acknowledge-monitoring-report-'.$agency->id.'-'.$q.'-button']) : '' ?>
-                <?= $agency->getMonitoringReportAcknowledgment($getData['year'], $q) ? Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printAcknowledgmentMonitoringReport('.$agency->getMonitoringReportAcknowledgment($getData['year'], $q)->id.')', 'class' => 'btn btn-danger btn-xs btn-block']) : '' ?>
-                <?= $agency->getMonitoringReportSubmission($getData['year'], $q) ? '<hr style="opacity: 0.3;">'.Html::a('<i class="fa fa-trash"></i> Delete', ['/rpmes/acknowledgment/delete-submission', 'id' => $agency->getMonitoringReportSubmission($getData['year'], $q)->id, 'report' => 'Accomplishment'], ['class' => 'btn btn-danger btn-block btn-xs', 'id' => 'delete-monitoring-report-'.$agency->id.'-button', 'data' => [
+                <span class="pull-right"><?= Yii::$app->user->can('Administrator') ? $agency->getMonitoringReportSubmission($getData['year'], $q) ? Html::button('<i class="fa fa-edit"></i>', ['value' => Url::to(['/rpmes/acknowledgment/acknowledge-monitoring-report', 'id' => $agency->getMonitoringReportSubmission($getData['year'], $q)->id]), 'class' => 'btn btn-success btn-sm', 'id' => 'acknowledge-monitoring-report-'.$agency->id.'-'.$q.'-button']) : '' : '' ?>
+                <?= $agency->getMonitoringReportAcknowledgment($getData['year'], $q) ? Html::button('<i class="fa fa-print"></i>', ['onClick' => 'printAcknowledgmentMonitoringReport('.$agency->getMonitoringReportAcknowledgment($getData['year'], $q)->id.')', 'class' => 'btn btn-info btn-sm']) : '' ?>
+                <?= Yii::$app->user->can('Administrator') ? $agency->getMonitoringReportSubmission($getData['year'], $q) ? Html::a('<i class="fa fa-trash"></i>', ['/rpmes/acknowledgment/delete-submission', 'id' => $agency->getMonitoringReportSubmission($getData['year'], $q)->id, 'report' => 'Accomplishment'], ['class' => 'btn btn-danger btn-sm', 'id' => 'delete-monitoring-report-'.$agency->id.'-button', 'data' => [
                     'confirm' => 'Are you sure you want to remove submission of this agency?',
                     'method' => 'post',
-                ],]) : '' ?>
+                ],]) : '' : '' ?></span>
             </td>
         <?php } ?>
     <?php } ?>

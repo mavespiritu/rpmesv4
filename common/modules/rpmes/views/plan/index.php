@@ -244,7 +244,7 @@ $title = $model->title != '' ? $model->title : '';
                             <?php $femaleEmployedTotal = 0; ?>
                             <?php $beneficiaryTotal = 0; ?>
                             <?php $groupTotal = 0; ?>
-                            <tr>
+                            <!-- <tr>
                                 <td colspan=5 align=right><b>Grand Total</b></td>
                                 <?php foreach($quarters as $quarter => $q){ ?>
                                     <td align=right><b><?= isset($totals['financials'][$quarter]) ? number_format($totals['financials'][$quarter], 2) : number_format(0, 2) ?></b></td>
@@ -272,7 +272,7 @@ $title = $model->title != '' ? $model->title : '';
                                 <?php } ?>
                                 <td align=right><b><?= number_format($beneficiaryTotal, 0) ?></b></td>
                                 <td align=right><b><?= number_format($groupTotal, 0) ?></b></td>
-                            </tr>
+                            </tr> -->
                         </thead>
                         <tbody>
                         <?php if($projectsModels){ ?>
