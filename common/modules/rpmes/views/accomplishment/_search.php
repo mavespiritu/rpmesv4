@@ -41,6 +41,29 @@ DisableButtonAsset::register($this);
             ?>
         </div>
         
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
+                'data' => $categories,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Category');
+            ?>
+        </div>
+
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
+                'data' => $sectors,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Sector');
+            ?>
+        </div>
+    </div>
+    <div class="row">
         <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('SuperAdministrator')){ ?>
             <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
@@ -53,29 +76,6 @@ DisableButtonAsset::register($this);
             ?>
             </div>
         <?php } ?>
-
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
-                'data' => $categories,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Category');
-            ?>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
-                'data' => $sectors,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Sector');
-            ?>
-        </div>
     </div>
     <div class="form-group pull-right">
         <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
