@@ -126,7 +126,7 @@ class DashboardController extends \yii\web\Controller
 
     public function actionSubmissionLog($year, $agency_id)
     {
-        $agency_id = Yii::$app->user->can('Administrator') ? $agency_id : Yii::$app->user->identity->userinfo('AGENCY_C');
+        $agency_id = Yii::$app->user->can('Administrator') ? $agency_id : Yii::$app->user->identity->userinfo->AGENCY_C;
 
         $projectTotal = Project::find()->where(['draft' => 'No', 'year' => $year, 'agency_id' => $agency_id])->count();
 
