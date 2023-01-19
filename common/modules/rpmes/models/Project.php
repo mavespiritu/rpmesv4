@@ -78,8 +78,7 @@ class Project extends \yii\db\ActiveRecord
             [['year', 'quarter'], 'required', 'on' => 'projectExceptionUser'],
             [['year', 'agency_id','quarter'], 'required', 'on' => 'projectExceptionAdmin'],
             [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
-            [['year', 'quarter', 'agency_id'], 'required', 'on' => 'projectResult'],
-            [['year', 'quarter', 'agency_id', 'id'], 'required', 'on' => 'projectResultAdmin'],
+            [['year', 'quarter', 'agency_id', 'id'], 'required', 'on' => 'projectResult'],
             [['year'], 'required', 'on' => 'searchSubmissionLog'],
             [['year', 'agency_id'], 'required', 'on' => 'searchSubmissionLogAdmin'],
             /* [['source_id'], 'required',  'when' => function($model){

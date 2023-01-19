@@ -22,7 +22,6 @@ $projectsUrl = \yii\helpers\Url::to(['/rpmes/project-result/project-list']);
     ]); ?>
 
     <div class="row">
-        <?php if(Yii::$app->user->can('Administrator')){ ?>
         <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
                 'data' => $agencies,
@@ -30,25 +29,9 @@ $projectsUrl = \yii\helpers\Url::to(['/rpmes/project-result/project-list']);
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
-                'pluginEvents'=>[
-                    'select2:select'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.$projectsUrl.'",
-                                data: {
-                                        agency_id: this.value,
-                                        year: $("#project-year").val(),
-                                    }
-                            }).done(function(result) {
-                                $(".project-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select One", allowClear: true});
-                                $(".project-select").select2("val","");
-                            });
-                        }'
-                ]
                 ])->label('Agency');
             ?>
         </div>
-        <?php } ?>
         <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'year')->widget(Select2::classname(), [
                 'data' => $years,
@@ -56,32 +39,7 @@ $projectsUrl = \yii\helpers\Url::to(['/rpmes/project-result/project-list']);
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
-                'pluginEvents'=>[
-                    'select2:select'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.$projectsUrl.'",
-                                data: {
-                                        agency_id: $("#project-agency_id").val(),
-                                        year: this.value,
-                                    }
-                            }).done(function(result) {
-                                $(".project-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select One", allowClear: true});
-                                $(".project-select").select2("val","");
-                            });
-                        }'
-                ]
                 ])->label('Year *');
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'id')->widget(Select2::classname(), [
-                'data' => $projects,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'project-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Project *');
             ?>
         </div>
         <div class="col-md-3 col-xs-12">
@@ -94,10 +52,11 @@ $projectsUrl = \yii\helpers\Url::to(['/rpmes/project-result/project-list']);
                 ])->label('Quarter *');
             ?>
         </div>
-    </div>
-
-    <div class="pull-right">
-        <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;']) ?>
+        <div class="col-md-3 col-xs-12">
+            <label for="">&nbsp;</label>
+            <br>
+            <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary']) ?>
+        </div>
     </div>
 
     <?php ActiveForm::end(); ?>
