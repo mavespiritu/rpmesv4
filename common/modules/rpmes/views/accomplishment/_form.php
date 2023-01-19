@@ -308,7 +308,7 @@ function renderSummary($page)
                                             'change' => new JsExpression('function() {
                                                 this.checked == true ? this.value = 1 : this.value = 0;
                                                 
-                                                enableInputFields(this.value, '.$model->id.');
+                                                //enableInputFields(this.value, '.$model->id.');
                                             }'),
                                         ]
                                     ])->label('Project is completed?') ?>
