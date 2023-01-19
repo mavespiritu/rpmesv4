@@ -15,7 +15,7 @@ use yii\web\View;
 /* @var $searchModel common\modules\rpmes\models\AgencySearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Monitoring Plan';
+$this->title = 'Form 1: Initial Project Report';
 $this->params['breadcrumbs'][] = $this->title;
 
 $HtmlHelper = new HtmlHelper();
@@ -98,7 +98,7 @@ $title = $model->title != '' ? $model->title : '';
                     'id' => 'monitoring-project-form',
                     'options' => ['class' => 'disable-submit-buttons'],
                 ]); ?>
-                <div class="pull-left">
+                <div class="pull-right">
                     <?= ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
                         'encodeLabel' => false,

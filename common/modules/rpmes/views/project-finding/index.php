@@ -10,20 +10,15 @@ use yii\web\View;
 /* @var $searchModel common\modules\rpmes\models\ProjectFindingSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Project Findings';
+$this->title = 'Form 7: Project Inspection Report';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-finding-index">
-
-    <p>
-        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
-
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Project Major Findings</h3>
+                    <h3 class="box-title">Project Inspection Report Form</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search', [
@@ -33,7 +28,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <hr>
                 <div class="box-body">
-                    <div class="pull-left">
+                    <div class="pull-left"><?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?></div>
+                    <div class="pull-right">
                             <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                             'label' => '<i class="fa fa-download"></i> Export',
                             'encodeLabel' => false,

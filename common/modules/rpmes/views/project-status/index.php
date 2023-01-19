@@ -10,7 +10,7 @@ use yii\bootstrap\ButtonDropdown;
 /* @var $searchModel common\modules\rpmes\models\ProjectSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Reports on the Status of Projects Encountering Implementation Problems';
+$this->title = 'Form 6: Reports on the Status of Projects Encountering Implementation Problems';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-status-index">

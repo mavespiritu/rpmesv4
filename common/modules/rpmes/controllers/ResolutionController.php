@@ -54,7 +54,7 @@ class ResolutionController extends Controller
         $searchModel = new ResolutionSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
-        $years = Resolution::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
 

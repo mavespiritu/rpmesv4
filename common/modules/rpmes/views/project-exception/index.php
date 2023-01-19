@@ -9,7 +9,7 @@
     DisableButtonAsset::register($this);
     use yii\web\View;
 
-    $this->title = 'Project Exceptions';
+    $this->title = 'Form 3: Project Exception Report';
     $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-exception-index">
@@ -17,7 +17,7 @@
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Project Exceptions</h3>
+                    <h3 class="box-title">Project Exception Report Form</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search', [

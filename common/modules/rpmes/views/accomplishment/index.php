@@ -9,7 +9,7 @@
     DisableButtonAsset::register($this);
     use yii\web\View;
 
-    $this->title = 'Accomplishment';
+    $this->title = 'Form 2: Physical and Financial Accomplishment Report';
     $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="accomplishment-index">
@@ -17,7 +17,7 @@
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Accomplishments</h3>
+                    <h3 class="box-title">Physical and Financial Accomplishment Form</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search', [

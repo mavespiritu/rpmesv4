@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $model common\modules\rpmes\models\Training */
 
 $this->title = 'Add New Record';
-$this->params['breadcrumbs'][] = ['label' => 'Trainings', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Form 9: List of Training/Workshops Conducted', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="training-create">
