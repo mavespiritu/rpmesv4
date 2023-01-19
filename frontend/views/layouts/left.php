@@ -30,7 +30,7 @@
                         ],
                         
                     ],
-                    ['label' => 'Form 1: Monitoring Plan', 'icon' => 'folder', 'url' => ['/rpmes/plan'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 1: Initial Project Report', 'icon' => 'folder', 'url' => ['/rpmes/plan'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 2: Accomplishment', 'icon' => 'folder', 'url' => ['/rpmes/accomplishment'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 3: Project Exception', 'icon' => 'folder', 'url' => ['/rpmes/project-exception'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 4: Project Results', 'icon' => 'folder', 'url' => ['/rpmes/project-result'], 'visible' => !Yii::$app->user->isGuest],
@@ -41,7 +41,6 @@
                     ['label' => 'Form 9: Trainings', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 10: Resolutions', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 11: Key Lessons', 'icon' => 'folder', 'url' => ['/rpmes/project-problem'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
-                    ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     [
                         'label' => 'Acknowledgment',
                         'icon' => 'folder',
@@ -62,6 +61,7 @@
                             ['label' => 'Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                     ],
+                    ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Due Dates', 'icon' => 'clock-o', 'url' => ['/rpmes/due-date'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     [
                         'label' => 'Presets',
