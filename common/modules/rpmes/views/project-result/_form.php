@@ -34,7 +34,7 @@ function renderSummary($page)
         <thead>
             <tr>
                 <td align=center><b>#</td>
-                <td align=center style="width: 10%;"><b>Project</td>
+                <td align=center style="width: 15%;"><b>Project</td>
                 <td align=center><b>Objective</td>
                 <td align=center style="width: 20%;"><b>Results Indicator</td>
                 <td align=center style="width: 20%;"><b>Target</td>
