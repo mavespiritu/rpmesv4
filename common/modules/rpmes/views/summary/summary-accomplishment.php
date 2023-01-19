@@ -9,7 +9,7 @@
     DisableButtonAsset::register($this);
     use yii\web\View;
 
-    $this->title = 'Summary of Financial and Physical Accomplishment';
+    $this->title = 'Form 5: Summary of Physical and Financial Accomplishments';
     $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="monitoring-plan-index">
@@ -17,7 +17,7 @@
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Summary of Financial and Physical Accomplishment</h3>
+                    <h3 class="box-title">Summary of Physical and Financial Accomplishments Report</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search-summary-accomplishment', [

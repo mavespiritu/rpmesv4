@@ -25,4 +25,5 @@ DisableButtonAsset::register($this);
             ],
         ],
     ]); ?>
+&nbsp;
 <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummary("'.str_replace('"', '\'', json_encode($model)).'","'.$model->year.'","'.$model->quarter.'","'.$model->agency_id.'","'.$model->category_id.'","'.$model->sector_id.'")', 'class' => 'btn btn-danger btn-sm']) ?>

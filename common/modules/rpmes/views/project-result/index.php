@@ -7,7 +7,7 @@ use yii\grid\GridView;
 /* @var $searchModel common\modules\rpmes\models\ProjectResultSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Project Results';
+$this->title = 'Form 4: Project Results';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-result-index">
@@ -32,8 +32,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             'resultModels' => $resultModels,
                             'outcomesPages' => $outcomesPages,
                         ]); ?>
-                    <?php }else{ ?>
-                        <p class="text-center">No project outcomes registered under completed projects.</p>
                     <?php } ?>
                 </div>
             </div>

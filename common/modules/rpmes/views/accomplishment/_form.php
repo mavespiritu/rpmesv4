@@ -31,7 +31,7 @@ function renderSummary($page)
 ?>
 <br>
 <hr>
-<div class="pull-left">
+<div class="pull-right">
     <?= $this->render('_menu', [
         'model' => $model
     ]) ?>
@@ -43,6 +43,7 @@ function renderSummary($page)
     ]); ?>
         <div class="alert alert-<?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'info' : 'danger' : '' ?>"><i class="fa fa-exclamation-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? $HtmlHelper->time_elapsed_string($dueDate->due_date).' to go before the deadline of submission of '.$getData['quarter'].' Accomplishment. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) 
                 : 'Submission of '.$getData['quarter'].' Accomplishment has ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) : 'No due date set' ?></div>
+        <p><i class="fa fa-exclamation-circle"></i> Always save the form before proceeding to next set of accomplishments.</p>
         <div class="summary"><?= renderSummary($projectsPages) ?></div>
         <div class="accomplishment-form accomplishment-table" style="width: 100%; overflow-x: scroll;">
             <table id="accomplishment-table" class="table table-bordered table-hover table-striped" cellspacing="0" style="min-width: 4000px;">

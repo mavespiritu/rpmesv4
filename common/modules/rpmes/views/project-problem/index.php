@@ -14,18 +14,15 @@ use common\components\helpers\HtmlHelper;
 /* @var $searchModel common\modules\rpmes\models\ProjectProblemSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Key Lessons';
+$this->title = 'Form 11: Key Lessons Learned from Issues Resolved at the RPMC Level';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-problem-index">
-    <p>
-        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Key Lessons</h3>
+                    <h3 class="box-title">Key Lessons Learned from Issues Resolved at the RPMC Level Report</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search', [
@@ -37,6 +34,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 <hr>
                 <div class="box-body">
                     <div class="pull-left">
+                        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
+                    </div>
+                    <div class="pull-right">
                         <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                             'label' => '<i class="fa fa-download"></i> Export',
                             'encodeLabel' => false,

@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $model common\modules\rpmes\models\Resolution */
 
 $this->title = 'Add New Record';
-$this->params['breadcrumbs'][] = ['label' => 'Resolutions', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Form 10: List of Resolutions Passed', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="resolution-create">

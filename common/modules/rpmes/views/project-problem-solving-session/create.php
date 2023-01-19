@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $model common\modules\rpmes\models\ProjectProblemSolvingSession */
 
 $this->title = 'Add New Record';
-$this->params['breadcrumbs'][] = ['label' => 'Project Problem Solving Sessions', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Form 8: Problem Solving Session/Facilitation Meeting Conducted', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-problem-solving-session-create">

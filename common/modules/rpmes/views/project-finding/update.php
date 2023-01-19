@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $model common\modules\rpmes\models\ProjectFinding */
 
 $this->title = 'Update Record';
-$this->params['breadcrumbs'][] = ['label' => 'Project Findings', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Form 7: Project Inspection Report', 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="project-finding-update">

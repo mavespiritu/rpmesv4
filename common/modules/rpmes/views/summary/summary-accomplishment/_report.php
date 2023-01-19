@@ -13,7 +13,7 @@ DisableButtonAsset::register($this);
 /* @var $form yii\widgets\ActiveForm */
 
 ?>
-<div class="pull-left">
+<div class="pull-right">
     <?= $this->render('_menu', [
         'model' => $model
     ]) ?>

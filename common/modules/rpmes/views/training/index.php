@@ -15,27 +15,23 @@ DisableButtonAsset::register($this);
 /* @var $searchModel common\modules\rpmes\models\TrainingSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Trainings';
+$this->title = 'Form 9: List of Training/Workshops Conducted';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="training-index">
-    <p>
-        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Trainings</h3>
+                    <h3 class="box-title">List of Training/Workshops Conducted Report</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search', [
                             'searchModel' => $searchModel,
                             'years' => $years,
                     ]) ?>
-                    <br><br>
                     <hr>
-                <div class="pull-left">
+                <div class="pull-right">
                         <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',
                         'encodeLabel' => false,
@@ -49,10 +45,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     ]) : '' ?>
                     <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormNineReport("'.$searchModel->year.'", "'.$searchModel->quarter.'", "'.$searchModel->title.'", "'.$searchModel->objective.'", "'.$searchModel->office.'", "'.$searchModel->organization.'", "'.$searchModel->start_date.'", "'.$searchModel->end_date.'", "'.$searchModel->male_participant.'", "'.$searchModel->female_participant.'")', 'class' => 'btn btn-danger btn-sm']) ?>
-                </div><br><br>
-                    <!-- <h5 class="text-center">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
-                                    RPMES Form 9: LIST OF TRAININGS AND WORKSHOPS
-                    </h5> -->
+                    </div>
+                    <div class="pull-left">
+                        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
+                    </div>
+                    <div class="clearfix"></div>
+                    <br>
+                    
                     <?= GridView::widget(['options' => ['class' => 'table-responsive',],
                             'dataProvider' => $dataProvider,
                             'filterModel' => $searchModel,

@@ -14,18 +14,15 @@ use yii\web\View;
 /* @var $searchModel common\modules\rpmes\models\ProjectProblemSolvingSessionSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Project Problem Solving Sessions';
+$this->title = 'Form 8: Problem Solving Session/Facilitation Meeting Conducted';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-problem-solving-session-index">
-    <p>
-        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Summary of Project Problem Solving Sessions</h3>
+                    <h3 class="box-title">Problem Solving Session/Facilitation Meeting Conducted Report</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search', [
@@ -39,6 +36,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     ]) ?>
                     <br><br>
                     <hr>
+                    <div class="pull-left">
+                        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
+                    </div>
+                    <div class="clearfix"></div>
                     <div id="project-problem-solving-session-table"></div>
                 </div>
             </div>
