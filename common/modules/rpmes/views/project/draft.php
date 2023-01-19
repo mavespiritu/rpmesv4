@@ -13,7 +13,8 @@ use yii\web\View;
 /* @var $searchModel common\modules\rpmes\models\ProjectSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Saved Projects';
+$this->title = 'Saved as Draft';
+$this->params['breadcrumbs'][] = 'Projects';
 $this->params['breadcrumbs'][] = $this->title;
 
 $HtmlHelper = new HtmlHelper();
@@ -34,7 +35,7 @@ function renderSummary($page)
     : 'Submission of monitoring plan has ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) : '' ?></div>
     <div class="box box-primary">
         <div class="box-header with-border">
-            <h3 class="box-title">Saved Projects</h3>
+            <h3 class="box-title">Saved as Draft</h3>
         </div>
         <div class="box-body">
             <div class="summary"><?= renderSummary($projectsPages) ?></div>

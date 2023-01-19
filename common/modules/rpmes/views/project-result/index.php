@@ -22,17 +22,18 @@ $this->params['breadcrumbs'][] = $this->title;
                         'model' => $model,
                         'years' => $years,
                         'quarters' => $quarters,
-                        'agencies' => $agencies,
-                        'projects' => $projects,
+                        'agencies' => $agencies
                     ]) ?>
-                    <br><br>
                     <hr>
                     <?php if(!empty($outcomes)){ ?>
                         <?= $this->render('_form', [
                             'project' => $project,
                             'outcomes' => $outcomes,
-                            'resultModels' => $resultModels
+                            'resultModels' => $resultModels,
+                            'outcomesPages' => $outcomesPages,
                         ]); ?>
+                    <?php }else{ ?>
+                        <p class="text-center">No project outcomes registered under completed projects.</p>
                     <?php } ?>
                 </div>
             </div>
