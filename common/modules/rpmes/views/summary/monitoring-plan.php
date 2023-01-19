@@ -9,7 +9,7 @@
     DisableButtonAsset::register($this);
     use yii\web\View;
 
-    $this->title = 'Summary: Monitoring Plans';
+    $this->title = 'Summary of Monitoring Plans';
     $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="monitoring-plan-index">
