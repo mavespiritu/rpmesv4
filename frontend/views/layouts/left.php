@@ -37,9 +37,9 @@
                     ['label' => 'Form 5: Summary of Phy...', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Form 6: Report on Status...', 'icon' => 'folder', 'url' => ['/rpmes/project-status'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Form 7: Project Inspection..', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
-                    ['label' => 'Form 8: Project Solving Se..', 'icon' => 'folder', 'url' => ['/rpmes/project-problem-solving-session'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
-                    ['label' => 'Form 9: List of Training/Fa..', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest],
-                    ['label' => 'Form 10: List of Resolution..', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 8: Project Solving Se..', 'icon' => 'folder', 'url' => ['/rpmes/project-problem-solving-session'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Form 9: List of Training/Fa..', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
+                    ['label' => 'Form 10: List of Resolution..', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Form 11: Key Lessons Lear...', 'icon' => 'folder', 'url' => ['/rpmes/project-problem'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     [
                         'label' => 'Acknowledgment',
