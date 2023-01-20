@@ -82,6 +82,7 @@ class ProjectResultController extends Controller
      */
     public function actionIndex()
     {
+        throw new NotFoundHttpException('This site is temporary down');
         $resultModels = [];
         $outcomes = [];
         $getData = [];
