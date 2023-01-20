@@ -82,6 +82,7 @@ class ProjectResultController extends Controller
      */
     public function actionIndex()
     {
+        throw new NotFoundHttpException('This site is temporary down');
         $resultModels = [];
         $outcomes = [];
         $getData = [];
@@ -138,7 +139,7 @@ class ProjectResultController extends Controller
             {
                 foreach($outcomes as $outcome)
                 {
-                    $resultModel = ProjectResult::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'project_id' => $model->id, 'project_outcome_id' => $outcome->id]) ? ProjectResult::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'project_id' => $model->id, 'project_outcome_id' => $outcome->id]) : new ProjectResult();
+                    $resultModel = ProjectResult::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'project_id' => $outcome->project->id, 'project_outcome_id' => $outcome->id]) ? ProjectResult::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'project_id' => $outcome->project->id, 'project_outcome_id' => $outcome->id]) : new ProjectResult();
 
                     $resultModel->year = $model->year;
                     $resultModel->quarter = $model->quarter;
