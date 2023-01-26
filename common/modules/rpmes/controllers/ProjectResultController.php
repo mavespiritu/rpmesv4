@@ -149,6 +149,8 @@ class ProjectResultController extends Controller
                     $resultModels[$outcome->id] = $resultModel;
                 }
             }
+
+            //echo "<pre>"; print_r($resultModels); exit;
         }
         if(
             MultipleModel::loadMultiple($resultModels, Yii::$app->request->post())

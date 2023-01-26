@@ -13,22 +13,23 @@ DisableButtonAsset::register($this);
 /* @var $model common\modules\rpmes\models\Project */
 /* @var $form yii\widgets\ActiveForm */
 ?>
-<div class="project-status-table" style="height: 600px;">
-    <div class="pull-right">
-        <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
-            'label' => '<i class="fa fa-download"></i> Export',
-            'encodeLabel' => false,
-            'options' => ['class' => 'btn btn-success btn-sm'],
-            'dropdown' => [
-                'items' => [
-                    ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-status/download-form-six', 'type' => 'excel', 'year' => $model->year == null ? '2022' : $model->year, 'quarter' => $model->quarter == null ? '' : $model->quarter, 'agency_id' => $model->agency_id == null ? '' : $model->agency_id, 'sector_id' => $model->sector_id == null ? '' : $model->sector_id, 'region_id' => $model->region_id == null ? '' : $model->region_id, 'province_id' => $model->province_id == null ? '' : $model->province_id, 'model' => json_encode($model)])],
-                    ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-status/download-form-six', 'type' => 'pdf', 'year' => $model->year == null ? '2022' : $model->year, 'quarter' => $model->quarter == null ? '' : $model->quarter, 'agency_id' => $model->agency_id == null ? '' : $model->agency_id, 'sector_id' => $model->sector_id == null ? '' : $model->sector_id, 'region_id' => $model->region_id == null ? '' : $model->region_id, 'province_id' => $model->province_id == null ? '' : $model->province_id, 'model' => json_encode($model)])],
-                ],
+
+<div class="pull-right">
+    <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
+        'label' => '<i class="fa fa-download"></i> Export',
+        'encodeLabel' => false,
+        'options' => ['class' => 'btn btn-success btn-sm'],
+        'dropdown' => [
+            'items' => [
+                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-status/download-form-six', 'type' => 'excel', 'year' => $model->year == null ? '2022' : $model->year, 'quarter' => $model->quarter == null ? '' : $model->quarter, 'agency_id' => $model->agency_id == null ? '' : $model->agency_id, 'sector_id' => $model->sector_id == null ? '' : $model->sector_id, 'region_id' => $model->region_id == null ? '' : $model->region_id, 'province_id' => $model->province_id == null ? '' : $model->province_id, 'model' => json_encode($model)])],
+                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/project-status/download-form-six', 'type' => 'pdf', 'year' => $model->year == null ? '2022' : $model->year, 'quarter' => $model->quarter == null ? '' : $model->quarter, 'agency_id' => $model->agency_id == null ? '' : $model->agency_id, 'sector_id' => $model->sector_id == null ? '' : $model->sector_id, 'region_id' => $model->region_id == null ? '' : $model->region_id, 'province_id' => $model->province_id == null ? '' : $model->province_id, 'model' => json_encode($model)])],
             ],
-        ]) : '' ?>
-            <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormSixReport("'.$model->year.'", "'.$model->quarter.'", "'.$model->agency_id.'", "'.$model->sector_id.'", "'.$model->region_id.'", "'.$model->province_id.'")', 'class' => 'btn btn-danger btn-sm']) ?>
-    </div>
-    <div class="clearfix"></div><br>
+        ],
+    ]) : '' ?>
+        <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormSixReport("'.$model->year.'", "'.$model->quarter.'", "'.$model->agency_id.'", "'.$model->sector_id.'", "'.$model->region_id.'", "'.$model->province_id.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+</div>
+<div class="clearfix"></div><br>
+<div class="project-status-table" style="height: 600px;">
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
         <thead>
             <tr>
