@@ -566,7 +566,8 @@ class Project extends \yii\db\ActiveRecord
 
         if($unit == true)
         {
-            $slippage = $this->getPhysicalActualToDate($quarter) - $this->getPhysicalTargetAsOfReportingPeriod($quarter);
+            //$slippage = $this->getPhysicalActualToDate($quarter) - $this->getPhysicalTargetAsOfReportingPeriod($quarter);
+            $slippage = $this->getPhysicalTargetAsOfReportingPeriod($quarter) > 0 ? (($this->getPhysicalActualToDate($quarter)/$this->getPhysicalTargetAsOfReportingPeriod($quarter))*100) - 100 : 0;
         }else{
             $slippage = $this->getPhysicalTargetAsOfReportingPeriod($quarter) > 0 ? (($this->getPhysicalActualToDate($quarter)/$this->getPhysicalTargetAsOfReportingPeriod($quarter))*100) - 100 : 0;
         }
