@@ -60,8 +60,8 @@ $this->registerJs($js);
         ],
     ]); ?>
 
-    <?php if(Yii::$app->controller->action->id != 'carry-over'){ ?>
     <div class="row">
+    <?php if(Yii::$app->controller->action->id != 'carry-over'){ ?>
         <div class="col-md-3 col-xs-12">
             <?= $form->field($model, 'period')->widget(Select2::classname(), [
                 'data' => ['Current Year' => 'Current Year', 'Carry-Over' => 'Carry-Over'],
@@ -72,9 +72,12 @@ $this->registerJs($js);
                 ])->label('Period *');
             ?>
         </div>
-    </div>
     <?php } ?>
-    
+        <div class="col-md-3 col-xs-12">
+            <?= $form->field($model, 'year')->textInput(['type' => 'number', 'min' => date("Y") - 1, 'max' => date("Y")])->label('Year *') ?>
+        </div>    
+    </div>
+
     <div class="row">
         <div class="col-md-6 col-xs-12">
             <h4>Basic Information</h4>
