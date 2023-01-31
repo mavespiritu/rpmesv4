@@ -58,18 +58,18 @@ DisableButtonAsset::register($this);
                 <?php if((($project['slippage'] <= -15)) && $project['isCompleted'] != 1){ ?>
                     <tr>
                         <td align=center><?= $idx ?></td>
-                        <td colspan=2 align=center><?= $project['projectTitle'] ?></td>
-                        <td align=center><?= number_format($project['totalCost'], 2) ?></td>
-                        <td colspan=2 align=center><?= $project['sectorTitle']. ' / '.$project['subSectorTitle'] ?></td>
-                        <td colspan=2 align=center><?= $project['locationTitle'] ?></td>
+                        <td colspan=2><?= $project['projectTitle'] ?></td>
+                        <td align=right><?= number_format($project['totalCost'], 2) ?></td>
+                        <td colspan=2><?= $project['sectorTitle']. ' / '.$project['subSectorTitle'] ?></td>
+                        <td colspan=2><?= $project['locationTitle'] ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
                         <td align=center><?= $project['releases'] > 0 ? number_format(($project['expenditures'] / $project['releases']) * 100, 2) : number_format(0, 2) ?></td>
                         <td align=center><?= $project['physicalTargetTotalPerQuarter'] != '' ? number_format($project['physicalTargetTotalPerQuarter'], 2) : 0 ?></td>
                         <td align=center><?= $project['physicalAccompTotalPerQuarter'] != '' ? number_format($project['physicalAccompTotalPerQuarter'], 2) : 0 ?></td>
                         <td align=center><?= number_format($project['slippage'], 2) ?>%</td>
-                        <td colspan=2 align=center><?= $project['causes'] ?></td>
+                        <td colspan=2><?= $project['causes'] ?></td>
                         <td align=center><?= $project['agencyTitle'] ?></td>
-                        <td colspan=2 align=center><?= $project['recommendations'] ?></td>
+                        <td colspan=2><?= $project['recommendations'] ?></td>
                     </tr>
                     <?php $idx ++ ?>
                 <?php } ?>
@@ -83,6 +83,7 @@ DisableButtonAsset::register($this);
         $(document).ready(function(){
             $(".project-status-table").freezeTable({
                 "scrollable": true,
+                "columnNum" : 3,
             });
         });
     ';
