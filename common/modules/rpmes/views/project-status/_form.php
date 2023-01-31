@@ -41,9 +41,9 @@ DisableButtonAsset::register($this);
                 <td rowspan=2 align=center><b>Implementing Agency</b></td>
                 <td rowspan=2 align=center><b>Fund Utilization</b></td>
                 <td colspan=3 align=center><b>Physical Status (as of Reporting Period)</b></td>
-                <td rowspan=2 colspan=2 align=center><b>Issues</b></td>
+                <td rowspan=2 colspan=2 align=center style="width: 10%;"><b>Issues</b></td>
                 <td rowspan=2 align=center><b>Source of Information</b></td>
-                <td rowspan=2 colspan=2 align=center><b>Recommendations</b></td>
+                <td rowspan=2 colspan=2 align=center style="width: 10%;"><b>Recommendations</b></td>
             </tr>
             <tr>
                 <td align=center><b>Target</b></td>
