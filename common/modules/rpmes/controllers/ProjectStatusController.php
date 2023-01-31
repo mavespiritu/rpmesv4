@@ -103,6 +103,7 @@ class ProjectStatusController extends Controller
             $physicalAccomps = PhysicalAccomplishment::find()->where(['year' => $model->year])->createCommand()->getRawSql();
             $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
             $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year])->createCommand()->getRawSql();
+            $projectException = ProjectException::find()->where(['year' => $model->year, 'quarter' => $model->quarter])->createCommand()->getRawSql();
 
             $accomps = Accomplishment::find()->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])->where(['year' => $model->year])->groupBy(['project_id'])->createCommand()->getRawSql();
         
@@ -285,15 +286,14 @@ class ProjectStatusController extends Controller
                             $slippage. 'as slippage',
                             'regionTitles.title as regionTitles',
                             'accomps.isCompleted as isCompleted',
-                            'IF(project_exception.recommendations is null, "No Recommendation/s", project_exception.recommendations) as recommendations',
-                            'IF(project_exception.causes is null, "No Issue/s", project_exception.causes) as causes',                
+                            'IF(projectException.recommendations is null, "No Recommendation/s", projectException.recommendations) as recommendations',
+                            'IF(projectException.causes is null, "No Issue/s", projectException.causes) as causes',                
                         ]);
             $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
             $projects = $projects->leftJoin('program', 'program.id = project.program_id');
             $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
             $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
             $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-            $projects = $projects->leftJoin('project_exception', 'project_exception.project_id = project.id');
             $projects = $projects->leftJoin('project_region', 'project_region.project_id = project.id and project_region.year = project.year');
             $projects = $projects->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id');
             $projects = $projects->leftJoin('project_province', 'project_province.project_id = project.id and project_province.year = project.year');
@@ -307,6 +307,7 @@ class ProjectStatusController extends Controller
             $projects = $projects->leftJoin(['physicalAccompsQ3' => '('.$physicalAccomps.')'], 'physicalAccompsQ3.project_id = project.id and physicalAccompsQ3.quarter = "Q3"');
             $projects = $projects->leftJoin(['physicalAccompsQ4' => '('.$physicalAccomps.')'], 'physicalAccompsQ4.project_id = project.id and physicalAccompsQ4.quarter = "Q4"');
             $projects = $projects->leftJoin(['accomps' => '('.$accomps.')'], 'accomps.project_id = project.id');
+            $projects = $projects->leftJoin(['projectException' => '('.$projectException.')'], 'projectException.project_id = project.id');
             $projects = $projects->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
             $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
             $projects = $projects->leftJoin(['financials' => '('.$financials.')'], 'financials.project_id = project.id');
