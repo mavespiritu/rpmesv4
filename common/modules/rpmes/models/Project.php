@@ -63,7 +63,7 @@ class Project extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['period', 'agency_id', 'title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCreateAdmin'],
+            [['period', 'agency_id', 'title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type', 'year'], 'required', 'on' => 'projectCreateAdmin'],
             [['period', 'title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCreateUser'],
             [['title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCarryOverUser'],
             [['typhoon'], 'validateTyphoon', 'skipOnEmpty' => false, 'skipOnError' => false],
@@ -75,8 +75,8 @@ class Project extends \yii\db\ActiveRecord
             [['agency_id'], 'exist', 'skipOnError' => true, 'targetClass' => Agency::className(), 'targetAttribute' => ['agency_id' => 'id']],
             [['year', 'quarter','agency_id'], 'required', 'on' => 'accomplishmentUser'],
             [['year','quarter'], 'required', 'on' => 'accomplishmentAdmin'],
-            [['year', 'quarter'], 'required', 'on' => 'projectExceptionUser'],
-            [['year', 'agency_id','quarter'], 'required', 'on' => 'projectExceptionAdmin'],
+            [['year', 'quarter', 'status'], 'required', 'on' => 'projectExceptionUser'],
+            [['year', 'agency_id','quarter', 'status'], 'required', 'on' => 'projectExceptionAdmin'],
             [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
             [['year', 'quarter', 'agency_id', 'id'], 'required', 'on' => 'projectResult'],
             [['year'], 'required', 'on' => 'searchSubmissionLog'],

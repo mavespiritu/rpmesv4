@@ -363,7 +363,7 @@ class ProjectController extends Controller
         $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
 
         $model = new Project();
-        $model->year = date("Y");
+        $model->year = Yii::$app->user->can('Administrator') ? $model->year : date("Y");
         $model->period = 'Current Year';
         $model->agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : null;
         $model->scenario = Yii::$app->user->can('AgencyUser') ? 'projectCreateUser' : 'projectCreateAdmin';
