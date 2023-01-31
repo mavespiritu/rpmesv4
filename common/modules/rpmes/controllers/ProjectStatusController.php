@@ -26,6 +26,7 @@ use common\modules\rpmes\models\Sector;
 use common\modules\rpmes\models\ProjectRegion;
 use common\modules\rpmes\models\ProjectProvince;
 use common\modules\rpmes\models\ProjectCitymun;
+use common\modules\rpmes\models\ProjectBarangay;
 use common\modules\rpmes\models\ProjectException;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
