@@ -37,12 +37,17 @@ class ProjectFindingController extends Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index'],
+                'only' => ['index', 'create', 'update', 'view', 'delete'],
                 'rules' => [
                     [
-                        'actions' => ['index', 'create', 'update', 'view', 'delete'],
+                        'actions' => ['index'],
                         'allow' => true,
-                        'roles' => ['@'],
+                        'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
+                    ],
+                    [
+                        'actions' => ['create', 'update'],
+                        'allow' => true,
+                        'roles' => ['Administrator', 'SuperAdministrator'],
                     ],
                 ],
             ],

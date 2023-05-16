@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <br><br>
                     <hr>
                     <div class="pull-left">
-                        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
+                        <?= Yii::$app->user->can('Administrator') ? Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) : '' ?>
                     </div>
                     <div class="clearfix"></div>
                     <div id="project-problem-solving-session-table"></div>

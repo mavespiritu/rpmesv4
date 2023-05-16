@@ -9,7 +9,7 @@
     DisableButtonAsset::register($this);
     use yii\web\View;
 
-    $this->title = 'Dashboard';
+    $this->title = 'Home';
     $this->params['breadcrumbs'][] = $this->title;
 
     $HtmlHelper = new HtmlHelper();

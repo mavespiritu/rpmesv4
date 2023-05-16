@@ -19,7 +19,7 @@ DisableButtonAsset::register($this);
         <thead>
             <tr>
                 <td align=center><b>#</td>
-                <td colspan=2 align=center><b>Name of Project / Total PRoject Cost</td>
+                <td colspan=2 align=center><b>Name of Project / Total Project Cost</td>
                 <td colspan=2 align=center><b>Sector / Subsector </td>
                 <td colspan=2 align=center><b>Issue Details</td>
                 <td colspan=2 align=center><b>Location</td>

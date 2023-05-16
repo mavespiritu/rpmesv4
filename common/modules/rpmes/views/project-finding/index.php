@@ -28,7 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <hr>
                 <div class="box-body">
-                    <div class="pull-left"><?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?></div>
+                    <div class="pull-left"><?= !Yii::$app->user->can('AgencyUser') ? Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) : '' ?></div>
                     <div class="pull-right">
                             <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
                             'label' => '<i class="fa fa-download"></i> Export',

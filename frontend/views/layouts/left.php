@@ -18,7 +18,7 @@
                 'options' => ['class' => 'sidebar-menu tree', 'data-widget'=> 'tree'],
                 'items' => [
                     ['label' => 'MAIN MENU', 'options' => ['class' => 'header']],
-                    ['label' => 'Dashboard', 'icon' => 'bar-chart-o', 'url' => ['/rpmes/dashboard']],
+                    ['label' => 'Home', 'icon' => 'home', 'url' => ['/rpmes/dashboard']],
                     ['label' => 'Add Project', 'icon' => 'plus', 'url' => ['/rpmes/project/create'], 'visible' => !Yii::$app->user->isGuest],
                     [
                         'label' => 'Projects',

@@ -63,7 +63,7 @@
                 <br>
                 <p style="text-align: center;">
                     <u><b><?= $officeHead ? $officeHead->value : 'No set agency head' ?></b></u> <br>
-                    <?= $officeTitleShort ? $officeTitleShort->value : 'No set agency title short' ?> Regional Director
+                    <?= $officeTitleShort ? $officeTitleShort->value : 'No set agency title short' ?> OIC-Regional Director
                 </p>
             </td>
         </tr>
