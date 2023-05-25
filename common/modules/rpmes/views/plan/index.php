@@ -98,6 +98,9 @@ $title = $model->title != '' ? $model->title : '';
                     'id' => 'monitoring-project-form',
                     'options' => ['class' => 'disable-submit-buttons'],
                 ]); ?>
+                <div class="pull-left">
+                    <?= Html::a('<i class="fa fa-plus"></i> Add Project', ['/rpmes/project/create'], ['class' => 'btn btn-success'])?>
+                </div>
                 <div class="pull-right">
                     <?= ButtonDropdown::widget([
                         'label' => '<i class="fa fa-download"></i> Export',

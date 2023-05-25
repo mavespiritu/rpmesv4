@@ -19,6 +19,8 @@ DisableButtonAsset::register($this);
 
     <?= $form->field($model, 'chapter_no')->textInput() ?>
 
+    <?= $form->field($model, 'year')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
 
     <?= $form->field($model, 'description')->textarea(['rows' => 6]) ?>

@@ -417,7 +417,14 @@ class ProjectController extends Controller
         $goals = SdgGoal::find()->select(['id', 'concat("SDG #",sdg_no,": ",title) as title'])->asArray()->all();
         $goals = ArrayHelper::map($goals, 'id', 'title');
 
-        $chapters = RdpChapter::find()->select(['id', 'concat("Chapter ",chapter_no,": ",title) as title'])->asArray()->all();
+        $year = RdpChapter::find()->select('year')->orderBy(['year' => SORT_DESC])->asArray()->one();
+
+        $chapters = RdpChapter::find()
+        ->select(['id', 'concat("Chapter ",chapter_no,": ",title) as title'])
+        ->where(['year' => $year['year']])
+        ->orderBy(['year' => SORT_DESC, 'chapter_no' => SORT_ASC])
+        ->asArray()
+        ->all();
         $chapters = ArrayHelper::map($chapters, 'id', 'title');
 
         $chapterOutcomes = [];
