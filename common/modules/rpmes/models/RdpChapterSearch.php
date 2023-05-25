@@ -17,7 +17,7 @@ class RdpChapterSearch extends RdpChapter
     public function rules()
     {
         return [
-            [['id', 'chapter_no'], 'integer'],
+            [['id', 'chapter_no', 'year'], 'integer'],
             [['title', 'description'], 'safe'],
         ];
     }
@@ -59,6 +59,7 @@ class RdpChapterSearch extends RdpChapter
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
+            'year' => $this->year,
             'chapter_no' => $this->chapter_no,
         ]);
 

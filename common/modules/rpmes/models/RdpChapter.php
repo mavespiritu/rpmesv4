@@ -31,9 +31,7 @@ class RdpChapter extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['chapter_no', 'title'], 'required'],
-            [['chapter_no'], 'unique', 'message' => 'The number has been used already'],
-            [['title'], 'unique', 'message' => 'The title has been used already'],
+            [['chapter_no', 'title', 'year'], 'required'],
             [['description'], 'string'],
             [['title'], 'string', 'max' => 200],
         ];
@@ -46,6 +44,7 @@ class RdpChapter extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
+            'year' => 'Year',
             'chapter_no' => 'Chapter No.',
             'title' => 'Title',
             'description' => 'Description',
