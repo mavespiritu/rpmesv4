@@ -422,7 +422,7 @@ class ProjectController extends Controller
         $chapters = RdpChapter::find()
         ->select(['id', 'concat("Chapter ",chapter_no,": ",title) as title'])
         ->where(['year' => $year['year']])
-        ->orderBy(['year' => SORT_DESC, 'chapter_no' => SORT_ASC])
+        ->orderBy(['year' => SORT_DESC, 'CAST(chapter_no as unsigned)' => SORT_ASC])
         ->asArray()
         ->all();
         $chapters = ArrayHelper::map($chapters, 'id', 'title');
