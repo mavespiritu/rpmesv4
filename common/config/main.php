@@ -58,9 +58,9 @@ return [
         'rbac' => [
             'class' => 'markavespiritu\rbac\RbacWebModule',
         ],
-        'audit' => [
+        /* 'audit' => [
             'class' => 'bedezign\yii2\audit\Audit',
             'accessRoles' => ['SuperAdministrator'],
-        ],
+        ], */
     ]
 ];

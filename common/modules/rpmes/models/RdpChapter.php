@@ -32,8 +32,8 @@ class RdpChapter extends \yii\db\ActiveRecord
     {
         return [
             [['chapter_no', 'title'], 'required'],
-            [['chapter_no'], 'unique', 'message' => 'The number has been used already'],
-            [['title'], 'unique', 'message' => 'The title has been used already'],
+            //[['chapter_no'], 'unique', 'message' => 'The number has been used already'],
+            //[['title'], 'unique', 'message' => 'The title has been used already'],
             [['description'], 'string'],
             [['title'], 'string', 'max' => 200],
         ];
