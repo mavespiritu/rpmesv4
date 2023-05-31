@@ -21,8 +21,6 @@ DisableButtonAsset::register($this);
 <div class="clearfix"></div>
 <br>
 <div class="summary-summary-accomplishment-table" style="height: 600px;">
-
-    </h5>
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
         <thead>
             <tr>

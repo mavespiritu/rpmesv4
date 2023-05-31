@@ -45,7 +45,7 @@ function renderSummary($page)
                 : 'Submission of '.$getData['quarter'].' Accomplishment has ended '.$HtmlHelper->time_elapsed_string($dueDate->due_date).' ago. Due date is '.date("F j, Y", strtotime($dueDate->due_date)) : 'No due date set' ?></div>
         <p><i class="fa fa-exclamation-circle"></i> Always save the form before proceeding to next set of accomplishments.</p>
         <div class="summary"><?= renderSummary($projectsPages) ?></div>
-        <div class="accomplishment-form accomplishment-table" style="height: 600px;">
+        <div class="accomplishment-form accomplishment-table" style="width: 100%; overflow-x: scroll;">
             <table id="accomplishment-table" class="table table-bordered table-hover table-striped" cellspacing="0" style="min-width: 4000px;">
                 <thead>
                     <tr>
@@ -60,7 +60,7 @@ function renderSummary($page)
                             </b>
                         </td>
                         <td colspan=8 align=center><b>Financial Status (PhP)</b></td>
-                        <td rowspan=3 align=center style="width: 5% !important;"><b>Output Indicator</b></td>
+                        <td rowspan=3 align=center><b>Output Indicator</b></td>
                         <td colspan=4 align=center><b>Physical Status</b></td>
                         <td colspan=6 align=center><b>No. of Persons Employed</b></td>
                         <td colspan=7 align=center><b>No. of Beneficiaries</b></td>
@@ -138,8 +138,8 @@ function renderSummary($page)
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $financial[$model->id]['releases'] != '' ? $financial[$model->id]['releases'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -147,7 +147,7 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('Releases(For the Qtr)') ?>
                                 </td>
                                 <td align=right><?= number_format($model->getObligationsAsOfReportingPeriod($getData['quarter']), 2) ?></td>
                                 <td align=center>
@@ -155,8 +155,8 @@ function renderSummary($page)
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $financial[$model->id]['obligation'] != '' ? $financial[$model->id]['obligation'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -164,7 +164,7 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('Obligation(For the Qtr)') ?>
                                 </td>
                                 <td align=right><?= number_format($model->getExpendituresAsOfReportingPeriod($getData['quarter']), 2) ?></td>
                                 <td align=center>
@@ -172,8 +172,8 @@ function renderSummary($page)
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $financial[$model->id]['expenditures'] != '' ? $financial[$model->id]['expenditures'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -181,7 +181,7 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('Disbursements(For the Qtr)') ?>
                                 </td>
                                 <td><?= $model->data_type != "" ? $model->unitOfMeasure.'<br>('.$model->data_type.')' : $model->unitOfMeasure.'<br>(No Data Type)' ?></td>
                                 <td align=center><?= $model->indicatorUnitOfMeasure == true ? number_format($model->getPhysicalTargetAsOfReportingPeriod($getData['quarter']), 2).'%' : number_format($model->getPhysicalTargetAsOfReportingPeriod($getData['quarter']), 0) ?></td>
@@ -192,8 +192,8 @@ function renderSummary($page)
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $physical[$model->id]['value'] != '' ? $physical[$model->id]['value'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -201,7 +201,7 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('Physical Status(Actual for the Qtr)') ?>
                                 </td>
                                 <td align=center><?= number_format($model->getMalesEmployedTarget($getData['quarter']), 0) ?></td>
                                 <td align=center><?= number_format($model->getFemalesEmployedTarget($getData['quarter']), 0) ?></td>
@@ -211,8 +211,8 @@ function renderSummary($page)
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $personEmployed[$model->id]['male'] != '' ? $personEmployed[$model->id]['male'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -220,15 +220,15 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('No. of Male Employed (Actual)') ?>
                                 </td>
                                 <td align=center>
                                     <?= $form->field($personEmployed[$model->id], "[$model->id]female")->widget(MaskedInput::classname(), [
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $personEmployed[$model->id]['female'] != '' ? $personEmployed[$model->id]['female'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -236,7 +236,7 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('No. of Female Employed (Actual)') ?>
                                 </td>
                                 <td align=center><b><?= number_format($model->getEmployedActual($getData['quarter']), 0) ?></b></td>
                                 <td align=center><?= number_format($model->getBeneficiariesTarget($getData['quarter']), 0 ) ?></td>
@@ -246,8 +246,8 @@ function renderSummary($page)
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $beneficiaries[$model->id]['male'] != '' ? $beneficiaries[$model->id]['male'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -255,15 +255,15 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('No. of Male Beneficiaries (Actual)') ?>
                                 </td>
                                 <td align=center>
                                     <?= $form->field($beneficiaries[$model->id], "[$model->id]female")->widget(MaskedInput::classname(), [
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $beneficiaries[$model->id]['female'] != '' ? $beneficiaries[$model->id]['female'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -271,7 +271,7 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('No. of Female Beneficiaries (Actual)') ?>
                                 </td>
                                 <td align=center><b><?= number_format($model->getBeneficiariesActual($getData['quarter']), 0 ) ?></b></td>
                                 <td align=center>
@@ -279,8 +279,8 @@ function renderSummary($page)
                                         'options' => [
                                             'autocomplete' => 'off',
                                             'value' => $groups[$model->id]['value'] != '' ? $groups[$model->id]['value'] : 0,
-                                            'onKeyup' => 'updateAccomplishmentTable()',
-                                            'readonly' => $model->isCompleted == true ? true : false
+                                            //'onKeyup' => 'updateAccomplishmentTable()',
+                                            //'disabled' => $model->isCompleted == true ? true : false
                                         ],
                                         'clientOptions' => [
                                             'alias' =>  'decimal',
@@ -288,15 +288,12 @@ function renderSummary($page)
                                             'groupSeparator' => ',',
                                             'autoGroup' => true
                                         ],
-                                    ])->label(false) ?>
+                                    ])->label('No. of Group Beneficiaries (Actual)') ?>
                                 </td>
                                 <td align=center><b><?= number_format($model->getGroupsActual($getData['quarter']), 0 ) ?></b></td>
                                 <td align=center>
-                                    <?= $form->field($accomplishment[$model->id], "[$model->id]remarks")->textArea(['rows' => '3',  
-                                            'onKeyup' => 'updateAccomplishmentTable()', 
-                                            'readonly' => $model->isCompleted == true ? true : false,
-                                            'style' => 'resize: none;'
-                                        ])->label(false) ?>
+                                    <?= $form->field($accomplishment[$model->id], "[$model->id]remarks")->textArea(['rows' => '3',  /* 'onKeyup' => 'updateAccomplishmentTable()', 'style' => 'resize: none;',
+                                            'disabled' => $model->isCompleted == true ? true : false */])->label('Remarks') ?>
                                 </td>
                                 <td align=center>
                                     <?= $form->field($accomplishment[$model->id], "[$model->id]action")->widget(Switchery::className(), [
@@ -311,8 +308,8 @@ function renderSummary($page)
                                     'clientEvents' => [
                                             'change' => new JsExpression('function() {
                                                 this.checked == true ? this.value = 1 : this.value = 0;
-                                                enableInputFields(this.value, '.$model->id.');
-                                                updateAccomplishmentTable();
+                                                
+                                                //enableInputFields(this.value, '.$model->id.');
                                             }'),
                                         ]
                                     ])->label('Project is completed?') ?>
@@ -327,7 +324,7 @@ function renderSummary($page)
         </div>
         <div>
             <div class="pull-right"><?= LinkPager::widget(['pagination' => $projectsPages]); ?></div>
-            <div class="pull-left"><?= $projectsModels ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Save Accomplishment', ['class' => 'btn btn-primary', 'style' => 'margin-top: 20px;', 'data' => ['readonly-text' => 'Please Wait']]) : '' : '' : '' ?></div>
+            <div class="pull-left"><?= $projectsModels ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Save Accomplishment', ['class' => 'btn btn-primary', 'style' => 'margin-top: 20px;', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' : '' ?></div>
             <div class="clearfix"></div>
         </div>
     <?php ActiveForm::end(); ?>
@@ -337,43 +334,38 @@ function renderSummary($page)
     <?= $projectsModels ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? !$submissionModel->isNewRecord ? 'Accomplishment for '.$submissionModel->quarter.' '.$submissionModel->year.' has been submitted by '.$submissionModel->submitter.' last '.date("F j, Y H:i:s", strtotime($submissionModel->date_submitted)) : Html::button('Submit Accomplishment '.$getData['quarter'].' '.$getData['year'],['class' => 'btn btn-success', 'id' => 'accomplishment-submit-button']) : '' : '' : '' ?>
 <?php
     $script = '
-    function updateAccomplishmentTable()
-    {
-        $(".accomplishment-table").freezeTable("update");
-    }
     function enableInputFields(toggle, id)
     {
         if(toggle == 1)
         {
-            $("#financialaccomplishment-"+id+"-releases").prop("readonly", true);
-            $("#financialaccomplishment-"+id+"-obligation").prop("readonly", true);
-            $("#financialaccomplishment-"+id+"-expenditures").prop("readonly", true);
-            $("#physicalaccomplishment-"+id+"-value").prop("readonly", true);
-            $("#personemployedaccomplishment-"+id+"-male").prop("readonly", true);
-            $("#personemployedaccomplishment-"+id+"-female").prop("readonly", true);
-            $("#beneficiariesaccomplishment-"+id+"-male").prop("readonly", true);
-            $("#beneficiariesaccomplishment-"+id+"-female").prop("readonly", true);
-            $("#groupaccomplishment-"+id+"-value").prop("readonly", true);
-            $("#accomplishment-"+id+"-remarks").prop("readonly", true);
+            $("#financialaccomplishment-"+id+"-releases").prop("disabled", true);
+            $("#financialaccomplishment-"+id+"-obligation").prop("disabled", true);
+            $("#financialaccomplishment-"+id+"-expenditures").prop("disabled", true);
+            $("#physicalaccomplishment-"+id+"-value").prop("disabled", true);
+            $("#personemployedaccomplishment-"+id+"-male").prop("disabled", true);
+            $("#personemployedaccomplishment-"+id+"-female").prop("disabled", true);
+            $("#beneficiariesaccomplishment-"+id+"-male").prop("disabled", true);
+            $("#beneficiariesaccomplishment-"+id+"-female").prop("disabled", true);
+            $("#groupaccomplishment-"+id+"-value").prop("disabled", true);
+            $("#accomplishment-"+id+"-remarks").prop("disabled", true);
         }else{
-            $("#financialaccomplishment-"+id+"-releases").prop("readonly", false);
-            $("#financialaccomplishment-"+id+"-obligation").prop("readonly", false);
-            $("#financialaccomplishment-"+id+"-expenditures").prop("readonly", false);
-            $("#physicalaccomplishment-"+id+"-value").prop("readonly", false);
-            $("#personemployedaccomplishment-"+id+"-male").prop("readonly", false);
-            $("#personemployedaccomplishment-"+id+"-female").prop("readonly", false);
-            $("#beneficiariesaccomplishment-"+id+"-male").prop("readonly", false);
-            $("#beneficiariesaccomplishment-"+id+"-female").prop("readonly", false);
-            $("#groupaccomplishment-"+id+"-value").prop("readonly", false);
-            $("#accomplishment-"+id+"-remarks").prop("readonly", false);
+            $("#financialaccomplishment-"+id+"-releases").prop("disabled", false);
+            $("#financialaccomplishment-"+id+"-obligation").prop("disabled", false);
+            $("#financialaccomplishment-"+id+"-expenditures").prop("disabled", false);
+            $("#physicalaccomplishment-"+id+"-value").prop("disabled", false);
+            $("#personemployedaccomplishment-"+id+"-male").prop("disabled", false);
+            $("#personemployedaccomplishment-"+id+"-female").prop("disabled", false);
+            $("#beneficiariesaccomplishment-"+id+"-male").prop("disabled", false);
+            $("#beneficiariesaccomplishment-"+id+"-female").prop("disabled", false);
+            $("#groupaccomplishment-"+id+"-value").prop("disabled", false);
+            $("#accomplishment-"+id+"-remarks").prop("disabled", false);
         }
     }
     $(document).ready(function(){
-        $(".accomplishment-table").freezeTable({
+        /* $(".accomplishment-table").freezeTable({
             "scrollable": true,
-            "scrollBar": true,
-            "columnNum": 2,
-        });
+            "columnNum": 2
+        }); */
     });
 
     $("#accomplishment-submit-button").on("click", function(e) {
