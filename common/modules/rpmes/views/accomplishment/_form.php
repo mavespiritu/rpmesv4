@@ -46,7 +46,7 @@ function renderSummary($page)
         <p><i class="fa fa-exclamation-circle"></i> Always save the form before proceeding to next set of accomplishments.</p>
         <div class="summary"><?= renderSummary($projectsPages) ?></div>
         <div class="accomplishment-form accomplishment-table" style="height: 600px;">
-            <table id="accomplishment-table" class="table table-bordered table-hover table-striped" cellspacing="0" style="min-width: 4000px;">
+            <table id="accomplishment-table" class="table table-bordered table-hover" cellspacing="0" style="min-width: 4000px;">
                 <thead>
                     <tr>
                         <td rowspan=4 style="width: 3%;">&nbsp;</td>
