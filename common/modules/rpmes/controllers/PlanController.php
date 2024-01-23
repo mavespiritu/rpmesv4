@@ -158,7 +158,7 @@ class PlanController extends \yii\web\Controller
             'Maintained' => 'Maintained',
         ];
 
-        $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
+        $dueDate = DueDate::find()->where(['report' => 'Monitoring Plan']);
         $projectsPaging = Project::find();
         $projectsPaging = Yii::$app->user->can('AgencyUser') ? 
             $projectsPaging
@@ -271,6 +271,9 @@ class PlanController extends \yii\web\Controller
                 $provinceIDs = $provinceIDs->andWhere(['year' => $project['year']]);
                 $categoryIDs = $categoryIDs->andWhere(['year' => $project['year']]);
                 $model->year = $project['year'];
+                $dueDate = $dueDate->andWhere(['year' => $project['year']]);
+            }else{
+                $dueDate = $dueDate->andWhere(['year' => date("Y")]);
             }
 
             if(!empty($project['agency_id']))
@@ -422,6 +425,8 @@ class PlanController extends \yii\web\Controller
                 ->orderBy(['id' => SORT_DESC])
                 ->all();
 
+            $dueDate = $dueDate->one();
+
             return $this->render('index', [
                 'model' => $model,
                 'regionModel' => $regionModel,
@@ -454,6 +459,8 @@ class PlanController extends \yii\web\Controller
                 'dataTypes' => $dataTypes,
             ]);
         }
+
+        $dueDate = $dueDate->one();
 
         return $this->render('index', [
             'model' => $model,

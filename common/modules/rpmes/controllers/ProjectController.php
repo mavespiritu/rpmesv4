@@ -1168,9 +1168,10 @@ class ProjectController extends Controller
      */
     public function actionUpdate($id)
     {
-        $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
-
         $model = $this->findModel($id);
+
+        $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => $model->year]);
+
         $draft = $model->draft;
 
         if($model->draft == 'No')
