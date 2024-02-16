@@ -33,7 +33,7 @@ class PersonEmployedAccomplishment extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            //[['male', 'female'], 'required'],
+            [['male', 'female'], 'required'],
             [['project_id', 'year'], 'integer'],
             [['quarter', 'remarks'], 'string'],
             [['male', 'female'], 'safe'],

@@ -38,8 +38,12 @@ use common\modules\rpmes\models\RdpChapter;
 use common\modules\rpmes\models\RdpChapterOutcome;
 use common\modules\rpmes\models\RdpSubChapterOutcome;
 use common\modules\rpmes\models\ProjectSearch;
+use common\modules\rpmes\models\DraftProjectSearch;
 use common\modules\rpmes\models\Model;
 use common\modules\rpmes\models\Submission;
+use common\modules\rpmes\models\ProjectHasRevisedSchedules;
+use common\modules\rpmes\models\ProjectHasFundSources;
+use common\modules\rpmes\models\ProjectHasOutputIndicators;
 use common\modules\rpmes\models\MultipleModel;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -354,31 +358,52 @@ class ProjectController extends Controller
     }
 
     /**
+     * Lists all Project models.
+     * @return mixed
+     */
+    public function actionIndex()
+    {
+        $searchModel = new ProjectSearch();
+
+        if(Yii::$app->user->can('AgencyUser'))
+        {
+            $searchModel->agency_id = Yii::$app->user->identity->userinfo->AGENCY_C;
+        }
+
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
      * Creates a new Project model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
     public function actionCreate()
     {
-        $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
-
         $model = new Project();
-        $model->year = Yii::$app->user->can('Administrator') ? $model->year : date("Y");
-        $model->period = 'Current Year';
         $model->agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : null;
         $model->scenario = Yii::$app->user->can('AgencyUser') ? 'projectCreateUser' : 'projectCreateAdmin';
+        $model->data_type = 'Default';
+
         $regionModel = new ProjectRegion();
         $provinceModel = new ProjectProvince();
         $citymunModel = new ProjectCitymun();
         $barangayModel = new ProjectBarangay();
         $categoryModel = new ProjectCategory();
-        $kraModel = new ProjectKra();
         $sdgModel = new ProjectSdgGoal();
         $rdpChapterModel = new ProjectRdpChapter();
         $rdpChapterOutcomeModel = new ProjectRdpChapterOutcome();
         $rdpSubChapterOutcomeModel = new ProjectRdpSubChapterOutcome();
-        $expectedOutputModels = [new ProjectExpectedOutput()];
+
+        $expectedOutputModels = [new ProjectHasOutputIndicators()];
         $outcomeModels = [new ProjectOutcome()];
+        $revisedScheduleModels = [new ProjectHasRevisedSchedules()];
+        $fundSourceModels = [new ProjectHasFundSources()];
 
         $agencies = Agency::find()->select(['id', 'concat(title," (",code,")") as title']);
         $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
@@ -412,76 +437,35 @@ class ProjectController extends Controller
         $categories = Category::find()->all();
         $categories = ArrayHelper::map($categories, 'id', 'title');
 
-        $kras = [];
-
         $goals = SdgGoal::find()->select(['id', 'concat("SDG #",sdg_no,": ",title) as title'])->asArray()->all();
         $goals = ArrayHelper::map($goals, 'id', 'title');
 
-        $year = RdpChapter::find()->select('year')->orderBy(['year' => SORT_DESC])->asArray()->one();
+        $rdpChapterYear = RdpChapter::find()->select('year')->orderBy(['year' => SORT_DESC])->asArray()->one();
 
         $chapters = RdpChapter::find()
         ->select(['id', 'concat("Chapter ",chapter_no,": ",title) as title'])
-        ->where(['year' => $year['year']])
+        ->where(['year' => $rdpChapterYear['year']])
         ->orderBy(['year' => SORT_DESC, 'CAST(chapter_no as unsigned)' => SORT_ASC])
         ->asArray()
         ->all();
+
         $chapters = ArrayHelper::map($chapters, 'id', 'title');
 
         $chapterOutcomes = [];
         $subChapterOutcomes = [];
 
-        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-        $genders = ['M' => 'Male', 'F' => 'Female'];
-
-        $targets = [];
-
-
-        $physicalTargetModel = new ProjectTarget();
-        $physicalTargetModel->scenario = 'physicalTarget';
-        $physicalTargetModel->target_type = 'Physical';
-
-        $targets[0] = $physicalTargetModel;
-
-        $financialTargetModel = new ProjectTarget();
-        $financialTargetModel->target_type = 'Financial';
-
-        $targets[1] = $financialTargetModel;
-
-        $maleEmployedTargetModel = new ProjectTarget();
-        $maleEmployedTargetModel->target_type = 'Male Employed';
-
-        $targets[2] = $maleEmployedTargetModel;
-
-        $femaleEmployedTargetModel = new ProjectTarget();
-        $femaleEmployedTargetModel->target_type = 'Female Employed';
-
-        $targets[3] = $femaleEmployedTargetModel;
-
-        $beneficiaryTargetModel = new ProjectTarget();
-        $beneficiaryTargetModel->target_type = 'Beneficiaries';
-
-        $targets[4] = $beneficiaryTargetModel;
-
-        $groupTargetModel = new ProjectTarget();
-        $groupTargetModel->target_type = 'Group Beneficiaries';
-
-        $targets[5] = $groupTargetModel;
-
-        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())  &&
+        /* if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())  &&
             $regionModel->load(Yii::$app->request->post()) &&
             $provinceModel->load(Yii::$app->request->post()) &&
             $citymunModel->load(Yii::$app->request->post()) &&
             $barangayModel->load(Yii::$app->request->post()) &&
             $categoryModel->load(Yii::$app->request->post()) &&
-            $kraModel->load(Yii::$app->request->post()) &&
             $sdgModel->load(Yii::$app->request->post()) &&
             $rdpChapterModel->load(Yii::$app->request->post()) &&
             $rdpChapterOutcomeModel->load(Yii::$app->request->post()) &&
-            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post()) &&
-            MultipleModel::loadMultiple($targets, Yii::$app->request->post()) ) {
+            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                return ActiveForm::validateMultiple($targets);
-            }
+            } */
 
         if (
             $model->load(Yii::$app->request->post()) &&
@@ -490,53 +474,45 @@ class ProjectController extends Controller
             $citymunModel->load(Yii::$app->request->post()) &&
             $barangayModel->load(Yii::$app->request->post()) &&
             $categoryModel->load(Yii::$app->request->post()) &&
-            $kraModel->load(Yii::$app->request->post()) &&
             $sdgModel->load(Yii::$app->request->post()) &&
             $rdpChapterModel->load(Yii::$app->request->post()) &&
             $rdpChapterOutcomeModel->load(Yii::$app->request->post()) &&
-            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post()) &&
-            MultipleModel::loadMultiple($targets, Yii::$app->request->post()) 
-            ) 
+            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post())) 
             {
 
-            $expectedOutputModels = Model::createMultiple(ProjectExpectedOutput::classname());
+            $expectedOutputModels = Model::createMultiple(ProjectHasOutputIndicators::classname());
             $outcomeModels = Model::createMultiple(ProjectOutcome::classname());
+            $revisedScheduleModels = Model::createMultiple(ProjectHasRevisedSchedules::classname());
+            $fundSourceModels = Model::createMultiple(ProjectHasFundSources::classname());
             Model::loadMultiple($expectedOutputModels, Yii::$app->request->post());
             Model::loadMultiple($outcomeModels, Yii::$app->request->post());
+            Model::loadMultiple($revisedScheduleModels, Yii::$app->request->post());
+            Model::loadMultiple($fundSourceModels, Yii::$app->request->post());
 
             // validate all models
             $valid = $model->validate();
-            $valid = Model::validateMultiple($expectedOutputModels) && Model::validateMultiple($outcomeModels) && $valid;
-
-            $monitoringPlanSubmission = Submission::findOne(['report' => 'Monitoring Plan', 'agency_id' => $model->agency_id, 'year' => $model->year]);
-            if($monitoringPlanSubmission)
-            {
-                $monitoringPlanSubmission->date_submitted = strtotime($monitoringPlanSubmission->date_submitted) < strtotime(date("Y-m-d H:i:s")) ? date("Y-m-d H:i:s") : $monitoringPlanSubmission->date_submitted;
-                $monitoringPlanSubmission->save();
-            }
+            $valid = Model::validateMultiple($expectedOutputModels) && 
+                     Model::validateMultiple($outcomeModels) && 
+                     Model::validateMultiple($revisedScheduleModels) && 
+                     Model::validateMultiple($fundSourceModels) && 
+                     //Model::validateMultiple($targets) && 
+                     $valid;
 
             if ($valid) {
                 $transaction = \Yii::$app->db->beginTransaction();
                 $agency = Agency::findOne(['id' => $model->agency_id]);
-                $lastProject = Project::find()->where(['agency_id' => $model->agency_id, 'year' => $model->year, 'draft' => 'No'])->orderBy(['id' => SORT_DESC])->one();
+                $lastProject = Project::find()->where(['agency_id' => $model->agency_id, 'draft' => 'No'])->orderBy(['id' => SORT_DESC])->one();
                 $lastNumber = $lastProject ? intval(substr($lastProject->project_no, -4)): '0001';
-                $project_no = $lastProject ? $agency->code.'-'.substr($model->year, -2).'-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT) : $agency->code.'-'.substr($model->year, -2).'-'.str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
-                $model->project_no = $model->project_no == '' ? $project_no : $model->project_no;
+                $project_no = $lastProject ? $agency->code.'-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT) : $agency->code.'-'.str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
+                $model->project_no = $project_no;
+                $model->cost = $this->removeMask($model->cost);
                 $model->submitted_by = Yii::$app->user->id;
                 $model->draft = 'No';
                 try {
                     if ($flag = $model->save(false)) {
-                        $plan = Plan::findOne(['project_id' => $model->id, 'year' => $model->year]) ? Plan::findOne(['project_id' => $model->id, 'year' => $model->year]) : new Plan();
-                        $plan->project_id = $model->id;
-                        $plan->year = $model->year;
-                        $plan->date_submitted = date("Y-m-d H:i:s");
-                        $plan->submitted_by = Yii::$app->user->id;
-                        $plan->save(false);
-
                         
                         foreach ($expectedOutputModels as $expectedOutputModel) {
                             $expectedOutputModel->project_id = $model->id;
-                            $expectedOutputModel->year = $model->year;
                             if (! ($flag = $expectedOutputModel->save())) {
                                 $transaction->rollBack();
                                 break;
@@ -545,8 +521,23 @@ class ProjectController extends Controller
 
                         foreach ($outcomeModels as $outcomeModel) {
                             $outcomeModel->project_id = $model->id;
-                            $outcomeModel->year = $model->year;
                             if (! ($flag = $outcomeModel->save())) {
+                                $transaction->rollBack();
+                                break;
+                            }
+                        }
+
+                        foreach ($revisedScheduleModels as $revisedScheduleModel) {
+                            $revisedScheduleModel->project_id = $model->id;
+                            if (! ($flag = $revisedScheduleModel->save())) {
+                                $transaction->rollBack();
+                                break;
+                            }
+                        }
+
+                        foreach ($fundSourceModels as $fundSourceModel) {
+                            $fundSourceModel->project_id = $model->id;
+                            if (! ($flag = $fundSourceModel->save())) {
                                 $transaction->rollBack();
                                 break;
                             }
@@ -557,23 +548,21 @@ class ProjectController extends Controller
                         {
                             $category = new ProjectCategory();
                             $category->project_id = $model->id;
-                            $category->year = $model->year;
                             $category->category_id = $categoryModel->category_id;
                             if (! ($flag = $category->save())) {
                                 $transaction->rollBack();
                             }
                         }
 
-                        if(!empty($kraModel->key_result_area_id))
+                        /* if(!empty($kraModel->key_result_area_id))
                         {
                             $kra = new ProjectKra();
                             $kra->project_id = $model->id;
-                            $kra->year = $model->year;
                             $kra->key_result_area_id = $kraModel->key_result_area_id;
                             if (! ($flag = $kra->save())) {
                                 $transaction->rollBack();
                             }
-                        }
+                        } */
 
                         // function for multiple category and kra
                         /* if(!empty($categoryModel->category_id))
@@ -612,7 +601,6 @@ class ProjectController extends Controller
                             {
                                 $sdg = new ProjectSdgGoal();
                                 $sdg->project_id = $model->id;
-                                $sdg->year = $model->year;
                                 $sdg->sdg_goal_id = $id;
                                 if (! ($flag = $sdg->save())) {
                                     $transaction->rollBack();
@@ -627,7 +615,6 @@ class ProjectController extends Controller
                             {
                                 $chapter = new ProjectRdpChapter();
                                 $chapter->project_id = $model->id;
-                                $chapter->year = $model->year;
                                 $chapter->rdp_chapter_id = $id;
                                 if (! ($flag = $chapter->save())) {
                                     $transaction->rollBack();
@@ -642,7 +629,6 @@ class ProjectController extends Controller
                             {
                                 $chapterOutcome = new ProjectRdpChapterOutcome();
                                 $chapterOutcome->project_id = $model->id;
-                                $chapterOutcome->year = $model->year;
                                 $chapterOutcome->rdp_chapter_outcome_id = $id;
                                 if (! ($flag = $chapterOutcome->save())) {
                                     $transaction->rollBack();
@@ -657,7 +643,6 @@ class ProjectController extends Controller
                             {
                                 $subChapterOutcome = new ProjectRdpSubChapterOutcome();
                                 $subChapterOutcome->project_id = $model->id;
-                                $subChapterOutcome->year = $model->year;
                                 $subChapterOutcome->rdp_sub_chapter_outcome_id = $id;
                                 if (! ($flag = $subChapterOutcome->save())) {
                                     $transaction->rollBack();
@@ -672,7 +657,6 @@ class ProjectController extends Controller
                             {
                                 $region = new ProjectRegion();
                                 $region->project_id = $model->id;
-                                $region->year = $model->year;
                                 $region->region_id = $id;
                                 if (! ($flag = $region->save())) {
                                     $transaction->rollBack();
@@ -687,7 +671,6 @@ class ProjectController extends Controller
                             {
                                 $province = new ProjectProvince();
                                 $province->project_id = $model->id;
-                                $province->year = $model->year;
                                 $province->province_id = $id;
                                 if (! ($flag = $province->save())) {
                                     $transaction->rollBack();
@@ -703,7 +686,6 @@ class ProjectController extends Controller
                                 $ids = explode("-", $id);
                                 $citymun = new ProjectCitymun();
                                 $citymun->project_id = $model->id;
-                                $citymun->year = $model->year;
                                 $citymun->region_id = $ids[0];
                                 $citymun->province_id = $ids[1];
                                 $citymun->citymun_id = $ids[2];
@@ -721,7 +703,6 @@ class ProjectController extends Controller
                                 $ids = explode("-", $id);
                                 $barangay = new ProjectBarangay();
                                 $barangay->project_id = $model->id;
-                                $barangay->year = $model->year;
                                 $barangay->region_id = $ids[0];
                                 $barangay->province_id = $ids[1];
                                 $barangay->citymun_id = $ids[2];
@@ -733,7 +714,7 @@ class ProjectController extends Controller
                             }
                         }
 
-                        if(!empty($targets))
+                        /* if(!empty($targets))
                         {
                             foreach($targets as $target)
                             {
@@ -744,13 +725,13 @@ class ProjectController extends Controller
                                     break;
                                 }
                             }
-                        }
+                        } */
                     }
 
                     if ($flag) {
                         $transaction->commit();
                         \Yii::$app->getSession()->setFlash('success', 'Record Saved');
-                        return $this->redirect(['/rpmes/project/create']);
+                        return $this->redirect(['/rpmes/project/']);
                     }
                 } catch (Exception $e) {
                     $transaction->rollBack();
@@ -765,14 +746,14 @@ class ProjectController extends Controller
             'citymunModel' => $citymunModel,
             'barangayModel' => $barangayModel,
             'categoryModel' => $categoryModel,
-            'kraModel' => $kraModel,
             'sdgModel' => $sdgModel,
             'rdpChapterModel' => $rdpChapterModel,
             'rdpChapterOutcomeModel' => $rdpChapterOutcomeModel,
             'rdpSubChapterOutcomeModel' => $rdpSubChapterOutcomeModel,
-            'targets' => $targets,
-            'expectedOutputModels' => (empty($expectedOutputModels)) ? [new ProjectExpectedOutput] : $expectedOutputModels,
+            'expectedOutputModels' => (empty($expectedOutputModels)) ? [new ProjectHasOutputIndicators] : $expectedOutputModels,
             'outcomeModels' => (empty($outcomeModels)) ? [new ProjectOutcome] : $outcomeModels,
+            'revisedScheduleModels' => (empty($revisedScheduleModels)) ? [new ProjectHasRevisedSchedules] : $revisedScheduleModels,
+            'fundSourceModels' => (empty($fundSourceModels)) ? [new ProjectHasFundSources] : $fundSourceModels,
             'agencies' => $agencies,
             'projects' => $projects,
             'programs' => $programs,
@@ -786,18 +767,14 @@ class ProjectController extends Controller
             'citymuns' => $citymuns,
             'barangays' => $barangays,
             'categories' => $categories,
-            'kras' => $kras,
             'chapters' => $chapters,
             'goals' => $goals,
             'chapterOutcomes' => $chapterOutcomes,
             'subChapterOutcomes' => $subChapterOutcomes,
-            'quarters' => $quarters,
-            'genders' => $genders,
-            'dueDate' => $dueDate
         ]);
     }
 
-    public function actionSaveDraft()
+    /* public function actionSaveDraft()
     {
         if(Yii::$app->request->post())
         {
@@ -1072,90 +1049,21 @@ class ProjectController extends Controller
                 $transaction->rollBack();
             }
         }
-    }
+    } */
 
+    /**
+     * Lists all Project models.
+     * @return mixed
+     */
     public function actionDraft()
     {
-        $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
-        $projectsPaging = Project::find();
-        $projectsPaging = Yii::$app->user->can('AgencyUser') ? 
-            $projectsPaging
-            ->andWhere(['draft' => 'Yes'])
-            ->andWhere(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]) 
-            ->andWhere(['submitted_by' => Yii::$app->user->id]) 
-            : 
-            $projectsPaging
-            ->andWhere(['draft' => 'Yes'])
-            ->andWhere(['submitted_by' => Yii::$app->user->id]) 
-            ;
+        $searchModel = new DraftProjectSearch();
 
-        $countProjects = clone $projectsPaging;
-        $projects = clone $projectsPaging;
-        $projects = $projects->all();
-        $projectIds = [];
-        if(!empty($projects))
-        {
-            foreach($projects as $project)
-            {
-                $projectIds[$project['id']] = $project;
-            }
-        }
-
-        $projectsPages = new Pagination(['totalCount' => $countProjects->count()]);
-        $projectsModels = $projectsPaging->offset($projectsPages->offset)
-            ->limit($projectsPages->limit)
-            ->orderBy(['id' => SORT_DESC])
-            ->all();
-
-        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-        $genders = ['M' => 'Male', 'F' => 'Female'];
-
-        if(Yii::$app->request->get())
-        {
-            $getData = Yii::$app->request->get();
-            if(isset($getData['id']))
-            {
-                $ids = Yii::$app->request->get('id');
-                $ids = explode(",", $ids);
-                
-                Project::deleteAll(['in', 'id', $ids]);
-                \Yii::$app->getSession()->setFlash('success', 'Selected projects has been deleted successfully');
-                return $this->redirect(['/rpmes/project/draft']);
-            }
-        }
-
-        if(Yii::$app->request->post())
-        {
-            $postData = Yii::$app->request->post('Project');
-            $ids = ArrayHelper::map($postData, 'id', 'id');
-
-            
-            Project::updateAll(['draft' => 'No'], 'id in ('.implode(",",$ids).')');
-            if(!empty($ids))
-            {
-                foreach($ids as $id)
-                {
-                    $project = Project::findOne(['id' => $id]);
-                    $plan = Plan::findOne(['project_id' => $project->id, 'year' => $project->year]) ? Plan::findOne(['project_id' => $project->id, 'year' => $project->year]) : new Plan();
-                    $plan->project_id = $project->id;
-                    $plan->year = $project->year;
-                    $plan->date_submitted = date("Y-m-d H:i:s");
-                    $plan->submitted_by = Yii::$app->user->id;
-                    $plan->save(false);
-                }
-            }
-
-            \Yii::$app->getSession()->setFlash('success', 'Selected projects has been submitted successfully');
-            return $this->redirect(['/rpmes/project/draft']);
-        }
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('draft', [
-            'dueDate' => $dueDate,
-            'projectIds' => $projectIds,
-            'projectsModels' => $projectsModels,
-            'projectsPages' => $projectsPages,
-            'quarters' => $quarters,
-            'genders' => $genders,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
         ]);
     }
 
@@ -1169,20 +1077,7 @@ class ProjectController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-
-        $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => $model->year]);
-
-        $draft = $model->draft;
-
-        if($model->draft == 'No')
-        {
-            if($dueDate)
-            {
-                if(strtotime(date("Y-m-d")) > strtotime($dueDate->due_date)){
-                    throw new ForbiddenHttpException('Not allowed after due date');
-                }
-            }
-        }
+        $model->data_type = 'Default';
 
         $model->scenario = Yii::$app->user->can('AgencyUser') ? 'projectCreateUser' : 'projectCreateAdmin';
 
@@ -1202,13 +1097,9 @@ class ProjectController extends Controller
         $projectBarangays = $model->projectBarangays;
         $barangayModel->barangay_id = array_values(ArrayHelper::map($projectBarangays, 'barangayId', 'barangayId'));
         
-        $categoryModel = ProjectCategory::findOne(['project_id' => $model->id, 'year' => $model->year]) ? ProjectCategory::findOne(['project_id' => $model->id, 'year' => $model->year]) : new ProjectCategory();
-        $categoryModel->project_id = $model->id;
-        $categoryModel->year = $model->year;
-
-        $kraModel = ProjectKra::findOne(['project_id' => $model->id, 'year' => $model->year]) ? ProjectKra::findOne(['project_id' => $model->id, 'year' => $model->year]) : new ProjectKra();
-        $kraModel->project_id = $model->id;
-        $kraModel->year = $model->year;
+        $categoryModel = new ProjectCategory();
+        $projectCategories = $model->projectCategories;
+        $categoryModel->category_id = array_values(ArrayHelper::map($projectCategories, 'category_id', 'category_id'));
         
         $sdgModel = new ProjectSdgGoal();
         $projectSdgGoals = $model->projectSdgGoals;
@@ -1226,8 +1117,10 @@ class ProjectController extends Controller
         $projectRdpSubChapterOutcomes = $model->projectRdpSubChapterOutcomes;
         $rdpSubChapterOutcomeModel->rdp_sub_chapter_outcome_id = array_values(ArrayHelper::map($projectRdpSubChapterOutcomes, 'rdp_sub_chapter_outcome_id', 'rdp_sub_chapter_outcome_id'));
         
-        $expectedOutputModels = $model->projectExpectedOutputs;
+        $expectedOutputModels = $model->projectHasOutputIndicators;
         $outcomeModels = $model->projectOutcomes;
+        $revisedScheduleModels = $model->projectHasRevisedSchedules;
+        $fundSourceModels = $model->projectHasFundSources;
 
         $agencies = Agency::find()->select(['id', 'concat(title," (",code,")") as title']);
         $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
@@ -1311,22 +1204,32 @@ class ProjectController extends Controller
         $categoryIDs = ArrayHelper::map($categories, 'id', 'id');
         $categories = ArrayHelper::map($categories, 'id', 'title');
 
-        $kras = KeyResultArea::find()->where(['in', 'category_id', $categoryIDs])->all();
-        $kras = ArrayHelper::map($kras, 'id', 'kraTitle');
-
         $goals = SdgGoal::find()->select(['id', 'concat("SDG #",sdg_no,": ",title) as title'])->asArray()->all();
         $goals = ArrayHelper::map($goals, 'id', 'title');
 
-        $chapters = RdpChapter::find()->select(['id', 'concat("Chapter ",chapter_no,": ",title) as title'])->asArray()->all();
+        $rdpChapterYear = RdpChapter::find()->select('year')->orderBy(['year' => SORT_DESC])->asArray()->one();
+
+        $chapters = RdpChapter::find()
+            ->select(['id', 'concat("Chapter ",chapter_no,": ",title) as title'])
+            ->where(['year' => $rdpChapterYear['year']])
+            ->orderBy(['year' => SORT_DESC, 'CAST(chapter_no as unsigned)' => SORT_ASC])
+            ->asArray()
+            ->all();
+
         $chapterIDs = ArrayHelper::map($chapters, 'id', 'id');
         $chapters = ArrayHelper::map($chapters, 'id', 'title');
 
+        $selectedChapters = $model->projectRdpChapters;
+        $selectedChapters = ArrayHelper::map($selectedChapters, 'rdp_chapter_id', 'rdp_chapter_id');
+        
         $chapterOutcomes = RdpChapterOutcome::find()
-                    ->select(['id', 'concat("Chapter Outcome ",level,": ",title) as title'])
-                    ->where(['in', 'rdp_chapter_id', $chapterIDs])
-                    ->orderBy(['level' => SORT_ASC, 'title' => SORT_ASC])
+                    ->select(['rdp_chapter_outcome.id', 'concat("Chapter Outcome ",rdp_chapter.chapter_no,".",rdp_chapter_outcome.level,": ",rdp_chapter_outcome.title) as title'])
+                    ->leftJoin('rdp_chapter', 'rdp_chapter.id = rdp_chapter_outcome.rdp_chapter_id')
+                    ->where(['in', 'rdp_chapter_id', $selectedChapters])
+                    ->orderBy(['rdp_chapter.chapter_no' => SORT_ASC, 'rdp_chapter_outcome.level' => SORT_ASC, 'rdp_chapter_outcome.title' => SORT_ASC])
                     ->asArray()
                     ->all();
+
         $chapterOutcomeIDs = ArrayHelper::map($chapterOutcomes, 'id', 'id');
         $chapterOutcomes = ArrayHelper::map($chapterOutcomes, 'id', 'title');
 
@@ -1340,69 +1243,18 @@ class ProjectController extends Controller
                     ->all();
         $subChapterOutcomes = ArrayHelper::map($subChapterOutcomes, 'id', 'title');
 
-        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-        $genders = ['M' => 'Male', 'F' => 'Female'];
-
-        $targets = [];
-
-        $physicalTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Physical']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Physical']) : new ProjectTarget();
-        $physicalTargetModel->scenario = 'physicalTarget';
-        $physicalTargetModel->project_id = $model->id;
-        $physicalTargetModel->year = $model->year;
-        $physicalTargetModel->target_type = 'Physical';
-
-        $targets[0] = $physicalTargetModel;
-
-        $financialTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Financial']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Financial']) : new ProjectTarget();
-        $financialTargetModel->project_id = $model->id;
-        $financialTargetModel->year = $model->year;
-        $financialTargetModel->target_type = 'Financial';
-
-        $targets[1] = $financialTargetModel;
-
-        $maleEmployedTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Male Employed']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Male Employed']) : new ProjectTarget();
-        $maleEmployedTargetModel->project_id = $model->id;
-        $maleEmployedTargetModel->year = $model->year;
-        $maleEmployedTargetModel->target_type = 'Male Employed';
-
-        $targets[2] = $maleEmployedTargetModel;
-
-        $femaleEmployedTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Female Employed']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Female Employed']) : new ProjectTarget();
-        $femaleEmployedTargetModel->project_id = $model->id;
-        $femaleEmployedTargetModel->year = $model->year;
-        $femaleEmployedTargetModel->target_type = 'Female Employed';
-
-        $targets[3] = $femaleEmployedTargetModel;
-
-        $beneficiaryTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Beneficiaries']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Beneficiaries']) : new ProjectTarget();
-        $beneficiaryTargetModel->project_id = $model->id;
-        $beneficiaryTargetModel->year = $model->year;
-        $beneficiaryTargetModel->target_type = 'Beneficiaries';
-
-        $targets[4] = $beneficiaryTargetModel;
-
-        $groupTargetModel = ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Group Beneficiaries']) ? ProjectTarget::findOne(['project_id' => $model->id, 'year' => $model->year, 'target_type' => 'Group Beneficiaries']) : new ProjectTarget();
-        $groupTargetModel->project_id = $model->id;
-        $groupTargetModel->year = $model->year;
-        $groupTargetModel->target_type = 'Group Beneficiaries';
-
-        $targets[5] = $groupTargetModel;
-
-        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())  &&
+        /* if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())  &&
             $regionModel->load(Yii::$app->request->post()) &&
             $provinceModel->load(Yii::$app->request->post()) &&
             $citymunModel->load(Yii::$app->request->post()) &&
             $barangayModel->load(Yii::$app->request->post()) &&
             $categoryModel->load(Yii::$app->request->post()) &&
-            $kraModel->load(Yii::$app->request->post()) &&
             $sdgModel->load(Yii::$app->request->post()) &&
             $rdpChapterModel->load(Yii::$app->request->post()) &&
             $rdpChapterOutcomeModel->load(Yii::$app->request->post()) &&
-            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post()) &&
-            MultipleModel::loadMultiple($targets, Yii::$app->request->post()) ) {
+            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post())) {
                 Yii::$app->response->format = Response::FORMAT_JSON;
-                return ActiveForm::validateMultiple($targets);
-            }
+            } */
 
         if (
             $model->load(Yii::$app->request->post()) &&
@@ -1411,41 +1263,46 @@ class ProjectController extends Controller
             $citymunModel->load(Yii::$app->request->post()) &&
             $barangayModel->load(Yii::$app->request->post()) &&
             $categoryModel->load(Yii::$app->request->post()) &&
-            $kraModel->load(Yii::$app->request->post()) &&
             $sdgModel->load(Yii::$app->request->post()) &&
             $rdpChapterModel->load(Yii::$app->request->post()) &&
             $rdpChapterOutcomeModel->load(Yii::$app->request->post()) &&
-            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post()) &&
-            MultipleModel::loadMultiple($targets, Yii::$app->request->post()) 
-            ) 
+            $rdpSubChapterOutcomeModel->load(Yii::$app->request->post())) 
             {
 
             $oldExpectedOutputIDs = ArrayHelper::map($expectedOutputModels, 'id', 'id');
             $oldOutcomeIDs = ArrayHelper::map($outcomeModels, 'id', 'id');
+            $oldRevisedScheduleIDs = ArrayHelper::map($revisedScheduleModels, 'id', 'id');
+            $oldFundSourceIDs = ArrayHelper::map($fundSourceModels, 'id', 'id');
             $oldRegionIDs = array_values(ArrayHelper::map($projectRegions, 'region_id', 'region_id'));
             $oldProvinceIDs = array_values(ArrayHelper::map($projectProvinces, 'province_id', 'province_id'));
             $oldCitymunIDs = array_values(ArrayHelper::map($projectCitymuns, 'citymunId', 'citymunId'));
             $oldBarangayIDs = array_values(ArrayHelper::map($projectBarangays, 'barangayId', 'barangayId'));
-            //$oldCategoryIDs = array_values(ArrayHelper::map($projectCategories, 'category_id', 'category_id'));
+            $oldCategoryIDs = array_values(ArrayHelper::map($projectCategories, 'category_id', 'category_id'));
             //$oldKraIDs = array_values(ArrayHelper::map($projectKras, 'key_result_area_id', 'key_result_area_id'));
             $oldSdgGoalIDs = array_values(ArrayHelper::map($projectSdgGoals, 'sdg_goal_id', 'sdg_goal_id'));
             $oldRdpChapterIDs = array_values(ArrayHelper::map($projectRdpChapters, 'rdp_chapter_id', 'rdp_chapter_id'));
             $oldRdpChapterOutcomeIDs = array_values(ArrayHelper::map($projectRdpChapterOutcomes, 'rdp_chapter_outcome_id', 'rdp_chapter_outcome_id'));
             $oldRdpSubChapterOutcomeIDs = array_values(ArrayHelper::map($projectRdpSubChapterOutcomes, 'rdp_sub_chapter_outcome_id', 'rdp_sub_chapter_outcome_id'));
             
-            $expectedOutputModels = Model::createMultiple(ProjectExpectedOutput::classname(), $expectedOutputModels);
+            $expectedOutputModels = Model::createMultiple(ProjectHasOutputIndicators::classname(), $expectedOutputModels);
             $outcomeModels = Model::createMultiple(ProjectOutcome::classname(), $outcomeModels);
+            $revisedScheduleModels = Model::createMultiple(ProjectHasRevisedSchedules::classname(), $revisedScheduleModels);
+            $fundSourceModels = Model::createMultiple(ProjectHasFundSources::classname(), $fundSourceModels);
 
             Model::loadMultiple($expectedOutputModels, Yii::$app->request->post());
             Model::loadMultiple($outcomeModels, Yii::$app->request->post());
+            Model::loadMultiple($revisedScheduleModels, Yii::$app->request->post());
+            Model::loadMultiple($fundSourceModels, Yii::$app->request->post());
 
             $deletedExpectedOutputIDs = array_diff($oldExpectedOutputIDs, array_filter(ArrayHelper::map($expectedOutputModels, 'id', 'id')));
             $deletedOutcomeIDs = array_diff($oldOutcomeIDs, array_filter(ArrayHelper::map($outcomeModels, 'id', 'id')));
+            $deletedRevisedScheduleIDs = array_diff($oldRevisedScheduleIDs, array_filter(ArrayHelper::map($revisedScheduleModels, 'id', 'id')));
+            $deletedFundSourceIDs = array_diff($oldFundSourceIDs, array_filter(ArrayHelper::map($fundSourceModels, 'id', 'id')));
             $deletedRegionIDs = $regionModel->region_id != '' ? array_diff($oldRegionIDs, array_filter($regionModel->region_id)) : array_diff($oldRegionIDs, []);
             $deletedProvinceIDs = $provinceModel->province_id != '' ? array_diff($oldProvinceIDs, array_filter($provinceModel->province_id)) : array_diff($oldProvinceIDs, []);
             $deletedCitymunIDs = $citymunModel->citymun_id != '' ? array_diff($oldCitymunIDs, array_filter($citymunModel->citymun_id)) : array_diff($oldCitymunIDs, []);
             $deletedBarangayIDs = $barangayModel->barangay_id != '' ? array_diff($oldBarangayIDs, array_filter($barangayModel->barangay_id)) : array_diff($oldBarangayIDs, []);
-            //$deletedCategoryIDs = $categoryModel->category_id != '' ? array_diff($oldCategoryIDs, array_filter($categoryModel->category_id)) : array_diff($oldCategoryIDs, []);
+           // $deletedCategoryIDs = $categoryModel->category_id != '' ? array_diff($oldCategoryIDs, array_filter($categoryModel->category_id)) : array_diff($oldCategoryIDs, []);
             //$deletedKraIDs = $kraModel->key_result_area_id != '' ? array_diff($oldKraIDs, array_filter($kraModel->key_result_area_id)) : array_diff($oldKraIDs, []);
             $deletedSdgGoalIDs = $sdgModel->sdg_goal_id != '' ? array_diff($oldSdgGoalIDs, array_filter($sdgModel->sdg_goal_id)) : array_diff($oldSdgGoalIDs, []);
             $deletedRdpChapterIDs = $rdpChapterModel->rdp_chapter_id != '' ? array_diff($oldRdpChapterIDs, array_filter($rdpChapterModel->rdp_chapter_id)) : array_diff($oldRdpChapterIDs, []);
@@ -1454,45 +1311,27 @@ class ProjectController extends Controller
 
             // validate all models
             $valid = $model->validate();
-            $valid = Model::validateMultiple($expectedOutputModels) && Model::validateMultiple($outcomeModels) && Model::validateMultiple($targets) && $valid;
+            $valid = Model::validateMultiple($expectedOutputModels) && 
+                     Model::validateMultiple($outcomeModels) && 
+                     Model::validateMultiple($revisedScheduleModels) && 
+                     Model::validateMultiple($fundSourceModels) && 
+                     $valid;
 
             if ($valid) {
                 $transaction = \Yii::$app->db->beginTransaction();
-                $agency = Agency::findOne(['id' => $model->agency_id]);
-                $lastProject = Project::find()->where(['agency_id' => $model->agency_id, 'year' => $model->year, 'draft' => 'No'])->orderBy(['id' => SORT_DESC])->one();
-                $lastNumber = $lastProject ? intval(substr($lastProject->project_no, -4)) : '0001';
-                $project_no = $lastProject ? $agency->code.'-'.substr($model->year, -2).'-'.str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT) : $agency->code.'-'.substr($model->year, -2).'-'.str_pad($lastNumber, 4, '0', STR_PAD_LEFT);
-                $model->project_no = $model->project_no == '' || $model->project_no == null ? $project_no : $model->project_no;
-                //$model->submitted_by = Yii::$app->user->id;
-                //$model->date_submitted = date("Y-m-d H:i:s");
-                $model->draft = 'No';
+
+                $model->cost = $this->removeMask($model->cost);
+
                 try {
                     if ($flag = $model->save(false)) {
-                        $plan = Plan::findOne(['project_id' => $model->id, 'year' => $model->year]) ? Plan::findOne(['project_id' => $model->id, 'year' => $model->year]) : new Plan();
-                        $plan->project_id = $model->id;
-                        $plan->year = $model->year;
-                        $plan->date_submitted = date("Y-m-d H:i:s");
-                        $plan->submitted_by = Yii::$app->user->id;
-                        $plan->save(false);
-
-                        if($draft == 'Yes')
-                        {
-                            $monitoringPlanSubmission = Submission::findOne(['report' => 'Monitoring Plan', 'agency_id' => $model->agency_id, 'year' => $model->year]);
-                            if($monitoringPlanSubmission)
-                            {
-                                $monitoringPlanSubmission->date_submitted = strtotime($monitoringPlanSubmission->date_submitted) < strtotime(date("Y-m-d H:i:s")) ? date("Y-m-d H:i:s") : $monitoringPlanSubmission->date_submitted;
-                                $monitoringPlanSubmission->save();
-                            }
-                        }
 
                         if(!empty($deletedExpectedOutputIDs))
                         {
-                            ProjectExpectedOutput::deleteAll(['id' => $deletedExpectedOutputIDs]);
+                            ProjectHasOutputIndicators::deleteAll(['id' => $deletedExpectedOutputIDs]);
                         }
         
                         foreach ($expectedOutputModels as $expectedOutputModel) {
                             $expectedOutputModel->project_id = $model->id;
-                            $expectedOutputModel->year = $model->year;
                             if (! ($flag = $expectedOutputModel->save())) {
                                 $transaction->rollBack();
                                 break;
@@ -1506,21 +1345,48 @@ class ProjectController extends Controller
 
                         foreach ($outcomeModels as $outcomeModel) {
                             $outcomeModel->project_id = $model->id;
-                            $outcomeModel->year = $model->year;
                             if (! ($flag = $outcomeModel->save())) {
                                 $transaction->rollBack();
                                 break;
                             }
                         }
+
+                        if(!empty($deletedRevisedScheduleIDs))
+                        {
+                            ProjectHasRevisedSchedules::deleteAll(['id' => $deletedRevisedScheduleIDs]);
+                        }
+
+                        foreach ($revisedScheduleModels as $revisedScheduleModel) {
+                            $revisedScheduleModel->project_id = $model->id;
+                            if (! ($flag = $revisedScheduleModel->save())) {
+                                $transaction->rollBack();
+                                break;
+                            }
+                        }
+
+                        if(!empty($deletedFundSourceIDs))
+                        {
+                            ProjectHasFundSources::deleteAll(['id' => $deletedFundSourceIDs]);
+                        }
+
+                        foreach ($fundSourceModels as $fundSourceModel) {
+                            $fundSourceModel->project_id = $model->id;
+                            if (! ($flag = $fundSourceModel->save())) {
+                                $transaction->rollBack();
+                                break;
+                            }
+                        }
+
                         // function for single category and kra
 
+                        
                         if(! ($flag = $categoryModel->save(false))) {
                             $transaction->rollBack();
                         }
 
-                        if (! ($flag = $kraModel->save(false))) {
+                        /* if (! ($flag = $kraModel->save(false))) {
                             $transaction->rollBack();
-                        }
+                        } */
 
                         // functions for multiple category and kra
 
@@ -1588,17 +1454,16 @@ class ProjectController extends Controller
  */
                         if(!empty($deletedSdgGoalIDs))
                         {
-                            ProjectSdgGoal::deleteAll(['project_id' => $model->id, 'year' => $model->year, 'sdg_goal_id' => $deletedSdgGoalIDs]);
+                            ProjectSdgGoal::deleteAll(['project_id' => $model->id, 'sdg_goal_id' => $deletedSdgGoalIDs]);
                         }
 
                         if(!empty($sdgModel->sdg_goal_id))
                         {
                             foreach($sdgModel->sdg_goal_id as $id)
                             {
-                                $sdg = ProjectSdgGoal::findOne(['project_id' => $model->id, 'year' => $model->year, 'sdg_goal_id' => $id]) ?
-                                ProjectSdgGoal::findOne(['project_id' => $model->id, 'year' => $model->year, 'sdg_goal_id' => $id]) : new ProjectSdgGoal();
+                                $sdg = ProjectSdgGoal::findOne(['project_id' => $model->id, 'sdg_goal_id' => $id]) ?
+                                ProjectSdgGoal::findOne(['project_id' => $model->id, 'sdg_goal_id' => $id]) : new ProjectSdgGoal();
                                 $sdg->project_id = $model->id;
-                                $sdg->year = $model->year;
                                 $sdg->sdg_goal_id = $id;
                                 if (! ($flag = $sdg->save())) {
                                     $transaction->rollBack();
@@ -1609,17 +1474,16 @@ class ProjectController extends Controller
 
                         if(!empty($deletedRdpChapterIDs))
                         {
-                            ProjectRdpChapter::deleteAll(['project_id' => $model->id, 'year' => $model->year, 'rdp_chapter_id' => $deletedRdpChapterIDs]);
+                            ProjectRdpChapter::deleteAll(['project_id' => $model->id,'rdp_chapter_id' => $deletedRdpChapterIDs]);
                         }
 
                         if(!empty($rdpChapterModel->rdp_chapter_id))
                         {
                             foreach($rdpChapterModel->rdp_chapter_id as $id)
                             {
-                                $chapter = ProjectRdpChapter::findOne(['project_id' => $model->id, 'year' => $model->year, 'rdp_chapter_id' => $id]) ?
-                                ProjectRdpChapter::findOne(['project_id' => $model->id, 'year' => $model->year, 'rdp_chapter_id' => $id]) : new ProjectRdpChapter();
+                                $chapter = ProjectRdpChapter::findOne(['project_id' => $model->id, 'rdp_chapter_id' => $id]) ?
+                                ProjectRdpChapter::findOne(['project_id' => $model->id, 'rdp_chapter_id' => $id]) : new ProjectRdpChapter();
                                 $chapter->project_id = $model->id;
-                                $chapter->year = $model->year;
                                 $chapter->rdp_chapter_id = $id;
                                 if (! ($flag = $chapter->save())) {
                                     $transaction->rollBack();
@@ -1630,17 +1494,16 @@ class ProjectController extends Controller
 
                         if(!empty($deletedRdpChapterOutcomeIDs))
                         {
-                            ProjectRdpChapterOutcome::deleteAll(['project_id' => $model->id, 'year' => $model->year, 'rdp_chapter_outcome_id' => $deletedRdpChapterOutcomeIDs]);
+                            ProjectRdpChapterOutcome::deleteAll(['project_id' => $model->id, 'rdp_chapter_outcome_id' => $deletedRdpChapterOutcomeIDs]);
                         }
 
                         if(!empty($rdpChapterOutcomeModel->rdp_chapter_outcome_id))
                         {
                             foreach($rdpChapterOutcomeModel->rdp_chapter_outcome_id as $id)
                             {
-                                $chapterOutcome = ProjectRdpChapterOutcome::findOne(['project_id' => $model->id, 'year' => $model->year, 'rdp_chapter_outcome_id' => $id]) ?
-                                ProjectRdpChapterOutcome::findOne(['project_id' => $model->id, 'year' => $model->year, 'rdp_chapter_outcome_id' => $id]) : new ProjectRdpChapterOutcome();
+                                $chapterOutcome = ProjectRdpChapterOutcome::findOne(['project_id' => $model->id, 'rdp_chapter_outcome_id' => $id]) ?
+                                ProjectRdpChapterOutcome::findOne(['project_id' => $model->id, 'rdp_chapter_outcome_id' => $id]) : new ProjectRdpChapterOutcome();
                                 $chapterOutcome->project_id = $model->id;
-                                $chapterOutcome->year = $model->year;
                                 $chapterOutcome->rdp_chapter_outcome_id = $id;
                                 if (! ($flag = $chapterOutcome->save())) {
                                     $transaction->rollBack();
@@ -1651,17 +1514,16 @@ class ProjectController extends Controller
 
                         if(!empty($deletedRdpSubChapterOutcomeIDs))
                         {
-                            ProjectRdpSubChapterOutcome::deleteAll(['project_id' => $model->id, 'year' => $model->year, 'rdp_sub_chapter_outcome_id' => $deletedRdpSubChapterOutcomeIDs]);
+                            ProjectRdpSubChapterOutcome::deleteAll(['project_id' => $model->id, 'rdp_sub_chapter_outcome_id' => $deletedRdpSubChapterOutcomeIDs]);
                         }
 
                         if(!empty($rdpSubChapterOutcomeModel->rdp_sub_chapter_outcome_id))
                         {
                             foreach($rdpSubChapterOutcomeModel->rdp_sub_chapter_outcome_id as $id)
                             {
-                                $subChapterOutcome = ProjectRdpSubChapterOutcome::findOne(['project_id' => $model->id, 'year' => $model->year, 'rdp_sub_chapter_outcome_id' => $id]) ?
-                                ProjectRdpSubChapterOutcome::findOne(['project_id' => $model->id, 'year' => $model->year, 'rdp_sub_chapter_outcome_id' => $id]) : new ProjectRdpSubChapterOutcome();
+                                $subChapterOutcome = ProjectRdpSubChapterOutcome::findOne(['project_id' => $model->id, 'rdp_sub_chapter_outcome_id' => $id]) ?
+                                ProjectRdpSubChapterOutcome::findOne(['project_id' => $model->id, 'rdp_sub_chapter_outcome_id' => $id]) : new ProjectRdpSubChapterOutcome();
                                 $subChapterOutcome->project_id = $model->id;
-                                $subChapterOutcome->year = $model->year;
                                 $subChapterOutcome->rdp_sub_chapter_outcome_id = $id;
                                 if (! ($flag = $subChapterOutcome->save())) {
                                     $transaction->rollBack();
@@ -1672,17 +1534,16 @@ class ProjectController extends Controller
 
                         if(!empty($deletedRegionIDs))
                         {
-                            ProjectRegion::deleteAll(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $deletedRegionIDs]);
+                            ProjectRegion::deleteAll(['project_id' => $model->id, 'region_id' => $deletedRegionIDs]);
                         }
 
                         if(!empty($regionModel->region_id))
                         {
                             foreach($regionModel->region_id as $id)
                             {
-                                $region = ProjectRegion::findOne(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $id]) ?
-                                ProjectRegion::findOne(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $id]) : new ProjectRegion();
+                                $region = ProjectRegion::findOne(['project_id' => $model->id, 'region_id' => $id]) ?
+                                ProjectRegion::findOne(['project_id' => $model->id, 'region_id' => $id]) : new ProjectRegion();
                                 $region->project_id = $model->id;
-                                $region->year = $model->year;
                                 $region->region_id = $id;
                                 if (! ($flag = $region->save())) {
                                     $transaction->rollBack();
@@ -1700,10 +1561,9 @@ class ProjectController extends Controller
                         {
                             foreach($provinceModel->province_id as $id)
                             {
-                                $province = ProjectProvince::findOne(['project_id' => $model->id, 'year' => $model->year, 'province_id' => $id]) ?
-                                ProjectProvince::findOne(['project_id' => $model->id, 'year' => $model->year, 'province_id' => $id]) :  new ProjectProvince();
+                                $province = ProjectProvince::findOne(['project_id' => $model->id, 'province_id' => $id]) ?
+                                ProjectProvince::findOne(['project_id' => $model->id, 'province_id' => $id]) :  new ProjectProvince();
                                 $province->project_id = $model->id;
-                                $province->year = $model->year;
                                 $province->province_id = $id;
                                 if (! ($flag = $province->save())) {
                                     $transaction->rollBack();
@@ -1717,7 +1577,7 @@ class ProjectController extends Controller
                             foreach($deletedCitymunIDs as $id)
                             {
                                 $ids = explode("-", $id);
-                                $citymun = ProjectCitymun::findOne(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2]]);
+                                $citymun = ProjectCitymun::findOne(['project_id' => $model->id, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2]]);
                                 if($citymun)
                                 {
                                     if (! ($flag = $citymun->delete())) {
@@ -1733,10 +1593,9 @@ class ProjectController extends Controller
                             foreach($citymunModel->citymun_id as $id)
                             {
                                 $ids = explode("-", $id);
-                                $citymun = ProjectCitymun::findOne(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2]]) ?
-                                ProjectCitymun::findOne(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2]]) : new ProjectCitymun();
+                                $citymun = ProjectCitymun::findOne(['project_id' => $model->id, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2]]) ?
+                                ProjectCitymun::findOne(['project_id' => $model->id, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2]]) : new ProjectCitymun();
                                 $citymun->project_id = $model->id;
-                                $citymun->year = $model->year;
                                 $citymun->region_id = $ids[0];
                                 $citymun->province_id = $ids[1];
                                 $citymun->citymun_id = $ids[2];
@@ -1752,7 +1611,7 @@ class ProjectController extends Controller
                             foreach($deletedBarangayIDs as $id)
                             {
                                 $ids = explode("-", $id);
-                                $barangay = ProjectBarangay::findOne(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2], 'barangay_id' => $ids[3]]);
+                                $barangay = ProjectBarangay::findOne(['project_id' => $model->id, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2], 'barangay_id' => $ids[3]]);
                                 if($barangay)
                                 {
                                     if (! ($flag = $barangay->delete())) {
@@ -1768,10 +1627,9 @@ class ProjectController extends Controller
                             foreach($barangayModel->barangay_id as $id)
                             {
                                 $ids = explode("-", $id);
-                                $barangay = ProjectBarangay::findOne(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2], 'barangay_id' => $ids[3]]) ?
-                                ProjectBarangay::findOne(['project_id' => $model->id, 'year' => $model->year, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2], 'barangay_id' => $ids[3]]) : new ProjectBarangay();
+                                $barangay = ProjectBarangay::findOne(['project_id' => $model->id, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2], 'barangay_id' => $ids[3]]) ?
+                                ProjectBarangay::findOne(['project_id' => $model->id, 'region_id' => $ids[0], 'province_id' => $ids[1], 'citymun_id' => $ids[2], 'barangay_id' => $ids[3]]) : new ProjectBarangay();
                                 $barangay->project_id = $model->id;
-                                $barangay->year = $model->year;
                                 $barangay->region_id = $ids[0];
                                 $barangay->province_id = $ids[1];
                                 $barangay->citymun_id = $ids[2];
@@ -1785,7 +1643,7 @@ class ProjectController extends Controller
 
                         //$targetTypes = ['Physical', 'Financial', 'Male Employed', 'Female Employed', 'Beneficiaries', 'Group Beneficiaries'];
 
-                        if(!empty($targets))
+                        /* if(!empty($targets))
                         {
                             foreach($targets as $target)
                             {
@@ -1794,13 +1652,13 @@ class ProjectController extends Controller
                                     break;
                                 }   
                             }
-                        }
+                        } */
                     }
 
                     if ($flag) {
                         $transaction->commit();
                         \Yii::$app->getSession()->setFlash('success', 'Record Updated');
-                        return $model->draft == 'No' ? $this->redirect(['/rpmes/plan/']) : $this->redirect(['/rpmes/project/draft']);
+                        return $this->redirect(['/rpmes/project/']);
                     }
                 } catch (Exception $e) {
                     $transaction->rollBack();
@@ -1815,14 +1673,14 @@ class ProjectController extends Controller
             'citymunModel' => $citymunModel,
             'barangayModel' => $barangayModel,
             'categoryModel' => $categoryModel,
-            'kraModel' => $kraModel,
             'sdgModel' => $sdgModel,
             'rdpChapterModel' => $rdpChapterModel,
             'rdpChapterOutcomeModel' => $rdpChapterOutcomeModel,
             'rdpSubChapterOutcomeModel' => $rdpSubChapterOutcomeModel,
-            'targets' => $targets,
-            'expectedOutputModels' => (empty($expectedOutputModels)) ? [new ProjectExpectedOutput] : $expectedOutputModels,
+            'expectedOutputModels' => (empty($expectedOutputModels)) ? [new ProjectHasOutputIndicators] : $expectedOutputModels,
             'outcomeModels' => (empty($outcomeModels)) ? [new ProjectOutcome] : $outcomeModels,
+            'revisedScheduleModels' => (empty($revisedScheduleModels)) ? [new ProjectHasRevisedSchedules] : $revisedScheduleModels,
+            'fundSourceModels' => (empty($fundSourceModels)) ? [new ProjectHasFundSources] : $fundSourceModels,
             'agencies' => $agencies,
             'projects' => $projects,
             'programs' => $programs,
@@ -1836,14 +1694,10 @@ class ProjectController extends Controller
             'citymuns' => $citymuns,
             'barangays' => $barangays,
             'categories' => $categories,
-            'kras' => $kras,
             'chapters' => $chapters,
             'goals' => $goals,
             'chapterOutcomes' => $chapterOutcomes,
             'subChapterOutcomes' => $subChapterOutcomes,
-            'quarters' => $quarters,
-            'genders' => $genders,
-            'dueDate' => $dueDate,
         ]);
     }
 
@@ -2415,10 +2269,10 @@ class ProjectController extends Controller
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
-        $project = $model;
         $model->delete();
         \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
-        return $project->draft == 'No' ? $this->redirect(['/rpmes/plan/']) : $this->redirect(['/rpmes/project/draft']);
+        //return $project->draft == 'No' ? $this->redirect(['/rpmes/project/']) : $this->redirect(['/rpmes/project/draft']);
+        return $this->redirect(['/rpmes/project/']);
     }
 
     /**

@@ -37,25 +37,32 @@ use common\modules\rpmes\models\RdpChapter;
 use common\modules\rpmes\models\RdpChapterOutcome;
 use common\modules\rpmes\models\RdpSubChapterOutcome;
 use common\modules\rpmes\models\ProjectSearch;
+use common\modules\rpmes\models\SubmissionSearch;
 use common\modules\rpmes\models\Model;
 use common\modules\rpmes\models\MultipleModel;
 use common\modules\rpmes\models\Submission;
+use common\modules\rpmes\models\SubmissionLog;
 use common\modules\rpmes\models\PhysicalAccomplishment;
 use common\modules\rpmes\models\FinancialAccomplishment;
 use common\modules\rpmes\models\PersonEmployedAccomplishment;
 use common\modules\rpmes\models\BeneficiariesAccomplishment;
 use common\modules\rpmes\models\GroupAccomplishment;
+use common\modules\rpmes\models\ExpectedOutputAccomplishment;
 use common\modules\rpmes\models\Accomplishment;
+use common\modules\rpmes\models\PlanSearch;
+use markavespiritu\user\models\User;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\helpers\ArrayHelper;
+use yii\widgets\ActiveForm;
 use yii\db\Query;
 use yii\helpers\Json;
 use yii\data\Pagination;
 use kartik\mpdf\Pdf;
+use yii\web\Response;
 
 class AccomplishmentController extends \yii\web\Controller
 {
@@ -93,7 +100,7 @@ class AccomplishmentController extends \yii\web\Controller
         return $number;
     }
     
-    public function actionIndex()
+    /* public function actionIndex()
     {
         $physical = [];
         $financial = [];
@@ -473,26 +480,577 @@ class AccomplishmentController extends \yii\web\Controller
             'agency_id' => $agency_id,
             'projects' => $projects
         ]);
+    } */
+
+    public function actionIndex()
+    {
+        $searchModel = new SubmissionSearch();
+        $searchModel->report = 'Accomplishment';
+
+        if(Yii::$app->user->can('AgencyUser'))
+        {
+            $searchModel->agency_id = Yii::$app->user->identity->userinfo->AGENCY_C;
+        }
+
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
-    public function actionSubmit()
+    public function actionCreate()
+    {
+        if(!Yii::$app->user->can('AgencyUser')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $model = new Submission();
+        $model->scenario = Yii::$app->user->can('Administrator') ? 'createAccomplishmentReportAdmin' : 'createAccomplishmentReport';
+
+        $model->report = 'Accomplishment';
+        $model->agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : $model->agency_id;
+        $model->draft = 'Yes';
+
+        $agencies = Agency::find()->select(['id', 'concat(title," (",code,")") as title'])->orderBy(['title' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+
+            \Yii::$app->getSession()->setFlash('success', 'Record created');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->renderAjax('create', [
+            'model' => $model,
+            'agencies' => $agencies,
+            'quarters' => $quarters,
+        ]);
+    }
+
+    public function actionUpdate($id)
+    {
+        $model = Submission::findOne($id);
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        $model->scenario = Yii::$app->user->can('Administrator') ? 'createAccomplishmentReportAdmin' : 'createAccomplishmentReport';
+
+        $agencies = Agency::find()->select(['id', 'concat(title," (",code,")") as title'])->orderBy(['title' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+
+            \Yii::$app->getSession()->setFlash('success', 'Record updated');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->renderAjax('update', [
+            'model' => $model,
+            'agencies' => $agencies,
+            'quarters' => $quarters,
+        ]);
+    }
+
+    public function actionDelete($id)
+    {
+        $model = Submission::findOne($id);
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        $model->delete();
+
+        \Yii::$app->getSession()->setFlash('success', 'Record deleted');
+
+        return $this->redirect(['index']);
+    }
+
+    public function actionView($id)
+    {
+        $model = Submission::findOne($id);
+
+        $planSubmission = Submission::findOne([
+            'year' => $model->year,
+            'agency_id' => $model->agency_id,
+            'report' => 'Monitoring Plan',
+            'draft' => 'No',
+        ]);
+
+        $dueDate = DueDate::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'report' => 'Accomplishment']);
+
+        $quarters = [
+            'Q1', 
+            'Q2', 
+            'Q3', 
+            'Q4'
+        ];
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        $searchModel = new PlanSearch();
+        $searchModel->submission_id = $planSubmission ? $planSubmission->id : $searchModel->submission_id;
+
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('view', [
+            'model' => $model,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'dueDate' => $dueDate,
+            'quarters' => $quarters,
+        ]);
+    }
+
+    public function actionAccomplishForm($id)
+    {
+        $model = Submission::findOne($id);
+
+        $planSubmission = Submission::findOne([
+            'year' => $model->year,
+            'agency_id' => $model->agency_id,
+            'report' => 'Monitoring Plan',
+            'draft' => 'No',
+        ]);
+
+        $dueDate = DueDate::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'report' => 'Accomplishment']);
+
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        if(!$planSubmission){
+            throw new ForbiddenHttpException('No included projects in monitoring plan');
+        }
+
+        $accomplishments = [];
+
+        $projectIDs = $planSubmission ? $planSubmission->plans ? ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id') : [] : [];
+
+        $projectsPaging = Plan::find();
+        $projectsPaging 
+            ->andWhere(['project_id' => $projectIDs])
+            ->andWhere(['submission_id' => $planSubmission->id]);
+        $countProjects = clone $projectsPaging;
+        $projectsPages = new Pagination([
+            'totalCount' => $countProjects->count(),
+            'pageSize' => 5
+        ]);
+        $projectsModels = $projectsPaging->offset($projectsPages->offset)
+            ->limit($projectsPages->limit)
+            ->orderBy(['project_id' => SORT_ASC])
+            ->all();
+
+        if($projectsModels){
+            foreach($projectsModels as $plan){
+                $financial = FinancialAccomplishment::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $model->year,
+                    'quarter' => $model->quarter
+                ]) ? FinancialAccomplishment::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $model->year,
+                    'quarter' => $model->quarter
+                ]) : new FinancialAccomplishment();
+
+                $financial->project_id = $plan->project_id;
+                $financial->year = $model->year;
+                $financial->quarter = $model->quarter;
+
+                $accomplishments[$plan->project_id]['financial'] = $financial;
+
+                $physical = PhysicalAccomplishment::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $model->year,
+                    'quarter' => $model->quarter
+                ]) ? PhysicalAccomplishment::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $model->year,
+                    'quarter' => $model->quarter
+                ]) : new PhysicalAccomplishment();
+
+                $physical->project_id = $plan->project_id;
+                $physical->year = $model->year;
+                $physical->quarter = $model->quarter;
+
+                $accomplishments[$plan->project_id]['physical'] = $physical;
+
+                $personEmployed = PersonEmployedAccomplishment::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $model->year,
+                    'quarter' => $model->quarter
+                ]) ? PersonEmployedAccomplishment::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $model->year,
+                    'quarter' => $model->quarter
+                ]) : new PersonEmployedAccomplishment();
+
+                $personEmployed->project_id = $plan->project_id;
+                $personEmployed->year = $model->year;
+                $personEmployed->quarter = $model->quarter;
+
+                $accomplishments[$plan->project_id]['personEmployed'] = $personEmployed;
+
+                $accomplishment = Accomplishment::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $model->year,
+                    'quarter' => $model->quarter
+                ]) ? Accomplishment::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $model->year,
+                    'quarter' => $model->quarter
+                ]) : new Accomplishment();
+
+                $accomplishment->project_id = $plan->project_id;
+                $accomplishment->year = $model->year;
+                $accomplishment->quarter = $model->quarter;
+
+                $accomplishments[$plan->project_id]['accomplishment'] = $accomplishment;
+            }
+        }
+
+        if(Yii::$app->request->post()){
+            $postData = Yii::$app->request->post();
+            $getData = Yii::$app->request->get();
+
+            $financialModels = $postData['FinancialAccomplishment'];
+            $physicalModels = $postData['PhysicalAccomplishment'];
+            $personEmployedModels = $postData['PersonEmployedAccomplishment'];
+            $accomplishmentModels = $postData['Accomplishment'];
+
+            if(!empty($financialModels)){
+                foreach($financialModels as $projectID => $financialModel){
+                    $financialValue = $financialModel['financial'];
+
+                    $financial = FinancialAccomplishment::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'quarter' => $model->quarter
+                    ]) ? FinancialAccomplishment::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'quarter' => $model->quarter
+                    ]) : new FinancialAccomplishment();
+    
+                    $financial->project_id = $projectID;
+                    $financial->year = $model->year;
+                    $financial->quarter = $model->quarter;
+                    $financial->allocation = $this->removeMask($financialValue['allocation']);
+                    $financial->releases = $this->removeMask($financialValue['releases']);
+                    $financial->obligation = $this->removeMask($financialValue['obligation']);
+                    $financial->expenditures = $this->removeMask($financialValue['expenditures']);
+                    $financial->save(false);
+
+
+                }
+            }
+
+            if(!empty($physicalModels)){
+                foreach($physicalModels as $projectID => $physicalModel){
+                    $physicalValue = $physicalModel['physical'];
+
+                    $physical = PhysicalAccomplishment::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'quarter' => $model->quarter
+                    ]) ? PhysicalAccomplishment::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'quarter' => $model->quarter
+                    ]) : new PhysicalAccomplishment();
+    
+                    $physical->project_id = $projectID;
+                    $physical->year = $model->year;
+                    $physical->quarter = $model->quarter;
+                    $physical->value = $this->removeMask($physicalValue['value']);
+                    $physical->save(false);
+                }
+            }
+
+            if(!empty($personEmployedModels)){
+                foreach($personEmployedModels as $projectID => $personEmployedModel){
+                    $personEmployedValue = $personEmployedModel['personEmployed'];
+
+                    $personEmployed = PersonEmployedAccomplishment::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'quarter' => $model->quarter
+                    ]) ? PersonEmployedAccomplishment::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'quarter' => $model->quarter
+                    ]) : new PersonEmployedAccomplishment();
+    
+                    $personEmployed->project_id = $projectID;
+                    $personEmployed->year = $model->year;
+                    $personEmployed->quarter = $model->quarter;
+                    $personEmployed->male = $this->removeMask($personEmployedValue['male']);
+                    $personEmployed->female = $this->removeMask($personEmployedValue['female']);
+                    $personEmployed->save(false);
+                }
+            }
+
+            if(!empty($accomplishmentModels)){
+                foreach($accomplishmentModels as $projectID => $accomplishmentModel){
+                    $accomplishmentValue = $accomplishmentModel['accomplishment'];
+
+                    $accomplishment = Accomplishment::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'quarter' => $model->quarter
+                    ]) ? Accomplishment::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'quarter' => $model->quarter
+                    ]) : new Accomplishment();
+    
+                    $accomplishment->project_id = $projectID;
+                    $accomplishment->year = $model->year;
+                    $accomplishment->quarter = $model->quarter;
+                    $accomplishment->remarks = $accomplishmentValue['remarks'];
+                    $accomplishment->submitted_by = Yii::$app->user->id;
+                    $accomplishment->save(false);
+                }
+            }
+
+            \Yii::$app->getSession()->setFlash('success', 'Accomplishments were saved successfully');
+                    return isset($getData['page']) ? 
+                        $this->redirect(['accomplish-form', 
+                            'id' => $model->id, 
+                            'page' => $getData['page'],
+                        ]) : $this->redirect(['accomplish-form', 
+                            'id' => $model->id,
+                        ]);
+        }
+        
+        return $this->render('accomplishment-form', [
+            'model' => $model,
+            'projectsModels' => $projectsModels,
+            'projectsPages' => $projectsPages,
+            'quarters' => $quarters,
+            'accomplishments' => $accomplishments,
+            'dueDate' => $dueDate,
+        ]);
+    }
+
+    public function actionAccomplishOi($id)
+    {
+        $model = Submission::findOne($id);
+
+        $planSubmission = Submission::findOne([
+            'year' => $model->year,
+            'agency_id' => $model->agency_id,
+            'report' => 'Monitoring Plan',
+            'draft' => 'No',
+        ]);
+
+        $dueDate = DueDate::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'report' => 'Accomplishment']);
+
+        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        if(!$planSubmission){
+            throw new ForbiddenHttpException('No included projects in monitoring plan');
+        }
+
+        $outputIndicators = [];
+
+        $projectIDs = $planSubmission ? $planSubmission->plans ? ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id') : [] : [];
+
+        $projectsPaging = Plan::find();
+        $projectsPaging 
+            ->andWhere(['project_id' => $projectIDs])
+            ->andWhere(['submission_id' => $planSubmission->id]);
+        $countProjects = clone $projectsPaging;
+        $projectsPages = new Pagination([
+            'totalCount' => $countProjects->count(),
+            'pageSize' => 5
+        ]);
+        $projectsModels = $projectsPaging->offset($projectsPages->offset)
+            ->limit($projectsPages->limit)
+            ->orderBy(['project_id' => SORT_ASC])
+            ->all();
+
+        if($projectsModels){
+            foreach($projectsModels as $plan){
+                $expectedOutputs = $plan->project->getProjectExpectedOutputs()->where([
+                    'year' => $model->year
+                ])
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+
+                if($expectedOutputs){
+                    foreach($expectedOutputs as $eo){
+                        $expectedOutput = ExpectedOutputAccomplishment::findOne([
+                            'project_id' => $plan->project_id,
+                            'expected_output_id' => $eo->id,
+                            'year' => $model->year,
+                            'quarter' => $model->quarter
+                        ]) ? ExpectedOutputAccomplishment::findOne([
+                            'project_id' => $plan->project_id,
+                            'expected_output_id' => $eo->id,
+                            'year' => $model->year,
+                            'quarter' => $model->quarter
+                        ]) : new ExpectedOutputAccomplishment();
+                        
+                        $expectedOutput->scenario = $eo->indicator == 'number of individual beneficiaries served' ? 'individual' : 'notIndividual';
+                        $expectedOutput->project_id = $plan->project_id;
+                        $expectedOutput->expected_output_id = $eo->id;
+                        $expectedOutput->year = $model->year;
+                        $expectedOutput->quarter = $model->quarter;
+
+                        $outputIndicators[$plan->project_id][$eo->id] = $expectedOutput;
+                    }
+                }
+            }
+        }
+
+        if(Yii::$app->request->post()){
+            $postData = Yii::$app->request->post();
+            $getData = Yii::$app->request->get();
+
+            $projectModels = $postData['ExpectedOutputAccomplishment'];
+
+            if(!empty($projectModels)){
+                foreach($projectModels as $projectID => $eoModels){
+                    if(!empty($eoModels)){
+                        foreach($eoModels as $eoID => $eoModel){
+                            $expectedOutput = ExpectedOutputAccomplishment::findOne([
+                                'project_id' => $projectID,
+                                'expected_output_id' => $eoID,
+                                'year' => $model->year,
+                                'quarter' => $model->quarter
+                            ]) ? ExpectedOutputAccomplishment::findOne([
+                                'project_id' => $projectID,
+                                'expected_output_id' => $eoID,
+                                'year' => $model->year,
+                                'quarter' => $model->quarter
+                            ]) : new ExpectedOutputAccomplishment();
+
+                            $expectedOutput->project_id = $projectID;
+                            $expectedOutput->expected_output_id = $eoID;
+                            $expectedOutput->year = $model->year;
+                            $expectedOutput->quarter = $model->quarter;
+                            $expectedOutput->value = isset($eoModel['value']) ? $this->removeMask($eoModel['value']) : 0;
+                            $expectedOutput->male = isset($eoModel['male']) ? $this->removeMask($eoModel['male']) : 0;
+                            $expectedOutput->female = isset($eoModel['female']) ? $this->removeMask($eoModel['female']) : 0;
+                            $expectedOutput->save(false);
+                        }
+                    }
+                }
+            }
+
+            \Yii::$app->getSession()->setFlash('success', 'Accomplishment Form 2 OI/s were saved successfully');
+                    return isset($getData['page']) ? 
+                        $this->redirect(['accomplish-oi', 
+                            'id' => $model->id, 
+                            'page' => $getData['page'],
+                        ]) : $this->redirect(['accomplish-oi', 
+                            'id' => $model->id,
+                        ]);
+        }
+        
+        return $this->render('accomplishment-oi-form', [
+            'model' => $model,
+            'projectsModels' => $projectsModels,
+            'projectsPages' => $projectsPages,
+            'quarters' => $quarters,
+            'outputIndicators' => $outputIndicators,
+            'dueDate' => $dueDate,
+        ]);
+    }
+
+    public function actionOutputIndicator($id, $plan_id)
+    {
+        $model = Submission::findOne($id);
+
+        $plan = Plan::findOne($plan_id);
+
+        $expectedOutputs = $plan->project->getProjectExpectedOutputs()->where(['year' => $model->year])->all();
+
+        $months = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        return $this->renderAjax('output-indicator', [
+            'model' => $model,
+            'plan' => $plan,
+            'months' => $months,
+            'expectedOutputs' => $expectedOutputs
+        ]);
+    }
+
+    public function actionSubmit($id)
     {
         if(Yii::$app->request->post())
         {
+            $model = Submission::findOne($id);
+
             $postData = Yii::$app->request->post();
 
-            $submissionModel = new Submission();
-            $submissionModel->agency_id = $postData['agency_id'];
-            $submissionModel->report = 'Accomplishment';
-            $submissionModel->year = $postData['year'];
-            $submissionModel->quarter = $postData['quarter'];
-            $submissionModel->submitted_by = Yii::$app->user->id;
-            $submissionModel->draft = 'No';
-
-            if($submissionModel->save())
+            if(Yii::$app->request->post())
             {
-                \Yii::$app->getSession()->setFlash('success', 'Accomplishment '.$postData['quarter'].' '.$postData['year'].' has been submitted.');
-                return $this->redirect(['/rpmes/accomplishment']);
+                $model->submitted_by = Yii::$app->user->id;
+                $model->date_submitted = date("Y-m-d H:i:s");
+                $model->draft = 'No';
+                $model->save(false);
+
+                $logModel = new SubmissionLog();
+                $logModel->submission_id = $model->id;
+                $logModel->user_id = Yii::$app->user->id;
+                $logModel->status = 'Submitted';
+
+                if($logModel->save(false))
+                {
+                    \Yii::$app->getSession()->setFlash('success', 'Accomplishment Report for '.$model->quarter.' '.$model->year.' has been submitted successfully.');
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
             }
         }
     }

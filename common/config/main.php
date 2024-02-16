@@ -22,16 +22,27 @@ return [
             'storePath' => '@frontend/web/store',
             'rules' => [
                 'maxFiles' => 10,
-                'maxSize' => 1024 * 1024 * 2, // 2 MB
-                'mimeTypes' => 'application/pdf'
+                'maxSize' => 1024 * 1024 * 5, // 2 MB
+                'mimeTypes' => [
+                    'application/pdf',
+                    'image/jpeg',
+                    'image/png',
+                ],
             ],
         ],
         'user' => [
             'class' => 'markavespiritu\user\Module',
             'admins' => ['markavespiritu'],
             'enableRegistration' => true,
-            'enableConfirmation' => false,
-            'enablePasswordRecovery' => false,
+            'enableConfirmation' => true,
+            'enablePasswordRecovery' => true,
+            'mailer' => [
+                    'sender'                => 'mvespiritu@neda.gov.ph',
+                    'welcomeSubject'        => 'Welcome to the NEDA RO1 eRPMES',
+                    'confirmationSubject'   => 'Confirm your NEDA RO1 eRPMES account',
+                    'reconfirmationSubject' => 'Reconfirm your NEDA RO1 eRPMES account',
+                    'recoverySubject'       => 'Recover your NEDA RO1 eRPMES account',
+            ],
             'controllerMap' => [
                 'admin' => [
                     'class' => 'markavespiritu\user\controllers\AdminController',

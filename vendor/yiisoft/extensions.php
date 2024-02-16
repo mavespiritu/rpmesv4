@@ -330,4 +330,13 @@ return array (
       '@dosamigos/switchery' => $vendorDir . '/2amigos/yii2-switchery-widget/src',
     ),
   ),
+  'buttflattery/yii2-formwizard' => 
+  array (
+    'name' => 'buttflattery/yii2-formwizard',
+    'version' => 'dev-master',
+    'alias' => 
+    array (
+      '@buttflattery/formwizard' => '//src',
+    ),
+  ),
 );

@@ -32,7 +32,7 @@ class PhysicalAccomplishment extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            //[['value'], 'required'],
+            [['value'], 'required'],
             [['project_id', 'year'], 'integer'],
             [['quarter', 'remarks'], 'string'],
             [['value'], 'safe'],

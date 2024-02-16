@@ -1,83 +1,345 @@
 <?php
-    use yii\helpers\Html;
-    use yii\helpers\Url;
-    use yii\widgets\ActiveForm;
-    use yii\grid\GridView;
-    use yii\widgets\LinkPager;
-    use common\components\helpers\HtmlHelper;
-    use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
-    DisableButtonAsset::register($this);
-    use yii\web\View;
 
-    $this->title = 'Form 2: Physical and Financial Accomplishment Report';
-    $this->params['breadcrumbs'][] = $this->title;
+use yii\helpers\Html;
+use yii\helpers\Url;
+use yii\widgets\ActiveForm;
+use yii\grid\GridView;
+use yii\widgets\LinkPager;
+use common\components\helpers\HtmlHelper;
+use yii\bootstrap\ButtonDropdown;
+use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
+DisableButtonAsset::register($this);
+use yii\web\View;
+use yii\bootstrap\Modal;
+
+$this->title = 'RPMES Form 2: Physical and Financial Accomplishment Report';
+$this->params['breadcrumbs'][] = $this->title;
+
+$successMessage = \Yii::$app->getSession()->getFlash('success');
 ?>
+
+<?php foreach ($dataProvider->models as $model): ?>
+    <?php
+    $modelID = $model->id;
+    Modal::begin([
+        'id' => 'update-modal-'.$modelID,
+        'size' => "modal-md",
+        'header' => '<div id="update-modal-'.$modelID.'-header"><h4>Update Accomplishment Report</h4></div>',
+        'options' => ['tabindex' => false],
+    ]);
+    echo '<div id="update-modal-'.$modelID.'-content"></div>';
+    Modal::end();
+    ?>
+<?php endforeach; ?>
+
 <div class="accomplishment-index">
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">Physical and Financial Accomplishment Form</h3>
-                </div>
-                <div class="box-body">
-                    <?= $this->render('_search', [
-                        'model' => $model,
-                        'years' => $years,
-                        'agencies' => $agencies,
-                        'quarters' => $quarters,
-                        'categories' => $categories,
-                        'sectors' => $sectors,
-                    ]) ?>
-                    <br>
-                    <?php if(!empty($getData)){ ?>
-                        <?= $this->render('_form', [
-                            'years' => $years,
-                            'model' => $model,
-                            'agencies' => $agencies,
-                            'quarters' => $quarters,
-                            'genders' => $genders,
-                            'physical' => $physical,
-                            'financial' => $financial,
-                            'personEmployed' => $personEmployed,
-                            'accomplishment' => $accomplishment,
-                            'beneficiaries' => $beneficiaries,
-                            'groups' => $groups,
-                            'projectsModels' => $projectsModels,
-                            'projectsPages' => $projectsPages,
-                            'projects' => $projects,
-                            'getData' => $getData,
-                            'dueDate' => $dueDate,
-                            'submissionModel' => $submissionModel,
-                            'agency_id' => $agency_id,
-                        ]); ?>
-                    <?php } ?>
-                </div>
-            </div>
+    <div class="flash-success" style="display: none;">
+        <?= $successMessage ?>
+    </div>
+
+    <div class="box box-solid">
+        <div class="box-header with-border">
+            <h3 class="box-title">Accomplishment Reports</h3>
+        </div>
+        <div class="box-body">
+            
+            <?= $this->render('_search', ['model' => $searchModel]); ?>
+
+            <?= GridView::widget([
+                    'options' => [
+                        'class' => 'table-responsive'
+                    ],
+                    'tableOptions' => [
+                        'class' => 'table table-bordered table-striped table-hover',
+                    ],
+                    'dataProvider' => $dataProvider,
+                    //'filterModel' => $searchModel,
+                    'columns' => Yii::$app->user->can('Administrator') ? [
+                        [
+                            'class' => 'yii\grid\SerialColumn',
+                            'headerOptions' => [
+                                'style' => 'background-color: #002060; color: white; font-weight: normal;'
+                            ]
+                        ],
+
+                        //'id',
+                        [
+                            'attribute' => 'year',
+                            'header' => 'Year',
+                            'headerOptions' => [
+                                'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                            ]
+                        ],
+                        [
+                            'attribute' => 'quarter',
+                            'header' => 'Quarter',
+                            'headerOptions' => [
+                                'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                            ]
+                        ],
+                        [
+                            'attribute' => 'agency.code',
+                            'header' => 'Agency',
+                            'headerOptions' => [
+                                'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
+                            ]
+                        ],
+                        [
+                            'attribute' => 'status',
+                            'header' => 'Status',
+                            'headerOptions' => [
+                                'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'format' => 'raw',
+                            'value' => function($model){
+                                return $model->currentStatus;;
+                            }
+                        ],
+                        [
+                            'attribute' => 'submitted_by',
+                            'header' => 'Submitted By',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'format' => 'raw',
+                            'value' => function($model){
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? $model->submitted->actor.'<br>'.$model->submitted->actorPosition : '' : '';
+                            }
+                        ],
+                        [
+                            'attribute' => 'date_submitted',
+                            'header' => 'Date Submitted',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'value' => function($model){
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? date("F j, Y H:i:s", strtotime($model->submitted->datetime)) : '' : '';
+                            }
+                        ],
+                        [
+                            'attribute' => 'acknowledged_by',
+                            'header' => 'Acknowledged By',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'value' => function($model){
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? $model->acknowledged->actor.'<br>'.$model->acknowledged->actorPosition : '' : '';
+                            }
+                        ],
+                        [
+                            'attribute' => 'date_acknowledged',
+                            'header' => 'Date Acknowledged',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'value' => function($model){
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged)->datetime) : '' : '';
+                            }
+                        ],
+                        [
+                            'attribute' => 'remarks',
+                            'header' => 'Remarks',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'value' => function($model){
+                                return $model->currentStatus == 'For further validation' ? $model->currentSubmissionLog->remarks : '';
+                            }
+                        ],
+                        [
+                            'class' => 'yii\grid\ActionColumn',
+                            'header' => 'Actions',
+                            'headerOptions' => [
+                                'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'template' => '<center>{view} {update} {delete}</center>',
+                            'buttons' => [
+                                'update' => function($url, $model, $key){
+                                    $modalID = $model->id;
+                                    return Yii::$app->user->can('Administrator') ? 
+                                                $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ?
+                                                    count($model->plans) < 1 ? 
+                                                        Html::a('<i class="fa fa-pencil"></i>', '#', [
+                                                            'class' => 'update-button',
+                                                            'data-toggle' => 'modal',
+                                                            'data-target' => '#update-modal-'.$modalID,
+                                                            'data-url' => Url::to(['update', 'id' => $model->id]),
+                                                        ]) :
+                                                    '' :
+                                                '' :
+                                            '';
+                                },
+                                'delete' => function($url, $model, $key){
+                                    return Yii::$app->user->can('Administrator') ? 
+                                                $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ?
+                                                    count($model->plans) < 1 ?
+                                                        Html::a('<i class="fa fa-trash"></i>', ['delete', 'id' => $model->id], [
+                                                            'data' => [
+                                                                'confirm' => 'Are you sure want to delete this item?',
+                                                                'method' => 'post',
+                                                            ],
+                                                        ]) :
+                                                    '' :
+                                                '' :
+                                            '';
+                                },
+                            ],
+                        ],
+                    ] : [
+                        [
+                            'class' => 'yii\grid\SerialColumn',
+                            'headerOptions' => [
+                                'style' => 'background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                        ],
+
+                        //'id',
+                        [
+                            'attribute' => 'year',
+                            'header' => 'Year',
+                            'headerOptions' => [
+                                'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                        ],
+                        [
+                            'attribute' => 'quarter',
+                            'header' => 'Quarter',
+                            'headerOptions' => [
+                                'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                            ]
+                        ],
+                        [
+                            'attribute' => 'status',
+                            'header' => 'Status',
+                            'headerOptions' => [
+                                'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'format' => 'raw',
+                            'value' => function($model){
+                                return $model->currentStatus;;
+                            }
+                        ],
+                        [
+                            'attribute' => 'submitted_by',
+                            'header' => 'Submitted By',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'format' => 'raw',
+                            'value' => function($model){
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? $model->submitted->actor.'<br>'.$model->submitted->actorPosition : '' : '';
+                            }
+                        ],
+                        [
+                            'attribute' => 'date_submitted',
+                            'header' => 'Date Submitted',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'value' => function($model){
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? date("F j, Y H:i:s", strtotime($model->submitted->datetime)) : '' : '';
+                            }
+                        ],
+                        [
+                            'attribute' => 'acknowledged_by',
+                            'header' => 'Acknowledged By',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'value' => function($model){
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? $model->acknowledged->actor.'<br>'.$model->acknowledged->actorPosition : '' : '';
+                            }
+                        ],
+                        [
+                            'attribute' => 'date_acknowledged',
+                            'header' => 'Date Acknowledged',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'value' => function($model){
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged)->datetime) : '' : '';
+                            }
+                        ],
+                        [
+                            'attribute' => 'remarks',
+                            'header' => 'Remarks',
+                            'headerOptions' => [
+                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'value' => function($model){
+                                return $model->currentStatus == 'For further validation' ? $model->currentSubmissionLog->remarks : '';
+                            }
+                        ],
+                        [
+                            'class' => 'yii\grid\ActionColumn',
+                            'header' => 'Actions',
+                            'headerOptions' => [
+                                'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                            ],
+                            'template' => '<center>{view} {update} {delete}</center>',
+                            'buttons' => [
+                                'update' => function($url, $model, $key){
+                                    $modalID = $model->id;
+                                    return Yii::$app->user->can('AgencyUser') ? 
+                                                $model->draft == 'Yes' ? 
+                                                    count($model->plans) < 1 ? 
+                                                        Html::a('<i class="fa fa-pencil"></i>', '#', [
+                                                            'class' => 'update-button',
+                                                            'data-toggle' => 'modal',
+                                                            'data-target' => '#update-modal-'.$modalID,
+                                                            'data-url' => Url::to(['update', 'id' => $model->id]),
+                                                        ]) :
+                                                    '' :
+                                                '' :
+                                            '';
+                                },
+                                'delete' => function($url, $model, $key){
+                                    return Yii::$app->user->can('AgencyUser') ? 
+                                                $model->draft == 'Yes' ? 
+                                                    count($model->plans) < 1 ?
+                                                        Html::a('<i class="fa fa-trash"></i>', ['delete', 'id' => $model->id], [
+                                                            'data' => [
+                                                                'confirm' => 'Are you sure want to delete this item?',
+                                                                'method' => 'post',
+                                                            ],
+                                                        ]) :
+                                                    '' :
+                                                '' :
+                                            '';
+                                },
+                            ],
+                        ],
+                    ]
+                ]); ?>
+
         </div>
     </div>
 </div>
 <?php
-    $script = '
-        function printSummary(model, year, quarter, agency_id, category_id, sector_id)
-        {
-            var printWindow = window.open(
-                "'.Url::to(['/rpmes/accomplishment/download-accomplishment']).'?type=print&model=" + model + "&year=" + year + "&quarter=" + quarter + "&agency_id=" + agency_id + "&category_id=" + category_id + "&sector_id=" + sector_id, 
-                "Print",
-                "left=200", 
-                "top=200", 
-                "width=650", 
-                "height=500", 
-                "toolbar=0", 
-                "resizable=0"
-                );
-                printWindow.addEventListener("load", function() {
-                    printWindow.print();
-                    setTimeout(function() {
-                    printWindow.close();
-                }, 1);
-                }, true);
-        }
-    ';
+$this->registerJs('
+    $(".update-button").click(function(e){
+        e.preventDefault();
 
-    $this->registerJs($script, View::POS_END);
+        var modalId = $(this).data("target");
+        $(modalId).modal("show").find(modalId + "-content").load($(this).data("url"));
+        
+        return false;
+    });
+');
+?>
+
+<?php
+if ($successMessage) {
+    $this->registerJs("
+        $(document).ready(function() {
+            // Display the flash message
+            $('.alert-success').fadeIn();
+
+            // Hide the flash message after 5 seconds
+            setTimeout(function() {
+                $('.alert-success').fadeOut();
+            }, 5000);
+        });
+    ");
+}
 ?>

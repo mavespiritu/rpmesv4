@@ -63,15 +63,53 @@ class Project extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['period', 'agency_id', 'title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type', 'year'], 'required', 'on' => 'projectCreateAdmin'],
-            [['period', 'title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCreateUser'],
-            [['title', 'sector_id', 'sub_sector_id', 'mode_of_implementation_id', 'fund_source_id', 'start_date', 'completion_date', 'data_type'], 'required', 'on' => 'projectCarryOverUser'],
-            [['typhoon'], 'validateTyphoon', 'skipOnEmpty' => false, 'skipOnError' => false],
+            [[
+                'agency_id', 
+                'title', 
+                'sector_id', 
+                'sub_sector_id', 
+                'mode_of_implementation_id', 
+                'start_date', 
+                'completion_date',
+                'cost',
+            ], 'required', 'on' => 'projectCreateAdmin'],
+            [[
+                'title', 
+                'sector_id', 
+                'sub_sector_id', 
+                'mode_of_implementation_id', 
+                'start_date', 
+                'completion_date',
+                'cost',
+            ], 'required', 'on' => 'projectCreateUser'],
+            [[
+                'source_id',
+                'agency_id', 
+                'title', 
+                'sector_id', 
+                'sub_sector_id', 
+                'mode_of_implementation_id', 
+                'start_date', 
+                'completion_date',
+                'cost',
+            ], 'required', 'on' => 'componentProjectCreateAdmin'],
+            [[
+                'source_id', 
+                'title', 
+                'sector_id', 
+                'sub_sector_id', 
+                'mode_of_implementation_id', 
+                'start_date', 
+                'completion_date',
+                'cost',
+            ], 'required', 'on' => 'componentProjectCreateUser'],
+            //[['typhoon'], 'validateTyphoon', 'skipOnEmpty' => false, 'skipOnError' => false],
             [['source_id', 'year', 'agency_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id', 'submitted_by','category_id','region_id','province_id'], 'integer'],
-            [['title', 'description', 'data_type', 'period', 'other_mode'], 'string'],
-            [['start_date', 'completion_date', 'date_submitted', 'program_id', 'draft', 'complete', 'status'], 'safe'],
+            [['title', 'description', 'data_type', 'period', 'other_mode', 'mode_name'], 'string'],
+            [['start_date', 'completion_date', 'date_submitted', 'program_id', 'draft', 'complete', 'status', 'remarks'], 'safe'],
             [['project_no'], 'string', 'max' => 20],
-            [['typhoon'], 'string', 'max' => 100],
+            [['typhoon', 'latitude', 'longitude'], 'string', 'max' => 100],
+            [['has_component'], 'boolean'],
             [['agency_id'], 'exist', 'skipOnError' => true, 'targetClass' => Agency::className(), 'targetAttribute' => ['agency_id' => 'id']],
             [['year', 'quarter','agency_id'], 'required', 'on' => 'accomplishmentUser'],
             [['year','quarter'], 'required', 'on' => 'accomplishmentAdmin'],
@@ -84,10 +122,27 @@ class Project extends \yii\db\ActiveRecord
             /* [['source_id'], 'required',  'when' => function($model){
                 return ($model->period == 'Carry-Over');
             }], */
-            [['other_mode'], 'required',  'when' => function($model){
-                return ($model->mode_of_implementation_id == 3);
-            }],
-            ['title', 'unique', 'targetAttribute' => 'year', 'message' => 'The title has been used already'],
+            /* ['title', 'unique', 'targetAttribute' => 'year', 'message' => 'The title has been used already'], */
+            ['other_mode', 'required', 'when' => function ($model) {
+                return $model->mode_of_implementation_id == 3;
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#project-mode_of_implementation_id').val() == 3;
+            }"],
+            ['mode_name', 'required', 'when' => function ($model) {
+                return $model->mode_of_implementation_id == 1;
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#project-mode_of_implementation_id').val() == 1;
+            }"],
+            ['mode_name', 'required', 'when' => function ($model) {
+                return $model->mode_of_implementation_id == 4;
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#project-mode_of_implementation_id').val() == 4;
+            }"],
+            ['mode_name', 'required', 'when' => function ($model) {
+                return $model->mode_of_implementation_id == 5;
+            }, 'whenClient' => "function (attribute, value) {
+                return $('#project-mode_of_implementation_id').val() == 5;
+            }"],
         ];
     }
 
@@ -108,23 +163,29 @@ class Project extends \yii\db\ActiveRecord
         return [
             'id' => 'Project',
             'source_id' => 'Source Project',
+            'has_component' => 'has component projects?',
             'project_no' => 'Project No',
             'year' => 'Year',
             'agency_id' => 'Agency',
             'program_id' => 'Program Title',
-            'title' => 'Project Title',
+            'title' => 'Program/Project Title',
             'description' => 'Description',
             'sector_id' => 'Sector',
             'sub_sector_id' => 'Sub-Sector',
             'location_scope_id' => 'Scope of Location',
+            'latitude' => 'Latitude',
+            'longitude' => 'Longitude',
             'mode_of_implementation_id' => 'Mode of Implementation',
+            'mode_name' => 'Name of Implementer',
             'other_mode' => 'Others(Please specify)',
             'fund_source_id' => 'Fund Source',
             'typhoon' => 'Typhoon',
             'data_type' => 'Data Type',
             'period' => 'Period',
-            'start_date' => 'Start Date',
-            'completion_date' => 'Completion Date',
+            'start_date' => 'Original Start Date',
+            'completion_date' => 'Original End Date',
+            'revised_start_date' => 'Revised Start Date',
+            'revised_completion_date' => 'Revised End Date',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',
             'draft' => 'Draft?',
@@ -134,6 +195,8 @@ class Project extends \yii\db\ActiveRecord
             'category_id' => 'Category',
             'region_id' => 'Region',
             'province_id' => 'Province',
+            'cost' => 'Total Project Cost',
+            'remarks' => 'Remarks'
         ];
     }
 
@@ -161,6 +224,55 @@ class Project extends \yii\db\ActiveRecord
             case 'Default':
             case 'Maintained':
                 $value = $allocation ? floatval($allocation->q1) + floatval($allocation->q2) + floatval($allocation->q3) + floatval($allocation->q4) : 0;
+                break;
+            case 'Cumulative':
+                $value = $allocation ? floatval($allocations[0]) : 0;
+                break;
+        }
+
+        return $value;
+    }
+
+    public function getNewAllocationTotal($year)
+    {
+        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Financial', 'year' => $year]);
+
+        $months = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        $allocations = [];
+        
+        if($allocation){
+            foreach($months as $mo => $month){
+                $allocations[] = $allocation->$mo;
+            }
+        }else{
+            $allocations = [0];
+        }
+
+        rsort($allocations);
+        $value = 0;
+        
+        switch($this->data_type){
+            case 'Default':
+            case 'Maintained':
+                if($allocation){
+                    foreach($months as $mo => $month){
+                        $value += floatval($allocation->$mo);
+                    }
+                }
                 break;
             case 'Cumulative':
                 $value = $allocation ? floatval($allocations[0]) : 0;
@@ -309,6 +421,64 @@ class Project extends \yii\db\ActiveRecord
         switch($this->data_type){
             case 'Default':
                 $value = $allocation ? intval($allocation->q1) + intval($allocation->q2) + intval($allocation->q3) + intval($allocation->q4) : 0;
+                break;
+            case 'Cumulative':
+                $value = intval($allocations[0]);
+                break;
+            case 'Maintained':
+                $value = intval($allocations[0]);
+                break;
+        }
+
+        return $value;
+    }
+
+    public function getNewPhysicalTotal($year)
+    {
+        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Physical', 'year' => $year]);
+
+        $months = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        $allocations = [];
+        $total = 0;
+        
+        if($allocation){
+            foreach($months as $mo => $month){
+                $allocations[] = $allocation->$mo;
+                $total += floatval($allocation->$mo);
+            }
+        }else{
+            $allocations = [0];
+        }
+
+        rsort($allocations);
+        $value = 0;
+        
+        switch($this->data_type){
+            case 'Default':
+                if($allocation){
+                    foreach($months as $mo => $month){
+                        $value += floatval($allocation->$mo);
+                    }
+
+                    if($allocation->type == 'Numerical'){
+                        $value = $total > 0 ? ($value/$total)*100 : 0;
+                    }
+                }
+
                 break;
             case 'Cumulative':
                 $value = intval($allocations[0]);
@@ -727,6 +897,16 @@ class Project extends \yii\db\ActiveRecord
     }
 
     /**
+     * Gets query for [[ProjectHasOutputIndicators]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectHasOutputIndicators()
+    {
+        return $this->hasMany(ProjectHasOutputIndicators::className(), ['project_id' => 'id']);
+    }
+
+    /**
      * Gets query for [[ProjectExpectedOutputs]].
      *
      * @return \yii\db\ActiveQuery
@@ -816,6 +996,46 @@ class Project extends \yii\db\ActiveRecord
         return $this->hasMany(ProjectTarget::className(), ['project_id' => 'id']);
     }
 
+    /**
+     * Gets query for [[ProjectHasRevisedSchedules]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectHasRevisedSchedules()
+    {
+        return $this->hasMany(ProjectHasRevisedSchedules::className(), ['project_id' => 'id']);
+    }
+
+     /**
+     * Gets query for [[ProjectHasFundSources]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectHasFundSources()
+    {
+        return $this->hasMany(ProjectHasFundSources::className(), ['project_id' => 'id']);
+    }
+
+    /**
+     * Gets query for [[ComponentProjects]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getMotherProject()
+    {
+        return $this->hasOne(Project::className(), ['id' => 'source_id']);
+    }
+
+    /**
+     * Gets query for [[ComponentProjects]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectHasComponents()
+    {
+        return $this->hasMany(Project::className(), ['source_id' => 'id']);
+    }
+
     public function getUnitofMeasure()
     {
         $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Physical']);
@@ -830,44 +1050,44 @@ class Project extends \yii\db\ActiveRecord
         return strpos($indicator, '%') === false ? false : true;
     }
 
-    public function getPhysicalTarget()
+    public function getPhysicalTarget($year)
     {
-        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Physical']);
+        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $year, 'target_type' => 'Physical']);
 
         return $target;
     }
 
-    public function getFinancialTarget()
+    public function getFinancialTarget($year)
     {
-        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Financial']);
+        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $year, 'target_type' => 'Financial']);
 
         return $target;
     }
 
-    public function getMaleEmployedTarget()
+    public function getMaleEmployedTarget($year)
     {
-        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Male Employed']);
+        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $year, 'target_type' => 'Male Employed']);
 
         return $target;
     }
 
-    public function getFemaleEmployedTarget()
+    public function getFemaleEmployedTarget($year)
     {
-        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Female Employed']);
+        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $year, 'target_type' => 'Female Employed']);
 
         return $target;
     }
 
-    public function getBeneficiaryTarget()
+    public function getBeneficiaryTarget($year)
     {
-        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Beneficiaries']);
+        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $year, 'target_type' => 'Beneficiaries']);
 
         return $target;
     }
 
-    public function getGroupTarget()
+    public function getGroupTarget($year)
     {
-        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $this->year, 'target_type' => 'Group Beneficiaries']);
+        $target = ProjectTarget::findOne(['project_id' => $this->id, 'year' => $year, 'target_type' => 'Group Beneficiaries']);
 
         return $target;
     }
@@ -947,5 +1167,301 @@ class Project extends \yii\db\ActiveRecord
 
         return !empty($locations) ? implode(" &#8226; ", $locations) : 'No location';
     }
-    
+
+    public function getTargetOwpa($year)
+    {
+        $target = ProjectTarget::find()->where([
+            'project_id' => $this->id,
+            'year' => $year,
+            'target_type' => 'Physical'
+        ])->one();
+
+        $months = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        $total = 0;
+
+        foreach($months as $mo => $month){
+            $total += floatval($target->$mo);
+        }
+
+        return $target ? [
+            'Q1' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar))/$total)*100 : 0 : floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar),
+            'Q2' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->apr) + floatval($target->may) + floatval($target->jun))/$total)*100 : 0 : floatval($target->apr) + floatval($target->may) + floatval($target->jun),
+            'Q3' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->jul) + floatval($target->aug) + floatval($target->sep))/$total)*100 : 0 : floatval($target->jul) + floatval($target->aug) + floatval($target->sep),
+            'Q4' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->oct) + floatval($target->nov) + floatval($target->dec))/$total)*100 : 0 : floatval($target->oct) + floatval($target->nov) + floatval($target->dec)
+        ] : [
+            'Q1' => 0,
+            'Q2' => 0,
+            'Q3' => 0,
+            'Q4' => 0,
+        ];
+    }
+
+    public function getActualOwpa($year)
+    {
+        $target = ProjectTarget::find()->where([
+            'project_id' => $this->id,
+            'year' => $year,
+            'target_type' => 'Physical'
+        ])->one();
+
+        $months = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        $total = 0;
+
+        foreach($months as $mo => $month){
+            $total += floatval($target->$mo);
+        }
+
+        $q1 = PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year]) ? PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year])->value : 0;
+        $q2 = PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year]) ? PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year])->value : 0;
+        $q3 = PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year]) ? PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year])->value : 0;
+        $q4 = PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year]) ? PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year])->value : 0;
+
+        return [
+            'Q1' => $target ? $target->type == 'Numerical' ? $total > 0 ? (floatval($q1)/$total)*100 : 0 : floatval($q1) : 0,
+            'Q2' => $target ? $target->type == 'Numerical' ? $total > 0 ? (floatval($q2)/$total)*100 : 0 : floatval($q2) : 0,
+            'Q3' => $target ? $target->type == 'Numerical' ? $total > 0 ? (floatval($q3)/$total)*100 : 0 : floatval($q3) : 0,
+            'Q4' => $target ? $target->type == 'Numerical' ? $total > 0 ? (floatval($q4)/$total)*100 : 0 : floatval($q4) : 0,
+        ];
+    }
+
+    public function getSlippage($year)
+    {
+        $target = $this->getTargetOwpa($year);
+        $actual = $this->getActualOwpa($year);
+
+        return [
+            'Q1' => $actual['Q1'] - $target['Q1'],
+            'Q2' => $actual['Q2'] - $target['Q2'],
+            'Q3' => $actual['Q3'] - $target['Q3'],
+            'Q4' => $actual['Q4'] - $target['Q4'],
+        ];
+    }
+
+    public function getFinancialTargetPerQuarter($year)
+    {
+        $target = $this->getFinancialTarget($year);
+
+        $quarters = [
+            'Q1' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
+            ],
+            'Q2' => [
+                'apr' => 'Apr',
+                'may' => 'May',
+                'jun' => 'Jun',
+            ],
+            'Q3' => [
+                'jul' => 'Jul',
+                'aug' => 'Aug',
+                'sep' => 'Sep',
+            ],
+            'Q4' => [
+                'oct' => 'Oct',
+                'nov' => 'Nov',
+                'dec' => 'Dec',
+            ]
+        ];
+
+        $targets = [];
+
+        if($target){
+            foreach($quarters as $quarter => $months){
+                $targets[$quarter] = 0;
+                foreach($months as $mo => $month){
+                    $targets[$quarter] += floatval($target->$mo);
+                }
+            }
+        }else{
+            $targets = [
+                'Q1' => 0,
+                'Q2' => 0,
+                'Q3' => 0,
+                'Q4' => 0
+            ];
+        }
+
+        $targets['Q1'] += floatval($target->allocation);
+
+        return $targets;
+    }
+
+    public function getNewAccomplishedAppropriationsForQuarter($year)
+    {
+        $q1 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year])->allocation : 0;
+        $q2 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year])->allocation : 0;
+        $q3 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year])->allocation : 0;
+        $q4 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year])->allocation : 0;
+
+        return [
+            'Q1' => floatval($q1),
+            'Q2' => floatval($q2),
+            'Q3' => floatval($q3),
+            'Q4' => floatval($q4),
+        ];
+    }
+
+    public function getNewAccomplishedAllotmentForQuarter($year)
+    {
+        $q1 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year])->releases : 0;
+        $q2 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year])->releases : 0;
+        $q3 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year])->releases : 0;
+        $q4 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year])->releases : 0;
+
+        return [
+            'Q1' => floatval($q1),
+            'Q2' => floatval($q2),
+            'Q3' => floatval($q3),
+            'Q4' => floatval($q4),
+        ];
+    }
+
+    public function getNewAccomplishedObligationForQuarter($year)
+    {
+        $q1 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year])->obligation : 0;
+        $q2 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year])->obligation : 0;
+        $q3 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year])->obligation : 0;
+        $q4 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year])->obligation : 0;
+
+        return [
+            'Q1' => floatval($q1),
+            'Q2' => floatval($q2),
+            'Q3' => floatval($q3),
+            'Q4' => floatval($q4),
+        ];
+    }
+
+    public function getNewAccomplishedDisbursementForQuarter($year)
+    {
+        $q1 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year])->expenditures : 0;
+        $q2 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q2', 'year' => $year])->expenditures : 0;
+        $q3 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $year])->expenditures : 0;
+        $q4 = FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year]) ? FinancialAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $year])->expenditures : 0;
+
+        return [
+            'Q1' => floatval($q1),
+            'Q2' => floatval($q2),
+            'Q3' => floatval($q3),
+            'Q4' => floatval($q4),
+        ];
+    }
+
+    public function getPhysicalTargetPerQuarter($year)
+    {
+        $target = $this->getPhysicalTarget($year);
+
+        $quarters = [
+            'Q1' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
+            ],
+            'Q2' => [
+                'apr' => 'Apr',
+                'may' => 'May',
+                'jun' => 'Jun',
+            ],
+            'Q3' => [
+                'jul' => 'Jul',
+                'aug' => 'Aug',
+                'sep' => 'Sep',
+            ],
+            'Q4' => [
+                'oct' => 'Oct',
+                'nov' => 'Nov',
+                'dec' => 'Dec',
+            ]
+        ];
+
+        $months = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        $total = 0;
+
+        foreach($months as $mo => $month){
+            $total += floatval($target->$mo);
+        }
+
+        $targets = [];
+
+        if($target){
+            foreach($quarters as $quarter => $months){
+                $targets[$quarter] = 0;
+                foreach($months as $mo => $month){
+                    $targets[$quarter] += floatval($target->$mo);
+                }
+            }
+        }else{
+            $targets = [
+                'Q1' => 0,
+                'Q2' => 0,
+                'Q3' => 0,
+                'Q4' => 0,
+            ];
+        }
+
+        $targets['Q1'] += floatval($target->baseline);
+
+        return [
+            'Q1' => $targets['Q1'],
+            'Q2' => $targets['Q1'] + $targets['Q2'],
+            'Q3' => $targets['Q1'] + $targets['Q2'] + $targets['Q3'],
+            'Q4' => $targets['Q1'] + $targets['Q2'] + $targets['Q3'] + $targets['Q4'],
+        ];
+    }
+
+    public function getNewMalesEmployedTarget($year)
+    {
+        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Male Employed', 'year' => $year]);
+
+        return $allocation ? intval($allocation->annual) : 0;
+    }
+
+    public function getNewFemalesEmployedTarget($year)
+    {
+        $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Female Employed', 'year' => $year]);
+
+        return $allocation ? intval($allocation->annual) : 0;
+    }
 }

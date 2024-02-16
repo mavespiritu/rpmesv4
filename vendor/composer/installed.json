@@ -933,6 +933,50 @@
             "install-path": "../box/spout"
         },
         {
+            "name": "buttflattery/yii2-formwizard",
+            "version": "dev-master",
+            "version_normalized": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/buttflattery/yii2-formwizard.git",
+                "reference": "13a963c777a2e580698841526573fab49fc8a0b3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/buttflattery/yii2-formwizard/zipball/13a963c777a2e580698841526573fab49fc8a0b3",
+                "reference": "13a963c777a2e580698841526573fab49fc8a0b3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "time": "2021-07-31T10:08:21+00:00",
+            "default-branch": true,
+            "type": "yii2-extension",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "buttflattery\\formwizard\\": "//src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "omer aslam",
+                    "email": "buttflattery@hotmail.com"
+                }
+            ],
+            "description": "A yii2 widget for form wizard, to create a multistep form.",
+            "support": {
+                "issues": "https://github.com/buttflattery/yii2-formwizard/issues",
+                "source": "https://github.com/buttflattery/yii2-formwizard/tree/master"
+            },
+            "install-path": "../buttflattery/yii2-formwizard"
+        },
+        {
             "name": "c006/yii2-migration-utility",
             "version": "dev-master",
             "version_normalized": "dev-master",

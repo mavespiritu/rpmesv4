@@ -1,5 +1,17 @@
 <?php if($type != 'pdf'){ ?>
     <style>
+    @media print {
+        body {-webkit-print-color-adjust: exact; }
+        *{
+            page-break-before: avoid !important;
+            page-break-after: avoid !important;
+            page-break-inside: avoid !important;
+        }
+        table { page-break-inside:avoid !important;}
+        tr    { page-break-inside:avoid !important; page-break-after:avoid !important;}
+        thead { display:table-header-group !important;}
+        tfoot { display:table-footer-group !important;}
+    }
     *{
         font-family: "Arial";
     }
@@ -9,20 +21,23 @@
         width: 100%;
     }
     thead{
-        font-size: 12px;
+        font-size: 14px;
         text-align: center;
+        vertical-align: middle;
     }
 
     td{
-        font-size: 10px;
+        font-size: 14px;
         border: 1px solid black;
         padding: 5px;
+        vertical-align: middle;
     }
 
     th{
         text-align: center;
         border: 1px solid black;
         padding: 5px;
+        vertical-align: middle;
     }
     h1,h2,h3,h4,h5,h6{
         text-align: center;
@@ -30,83 +45,41 @@
     }
 </style>
 <?php } ?>
-<?php if($type != 'pdf'){ ?>
-    <h5 style="text-align: center;">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
-RPMES Form 1: INITIAL PROJECT REPORT (Physical and Financial Targets for Ongoing Programs and Projects)
+<h5 style="text-align: center; font-family: 'Arial'; font-size: 14px;">
+    REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
+    INITIAL PROJECT REPORT <br>
+    CY <?= $model->year ?>
 </h5>
-<?php }else{ ?>
-    <h6 style="text-align: center;">REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
-RPMES Form 1: INITIAL PROJECT REPORT (Physical and Financial Targets for Ongoing Programs and Projects)
-</h6>
-<?php } ?>
 <table class="table table-condensed table-bordered table-striped table-condensed table-responsive" cellspacing="0">
     <thead>
-        <tr>
-            <td rowspan=3 colspan=2 style="width: 10%;" align=left>
-                <b>
-                (a) Name of Project <br>
-                (b) Location <br>
-                (c) Sector/Sub-Sector <br>
-                (d) Funding Source <br>
-                (e) Mode of Implementation <br>
-                (f) Project Schedule
-                </b>
-            </td>
-            <td rowspan=3 align=center style="width: 5%;"><b>Unit of Measure</b></td>
-            <td colspan=<?= count($quarters) + 1?> align=center><b>Financial Requirements</b></td>
-            <td colspan=<?= count($quarters) + 1?> align=center><b>Physical Targets</b></td>
-            <td colspan=<?= (count($quarters) * count($genders)) + 2?> align=center><b>Employment Generated</b></td>
-            <td colspan=<?= (count($quarters) * 2) + 2 ?> align=center><b>Target Beneficiaries</b></td>
+        <tr style="background-color: #002060; color: white">
+            <td style="font-weight: bolder;" rowspan=2 align=center>#</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Program/Project Title</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Component Details</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Fund Source</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Funding Agency</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Mode of <br>Implementation</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Total Program/Project<br>Cost<br>(PHP)</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Sector</td>
+            <td style="font-weight: bolder;" colspan=3 align=center>Location</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Start Date<br>(mm-dd-yy)</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>End Date<br>(mm-dd-yy)</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Remarks</td>
+            <td style="font-weight: bolder;" colspan=2 align=center>Target Employment<br>Generated</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Output Indicators</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Month</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Financial Targets</td>
+            <td style="font-weight: bolder;" rowspan=2 align=center>Physical Targets<br>(in %)</td>
+            <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
+                <td style="font-weight: bolder;" rowspan=2 align=center>Targets of Output Indicator <?= $i ?></td>
+            <?php } ?>
         </tr>
-        <tr>
-            <?php if($quarters){ ?>
-                <?php foreach($quarters as $q => $quarter){ ?>
-                    <td align=center rowspan=2><b><?= $q ?></b></td>
-                <?php } ?>
-            <?php } ?>
-            <td align=center rowspan=2><b>Total</b></td>
-            <?php if($quarters){ ?>
-                <?php foreach($quarters as $q => $quarter){ ?>
-                    <td align=center rowspan=2><b><?= $q ?></b></td>
-                <?php } ?>
-            <?php } ?>
-            <td align=center rowspan=2><b>Total</b></td>
-            <?php if($quarters){ ?>
-                <?php foreach($quarters as $q => $quarter){ ?>
-                    <td align=center colspan=2><b><?= $q ?></b></td>
-                <?php } ?>
-            <?php } ?>
-            <td align=center colspan=2><b>Total</b></td>
-            <?php if($quarters){ ?>
-                <?php foreach($quarters as $q => $quarter){ ?>
-                    <td align=center colspan=2><b><?= $q ?></b></td>
-                <?php } ?>
-            <?php } ?>
-            <td align=center colspan=2><b>Total</b></td>
-        </tr>
-        <tr>
-            <?php if($quarters){ ?>
-                <?php foreach($quarters as $quarter){ ?>
-                    <?php if($genders){ ?>
-                        <?php foreach($genders as $g => $gender){ ?>
-                            <td align=center><b><?= $g ?></b></td>
-                        <?php } ?>
-                    <?php } ?>
-                <?php } ?>
-            <?php } ?>
-            <?php if($genders){ ?>
-                <?php foreach($genders as $g => $gender){ ?>
-                    <td align=center><b><?= $g ?></b></td>
-                <?php } ?>
-            <?php } ?>
-            <?php if($quarters){ ?>
-                <?php foreach($quarters as $quarter){ ?>
-                    <td align=center><b>Individual</b></td>
-                    <td align=center><b>Group</b></td>
-                <?php } ?>
-            <?php } ?>
-            <td align=center><b>Individual</b></td>
-            <td align=center><b>Group</b></td>
+        <tr style="background-color: #002060; color: white">
+            <td style="font-weight: bolder;" align=center>Province</td>
+            <td style="font-weight: bolder;" align=center>City/<br>Municipality</td>
+            <td style="font-weight: bolder;" align=center>Barangay</td>
+            <td style="font-weight: bolder;" align=center>M</td>
+            <td style="font-weight: bolder;" align=center>F</td>
         </tr>
     </thead>
     <tbody>
@@ -114,69 +87,75 @@ RPMES Form 1: INITIAL PROJECT REPORT (Physical and Financial Targets for Ongoing
         <?php $idx = 1; ?>
         <?php foreach($projects as $project){ ?>
             <tr>
-                <td><?= $idx ?></td>
-                <td>
-                    (a) <?= $project['projectTitle'] ?> <br>
-                    (b) <?= $project['locationTitle'] ?> <br>
-                    (c) <?= $project['sectorTitle'].'/'.$project['subSectorTitle'] ?><br>
-                    (d) <?= $project['fundSourceTitle'] ?><br>
-                    (e) <?= $project['modeOfImplementationTitle'] ?><br>
-                    (f) <?= date("F j, Y", strtotime($project['startDate'])) ?> to <?= date("F j, Y", strtotime($project['completionDate'])) ?><br>
-                </td>
-                <td><?=  $project['unitOfMeasure'] ?></td>
-                <td align=right><?= number_format($project['financialQ1'], 2) ?></td>
-                <td align=right><?= number_format($project['financialQ2'], 2) ?></td>
-                <td align=right><?= number_format($project['financialQ3'], 2) ?></td>
-                <td align=right><?= number_format($project['financialQ4'], 2) ?></td>
+                <td rowspan=13><?= $idx ?></td>
+                <td rowspan=13><?= $project['title'] ?></td>
+                <td rowspan=13><i><?=  $project['componentTitle'] ?></i></td>
+                <td rowspan=13><?=  $project['fundingSourceTitle'] ?></td>
+                <td rowspan=13><?=  $project['fundingAgencyTitle'] ?></td>
+                <td rowspan=13><?=  $project['modeOfImplementationTitle'] ?></td>
+                <td rowspan=13 align=right><?=  number_format($project['cost'], 2) ?></td>
+                <td rowspan=13><?=  $project['sectorTitle'] ?></td>
+                <td rowspan=13><?=  $project['provinceTitle'] ?></td>
+                <td rowspan=13><?=  $project['citymunTitle'] ?></td>
+                <td rowspan=13><?=  $project['barangayTitle'] ?></td>
+                <td rowspan=13><?=  $type == 'excel' ? "'".$project['startDate'] : $project['startDate']?></td>
+                <td rowspan=13><?=  $type == 'excel' ? "'".$project['endDate'] : $project['endDate']?></td>
+                <td rowspan=13><?=  $project['remarks'] ?></td>
+                <td rowspan=13 align=center><?= number_format(intval($project['maleEmployedTotal']), 0) ?></td>
+                <td rowspan=13 align=center><?= number_format(intval($project['femaleEmployedTotal']), 0) ?></td>
+                <td rowspan=13><i><?=  $project['outputIndicatorTitle'] ?></i></td>
+                <td>Total Target for the Year</td>
                 <td align=right><?= number_format($project['financialTotal'], 2) ?></td>
-                <td align=right><?= number_format($project['physicalQ1'], 2) ?></td>
-                <td align=right><?= number_format($project['physicalQ2'], 2) ?></td>
-                <td align=right><?= number_format($project['physicalQ3'], 2) ?></td>
-                <td align=right><?= number_format($project['physicalQ4'], 2) ?></td>
-                <td align=right><?= number_format($project['physicalTotal'], 2) ?></td>
-                <td align=right><?= number_format($project['maleEmployedQ1'], 0) ?></td>
-                <td align=right><?= number_format($project['femaleEmployedQ1'], 0) ?></td>
-                <td align=right><?= number_format($project['maleEmployedQ2'], 0) ?></td>
-                <td align=right><?= number_format($project['femaleEmployedQ2'], 0) ?></td>
-                <td align=right><?= number_format($project['maleEmployedQ3'], 0) ?></td>
-                <td align=right><?= number_format($project['femaleEmployedQ3'], 0) ?></td>
-                <td align=right><?= number_format($project['maleEmployedQ4'], 0) ?></td>
-                <td align=right><?= number_format($project['femaleEmployedQ4'], 0) ?></td>
-                <td align=right><?= number_format(
-                    $project['maleEmployedQ1'] +
-                    $project['maleEmployedQ2'] +
-                    $project['maleEmployedQ3'] +
-                    $project['maleEmployedQ4']
-                , 0) ?></td>
-                <td align=right><?= number_format(
-                    $project['femaleEmployedQ1'] +
-                    $project['femaleEmployedQ2'] +
-                    $project['femaleEmployedQ3'] +
-                    $project['femaleEmployedQ4']
-                , 0) ?></td>
-                <td align=right><?= number_format($project['beneficiaryQ1'], 0) ?></td>
-                <td align=right><?= number_format($project['groupBeneficiaryQ1'], 0) ?></td>
-                <td align=right><?= number_format($project['beneficiaryQ2'], 0) ?></td>
-                <td align=right><?= number_format($project['groupBeneficiaryQ2'], 0) ?></td>
-                <td align=right><?= number_format($project['beneficiaryQ3'], 0) ?></td>
-                <td align=right><?= number_format($project['groupBeneficiaryQ3'], 0) ?></td>
-                <td align=right><?= number_format($project['beneficiaryQ4'], 0) ?></td>
-                <td align=right><?= number_format($project['groupBeneficiaryQ4'], 0) ?></td>
-                <td align=right><?= number_format(
-                    $project['beneficiaryQ1'] +
-                    $project['beneficiaryQ2'] +
-                    $project['beneficiaryQ3'] +
-                    $project['beneficiaryQ4']
-                , 0) ?></td>
-                <td align=right><?= number_format(
-                    $project['groupBeneficiaryQ1'] +
-                    $project['groupBeneficiaryQ2'] +
-                    $project['groupBeneficiaryQ3'] +
-                    $project['groupBeneficiaryQ4']
-                , 0) ?></td>
+                <td align=center><?= $project['metrics'] == 'Percentage' ? number_format($project['physicalTotal'], 0) : '100' ?></td>
+                <?php if(!empty($targets['outputIndicators'][$project['id']])){ ?>
+                    <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
+                        <td align=center><?= isset($targets['outputIndicators'][$project['id']][$i]) ? number_format(floatval($targets['outputIndicators'][$project['id']][$i]['total']), 2) : '&nbsp;' ?></td>
+                    <?php } ?>
+                <?php }else{ ?>
+                    <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
+                        <td>&nbsp;</td>
+                    <?php } ?>
+                <?php } ?>
             </tr>
+            <?php foreach($months as $mo => $month){ ?>
+                <tr>
+                    <td><?= $month ?></td>
+                    <td align=right><?= isset($targets['financial'][$project['id']]) ? number_format(floatval($targets['financial'][$project['id']][$mo]), 2) : '' ?></td>
+                    <td align=center><?= isset($targets['physical'][$project['id']]) ? number_format($project['metrics'] == 'Numerical' ? $project['physicalTotal'] > 0 ? (floatval($targets['physical'][$project['id']][$mo])/floatval($project['physicalTotal'])) * 100 : 0 : floatval($targets['physical'][$project['id']][$mo]), 2) : '' ?></td>
+                    <?php if(!empty($targets['outputIndicators'][$project['id']])){ ?>
+                        <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
+                            <td align=center><?= isset($targets['outputIndicators'][$project['id']][$i]) ? number_format($targets['outputIndicators'][$project['id']][$i]['type'] == 'Numerical' ? $targets['outputIndicators'][$project['id']][$i]['total'] > 0 ? floatval(($targets['outputIndicators'][$project['id']][$i][$mo]/$targets['outputIndicators'][$project['id']][$i]['rawTotal']) * 100) : 0 : floatval($targets['outputIndicators'][$project['id']][$i][$mo]), 2) : '&nbsp;' ?></td>
+                        <?php } ?>
+                    <?php }else{ ?>
+                        <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
+                            <td>&nbsp;</td>
+                        <?php } ?>
+                    <?php } ?>
+                </tr>
+            <?php } ?>
             <?php $idx ++ ?>
         <?php } ?>
     <?php } ?>
     </tbody>
+</table>
+<br>
+<table class="table table-condensed table-bordered table-striped table-condensed table-responsive" cellspacing="0">
+    <tr>
+        <td colspan=2>Submitted by:</td>
+        <td colspan=2 align=center><?= $model->submitter ?></td>
+        <td>Approved by:</td>
+        <td colspan=2 align=center><?= $model->agency->salutation.' '.$model->agency->head ?></td>
+    </tr>
+    <tr>
+        <td colspan=2>Designation/Office:</td>
+        <td colspan=2 align=center><?= $model->submitterPosition ?></td>
+        <td>&nbsp;</td>
+        <td colspan=2 align=center>Head of Agency/Office</td>
+    </tr>
+    <tr>
+        <td colspan=2>Date:</td>
+        <td colspan=2>&nbsp;</td>
+        <td>Date:</td>
+        <td colspan=2>&nbsp;</td>
+    </tr>
 </table>

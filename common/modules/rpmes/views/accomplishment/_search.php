@@ -1,87 +1,54 @@
 <?php
 
 use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\widgets\ActiveForm;
-use kartik\select2\Select2;
-use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
-DisableButtonAsset::register($this);
+use yii\widgets\Pjax;
+use yii\bootstrap\Modal;
+use yii\helpers\Url;
+use yii\web\View;
+
 /* @var $this yii\web\View */
-/* @var $model common\modules\rpmes\models\DueDateSearch */
+/* @var $model common\modules\rpmes\models\ProjectSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="accomplishment-search">
-
-    <?php $form = ActiveForm::begin([
-    	'options' => ['class' => 'disable-submit-buttons'],
-        'method' => 'get'
-    ]); ?>
-
-    <div class="row">
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'year')->widget(Select2::classname(), [
-                'data' => $years,
-                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Year *');
-            ?>
-        </div>
-
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'quarter')->widget(Select2::classname(), [
-                'data' => $quarters,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'quarter-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Quarter *');
-            ?>
-        </div>
-        
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'category_id')->widget(Select2::classname(), [
-                'data' => $categories,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Category');
-            ?>
-        </div>
-
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
-                'data' => $sectors,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Sector');
-            ?>
-        </div>
-    </div>
-    <div class="row">
-        <?php if(Yii::$app->user->can('Administrator') || Yii::$app->user->can('SuperAdministrator')){ ?>
-            <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
-                    'data' => $agencies,
-                    'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'agency-select'],
-                    'pluginOptions' => [
-                        'allowClear' =>  true,
-                    ],
-                ])->label('Agency');
-            ?>
-            </div>
-        <?php } ?>
-    </div>
-    <div class="form-group pull-right">
-        <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
-    </div>
-    
-    
-    <?php ActiveForm::end(); ?>
-
+<div class="pull-left">
+    <?= Html::button('<i class="fa fa-plus"></i> Add Accomplishment Report', ['value' => Url::to(['create']), 'class' => 'btn btn-success', 'id' => 'create-button']) ?>
 </div>
+<div class="pull-right">
+    <div class="plan-search">
+
+        <?php $form = ActiveForm::begin([
+            'action' => ['index'],
+            'method' => 'get',
+        ]); ?>
+
+        <?= $form->field($model, 'globalSearch')->textInput(['style' => 'border-top: none !important; border-left: none !important; border-right: none !important;', 'placeholder' => 'Search Records'])->label(false) ?>
+
+        <?php ActiveForm::end(); ?>
+
+    </div>
+</div>
+<div class="clearfix"></div>
+
+<?php
+  Modal::begin([
+    'id' => 'create-modal',
+    'size' => "modal-md",
+    'header' => '<div id="create-modal-header"><h4>Add Accomplishment Report</h4></div>',
+    'options' => ['tabindex' => false],
+  ]);
+  echo '<div id="create-modal-content"></div>';
+  Modal::end();
+?>
+<?php
+    $script = '
+        $(document).ready(function(){
+            $("#create-button").click(function(){
+              $("#create-modal").modal("show").find("#create-modal-content").load($(this).attr("value"));
+            });
+        });     
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>

@@ -35,7 +35,7 @@ class FinancialAccomplishment extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            //[['releases', 'obligation', 'expenditures'], 'required'],
+            [['allocation', 'releases', 'obligation', 'expenditures'], 'required'],
             [['project_id', 'year'], 'integer'],
             [['quarter', 'remarks'], 'string'],
             [['releases', 'obligation', 'expenditures'], 'safe'],
@@ -53,10 +53,10 @@ class FinancialAccomplishment extends \yii\db\ActiveRecord
             'project_id' => 'Project ID',
             'year' => 'Year',
             'quarter' => 'Quarter',
-            'allocation' => 'Allocation',
-            'releases' => 'Releases',
+            'allocation' => 'Appropriations',
+            'releases' => 'Allotment',
             'obligation' => 'Obligation',
-            'expenditures' => 'Expenditures',
+            'expenditures' => 'Disbursements',
             'remarks' => 'Remarks',
         ];
     }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bcd7b08517f77943e8fa89b234504358",
+    "content-hash": "118ff737cba28419f9063d15480a2e19",
     "packages": [
         {
             "name": "2amigos/yii2-chartjs-widget",
@@ -493,6 +493,47 @@
                 "source": "https://github.com/box/spout/tree/v3.3.0"
             },
             "time": "2021-05-14T21:18:09+00:00"
+        },
+        {
+            "name": "buttflattery/yii2-formwizard",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/buttflattery/yii2-formwizard.git",
+                "reference": "13a963c777a2e580698841526573fab49fc8a0b3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/buttflattery/yii2-formwizard/zipball/13a963c777a2e580698841526573fab49fc8a0b3",
+                "reference": "13a963c777a2e580698841526573fab49fc8a0b3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "default-branch": true,
+            "type": "yii2-extension",
+            "autoload": {
+                "psr-4": {
+                    "buttflattery\\formwizard\\": "//src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "omer aslam",
+                    "email": "buttflattery@hotmail.com"
+                }
+            ],
+            "description": "A yii2 widget for form wizard, to create a multistep form.",
+            "support": {
+                "issues": "https://github.com/buttflattery/yii2-formwizard/issues",
+                "source": "https://github.com/buttflattery/yii2-formwizard/tree/master"
+            },
+            "time": "2021-07-31T10:08:21+00:00"
         },
         {
             "name": "cebe/markdown",
@@ -8448,6 +8489,7 @@
         "kartik-v/yii2-tabs-x": 20,
         "kartik-v/yii2-sortable": 20,
         "kartik-v/yii2-sortable-input": 20,
+        "buttflattery/yii2-formwizard": 20,
         "kartik-v/yii2-widget-select2": 20,
         "kartik-v/yii2-widget-datepicker": 20,
         "c006/yii2-migration-utility": 20,
@@ -8460,5 +8502,5 @@
         "php": ">=5.6.0"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.1.0"
+    "plugin-api-version": "2.2.0"
 }
