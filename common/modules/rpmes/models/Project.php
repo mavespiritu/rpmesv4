@@ -885,7 +885,7 @@ class Project extends \yii\db\ActiveRecord
     public function getAccomplishmentSubmitter($quarter)
     {
         $accomplishment = Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => $quarter]);
-        $submitter = $accomplishment ? !is_null($accomplishment->submitted_by) ? UserInfo::findOne(['user_id' => $accomplishment->submitted_by])->fullName : 'No submitter name' : 'No submitter name';
+        $submitter = $accomplishment ? !is_null($accomplishment->submitted_by) ? UserInfo::findOne(['user_id' => $accomplishment->submitted_by]) ? UserInfo::findOne(['user_id' => $accomplishment->submitted_by])->fullName : 'No submitter name' : 'No submitter name' : 'No submitter name';
 
         return $submitter;
     }
