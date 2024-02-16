@@ -25,12 +25,14 @@ if (class_exists('backend\assets\AppAsset')) {
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
         <script
             src="https://code.jquery.com/jquery-3.6.0.min.js"
             integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
             crossorigin="anonymous"></script>
         <script type="text/javascript" src="<?= $asset->baseUrl.'/js/freeze-table/dist/js/freeze-table.js' ?>"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" type="text/javascript"></script>
         <script src="https://www.amcharts.com/lib/3/ammap.js"></script>
         <script src="https://www.amcharts.com/lib/3/maps/js/philippinesLow.js"></script>
@@ -50,7 +52,7 @@ if (class_exists('backend\assets\AppAsset')) {
         <title><?= Html::encode($this->title) ?></title>
         <?php $this->head() ?>
     </head>
-    <body class="<?= !Yii::$app->user->isGuest ? 'hold-transition skin-blue-light' : 'hold-transition layout-top-nav skin-blue-light' ?>">
+    <body class="<?= !Yii::$app->user->isGuest ? 'hold-transition skin-blue' : 'hold-transition layout-top-nav skin-blue' ?>">
     <?php $this->beginBody() ?>
     <div class="wrapper">
 

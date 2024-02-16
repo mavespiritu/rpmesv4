@@ -33,6 +33,7 @@ class ProjectProvince extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['province_id'], 'required'],
             [['project_id', 'year'], 'integer'],
             [['province_id'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],

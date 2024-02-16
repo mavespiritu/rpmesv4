@@ -156,6 +156,7 @@ class ComposerStaticInit5dc79614d4211f4e341f1ed4c7fbc2a9
         ),
         'b' => 
         array (
+            'buttflattery\\formwizard\\' => 24,
             'bedezign\\yii2\\audit\\' => 20,
         ),
         'Z' => 
@@ -398,6 +399,10 @@ class ComposerStaticInit5dc79614d4211f4e341f1ed4c7fbc2a9
         'c006\\utility\\migration\\' => 
         array (
             0 => __DIR__ . '/..' . '/c006/yii2-migration-utility',
+        ),
+        'buttflattery\\formwizard\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/buttflattery/yii2-formwizard/src',
         ),
         'bedezign\\yii2\\audit\\' => 
         array (

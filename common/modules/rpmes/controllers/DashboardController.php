@@ -40,6 +40,7 @@ use common\modules\rpmes\models\ProjectSearch;
 use common\modules\rpmes\models\Model;
 use common\modules\rpmes\models\MultipleModel;
 use common\modules\rpmes\models\Submission;
+use common\modules\rpmes\models\SubmissionLog;
 use common\modules\rpmes\models\PhysicalAccomplishment;
 use common\modules\rpmes\models\FinancialAccomplishment;
 use common\modules\rpmes\models\PersonEmployedAccomplishment;
@@ -108,6 +109,13 @@ class DashboardController extends \yii\web\Controller
         $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
         $agencies = ArrayHelper::map($agencies, 'id', 'title');
 
+        $logs = SubmissionLog::find()
+                ->leftJoin('submission', 'submission.id = submission_log.submission_id')
+                ->where(['submission.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])
+                ->orderBy(['id' => SORT_DESC])
+                ->limit(10)
+                ->all();
+
         return $this->render('index',[
             'monitoringPlan' => $monitoringPlan,
             'accompQ1' => $accompQ1,
@@ -121,6 +129,7 @@ class DashboardController extends \yii\web\Controller
             'years' => $years,
             'agencies' => $agencies,
             'logModel' => $logModel,
+            'logs' => $logs,
         ]);
     }
 

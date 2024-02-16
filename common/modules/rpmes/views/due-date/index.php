@@ -13,31 +13,27 @@ $this->title = 'Due Dates';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="due-date-index">
-    <div class="row">
-        <div class="col-md-3 col-xs-12">
-            <?= $this->render('_search', [
-                'model' => $model,
-                'years' => $years,
-            ]) ?>
-        </div>
-    </div>
-    <div class="box box-primary">
+    
+    <div class="box box-solid">
         <div class="box-header with-border">
-            <div class="box-title">Monitoring Plan</div>
+            <div class="box-title">Due Dates</div>
         </div>
         <div class="box-header box-body">
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <?= $this->render('_search', [
+                        'model' => $model,
+                        'years' => $years,
+                    ]) ?>
+                </div>
+            </div>
+            <br>
             <div class="row">
                 <div class="col-md-3 col-xs-12">
                     <div id="monitoring-plan-due-date"></div>
                 </div>
             </div>
-        </div>
-    </div>
-    <div class="box box-primary">
-        <div class="box-header with-border">
-            <div class="box-title">Accomplishments</div>
-        </div>
-        <div class="box-header box-body">
+            <br>
             <div class="row">
                 <?php if(!empty($quarters)){ ?>
                     <?php foreach($quarters as $quarter => $value){ ?>
@@ -47,13 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php } ?>
                 <?php } ?>
             </div>
-        </div>
-    </div>
-    <div class="box box-primary">
-        <div class="box-header with-border">
-            <div class="box-title">Project Exceptions</div>
-        </div>
-        <div class="box-header box-body">
+            <br>
             <div class="row">
                 <?php if(!empty($quarters)){ ?>
                     <?php foreach($quarters as $quarter => $value){ ?>

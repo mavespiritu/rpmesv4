@@ -45,6 +45,7 @@ return array(
     'dmstr\\' => array($vendorDir . '/dmstr/yii2-adminlte-asset'),
     'cebe\\markdown\\' => array($vendorDir . '/cebe/markdown'),
     'c006\\utility\\migration\\' => array($vendorDir . '/c006/yii2-migration-utility'),
+    'buttflattery\\formwizard\\' => array($vendorDir . '/buttflattery/yii2-formwizard/src'),
     'bedezign\\yii2\\audit\\' => array($vendorDir . '/bedezign/yii2-audit/src'),
     'ZipStream\\' => array($vendorDir . '/maennchen/zipstream-php/src'),
     'Webmozart\\Assert\\' => array($vendorDir . '/webmozart/assert/src'),

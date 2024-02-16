@@ -37,7 +37,7 @@ DisableButtonAsset::register($this);
                     }'
 
             ]
-        ]);
+        ])->label('Select year');
     ?>
 
     <?php ActiveForm::end(); ?>

@@ -35,6 +35,7 @@ class ProjectOutcome extends \yii\db\ActiveRecord
     {
         return [
             [['project_id', 'year'], 'integer'],
+            [['outcome'], 'required'],
             [['outcome', 'performance_indicator', 'target', 'timeline', 'remarks'], 'string'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
         ];

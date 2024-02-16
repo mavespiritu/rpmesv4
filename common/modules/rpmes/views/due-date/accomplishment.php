@@ -10,7 +10,7 @@ $HtmlHelper = new HtmlHelper();
 ?>
 <div class="box box-solid">
     <div class="box-header with-border <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'positive' : 'negative' : 'positive' ?>">
-        <div class="box-title"><?= $quarters[$quarter] ?></div>
+        <div class="box-title"><?= $quarters[$quarter] ?> Accomplishment</div>
     </div>
     <div class="box-header box-body">
         <h3 class="text-center"><?= $dueDate ? date("D, F j, Y", strtotime($dueDate->due_date)) : 'No due date set' ?></h3>

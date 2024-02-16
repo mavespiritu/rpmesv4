@@ -2,6 +2,7 @@
 
 namespace common\modules\rpmes\models;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use common\modules\rpmes\models\Project;
@@ -11,14 +12,15 @@ use common\modules\rpmes\models\Project;
  */
 class ProjectSearch extends Project
 {
+    public $globalSearch;
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['id', 'year', 'agency_id', 'program_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id'], 'integer'],
-            [['project_no', 'title', 'description', 'typhoon', 'data_type', 'period', 'start_date', 'completion_date'], 'safe'],
+            [['id', 'source_id', 'year', 'agency_id', 'program_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id'], 'integer'],
+            [['project_no', 'title', 'description', 'typhoon', 'data_type', 'period', 'start_date', 'completion_date', 'globalSearch'], 'safe'],
         ];
     }
 
@@ -40,7 +42,11 @@ class ProjectSearch extends Project
      */
     public function search($params)
     {
-        $query = Project::find();
+        $query = Project::find()
+                ->joinWith('agency')
+                ->joinWith('sector')
+                ->joinWith('modeOfImplementation');
+
 
         // add conditions that should always apply here
 
@@ -57,26 +63,25 @@ class ProjectSearch extends Project
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'year' => $this->year,
-            'agency_id' => $this->agency_id,
-            'program_id' => $this->program_id,
-            'sector_id' => $this->sector_id,
-            'sub_sector_id' => $this->sub_sector_id,
-            'location_scope_id' => $this->location_scope_id,
-            'mode_of_implementation_id' => $this->mode_of_implementation_id,
-            'fund_source_id' => $this->fund_source_id,
-            'start_date' => $this->start_date,
-            'completion_date' => $this->completion_date,
-        ]);
 
-        $query->andFilterWhere(['like', 'project_no', $this->project_no])
-            ->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'typhoon', $this->typhoon])
-            ->andFilterWhere(['like', 'data_type', $this->data_type])
-            ->andFilterWhere(['like', 'period', $this->period]);
+        $query
+            ->andFilterWhere(['source_id' => null]);
+
+        $query
+            ->orFilterWhere(['like', 'project_no', $this->globalSearch])
+            ->orFilterWhere(['like', 'project.title', $this->globalSearch])
+            ->orFilterWhere(['like', 'sector.title', $this->globalSearch])
+            ->orFilterWhere(['like', 'mode_of_implementation.title', $this->globalSearch]);
+
+        if(Yii::$app->user->can('AgencyUser'))
+        {
+            $query = $query->andWhere(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        }
+                
+        $query = $query->andWhere(['draft' => 'No']);
+        $query = $query->andWhere(['source_id' => null]);
+        $query = $query->orderBy(['id' => SORT_DESC]);
+
 
         return $dataProvider;
     }

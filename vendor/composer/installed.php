@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '61251115c054f8b952301b3e342ed553944a4f32',
+        'reference' => 'c6a69c015aac51724a5c27fd4517d35793255c9c',
         'name' => 'yiisoft/yii2-app-advanced',
         'dev' => true,
     ),
@@ -244,6 +244,17 @@
             'install_path' => __DIR__ . '/../box/spout',
             'aliases' => array(),
             'reference' => '9bdb027d312b732515b884a341c0ad70372c6295',
+            'dev_requirement' => false,
+        ),
+        'buttflattery/yii2-formwizard' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'type' => 'yii2-extension',
+            'install_path' => __DIR__ . '/../buttflattery/yii2-formwizard',
+            'aliases' => array(
+                0 => '9999999-dev',
+            ),
+            'reference' => '13a963c777a2e580698841526573fab49fc8a0b3',
             'dev_requirement' => false,
         ),
         'c006/yii2-migration-utility' => array(
@@ -1276,7 +1287,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => '61251115c054f8b952301b3e342ed553944a4f32',
+            'reference' => 'c6a69c015aac51724a5c27fd4517d35793255c9c',
             'dev_requirement' => false,
         ),
         'yiisoft/yii2-authclient' => array(

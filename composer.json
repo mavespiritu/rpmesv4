@@ -27,7 +27,8 @@
         "faryshta/yii2-disable-submit-buttons": "~2.0.0",
         "bedezign/yii2-audit": "^1.0",
         "fedemotta/yii2-widget-datatables": "*",
-        "2amigos/yii2-switchery-widget": "*"
+        "2amigos/yii2-switchery-widget": "*",
+        "buttflattery/yii2-formwizard": "@dev"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
@@ -61,7 +62,10 @@
         "fxp-asset": {
             "enabled": false
         },
-        "secure-http":false
+        "secure-http":false,
+        "allow-plugins": {
+            "yiisoft/yii2-composer": true
+        }
     },
     "repositories": [
         {

@@ -5,6 +5,8 @@ namespace common\modules\rpmes\models;
 use Yii;
 use markavespiritu\user\models\UserInfo;
 use common\components\helpers\HtmlHelper;
+use yii\helpers\ArrayHelper;
+use markavespiritu\user\models\User;
 /**
  * This is the model class for table "submission".
  *
@@ -43,6 +45,12 @@ class Submission extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
+            [['year'], 'required', 'on' => 'createMonitoringPlan'],
+            [['year', 'quarter'], 'required', 'on' => 'createAccomplishmentReport'],
+            [['year','agency_id'], 'validateMonitoringPlan'],
+            [['year', 'quarter', 'agency_id'], 'validateAccomplishmentReport'],
+            [['year', 'agency_id'], 'required', 'on' => 'createMonitoringPlanAdmin'],
+            [['year', 'quarter', 'agency_id'], 'required', 'on' => 'createAccomplishmentReportAdmin'],
             [['agency_id'], 'required', 'on' => 'monitoringPlanAdmin'],
             [['year'], 'required', 'on' => 'acknowledgmentMonitoringPlan'],
             [['year'], 'required', 'on' => 'acknowledgmentMonitoringReport'],
@@ -86,11 +94,72 @@ class Submission extends \yii\db\ActiveRecord
         ];
     }
 
+    public function validateMonitoringPlan($attribute, $params, $validator)
+    {
+        if($this->report == 'Monitoring Plan')
+        {
+            $model = Submission::findOne(['year' => $this->year, 'agency_id' => $this->agency_id]);
+
+            if($model)
+            {
+                $this->addError($attribute, 'This monitoring plan already exists');
+            }
+        }
+    }
+
+    public function validateAccomplishmentReport($attribute, $params, $validator)
+    {
+        if($this->report == 'Accomplishment')
+        {
+            $model = Submission::findOne(['year' => $this->year, 'quarter' => $this->quarter, 'agency_id' => $this->agency_id]);
+
+            if($model)
+            {
+                $this->addError($attribute, 'This accomplishment report already exists');
+            }
+        }
+    }
+
     /**
      * Gets query for [[Agency]].
      *
      * @return \yii\db\ActiveQuery
      */
+    public function getPlans()
+    {
+        return $this->hasMany(Plan::className(), ['submission_id' => 'id']);
+    }
+
+    public function getSubmissionLogs()
+    {
+        return $this->hasMany(SubmissionLog::className(), ['submission_id' => 'id']);
+    }
+
+    public function getCurrentSubmissionLog()
+    {
+        return $this->getSubmissionLogs()->orderBy(['id' => SORT_DESC])->one();
+    }
+
+    public function getCurrentStatus()
+    {
+        return $this->currentSubmissionLog ? $this->currentSubmissionLog->status : 'Draft';
+    }
+
+    public function getSubmitted()
+    {
+        return $this->getSubmissionLogs()->where(['status' => 'Submitted'])->orderBy(['id' => SORT_DESC])->one();
+    }
+
+    public function getForFurtherValidation()
+    {
+        return $this->getSubmissionLogs()->where(['status' => 'For further validation'])->orderBy(['id' => SORT_DESC])->one();
+    }
+
+    public function getAcknowledged()
+    {
+        return $this->getSubmissionLogs()->where(['status' => 'Acknowledged'])->orderBy(['id' => SORT_DESC])->one();
+    }
+
     public function getAgency()
     {
         return $this->hasOne(Agency::className(), ['id' => 'agency_id']);
@@ -101,6 +170,14 @@ class Submission extends \yii\db\ActiveRecord
         return $this->hasOne(Acknowledgment::className(), ['submission_id' => 'id']);
     }
     
+    public function getAcknowledger()
+    {
+        $acknowledgment = $this->acknowledgment; 
+
+        $acknowledger = $acknowledgment ? UserInfo::findOne(['user_id' => $this->acknowledgment->acknowledged_by]) : null;
+
+        return !is_null($acknowledger) ? $acknowledger->FIRST_M." ".$acknowledger->LAST_M : '';
+    }
 
     public function getSubmitter()
     {
@@ -118,15 +195,7 @@ class Submission extends \yii\db\ActiveRecord
 
     public function getProjectCount()
     {
-        $projects = Plan::find()
-            ->leftJoin('project', 'project.id = plan.project_id')
-            ->andWhere([
-                'project.agency_id' => $this->agency_id,
-                'plan.year' => $this->year
-            ])
-            ->count();
-
-        return $projects;
+        return count($this->plans);
     }
 
     public function getDeadlineStatus()
@@ -155,5 +224,80 @@ class Submission extends \yii\db\ActiveRecord
     public function getLocation()
     {
         return $this->project->location;
+    }
+
+    public function sendFormOneSubmissionNotification($emails)
+    {
+        // Your email sending logic here
+        // Example using Yii2 mailer component:
+        $mailer = Yii::$app->mailer;
+        $message = $mailer->compose('submit-form-one-html', [
+                'model' => $this
+            ])
+            ->setFrom('mvespiritu@neda.gov.ph')
+            ->setTo($emails)
+            ->setSubject('eRPMES Notification: '.$this->agency->code.' Form 1 Submission');
+
+        if ($message->send()) {
+            Yii::info('Email sent successfully', 'email');
+        } else {
+            Yii::error('Failed to send email', 'email');
+        }
+    }
+
+    public function sendFormTwoSubmissionNotification($emails)
+    {
+        // Your email sending logic here
+        // Example using Yii2 mailer component:
+        $mailer = Yii::$app->mailer;
+        $message = $mailer->compose('submit-form-two-html', [
+                'model' => $this
+            ])
+            ->setFrom('mvespiritu@neda.gov.ph')
+            ->setTo($emails)
+            ->setSubject('eRPMES Notification: '.$this->agency->code.' Form 2 Submission for '.$this->quarter.' '.$this->year);
+
+        if ($message->send()) {
+            Yii::info('Email sent successfully', 'email');
+        } else {
+            Yii::error('Failed to send email', 'email');
+        }
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+
+        if ($insert) {
+            // This code will be executed after a new record is inserted
+
+        } else {
+            $adminRole = Yii::$app->authManager->getRole('Administrator');
+
+            if ($adminRole !== null) {
+                // Get all users assigned to the 'Administrator' role
+                $admins = User::find()
+                ->innerJoin('auth_assignment', 'auth_assignment.user_id = user.id')
+                ->where(['auth_assignment.item_name' => $adminRole->name])
+                ->all();
+
+                $emails = [];
+
+                if($admins){
+                    foreach($admins as $admin){
+                        $emails[] = $admin->email;
+                    }
+                }
+
+                if($this->report == 'Monitoring Plan')
+                {
+                    $this->sendFormOneSubmissionNotification($emails);
+
+                }else if($this->report == 'Accomplishment')
+                {
+                    $this->sendFormTwoSubmissionNotification($emails);
+                }
+            }
+        }
     }
 }

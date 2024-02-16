@@ -115,7 +115,15 @@
             <div class="box box-solid">
                 <div class="box-body">
                     <h4>Recent Activities</h4>
-                    <p>This section is under maintenance.</p>
+                    <?php if($logs){ ?>
+                        <?php foreach($logs as $log){ ?>
+                            <?php if($log->status == 'Submitted'){ ?>
+                                <p><?= $log->actor ?> submitted the Agency <?= $log->submission->report ?> <?= $log->submission->year ?> Report last <?= $log->datetime ?></p>
+                            <?php }else if($log->status == 'For further validation'){ ?>
+                                <p><?= $log->actor ?> has requested to revise the Agency <?= $log->submission->report ?> <?= $log->submission->year ?> Report last <?= $log->datetime ?></p>
+                            <?php } ?>
+                        <?php } ?>
+                    <?php } ?>
                 </div>
             </div>
         </div>

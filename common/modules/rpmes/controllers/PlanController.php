@@ -10,6 +10,7 @@ use common\models\Barangay;
 use common\modules\rpmes\models\DueDate;
 use common\modules\rpmes\models\Project;
 use common\modules\rpmes\models\Plan;
+use common\modules\rpmes\models\PlanSearch;
 use common\modules\rpmes\models\ProjectTarget;
 use common\modules\rpmes\models\ProjectRegion;
 use common\modules\rpmes\models\ProjectProvince;
@@ -22,6 +23,7 @@ use common\modules\rpmes\models\ProjectRdpChapterOutcome;
 use common\modules\rpmes\models\ProjectRdpSubChapterOutcome;
 use common\modules\rpmes\models\ProjectExpectedOutput;
 use common\modules\rpmes\models\ProjectOutcome;
+use common\modules\rpmes\models\ProjectHasFundSources;
 use common\modules\rpmes\models\Agency;
 use common\modules\rpmes\models\Program;
 use common\modules\rpmes\models\Sector;
@@ -40,15 +42,21 @@ use common\modules\rpmes\models\ProjectSearch;
 use common\modules\rpmes\models\Model;
 use common\modules\rpmes\models\MultipleModel;
 use common\modules\rpmes\models\Submission;
+use common\modules\rpmes\models\SubmissionLog;
+use common\modules\rpmes\models\SubmissionSearch;
+use markavespiritu\user\models\User;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\helpers\ArrayHelper;
+use yii\widgets\ActiveForm;
 use yii\db\Query;
 use yii\helpers\Json;
 use yii\data\Pagination;
 use kartik\mpdf\Pdf;
+use yii\web\Response;
+
 class PlanController extends \yii\web\Controller
 {
     /**
@@ -77,7 +85,15 @@ class PlanController extends \yii\web\Controller
         ];
     }
 
-    public function actionIndex()
+    function removeMask($figure)
+    {
+        $figure = explode(",",$figure);
+        $number = implode("", $figure);
+
+        return $number;
+    }
+
+    /* public function actionIndex()
     {
         $model = new Project();
         $model->year = date("Y");
@@ -158,7 +174,7 @@ class PlanController extends \yii\web\Controller
             'Maintained' => 'Maintained',
         ];
 
-        $dueDate = DueDate::findOne(['report' => 'Monitoring Plan', 'year' => date("Y")]);
+        $dueDate = DueDate::find()->where(['report' => 'Monitoring Plan']);
         $projectsPaging = Project::find();
         $projectsPaging = Yii::$app->user->can('AgencyUser') ? 
             $projectsPaging
@@ -271,6 +287,9 @@ class PlanController extends \yii\web\Controller
                 $provinceIDs = $provinceIDs->andWhere(['year' => $project['year']]);
                 $categoryIDs = $categoryIDs->andWhere(['year' => $project['year']]);
                 $model->year = $project['year'];
+                $dueDate = $dueDate->andWhere(['year' => $project['year']]);
+            }else{
+                $dueDate = $dueDate->andWhere(['year' => date("Y")]);
             }
 
             if(!empty($project['agency_id']))
@@ -422,6 +441,8 @@ class PlanController extends \yii\web\Controller
                 ->orderBy(['id' => SORT_DESC])
                 ->all();
 
+            $dueDate = $dueDate->one();
+
             return $this->render('index', [
                 'model' => $model,
                 'regionModel' => $regionModel,
@@ -455,6 +476,8 @@ class PlanController extends \yii\web\Controller
             ]);
         }
 
+        $dueDate = $dueDate->one();
+
         return $this->render('index', [
             'model' => $model,
             'regionModel' => $regionModel,
@@ -485,6 +508,599 @@ class PlanController extends \yii\web\Controller
             'totals' => $totals,
             'periods' => $periods,
             'dataTypes' => $dataTypes,
+        ]);
+    } */
+
+    public function actionIndex()
+    {
+        $searchModel = new SubmissionSearch();
+        $searchModel->report = 'Monitoring Plan';
+
+        if(Yii::$app->user->can('AgencyUser'))
+        {
+            $searchModel->agency_id = Yii::$app->user->identity->userinfo->AGENCY_C;
+        }
+
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('index', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    public function actionView($id)
+    {
+        $model = Submission::findOne($id);
+
+        $dueDate = DueDate::findOne(['year' => $model->year, 'report' => 'Monitoring Plan']);
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        $searchModel = new PlanSearch();
+        $searchModel->submission_id = $model->id;
+
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        $projects = [];
+
+        if($model->plans){
+            foreach($model->plans as $plan){
+                $projects[$plan->id] = $plan;
+            }
+        }
+
+        if(MultipleModel::loadMultiple($projects, Yii::$app->request->post()))
+        {
+            $selectedProjects = [];
+            $postData = Yii::$app->request->post('Plan');
+            if(!empty($postData)){
+                foreach($postData as $project){
+                    if($project['id'] != 0){
+                        $plan = Plan::findOne($project['id']);
+                        if($plan){
+                            ProjectExpectedOutput::deleteAll([
+                                'project_id' => $plan->project_id,
+                                'year' => $plan->year
+                            ]);
+    
+                            ProjectTarget::deleteAll([
+                                'project_id' => $plan->project_id,
+                                'year' => $plan->year
+                            ]);
+
+                            $plan->delete();
+                        }
+                    }
+                }
+            }
+
+
+            \Yii::$app->getSession()->setFlash('success', 'Selected projects were removed in monitoring plan successfully');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->render('view', [
+            'model' => $model,
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'projects' => $projects,
+            'dueDate' => $dueDate,
+        ]);
+    }
+
+    public function actionTarget($id)
+    {
+        $model = Submission::findOne($id);
+
+        $dueDate = DueDate::findOne(['year' => $model->year, 'report' => 'Monitoring Plan']);
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        $months = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        $targets = [];
+        $oiTargets = [];
+        $indicators = [];
+
+        $metrics = [
+            'Percentage' => '%',
+            'Numerical' => '123'
+        ];
+
+        $projectIDs = $model->plans ? ArrayHelper::map($model->plans, 'project_id', 'project_id') : [];
+
+        $projectsPaging = Plan::find();
+        $projectsPaging
+            ->andWhere(['project_id' => $projectIDs])
+            ->andWhere(['submission_id' => $model->id]);
+        $countProjects = clone $projectsPaging;
+        $projectsPages = new Pagination([
+            'totalCount' => $countProjects->count(),
+            'pageSize' => 5
+        ]);
+        $projectsModels = $projectsPaging->offset($projectsPages->offset)
+            ->limit($projectsPages->limit)
+            ->orderBy(['project_id' => SORT_ASC])
+            ->all();
+
+        if($projectsModels){
+            foreach($projectsModels as $plan){
+                $physical = ProjectTarget::findOne([
+                                'project_id' => $plan->project_id,
+                                'year' => $plan->year,
+                                'target_type' => 'Physical',
+                            ]) ? ProjectTarget::findOne([
+                                'project_id' => $plan->project_id,
+                                'year' => $plan->year,
+                                'target_type' => 'Physical',
+                            ]) : new ProjectTarget();
+                
+                $physical->scenario = 'physicalTarget';
+                $physical->project_id = $plan->project_id;
+                $physical->year = $plan->year;
+                $physical->target_type = 'Physical';
+
+                $targets[$plan->project_id]['physical'] = $physical;
+
+                $financial = ProjectTarget::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $plan->year,
+                    'target_type' => 'Financial',
+                ]) ? ProjectTarget::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $plan->year,
+                    'target_type' => 'Financial',
+                ]) : new ProjectTarget();
+    
+                $financial->scenario = 'financialTarget';
+                $financial->project_id = $plan->project_id;
+                $financial->year = $plan->year;
+                $financial->target_type = 'Financial';
+
+                $targets[$plan->project_id]['financial'] = $financial;
+
+                $maleEmployed = ProjectTarget::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $plan->year,
+                    'target_type' => 'Male Employed',
+                ]) ? ProjectTarget::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $plan->year,
+                    'target_type' => 'Male Employed',
+                ]) : new ProjectTarget();
+    
+                $maleEmployed->scenario = 'employmentTarget';
+                $maleEmployed->project_id = $plan->project_id;
+                $maleEmployed->year = $plan->year;
+                $maleEmployed->target_type = 'Male Employed';
+
+                $targets[$plan->project_id]['maleEmployed'] = $maleEmployed;
+
+                $femaleEmployed = ProjectTarget::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $plan->year,
+                    'target_type' => 'Female Employed',
+                ]) ? ProjectTarget::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $plan->year,
+                    'target_type' => 'Female Employed',
+                ]) : new ProjectTarget();
+                    
+                $femaleEmployed->scenario = 'employmentTarget';
+                $femaleEmployed->project_id = $plan->project_id;
+                $femaleEmployed->year = $plan->year;
+                $femaleEmployed->target_type = 'Female Employed';
+
+                $targets[$plan->project_id]['femaleEmployed'] = $femaleEmployed;
+
+                $ois = $plan->project->projectHasOutputIndicators;
+
+                $beneficiariesModel = ProjectExpectedOutput::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $plan->year,
+                    'indicator' => 'number of individual beneficiaries served',
+                ]) ? ProjectExpectedOutput::findOne([
+                    'project_id' => $plan->project_id,
+                    'year' => $plan->year,
+                    'indicator' => 'number of individual beneficiaries served',
+                ]) : new ProjectExpectedOutput();
+
+                if($ois){
+                    foreach($ois as $oi){
+                        $eoModel = ProjectExpectedOutput::find()->where([
+                            'project_id' => $plan->project->id,
+                            'year' => $plan->year,
+                            'indicator' => $oi->indicator,
+                            'target' => $oi->target
+                        ])->one() ? ProjectExpectedOutput::find()->where([
+                            'project_id' => $plan->project->id,
+                            'year' => $plan->year,
+                            'indicator' => $oi->indicator,
+                            'target' => $oi->target
+                        ])->one() : new ProjectExpectedOutput();
+
+                        $eoModel->project_id = $plan->project->id;
+                        $eoModel->year = $plan->year;
+                        $eoModel->indicator = $oi->indicator;
+                        $eoModel->target = $oi->target;
+
+                        $oiTargets[$plan->project->id][$oi->indicator] = $eoModel; 
+                    }
+                }
+
+                $beneficiariesModel->project_id = $plan->project->id;
+                $beneficiariesModel->year = $plan->year;
+                $beneficiariesModel->indicator = 'number of individual beneficiaries served';
+
+                $oiTargets[$plan->project->id]['number of individual beneficiaries served'] = $beneficiariesModel;
+                
+                $indicators[$plan->project_id] = ArrayHelper::map($plan->project->projectHasOutputIndicators, 'indicator', 'indicator');
+
+            }
+        }
+
+        if(Yii::$app->request->post()){
+            $postData = Yii::$app->request->post();
+            $getData = Yii::$app->request->get();
+
+            $targetModels = $postData['ProjectTarget'];
+            $oiTargetModels = $postData['ProjectExpectedOutput'];
+
+            if(!empty($targetModels)){
+                foreach($targetModels as $projectID => $targetModel){
+
+                    $physicalValue = $targetModel['physical'];
+
+                    $physicalModel = ProjectTarget::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'target_type' => 'Physical',
+                    ]) ? ProjectTarget::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'target_type' => 'Physical',
+                    ]) : new ProjectTarget();
+                    
+                    $physicalModel->project_id = $projectID;
+                    $physicalModel->year = $model->year;
+                    $physicalModel->target_type = 'Physical';
+                    $physicalModel->indicator = !empty($physicalValue['updatedIndicator']) ? $physicalValue['updatedIndicator'] : $physicalValue['indicator'];
+                    $physicalModel->type = !empty($physicalValue['updatedType']) ? $physicalValue['updatedType'] : $physicalValue['type'];
+                    $physicalModel->baseline = $this->removeMask($physicalValue['baseline']);
+
+                    foreach($months as $mo => $month){
+                        $physicalModel->$mo = $this->removeMask($physicalValue[$mo]);
+                    }
+
+                    $physicalModel->save(false);
+
+                    $financialValue = $targetModel['financial'];
+
+                    $financialModel = ProjectTarget::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'target_type' => 'Financial',
+                    ]) ? ProjectTarget::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'target_type' => 'Financial',
+                    ]) : new ProjectTarget();
+                    
+                    $financialModel->project_id = $projectID;
+                    $financialModel->year = $model->year;
+                    $financialModel->target_type = 'Financial';
+                    $financialModel->allocation = $this->removeMask($financialValue['allocation']);
+                    $financialModel->releases = $this->removeMask($financialValue['releases']);
+
+                    foreach($months as $mo => $month){
+                        $financialModel->$mo = $this->removeMask($financialValue[$mo]);
+                    }
+
+                    $financialModel->save(false);
+
+                    $maleEmployedValue = $targetModel['maleEmployed'];
+
+                    $maleEmployedModel = ProjectTarget::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'target_type' => 'Male Employed',
+                    ]) ? ProjectTarget::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'target_type' => 'Male Employed',
+                    ]) : new ProjectTarget();
+                    
+                    $maleEmployedModel->project_id = $projectID;
+                    $maleEmployedModel->year = $model->year;
+                    $maleEmployedModel->target_type = 'Male Employed';
+                    $maleEmployedModel->annual = $this->removeMask($maleEmployedValue['annual']);
+
+                    $maleEmployedModel->save(false);
+
+                    $femaleEmployedValue = $targetModel['femaleEmployed'];
+
+                    $femaleEmployedModel = ProjectTarget::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'target_type' => 'Female Employed',
+                    ]) ? ProjectTarget::findOne([
+                        'project_id' => $projectID,
+                        'year' => $model->year,
+                        'target_type' => 'Female Employed',
+                    ]) : new ProjectTarget();
+                    
+                    $femaleEmployedModel->project_id = $projectID;
+                    $femaleEmployedModel->year = $model->year;
+                    $femaleEmployedModel->target_type = 'Female Employed';
+                    $femaleEmployedModel->annual = $this->removeMask($femaleEmployedValue['annual']);
+
+                    $femaleEmployedModel->save(false);
+
+                    if(!empty($oiTargetModels[$projectID])){
+                        foreach($oiTargetModels[$projectID] as $oiID => $oiTarget){
+    
+                            $oiModel = ProjectExpectedOutput::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'indicator' => $oiID,
+                            ]) ? ProjectExpectedOutput::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'indicator' => $oiID,
+                            ]) : new ProjectExpectedOutput();
+    
+                            $oiModel->project_id = $projectID;
+                            $oiModel->year = $model->year;
+                            $oiModel->indicator = $oiID;
+                            $oiModel->target = $oiTarget['target'];
+                            $oiModel->type = 'Numerical';
+                            $oiModel->baseline = $this->removeMask($oiTarget['baseline']);
+
+                            foreach($months as $mo => $month){
+                                $oiModel->$mo = $this->removeMask($oiTarget[$mo]);
+                            }
+
+                            $oiModel->save(false);
+                        }
+                    }
+
+                }
+            }
+
+            \Yii::$app->getSession()->setFlash('success', 'Targets were saved successfully');
+                    return isset($getData['page']) ? 
+                        $this->redirect(['target', 
+                            'id' => $model->id, 
+                            'page' => $getData['page'],
+                        ]) : $this->redirect(['target', 
+                            'id' => $model->id,
+                        ]);
+        }
+
+        return $this->render('target', [
+            'model' => $model,
+            'projectsModels' => $projectsModels,
+            'projectsPages' => $projectsPages,
+            'months' => $months,
+            'targets' => $targets,
+            'oiTargets' => $oiTargets,
+            'metrics' => $metrics,
+            'indicators' => $indicators,
+            'dueDate' => $dueDate,
+        ]);
+    }
+
+    public function actionCreate()
+    {
+        if(!Yii::$app->user->can('AgencyUser')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $model = new Submission();
+        $model->scenario = Yii::$app->user->can('Administrator') ? 'createMonitoringPlanAdmin' : 'createMonitoringPlan';
+
+        $model->report = 'Monitoring Plan';
+        $model->agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : $model->agency_id;
+        $model->draft = 'Yes';
+
+        $agencies = Agency::find()->select(['id', 'concat(title," (",code,")") as title'])->orderBy(['title' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+
+            \Yii::$app->getSession()->setFlash('success', 'Record created');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->renderAjax('create', [
+            'model' => $model,
+            'agencies' => $agencies,
+        ]);
+    }
+
+    public function actionUpdate($id)
+    {
+        $model = Submission::findOne($id);
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        $model->scenario = Yii::$app->user->can('Administrator') ? 'createMonitoringPlanAdmin' : 'createMonitoringPlan';
+
+        $agencies = Agency::find()->select(['id', 'concat(title," (",code,")") as title'])->orderBy(['title' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return ActiveForm::validate($model);
+        }
+
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+
+            \Yii::$app->getSession()->setFlash('success', 'Record updated');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        return $this->renderAjax('update', [
+            'model' => $model,
+            'agencies' => $agencies,
+        ]);
+    }
+
+    public function actionDelete($id)
+    {
+        $model = Submission::findOne($id);
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        $model->delete();
+
+        \Yii::$app->getSession()->setFlash('success', 'Record deleted');
+
+        return $this->redirect(['index']);
+    }
+
+    public function actionInclude($id)
+    {
+
+        $model = Submission::findOne($id);
+
+        $dueDate = DueDate::findOne(['year' => $model->year, 'report' => 'Monitoring Plan']);
+
+        if($dueDate){
+            if(strtotime(date("Y-m-d")) >= strtotime($dueDate->due_date)){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }else{
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
+        $existingProjects = $model->plans;
+        $existingProjects = ArrayHelper::map($existingProjects, 'project_id', 'project_id');
+
+        $projects = [];
+
+        $availableProjects = Project::find()
+                    ->andWhere(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])
+                    ->andWhere(['source_id' => null])
+                    ->andWhere(['draft' => 'No'])
+                    ->andWhere(['not in', 'id', $existingProjects])
+                    ->orderBy(['id' => SORT_DESC])
+                    ->all();
+
+        if($availableProjects){
+            foreach($availableProjects as $project){
+                $projects[$project->id] = $project;
+            }
+        }
+
+        if(MultipleModel::loadMultiple($projects, Yii::$app->request->post()))
+        {
+            $selectedProjects = [];
+            $postData = Yii::$app->request->post('Project');
+            if(!empty($postData)){
+                foreach($postData as $project){
+                    if($project['id'] != 0){
+                        $project = Project::findOne($project['id']);
+
+                        $includedProject = new Plan();
+                        $includedProject->submission_id = $model->id;
+                        $includedProject->project_id = $project['id'];
+                        $includedProject->year = $model->year;
+                        $includedProject->submitted_by = Yii::$app->user->id;
+                        if($includedProject->save(false)){
+                            if($project->projectHasOutputIndicators){
+                                foreach($project->projectHasOutputIndicators as $oi){
+                                    $eoModel = new ProjectExpectedOutput();
+                                    $eoModel->project_id = $project->id;
+                                    $eoModel->year = $model->year;
+                                    $eoModel->indicator = $oi->indicator;
+                                    $eoModel->target = $oi->target;
+                                    $eoModel->save(false);
+                                }
+                            }   
+                        }                     
+                    }
+                }
+            }
+
+            \Yii::$app->getSession()->setFlash('success', 'Selected projects were included in monitoring plan successfully');
+            return $this->redirect(['view', 'id' => $model->id]);
+
+        }
+        return $this->renderAjax('include', [
+            'model' => $model,
+            'projects' => $projects,
+            'dueDate' => $dueDate,
+        ]);
+
+    }
+
+    public function actionOutputIndicator($id, $year)
+    {
+        $model = Plan::findOne($id);
+
+        $expectedOutputs = $model->project->getProjectExpectedOutputs()->where(['year' => $year])->all();
+
+        $months = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        return $this->renderAjax('output-indicator', [
+            'model' => $model,
+            'months' => $months,
+            'expectedOutputs' => $expectedOutputs
         ]);
     }
 
@@ -536,37 +1152,395 @@ class PlanController extends \yii\web\Controller
         return $submission ? '<i class="fa fa-exclamation-circle"></i> Monitoring plan has been submitted last '.date("F j, Y H:i:s", strtotime($submission->date_submitted)).' by '.$submission->submitter : '<i class="fa fa-exclamation-circle"></i> Monitoring plan not yet submitted';
     }
 
-    public function actionSubmit()
+    public function actionSubmit($id)
     {
+        $model = Submission::findOne($id);
+
         if(Yii::$app->request->post())
         {
-            $postData = Yii::$app->request->post('Submission');
-            
-            if(Yii::$app->user->can('AgencyUser')){
-                $model = Submission::findOne(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'year' => date("Y")]) ? 
-                Submission::findOne(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C, 'report' => 'Monitoring Plan', 'year' => date("Y")]) : 
-                new Submission();
-            }else{
-                $model = Submission::findOne(['agency_id' => $postData['agency_id'], 'report' => 'Monitoring Plan', 'year' => date("Y")]) ? 
-                Submission::findOne(['agency_id' => $postData['agency_id'], 'report' => 'Monitoring Plan', 'year' => date("Y")]) : 
-                new Submission();
-            }
-            
-            $model->agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : $postData['agency_id'];
-            $model->report = 'Monitoring Plan';
-            $model->year = date("Y");
             $model->submitted_by = Yii::$app->user->id;
+            $model->date_submitted = date("Y-m-d H:i:s");
             $model->draft = 'No';
+            $model->save(false);
 
-            if($model->save(false))
+            $logModel = new SubmissionLog();
+            $logModel->submission_id = $model->id;
+            $logModel->user_id = Yii::$app->user->id;
+            $logModel->status = 'Submitted';
+
+            if($logModel->save(false))
             {
                 \Yii::$app->getSession()->setFlash('success', 'Monitoring plan has been submitted successfully');
-                return $this->redirect(['/rpmes/plan/']);
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         }
     }
 
-    public function actionDownloadMonitoringPlan(
+    public function actionDownload(
+        $id,
+        $type,
+    )
+    {
+        $model = Submission::findOne($id);
+
+        $projectIDs = ArrayHelper::map($model->plans, 'project_id', 'project_id');
+
+        $months = [
+            'jan' => 'January',
+            'feb' => 'February',
+            'mar' => 'March',
+            'apr' => 'April',
+            'may' => 'May',
+            'jun' => 'June',
+            'jul' => 'July',
+            'aug' => 'August',
+            'sep' => 'September',
+            'oct' => 'October',
+            'nov' => 'November',
+            'dec' => 'December',
+        ];
+
+        $monthsWithoutJanuary = [
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+            'dec' => 'Dec',
+        ];
+
+        $monthsWithoutDecember = [
+            'jan' => 'Jan',
+            'feb' => 'Feb',
+            'mar' => 'Mar',
+            'apr' => 'Apr',
+            'may' => 'May',
+            'jun' => 'Jun',
+            'jul' => 'Jul',
+            'aug' => 'Aug',
+            'sep' => 'Sep',
+            'oct' => 'Oct',
+            'nov' => 'Nov',
+        ];
+
+        $targets = [];
+
+        $financials = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year, 'project_id' => $projectIDs])->asArray()->all();
+
+        if(!empty($financials)){
+            foreach($financials as $target){
+                $targets['financial'][$target['project_id']] = $target;
+            }
+        }
+
+        $financialTargets = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year, 'project_id' => $projectIDs])->createCommand()->getRawSql();
+        
+        
+        $physicals = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->asArray()->all();
+
+        if(!empty($physicals)){
+            foreach($physicals as $target){
+                $targets['physical'][$target['project_id']] = $target;
+            }
+        }
+
+        $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year, 'project_id' => $projectIDs])->createCommand()->getRawSql();
+
+        $malesEmployed = ProjectTarget::find()->where(['target_type' => 'Male Employed', 'year' => $model->year, 'project_id' => $projectIDs])->asArray()->all();
+
+        if(!empty($malesEmployed)){
+            foreach($malesEmployed as $target){
+                $targets['maleEmployed'][$target['project_id']] = $target;
+            }
+        }
+
+        $maleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Male Employed', 'year' => $model->year, 'project_id' => $projectIDs])->createCommand()->getRawSql();
+
+
+        $femalesEmployed = ProjectTarget::find()->where(['target_type' => 'Female Employed', 'year' => $model->year, 'project_id' => $projectIDs])->asArray()->all();
+
+        if(!empty($femalesEmployed)){
+            foreach($femalesEmployed as $target){
+                $targets['maleEmployed'][$target['project_id']] = $target;
+            }
+        }
+
+        $femaleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Female Employed', 'year' => $model->year, 'project_id' => $projectIDs])->createCommand()->getRawSql();
+
+        $outputIndicatorTargets = ProjectExpectedOutput::find()->where(['year' => $model->year, 'project_id' => $projectIDs])->orderBy(['id' => SORT_ASC])->asArray()->all();
+
+        if (!empty($outputIndicatorTargets)) {
+            foreach ($outputIndicatorTargets as $i => $target) {
+                $targets['outputIndicators'][$target['project_id']][] = $target; // Change $i to [] to automatically append the next index
+        
+                $currentIndex = count($targets['outputIndicators'][$target['project_id']]) - 1; // Get the current index
+        
+                $targets['outputIndicators'][$target['project_id']][$currentIndex]['total'] = 0;
+                $targets['outputIndicators'][$target['project_id']][$currentIndex]['rawTotal'] = 0;
+        
+                if ($target['type'] == 'Percentage') {
+                    foreach ($months as $mo => $month) {
+                        $targets['outputIndicators'][$target['project_id']][$currentIndex]['total'] += floatval($target[$mo]);
+                    }
+                } else {
+                    foreach ($months as $mo => $month) {
+                        $targets['outputIndicators'][$target['project_id']][$currentIndex]['rawTotal'] += floatval($target[$mo]);
+                    }
+                    $targets['outputIndicators'][$target['project_id']][$currentIndex]['total'] = $targets['outputIndicators'][$target['project_id']][$currentIndex]['rawTotal'] > 0 ? 100 : 0;
+                }
+            }
+        
+            // Reindex the array numerically
+            foreach ($targets['outputIndicators'] as &$outputIndicators) {
+                $outputIndicators = array_values($outputIndicators);
+            }
+        }
+
+        $regionTitles = ProjectRegion::find()
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", <br>") as title'])
+                    ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
+                    ->leftJoin('project', 'project.id = project_region.project_id')
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['project_region.project_id'])
+                    ->createCommand()->getRawSql();
+
+        $provinceTitles = ProjectProvince::find()
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", <br>") as title'])
+                    ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
+                    ->leftJoin('project', 'project.id = project_province.project_id')
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['project_province.project_id'])
+                    ->createCommand()->getRawSql();
+
+        $citymunTitles = ProjectCitymun::find()
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", <br>") as title'])
+                    ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
+                    ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                    ->leftJoin('project', 'project.id = project_citymun.project_id')
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['project_citymun.project_id'])
+                    ->createCommand()->getRawSql();
+        
+        $barangayTitles = ProjectBarangay::find()
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", <br>") as title'])
+                    ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
+                    ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
+                    ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
+                    ->leftJoin('project', 'project.id = project_barangay.project_id')
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['project_barangay.project_id'])
+                    ->createCommand()->getRawSql();
+
+        $componentTitles = Project::find()
+                    ->select([
+                        'pro.source_id as project_id', 
+                        'GROUP_CONCAT(DISTINCT CONCAT(row_number, ". ", pro.title) ORDER BY pro.id ASC SEPARATOR "<br>") as title'
+                    ])
+                    ->from(['pro' => Project::tableName()])
+                    ->leftJoin('project mp', 'mp.id = pro.source_id')
+                    ->leftJoin(
+                        ['subquery' => Project::find()
+                            ->select(['id', 'source_id', 'ROW_NUMBER() OVER (PARTITION BY source_id ORDER BY id) AS row_number'])
+                        ],
+                        'subquery.source_id = pro.source_id and subquery.id = pro.id'
+                    )
+                    ->andWhere(['mp.draft' => 'No'])
+                    ->groupBy(['pro.source_id'])
+                    ->createCommand()->getRawSql();
+            
+        $fundingSourceTitles = ProjectHasFundSources::find()
+                    ->select([
+                        'phfs.project_id',
+                        'GROUP_CONCAT(DISTINCT CONCAT(row_number, ". ", fund_source.title, " ", phfs.type) ORDER BY phfs.id ASC SEPARATOR "<br>") as title'
+                    ])
+                    ->from(['phfs' => ProjectHasFundSources::tableName()])
+                    ->leftJoin('fund_source', 'fund_source.id = phfs.fund_source_id')
+                    ->leftJoin('project', 'project.id = phfs.project_id')
+                    ->leftJoin(
+                        ['subquery' => ProjectHasFundSources::find()
+                            ->select(['project_id', 'fund_source_id', 'ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY fund_source_id) AS row_number'])
+                        ],
+                        'subquery.project_id = phfs.project_id AND subquery.fund_source_id = phfs.fund_source_id'
+                    )
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['phfs.project_id'])
+                    ->createCommand()->getRawSql();
+        
+        $fundingAgencyTitles = ProjectHasFundSources::find()
+                    ->select([
+                        'phfs.project_id', 
+                        'GROUP_CONCAT(DISTINCT CONCAT(row_number, ". ", phfs.agency) ORDER BY phfs.id ASC SEPARATOR "<br>") as title'
+                        ])
+                    ->from(['phfs' => ProjectHasFundSources::tableName()])
+                    ->leftJoin('project', 'project.id = phfs.project_id')
+                    ->leftJoin(
+                        ['subquery' => ProjectHasFundSources::find()
+                            ->select(['project_id', 'fund_source_id', 'ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY fund_source_id) AS row_number'])
+                        ],
+                        'subquery.project_id = phfs.project_id AND subquery.fund_source_id = phfs.fund_source_id'
+                    )
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['phfs.project_id'])
+                    ->createCommand()->getRawSql();
+
+        $outputIndicatorTitles = ProjectExpectedOutput::find()
+                    ->select([
+                        'peo.project_id', 
+                        'GROUP_CONCAT(DISTINCT CONCAT(row_number, ". ", peo.indicator) ORDER BY peo.id ASC SEPARATOR "<br>") as title'
+                        ])
+                    ->from(['peo' => ProjectExpectedOutput::tableName()])
+                    ->leftJoin('project', 'project.id = peo.project_id')
+                    ->leftJoin(
+                        ['subquery' => ProjectExpectedOutput::find()
+                            ->select(['id', 'project_id', 'ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY id) AS row_number'])
+                        ],
+                        'subquery.project_id = peo.project_id AND subquery.id = peo.id'
+                    )
+                    ->where(['project.draft' => 'No'])
+                    ->groupBy(['peo.project_id'])
+                    ->createCommand()->getRawSql();
+        
+        $financialTotal = 'IF(project.data_type = "Cumulative",';
+        $physicalTotal = 'IF(project.data_type <> "Default",';
+        foreach(array_reverse($monthsWithoutJanuary) as $mo => $month){
+            $financialTotal .= 'IF(COALESCE(financialTargets.'.$mo.', 0) <= 0,';
+            $physicalTotal .= 'IF(COALESCE(physicalTargets.'.$mo.', 0) <= 0,';
+        }
+        $financialTotal .= 'COALESCE(financialTargets.jan, 0)';
+        $physicalTotal .= 'COALESCE(physicalTargets.jan, 0)';
+        foreach($monthsWithoutJanuary as $mo => $month){
+            $financialTotal .= ', COALESCE(financialTargets.'.$mo.', 0))';
+            $physicalTotal .= ', COALESCE(physicalTargets.'.$mo.', 0))';
+        }
+        $financialTotal .= ',';
+        $physicalTotal .= ',';
+        foreach($monthsWithoutDecember as $mo => $month){
+            $financialTotal .= 'COALESCE(financialTargets.'.$mo.', 0) +';
+            $physicalTotal .= 'COALESCE(physicalTargets.'.$mo.', 0) +';
+        }
+        $financialTotal .= 'COALESCE(financialTargets.dec, 0))';
+        $physicalTotal .= 'COALESCE(physicalTargets.dec, 0))';
+        
+        $projects = Project::find()
+                    ->select([
+                        'project.id',
+                        'project.project_no as project_no',
+                        'project.title as title',
+                        'componentTitles.title as componentTitle',
+                        'fundingSourceTitles.title as fundingSourceTitle',
+                        'fundingAgencyTitles.title as fundingAgencyTitle',
+                        'mode_of_implementation.title as modeOfImplementationTitle',
+                        'COALESCE(project.cost, 0) as cost',
+                        'sector.title as sectorTitle',
+                        'provinceTitles.title as provinceTitle',
+                        'citymunTitles.title as citymunTitle',
+                        'barangayTitles.title as barangayTitle',
+                        'DATE_FORMAT(project.start_date, "%m-%d-%y") as startDate',
+                        'DATE_FORMAT(project.completion_date, "%m-%d-%y") as endDate',
+                        'project.remarks as remarks',
+                        'maleEmployedTargets.annual as maleEmployedTotal',
+                        'femaleEmployedTargets.annual as femaleEmployedTotal',
+                        'outputIndicatorTitles.title as outputIndicatorTitle',
+                        'COALESCE('.$financialTotal.', 0) as financialTotal',
+                        'COALESCE('.$physicalTotal.', 0) as physicalTotal',
+                        'physicalTargets.type as metrics'
+                    ]);
+
+        $projects = $projects->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
+        $projects = $projects->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
+        $projects = $projects->leftJoin(['maleEmployedTargets' => '('.$maleEmployedTargets.')'], 'maleEmployedTargets.project_id = project.id');
+        $projects = $projects->leftJoin(['femaleEmployedTargets' => '('.$femaleEmployedTargets.')'], 'femaleEmployedTargets.project_id = project.id');
+        $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['componentTitles' => '('.$componentTitles.')'], 'componentTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['fundingSourceTitles' => '('.$fundingSourceTitles.')'], 'fundingSourceTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['fundingAgencyTitles' => '('.$fundingAgencyTitles.')'], 'fundingAgencyTitles.project_id = project.id');
+        $projects = $projects->leftJoin(['outputIndicatorTitles' => '('.$outputIndicatorTitles.')'], 'outputIndicatorTitles.project_id = project.id');
+        $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
+        $projects = $projects->leftJoin('mode_of_implementation', 'mode_of_implementation.id = project.mode_of_implementation_id');
+        $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
+        $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
+        $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
+        $projects = $projects->andWhere(['project.draft' => 'No']);
+        $projects = $projects->andWhere(['project.source_id' => null]);
+        $projects = $projects->andWhere(['project.id' => $projectIDs]);
+        $projects = $projects 
+                    ->asArray()
+                    ->all();
+
+        $maxOutputIndicator = ProjectExpectedOutput::find()
+                ->select(['count(id) as total'])
+                ->andWhere(['project_id' => $projectIDs])
+                ->andWhere(['year' => $model->year])
+                ->groupBy(['project_id'])
+                ->orderBy(['count(id)' => SORT_DESC])
+                ->asArray()
+                ->one();
+        
+        $filename = date("YmdHis").'_'.$model->agency->code.'_'.$model->year.'_'.'RPMES_Form_1';
+
+        if($type == 'excel')
+        {
+            header("Content-type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename=".$filename.".xls");
+            return $this->renderPartial('_plan-file', [
+                'model' => $model,
+                'type' => $type,
+                'projects' => $projects,
+                'months' => $months,
+                'maxOutputIndicator' => $maxOutputIndicator,
+                'targets' => $targets,
+            ]);
+        }else if($type == 'pdf')
+        {
+            $content = $this->renderPartial('_plan-file', [
+                'model' => $model,
+                'type' => $type,
+                'projects' => $projects,
+                'months' => $months,
+                'maxOutputIndicator' => $maxOutputIndicator,
+                'targets' => $targets,
+            ]);
+
+            $pdf = new Pdf([
+                'mode' => Pdf::MODE_CORE,
+                'format' => Pdf::FORMAT_LEGAL, 
+                'orientation' => Pdf::ORIENT_LANDSCAPE, 
+                'destination' => Pdf::DEST_DOWNLOAD, 
+                'filename' => $filename.'.pdf', 
+                'content' => $content,  
+                'marginLeft' => 11.4,
+                'marginRight' => 11.4,
+                'cssFile' => '@vendor/kartik-v/yii2-mpdf/src/assets/kv-mpdf-bootstrap.min.css',
+                'cssInline' => 'table{font-family: "Arial";border-collapse: collapse;}thead{font-size: 14px;text-align: center;vertical-align: middle;background-color: #002060;color: white;}thead tr{background-color: #002060;color: white;}td{font-size: 14px;border: 1px solid black;vertical-align: middle;}th{text-align: center;border: 1px solid black;vertical-align: middle;}h1,h2,h3,h4,h5,h6{text-align: center;font-weight: bolder;}', 
+                ]);
+        
+                $response = Yii::$app->response;
+                $response->format = \yii\web\Response::FORMAT_RAW;
+                $headers = Yii::$app->response->headers;
+                $headers->add('Content-Type', 'application/pdf');
+                return $pdf->render();
+        }else if($type == 'print')
+        {
+            return $this->renderAjax('_plan-file', [
+                'model' => $model,
+                'type' => $type,
+                'projects' => $projects,
+                'months' => $months,
+                'maxOutputIndicator' => $maxOutputIndicator,
+                'targets' => $targets,
+            ]);
+        }
+    }
+
+    /* public function actionDownloadMonitoringPlan(
         $type, 
         $year, 
         $agency_id, 
@@ -644,21 +1618,6 @@ class PlanController extends \yii\web\Controller
                         COALESCE(financials.q2, 0) +
                         COALESCE(financials.q3, 0) +
                         COALESCE(financials.q4, 0)
-                        )';
-            
-        $financialTotal = 'IF(project.data_type = "Cumulative",
-                            IF(COALESCE(financialTargets.q4, 0) <= 0,
-                                IF(COALESCE(financialTargets.q3, 0) <= 0,
-                                    IF(COALESCE(financialTargets.q2, 0) <= 0,
-                                        COALESCE(financialTargets.q1, 0)
-                                    , COALESCE(financialTargets.q2, 0))
-                                , COALESCE(financialTargets.q3, 0))
-                            , COALESCE(financialTargets.q4, 0))
-                        ,   
-                        COALESCE(financialTargets.q1, 0) +
-                        COALESCE(financialTargets.q2, 0) +
-                        COALESCE(financialTargets.q3, 0) +
-                        COALESCE(financialTargets.q4, 0)
                         )';
         
         $physicalTotal = 'IF(project.data_type <> "Default",
@@ -888,5 +1847,5 @@ class PlanController extends \yii\web\Controller
                 'genders' => $genders,
             ]);
         }
-    }
+    } */
 }

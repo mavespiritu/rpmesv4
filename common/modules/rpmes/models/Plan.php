@@ -31,10 +31,11 @@ class Plan extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['project_id', 'submitted_by'], 'integer'],
+            [['project_id', 'submission_id', 'submitted_by'], 'integer'],
             [['date_submitted'], 'safe'],
             [['year'], 'string', 'max' => 5],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
+            [['submission_id'], 'exist', 'skipOnError' => true, 'targetClass' => Submission::className(), 'targetAttribute' => ['submission_id' => 'id']],
         ];
     }
 
@@ -46,6 +47,7 @@ class Plan extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'project_id' => 'Project ID',
+            'submission_id' => 'Submission ID',
             'year' => 'Year',
             'date_submitted' => 'Date Submitted',
             'submitted_by' => 'Submitted By',
@@ -60,5 +62,10 @@ class Plan extends \yii\db\ActiveRecord
     public function getProject()
     {
         return $this->hasOne(Project::className(), ['id' => 'project_id']);
+    }
+
+    public function getSubmission()
+    {
+        return $this->hasOne(Submission::className(), ['id' => 'submission_id']);
     }
 }

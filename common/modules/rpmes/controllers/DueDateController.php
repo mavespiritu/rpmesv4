@@ -4,6 +4,7 @@ namespace common\modules\rpmes\controllers;
 
 use Yii;
 use common\modules\rpmes\models\Project;
+use common\modules\rpmes\models\Submission;
 use common\modules\rpmes\models\DueDate;
 use common\modules\rpmes\models\DueDateSearch;
 use yii\web\Controller;
@@ -52,7 +53,7 @@ class DueDateController extends Controller
         $model = new DueDate();
         $model->year = date("Y");
 
-        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = Submission::find()->select(['distinct(year) as year'])->orderBy(['year' => SORT_DESC])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
 

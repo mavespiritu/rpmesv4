@@ -13,12 +13,29 @@ use wbraganca\dynamicform\DynamicFormWidget;
 use kartik\date\DatePicker;
 use \file\components\AttachmentsInput;
 use yii\web\JsExpression;
+use buttflatteryormwizard\FormWizard;
+use dosamigos\switchery\Switchery;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 DisableButtonAsset::register($this);
 
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\Project */
 /* @var $form yii\widgets\ActiveForm */
+$months = [
+    'jan' => 'Jan',
+    'feb' => 'Feb',
+    'mar' => 'Mar',
+    'apr' => 'Apr',
+    'may' => 'May',
+    'jun' => 'Jun',
+    'jul' => 'Jul',
+    'aug' => 'Aug',
+    'sep' => 'Sep',
+    'oct' => 'Oct',
+    'nov' => 'Nov',
+    'dec' => 'Dec',
+];
+
 $js = '
 jQuery(".expected_output_wrapper").on("afterInsert", function(e, item) {
     $(".col-sm-9.col-sm-offset-3").removeClass("col-sm-9 col-sm-offset-3").addClass("col-md-12 col-xs-12");
@@ -32,6 +49,64 @@ jQuery(".outcome_wrapper").on("afterInsert", function(e, item) {
         jQuery(this).html((index + 1))
     });
 });
+jQuery(".fund_source_wrapper").on("afterInsert", function(e, item) {
+    $(".col-sm-9.col-sm-offset-3").removeClass("col-sm-9 col-sm-offset-3").addClass("col-md-12 col-xs-12");
+    jQuery(".fund_source_wrapper .fund_source-counter").each(function(index) {
+        jQuery(this).html((index + 1))
+    });
+});
+jQuery(".revised_schedule_wrapper").on("afterInsert", function(e, item) {
+    $(".col-sm-9.col-sm-offset-3").removeClass("col-sm-9 col-sm-offset-3").addClass("col-md-12 col-xs-12");
+    jQuery(".revised_schedule_wrapper .revised_schedule-counter").each(function(index) {
+        jQuery(this).html((index + 1))
+    });
+
+    $( ".revised_start_date" ).each(function() {
+        $( this ).datepicker({
+           dateFormat : "yy-mm-dd",
+           yearRange : "1925:+10",
+           maxDate : "-1D",
+           changeMonth: true,
+           changeYear: true
+        });
+   });     
+   
+   $( ".revised_end_date" ).each(function() {
+        $( this ).datepicker({
+        dateFormat : "yy-mm-dd",
+        yearRange : "1925:+10",
+        maxDate : "-1D",
+        changeMonth: true,
+        changeYear: true
+        });
+    });     
+
+    var datePickers = $(item).find("[data-krajee-kvdatepicker]");
+    datePickers.each(function(index, el) {
+        // Destroy the existing instance
+        $(el).kvDatepicker("destroy");
+
+        // Initialize the datepicker manually with the desired format
+        $(el).kvDatepicker({
+            format: "yyyy-mm-dd",
+            autoclose: true,
+        });
+
+        if ($(el).attr("name").includes("start_date")) {
+            // Handle the changeDate event for the start date picker
+            $(el).on("changeDate", function(e) {
+                // Clear the associated end date when the start date changes
+                var endIndex = $(el).attr("name").replace("start_date", "end_date");
+                var endDatePicker = $(item).find("[name=\'" + endIndex.replace(/\'/g, "\\\\\'") + "\']");
+                endDatePicker.val("").kvDatepicker("update");
+    
+                // Set the minimum date for the associated end date picker
+                var selectedStartDate = e.date;
+                endDatePicker.kvDatepicker("setStartDate", selectedStartDate);
+            });
+        }
+    });
+});
 
 jQuery(".expected_output_wrapper").on("afterDelete", function(e, item) {
     jQuery(".expected_output_wrapper .expected-output-counter").each(function(index) {
@@ -40,6 +115,16 @@ jQuery(".expected_output_wrapper").on("afterDelete", function(e, item) {
 });
 jQuery(".outcome_wrapper").on("afterDelete", function(e, item) {
     jQuery(".outcome_wrapper .outcome-counter").each(function(index) {
+        jQuery(this).html((index + 1))
+    });
+});
+jQuery(".revised_schedule_wrapper").on("afterDelete", function(e, item) {
+    jQuery(".revised_schedule_wrapper .revised_schedule-counter").each(function(index) {
+        jQuery(this).html((index + 1))
+    });
+});
+jQuery(".fund_source_wrapper").on("afterDelete", function(e, item) {
+    jQuery(".fund_source_wrapper .fund_source-counter").each(function(index) {
         jQuery(this).html((index + 1))
     });
 });
@@ -52,7 +137,7 @@ $this->registerJs($js);
     <?php $form = ActiveForm::begin([
     	'options' => ['id' => 'project-form', 'class' => 'disable-submit-buttons', 'enctype' => 'multipart/form-data'],
         'layout' => 'horizontal',
-        'enableAjaxValidation' => true,
+        //'enableAjaxValidation' => true,
         'fieldConfig' => [
             'horizontalCssClasses' => [
                 'wrapper' => 'col-sm-9',
@@ -60,37 +145,35 @@ $this->registerJs($js);
         ],
     ]); ?>
 
-    <div class="row">
+    <!-- <div class="row">
     <?php if(Yii::$app->controller->action->id != 'carry-over'){ ?>
         <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'period')->widget(Select2::classname(), [
+            <?php /* $form->field($model, 'period')->widget(Select2::classname(), [
                 'data' => ['Current Year' => 'Current Year', 'Carry-Over' => 'Carry-Over'],
                 'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'period-select'],
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
                 ])->label('Period *');
-            ?>
+ */            ?>
         </div>
     <?php } ?>
         <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'year')->textInput(['type' => 'number', 'min' => date("Y") - 1, 'max' => date("Y")])->label('Year *') ?>
+            <?php // $form->field($model, 'year')->textInput(['type' => 'number', 'min' => date("Y") - 1, 'max' => date("Y")])->label('Year *') ?>
         </div>    
-    </div>
+    </div> -->
 
     <div class="row">
-        <div class="col-md-6 col-xs-12">
-            <h4>Basic Information</h4>
-            <hr>
+        <div class="col-md-12 col-xs-12">
             <?= Yii::$app->user->can('Administrator') || Yii::$app->user->can('SuperAdministrator') ? $form->field($model, 'agency_id')->widget(Select2::classname(), [
                     'data' => $agencies,
                     'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'agency-select'],
                     'pluginOptions' => [
                         'allowClear' =>  true,
                     ],
-                ])->label('Agency *') : ''
+                ])->label('Agency') : ''
             ?>
-            <?= $form->field($model, 'program_id')->widget(Select2::classname(), [
+            <?php /* $form->field($model, 'program_id')->widget(Select2::classname(), [
                     'initValueText' => $model->program ? $model->program->title : '',
                     'data' => $programs,
                     'options' => ['placeholder' => 'Search Program', 'class' => 'program-select'],
@@ -109,89 +192,34 @@ $this->registerJs($js);
                         'templateResult' => new JsExpression('function(program) { return program.text; }'),
                         'templateSelection' => new JsExpression('function (program) { return program.text; }'),
                     ],
-                ]); 
+                ]); */ 
             ?>
 
-            <?= $form->field($model, 'title')->textInput()->label('Project Title *') ?>
+            <?= $form->field($model, 'title')->textarea(['rows' => 2, 'style' => 'resize: none;'])->label('Program/Project Title') ?>
 
-            <?= $form->field($model, 'description')->textarea(['rows' => 2]) ?>
-
-            <?= $form->field($categoryModel, 'category_id')->widget(Select2::classname(), [
-                'data' => $categories,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  false,
+            <?= $form->field($model, 'has_component')->widget(Switchery::className(), [
+                'options' => [
+                    'label' => false,
+                    'title' => 'Has component projects',
                 ],
-                'pluginEvents'=>[
-                    'select2:select'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.Url::to(['/rpmes/project/kra-list']).'",
-                                data: {
-                                    id: this.value,
-                                    }
-                            }).done(function(result) {
-                                $(".kra-select").html("").select2({ data:result, multiple: false, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
-                                $(".kra-select").select2("val","");
-                            });
-                        }'
-    
+                'clientOptions' => [
+                    'color' => '#5fbeaa',
+                    'size' => 'small'
+                ],
+                'clientEvents' => [
+                    'change' => new JsExpression('function() {
+                        this.checked == true ? this.value = 1 : this.value = 0;
+                    }'),
                 ]
-                ])->label('Category *');
-            ?>
+            ])->label("Has component projects?") ?>
 
-            <?= $form->field($kraModel, 'key_result_area_id')->widget(Select2::classname(), [
-                'data' => $kras,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'kra-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ]);
-            ?>
-
-            <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
-                'data' => $sectors,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  false,
-                ],
-                'pluginEvents'=>[
-                    'select2:select'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.Url::to(['/rpmes/project/sub-sector-list']).'",
-                                data: {
-                                        id: this.value,
-                                    }
-                            }).done(function(result) {
-                                $(".sub-sector-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
-                                $(".sub-sector-select").select2("val","");
-                            });
-                        }'
-    
-                ]
-                ])->label('Sector *');
-            ?>
-
-            <?= $form->field($model, 'sub_sector_id')->widget(Select2::classname(), [
-                'data' => $subSectors,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sub-sector-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Sub-Sector *');
-            ?>
-
-            <h4>RDP-related Information</h4>
-            <hr>
-            
             <?= $form->field($sdgModel, 'sdg_goal_id')->widget(Select2::classname(), [
                 'data' => $goals,
                 'options' => ['multiple' => true, 'placeholder' => 'Select one or more', 'class'=>'sdg-goal-select'],
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
-                ])->label('SDG Goal *');
+                ])->label('SDG Goals');
             ?>
 
             <?= $form->field($rdpChapterModel, 'rdp_chapter_id')->widget(Select2::classname(), [
@@ -227,33 +255,33 @@ $this->registerJs($js);
                         }'
     
                 ]
-                ])->label('RDP Chapter *');
+                ])->label('RDP Chapter');
             ?>
 
             <?= $form->field($rdpChapterOutcomeModel, 'rdp_chapter_outcome_id')->widget(Select2::classname(), [
-                'data' => $chapterOutcomes,
-                'options' => ['multiple' => true, 'placeholder' => 'Select one or more', 'class'=>'rdp-chapter-outcome-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                'pluginEvents'=>[
-                    'select2:select select2:unselect'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.Url::to(['/rpmes/project/sub-chapter-outcome-list']).'",
-                                dataType: "JSON",
-                                data: {
-                                        id: JSON.stringify($("#projectrdpchapteroutcome-rdp_chapter_outcome_id").select2("data")),
-                                    }
-                            }).done(function(result) {
-                                $(".rdp-sub-chapter-outcome-select").html("").select2({ data:result, multiple:true, theme:"krajee", width:"100%",placeholder:"Select one or more", allowClear: true});
-                                $(".rdp-sub-chapter-outcome-select").select2("val","");
-                            });
-                        }'
-    
-                ]
-                ]);
-            ?>
+                    'data' => $chapterOutcomes,
+                    'options' => ['multiple' => true, 'placeholder' => 'Select one or more', 'class'=>'rdp-chapter-outcome-select'],
+                    'pluginOptions' => [
+                        'allowClear' =>  true,
+                    ],
+                    'pluginEvents'=>[
+                        'select2:select select2:unselect'=>'
+                            function(){
+                                $.ajax({
+                                    url: "'.Url::to(['/rpmes/project/sub-chapter-outcome-list']).'",
+                                    dataType: "JSON",
+                                    data: {
+                                            id: JSON.stringify($("#projectrdpchapteroutcome-rdp_chapter_outcome_id").select2("data")),
+                                        }
+                                }).done(function(result) {
+                                    $(".rdp-sub-chapter-outcome-select").html("").select2({ data:result, multiple:true, theme:"krajee", width:"100%",placeholder:"Select one or more", allowClear: true});
+                                    $(".rdp-sub-chapter-outcome-select").select2("val","");
+                                });
+                            }'
+        
+                    ]
+                    ]);
+                ?>
 
             <?= $form->field($rdpSubChapterOutcomeModel, 'rdp_sub_chapter_outcome_id')->widget(Select2::classname(), [
                 'data' => $subChapterOutcomes,
@@ -264,116 +292,152 @@ $this->registerJs($js);
                 ]);
             ?>
 
-            <h4>Expected Output</h4>
-            <hr>
-            <?php DynamicFormWidget::begin([
-                'widgetContainer' => 'expected_output_wrapper', // required: only alphanumeric characters plus "_" [A-Za-z0-9_]
-                'widgetBody' => '.expected-output-items', // required: css class selector
-                'widgetItem' => '.expected-output-item', // required: css class
-                'limit' => 10, // the maximum times, an element can be cloned (default 999)
-                'min' => 1, // 0 or 1 (default 1)
-                'insertButton' => '.add-expected-output-item', // css class
-                'deleteButton' => '.remove-expected-output-item', // css class
-                'model' => $expectedOutputModels[0],
-                'formId' => 'project-form',
-                'formFields' => [
-                    'indicator',
-                    'target',
+            <?= $form->field($categoryModel, 'category_id')->widget(Select2::classname(), [
+                'data' => $categories,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'category-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  false,
                 ],
-            ]); ?>
-            
-            <table class="table table-bordered table-condensed table-responsive">
-                <thead>
-                    <tr>
-                        <td align=center><b>#</b></td>
-                        <td align=center><b>Output Indicator *</b></td>
-                        <td align=center><b>Target Output *</b></td>
-                        <td><button type="button" class="pull-right add-expected-output-item btn btn-success btn-xs"><i class="fa fa-plus"></i></button></td>
-                    </tr>
-                </thead>
-                <tbody class="expected-output-items">
-                <?php foreach ($expectedOutputModels as $eoIdx => $expectedOutputModel){ ?>
-                    <?php
-                        // necessary for update action.
-                        if (!$expectedOutputModel->isNewRecord) {
-                            echo Html::activeHiddenInput($expectedOutputModel, "[{$eoIdx}]id");
-                        }
-                    ?>
-                    <tr class="expected-output-item">
-                        <td class="expected-output-counter"><?= ($eoIdx + 1) ?></td>
-                        <td><?= $form->field($expectedOutputModel, "[{$eoIdx}]indicator")->textInput(['maxlength' => true])->label(false) ?></td>
-                        <td><?= $form->field($expectedOutputModel, "[{$eoIdx}]target")->textInput(['maxlength' => true])->label(false) ?></td>
-                        <td><button type="button" class="pull-right remove-expected-output-item btn btn-danger btn-xs"><i class="fa fa-minus"></i></button></td>
-                    </tr>
-                <?php } ?>
-                </tbody>
-            </table>
-            <?php DynamicFormWidget::end(); ?>
+                /* 'pluginEvents'=>[
+                    'select2:select'=>'
+                        function(){
+                            $.ajax({
+                                url: "'.Url::to(['/rpmes/project/kra-list']).'",
+                                data: {
+                                    id: this.value,
+                                    }
+                            }).done(function(result) {
+                                $(".kra-select").html("").select2({ data:result, multiple: false, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
+                                $(".kra-select").select2("val","");
+                            });
+                        }'
+    
+                ] */
+                ])->label('Category');
+            ?>
 
-        </div>
-        <div class="col-md-6">
-            <h4>&nbsp;</h4>
-            <hr>
+            <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
+                'data' => $sectors,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  false,
+                ],
+                'pluginEvents'=>[
+                    'select2:select'=>'
+                        function(){
+                            $.ajax({
+                                url: "'.Url::to(['/rpmes/project/sub-sector-list']).'",
+                                data: {
+                                        id: this.value,
+                                    }
+                            }).done(function(result) {
+                                $(".sub-sector-select").html("").select2({ data:result, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
+                                $(".sub-sector-select").select2("val","");
+                            });
+                        }'
+    
+                ]
+                ])->label('Sector');
+            ?>
+
+            <?= $form->field($model, 'sub_sector_id')->widget(Select2::classname(), [
+                'data' => $subSectors,
+                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sub-sector-select'],
+                'pluginOptions' => [
+                    'allowClear' =>  true,
+                ],
+                ])->label('Sub-Sector');
+            ?>
+
+            <?= $form->field($model, 'cost')->widget(MaskedInput::classname(), [
+                'options' => [
+                    'autocomplete' => 'off',
+                ],
+                'clientOptions' => [
+                    'alias' =>  'decimal',
+                    'removeMaskOnSubmit' => true,
+                    'groupSeparator' => ',',
+                    'autoGroup' => true
+                ],
+            ])->label('Total Project Cost (in PhP)') ?>
+
             <?= $form->field($model, 'mode_of_implementation_id')->widget(Select2::classname(), [
                 'data' => $modes,
                 'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'mode-of-implementation-select'],
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
-                ])->label('Mode of Implementation *');
+                ])->label('Mode of Implementation');
             ?>
 
-            <?= $form->field($model, 'other_mode')->textInput() ?>
+            <div id="div_mode_name">
+                <?= $form->field($model, 'mode_name')->textInput()->label('Mode Name') ?>
+            </div>
 
-            <?= $form->field($model, 'fund_source_id')->widget(Select2::classname(), [
-                'data' => $fundSources,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'fund-source-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Fund Source *');
-            ?>
+            <div id="div_other_mode">
+                <?= $form->field($model, 'other_mode')->textInput()->label('Other mode? Please specify') ?>
+            </div>
 
-            <?= $form->field($model, 'typhoon')->textInput(['maxlength' => true]) ?>
-            <h4>Timeline</h4>
+            <div class="form-group">
+                <label class="control-label col-sm-3" for="fund_sources">Funding Sources</label>
+                <div class="col-sm-9">
+                    <?php DynamicFormWidget::begin([
+                        'widgetContainer' => 'fund_source_wrapper', // required: only alphanumeric characters plus "_" [A-Za-z0-9_]
+                        'widgetBody' => '.fund-source-items', // required: css class selector
+                        'widgetItem' => '.fund-source-item', // required: css class
+                        'limit' => 5, // the maximum times, an element can be cloned (default 999)
+                        'min' => 1, // 0 or 1 (default 1)
+                        'insertButton' => '.add-fund-source-item', // css class
+                        'deleteButton' => '.remove-fund-source-item', // css class
+                        'model' => $fundSourceModels[0],
+                        'formId' => 'project-form',
+                        'formFields' => [
+                            'fund_source_id',
+                            'type',
+                            'agency',
+                        ],
+                    ]); ?>
+                    
+                    <table class="table table-bordered table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <td style="width: 2%;" align=center>#</td>
+                                <td style="width: 34%;">Funding Source</td>
+                                <td style="width: 15%;">Type</td>
+                                <td style="width: 29%;">Agency</td>
+                                <td style="width: 10%;"><button type="button" class="pull-right add-fund-source-item btn btn-info btn-xs btn-block">Add Funding Source</button></td>
+                            </tr>
+                        </thead>
+                        <tbody class="fund-source-items">
+                        <?php foreach ($fundSourceModels as $fsIdx => $fundSourceModel){ ?>
+                            <?php
+                                // necessary for update action.
+                                if (!$fundSourceModel->isNewRecord) {
+                                    echo Html::activeHiddenInput($fundSourceModel, "[{$fsIdx}]id");
+                                }
+                            ?>
+                            <tr class="fund-source-item">
+                                <td class="fund_source-counter" align=center><?= ($fsIdx + 1) ?></td>
+                                <td><?= $form->field($fundSourceModel, "[{$fsIdx}]fund_source_id")->widget(Select2::classname(), [
+                                    'data' => $fundSources,
+                                    'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class' => 'fund-source-select'],
+                                    'pluginOptions' => [
+                                        'allowClear' =>  true,
+                                    ],
+                                    ])->label(false) ?></td>
+                                <td><?= $form->field($fundSourceModel, "[{$fsIdx}]type")->textInput(['maxlength' => true])->label(false) ?></td>
+                                <td><?= $form->field($fundSourceModel, "[{$fsIdx}]agency")->textInput(['maxlength' => true])->label(false) ?></td>
+                                <td><button type="button" class="pull-right remove-fund-source-item btn btn-danger btn-xs btn-block">Delete Row</button></td>
+                            </tr>
+                        <?php } ?>
+                        </tbody>
+                    </table>
+                    <?php DynamicFormWidget::end(); ?>
+                </div>
+            </div>
+
+            <h4>Project Coverage</h4>
             <hr>
-            <?= $form->field($model, 'start_date')->widget(DatePicker::className(), [
-                'type' => DatePicker::TYPE_COMPONENT_APPEND,
-                'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
-                'pluginOptions' => [
-                    'autoclose'=>true,
-                    'format' => 'yyyy-mm-dd'
-                ],
-                'pluginEvents' => [
-                    'changeDate' => "function(e) {
-                        const dateReceived = $('#project-start_date');
-                        const dateActed = $('#project-completion_date-kvdate');
-                        dateActed.val('');
-                        dateActed.kvDatepicker('update', '');
-                        dateActed.kvDatepicker('setStartDate', dateReceived.val());
-                    }",
-                ]
-            ])->label('Start Date *'); ?>
-
-            <?= $form->field($model, 'completion_date')->widget(DatePicker::className(), [
-                'type' => DatePicker::TYPE_COMPONENT_APPEND,
-                'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
-                'pluginOptions' => [
-                    'autoclose'=>true,
-                    'format' => 'yyyy-mm-dd'
-                ],
-            ])->label('Completion Date *'); ?>
-
-            <h4>Location</h4>
-            <hr>
-            <?php /* $form->field($model, 'location_scope_id')->widget(Select2::classname(), [
-                'data' => $scopes,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'location-scope-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ]); */
-            ?>
             <?= $form->field($regionModel, 'region_id')->widget(Select2::classname(), [
                 'data' => $regions,
                 'options' => ['multiple' => true, 'placeholder' => 'Select one or more', 'class'=>'region-select'],
@@ -398,7 +462,7 @@ $this->registerJs($js);
                         }'
     
                 ]
-                ])->label('Region *');
+                ])->label('Region');
             ?>
             <?= $form->field($provinceModel, 'province_id')->widget(Select2::classname(), [
                 'data' => $provinces,
@@ -457,535 +521,287 @@ $this->registerJs($js);
                 ],
                 ]);
             ?>
+
+            <div class="form-group">
+                <label class="control-label col-sm-3" for="project-latitude">Map Location</label>
+                <div class="col-sm-9">
+                    <div id="map" style="width: 100%; height: 400px;"></div>
+                    <div class="row">
+                        <div class="col-md-6 col-xs-12">
+                            <?= $form->field($model, 'latitude')->hiddenInput(['id' => 'project-lat'])->label(false) ?>
+                        </div>
+                        <div class="col-md-6 col-xs-12">
+                            <?= $form->field($model, 'longitude')->hiddenInput(['id' => 'project-lng'])->label(false) ?>
+                        </div>
+                    </div> 
+                </div>
+            </div>
+
+            <h4>Implementation Schedule</h4>
+            <hr>
+            
+            <div class="form-group">
+                <label class="control-label col-sm-3" for="project-start_date">Original Project Schedule</label>
+                <div class="col-sm-9">
+                    <div class="row">
+                        <div class="col-md-6 col-xs-12">
+                            <?= $form->field($model, 'start_date')->widget(DatePicker::className(), [
+                                    'type' => DatePicker::TYPE_COMPONENT_APPEND,
+                                    'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
+                                    'pluginOptions' => [
+                                        'autoclose'=>true,
+                                        'format' => 'yyyy-mm-dd'
+                                    ],
+                                    'pluginEvents' => [
+                                        'changeDate' => "function(e) {
+                                            const dateReceived = $('#project-start_date');
+                                            const dateActed = $('#project-completion_date-kvdate');
+                                            dateActed.val('');
+                                            dateActed.kvDatepicker('update', '');
+                                            dateActed.kvDatepicker('setStartDate', dateReceived.val());
+                                        }",
+                                    ]
+                                ])->label("Start Date"); ?>
+                        </div>
+                        <div class="col-md-6 col-xs-12">
+                            <?= $form->field($model, 'completion_date')->widget(DatePicker::className(), [
+                                    'type' => DatePicker::TYPE_COMPONENT_APPEND,
+                                    'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
+                                    'pluginOptions' => [
+                                        'autoclose'=>true,
+                                        'format' => 'yyyy-mm-dd'
+                                    ],
+                                ])->label("End Date"); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="control-label col-sm-3" for="project-revised_start_date">Revised Project Schedule</label>
+                <div class="col-sm-9">
+                    <?php DynamicFormWidget::begin([
+                        'widgetContainer' => 'revised_schedule_wrapper', // required: only alphanumeric characters plus "_" [A-Za-z0-9_]
+                        'widgetBody' => '.revised-schedule-items', // required: css class selector
+                        'widgetItem' => '.revised-schedule-item', // required: css class
+                        'limit' => 5, // the maximum times, an element can be cloned (default 999)
+                        'min' => 0, // 0 or 1 (default 1)
+                        'insertButton' => '.add-revised-schedule-item', // css class
+                        'deleteButton' => '.remove-revised-schedule-item', // css class
+                        'model' => $revisedScheduleModels[0],
+                        'formId' => 'project-form',
+                        'formFields' => [
+                            'start_date',
+                            'end_date',
+                        ],
+                    ]); ?>
+                    
+                    <table class="table table-bordered table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <td style="width: 2%;" align=center>#</td>
+                                <td style="width: 44%;">Start Date</td>
+                                <td style="width: 44%;">End Date</td>
+                                <td style="width: 10%;"><button type="button" class="pull-right add-revised-schedule-item btn btn-info btn-xs btn-block">Add Revised Schedule</button></td>
+                            </tr>
+                        </thead>
+                        <tbody class="revised-schedule-items">
+                        <?php foreach ($revisedScheduleModels as $rsIdx => $revisedScheduleModel){ ?>
+                            <?php
+                                // necessary for update action.
+                                if (!$revisedScheduleModel->isNewRecord) {
+                                    echo Html::activeHiddenInput($revisedScheduleModel, "[{$rsIdx}]id");
+                                }
+                            ?>
+                            <tr class="revised-schedule-item">
+                                <td class="revised_schedule-counter" align=center><?= ($rsIdx + 1) ?></td>
+                                <td><?= $form->field($revisedScheduleModel, "[{$rsIdx}]start_date")->widget(DatePicker::className(), [
+                                    'type' => DatePicker::TYPE_COMPONENT_APPEND,
+                                    'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
+                                    'pluginOptions' => [
+                                        'autoclose'=>true,
+                                        'format' => 'yyyy-mm-dd'
+                                        // other plugin options...
+                                    ],
+                                ])->label(false); ?></td>
+                                <td><?= $form->field($revisedScheduleModel, "[{$rsIdx}]end_date")->widget(DatePicker::className(), [
+                                    'type' => DatePicker::TYPE_COMPONENT_APPEND,
+                                    'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
+                                    'pluginOptions' => [
+                                        'autoclose'=>true,
+                                        'format' => 'yyyy-mm-dd'
+                                        // other plugin options...
+                                    ],
+                                ])->label(false); ?></td>
+                                <td><button type="button" class="pull-right remove-revised-schedule-item btn btn-danger btn-xs btn-block">Delete Row</button></td>
+                            </tr>
+                        <?php } ?>
+                        </tbody>
+                    </table>
+                    <?php DynamicFormWidget::end(); ?>
+                </div>
+            </div>
         </div>
     </div>
     <div class="row">
         <div class="col-md-12 col-xs-12">
-            <h4>Specific Project Outcome</h4>
+        <h4>Output and Outcome Indicators</h4>
             <hr>
-            <?php DynamicFormWidget::begin([
-                'widgetContainer' => 'outcome_wrapper', // required: only alphanumeric characters plus "_" [A-Za-z0-9_]
-                'widgetBody' => '.outcome-items', // required: css class selector
-                'widgetItem' => '.outcome-item', // required: css class
-                'limit' => 10, // the maximum times, an element can be cloned (default 999)
-                'min' => 1, // 0 or 1 (default 1)
-                'insertButton' => '.add-outcome-item', // css class
-                'deleteButton' => '.remove-outcome-item', // css class
-                'model' => $outcomeModels[0],
-                'formId' => 'project-form',
-                'formFields' => [
-                    'outcome',
-                    'performance_indicator',
-                    'target',
-                    'timeline',
-                    'remarks'
-                ],
-            ]); ?>
-            
-            <table class="table table-bordered table-condensed table-responsive">
-                <thead>
-                    <tr>
-                        <td align=center><b>#</b></td>
-                        <td align=center><b>Outcome</b></td>
-                        <td align=center><b>Performance Indicator</b></td>
-                        <td align=center><b>Target</b></td>
-                        <td align=center><b>Timeline</b></td>
-                        <td align=center><b>Remarks</b></td>
-                        <td><button type="button" class="pull-right add-outcome-item btn btn-success btn-xs"><i class="fa fa-plus"></i></button></td>
-                    </tr>
-                </thead>
-                <tbody class="outcome-items">
-                <?php foreach ($outcomeModels as $oIdx => $outcomeModel){ ?>
-                    <?php
-                        // necessary for update action.
-                        if (!$outcomeModel->isNewRecord) {
-                            echo Html::activeHiddenInput($outcomeModel, "[{$oIdx}]id");
-                        }
-                    ?>
-                    <tr class="outcome-item">
-                        <td class="outcome-counter"><?= ($oIdx + 1) ?></td>
-                        <td><?= $form->field($outcomeModel, "[{$oIdx}]outcome")->textInput(['maxlength' => true])->label(false) ?></td>
-                        <td><?= $form->field($outcomeModel, "[{$oIdx}]performance_indicator")->textInput(['maxlength' => true])->label(false) ?></td>
-                        <td><?= $form->field($outcomeModel, "[{$oIdx}]target")->textInput(['maxlength' => true])->label(false) ?></td>
-                        <td><?= $form->field($outcomeModel, "[{$oIdx}]timeline")->textInput(['maxlength' => true])->label(false) ?></td>
-                        <td><?= $form->field($outcomeModel, "[{$oIdx}]remarks")->textInput(['maxlength' => true])->label(false) ?></td>
-                        <td><button type="button" class="pull-right remove-outcome-item btn btn-danger btn-xs"><i class="fa fa-minus"></i></button></td>
-                    </tr>
-                <?php } ?>
-                </tbody>
-            </table>
-            <?php DynamicFormWidget::end(); ?>
-            <h4>Quarterly Target Setting</h4>
-            <hr>
-            <div class="row">
-                <div class="col-md-6 col-xs-12">
-                    <?= $form->field($model, 'data_type')->widget(Select2::classname(), [
-                        'data' => ['Default' => 'Default', 'Maintained' => 'Maintained', 'Cumulative' => 'Cumulative'],
-                        'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'data-type-select'],
-                        'pluginOptions' => [
-                            'allowClear' =>  true,
+            <div class="form-group">
+                <label class="control-label col-sm-3" for="outcome_indicators">Output Indicators</label>
+                <div class="col-sm-9">
+                    <?php DynamicFormWidget::begin([
+                        'widgetContainer' => 'expected_output_wrapper', // required: only alphanumeric characters plus "_" [A-Za-z0-9_]
+                        'widgetBody' => '.expected-output-items', // required: css class selector
+                        'widgetItem' => '.expected-output-item', // required: css class
+                        'limit' => 4, // the maximum times, an element can be cloned (default 999)
+                        'min' => 1, // 0 or 1 (default 1)
+                        'insertButton' => '.add-expected-output-item', // css class
+                        'deleteButton' => '.remove-expected-output-item', // css class
+                        'model' => $expectedOutputModels[0],
+                        'formId' => 'project-form',
+                        'formFields' => [
+                            'indicator',
+                            'target',
                         ],
-                        ])->label('Data Type *');
-                    ?>
+                    ]); ?>
+                        <div class="clearfix"></div>
+                        <br>
+                        <small>Note: The system added the output indicator, <b>"number of individual beneficiaries served"</b> by default. Please add more below.</small>
+                        <table class="table table-bordered table-condensed table-responsive">
+                            <thead>
+                                <tr>
+                                    <td align=center>#</td>
+                                    <td>Title of Output Indicator</td>
+                                    <td>Target Output</td>
+                                    <td style="width: 10%;"><button type="button" class="pull-right add-expected-output-item btn btn-info btn-xs">Add Output Indicator</button></td>
+                                </tr>
+                            </thead>
+                            <tbody class="expected-output-items">
+                            <?php foreach ($expectedOutputModels as $eoIdx => $expectedOutputModel){ ?>
+                                <?php
+                                    // necessary for update action.
+                                    if (!$expectedOutputModel->isNewRecord) {
+                                        echo Html::activeHiddenInput($expectedOutputModel, "[{$eoIdx}]id");
+                                    }
+                                ?>
+                                <tr class="expected-output-item">
+                                    <td class="expected-output-counter" align=center><?= $eoIdx + 1 ?></td>
+                                    <td><?= $form->field($expectedOutputModel, "[{$eoIdx}]indicator")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
+                                    <td><?= $form->field($expectedOutputModel, "[{$eoIdx}]target")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
+                                    <td><button type="button" class="pull-right remove-expected-output-item btn btn-danger btn-xs btn-block">Delete Row</button></td>
+                                </tr>
+                            <?php } ?>
+                            </tbody>
+                        </table>
+                    <?php DynamicFormWidget::end(); ?>
                 </div>
             </div>
-            <table class="table table-bordered table-condensed table-responsive">
-                <thead>
-                    <tr>
-                        <td align=center rowspan=2 colspan=2 style="width: 20%;"><b>Type</b></td>
-                        <td align=center rowspan=2 style="width: 20%;"><b>Indicator *</b></td>
-                        <td align=center colspan=4><b>Quarterly Targets</b></td>
-                    </tr>
-                    <tr>
-                        <?php if(!empty($quarters)){ ?>
-                            <?php foreach($quarters as $q => $quarter){ ?>
-                                <td align=center><b><?= $q ?>*</b></td>
-                            <?php } ?>
+            <div class="form-group">
+                <label class="control-label col-sm-3" for="outcome_indicators">Outcome Indicators</label>
+                <div class="col-sm-9">
+                    <?php DynamicFormWidget::begin([
+                        'widgetContainer' => 'outcome_wrapper', // required: only alphanumeric characters plus "_" [A-Za-z0-9_]
+                        'widgetBody' => '.outcome-items', // required: css class selector
+                        'widgetItem' => '.outcome-item', // required: css class
+                        'limit' => 10, // the maximum times, an element can be cloned (default 999)
+                        'min' => 0, // 0 or 1 (default 1)
+                        'insertButton' => '.add-outcome-item', // css class
+                        'deleteButton' => '.remove-outcome-item', // css class
+                        'model' => $outcomeModels[0],
+                        'formId' => 'project-form',
+                        'formFields' => [
+                            'outcome',
+                        ],
+                    ]); ?>
+                    
+                    <table class="table table-bordered table-condensed table-responsive">
+                        <thead>
+                            <tr>
+                                <td align=center style="width: 5%;">#</td>
+                                <td align=center>Results/Outcome Indicator/Target</td>
+                                <td style="width: 10%;"><button type="button" class="pull-right add-outcome-item btn btn-info btn-xs btn-block">Add Outcome Indicator</button></td>
+                            </tr>
+                        </thead>
+                        <tbody class="outcome-items">
+                        <?php foreach ($outcomeModels as $oIdx => $outcomeModel){ ?>
+                            <?php
+                                // necessary for update action.
+                                if (!$outcomeModel->isNewRecord) {
+                                    echo Html::activeHiddenInput($outcomeModel, "[{$oIdx}]id");
+                                }
+                            ?>
+                            <tr class="outcome-item">
+                                <td class="outcome-counter" align=center><?= ($oIdx + 1) ?></td>
+                                <td><?= $form->field($outcomeModel, "[{$oIdx}]outcome")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
+                                <td><button type="button" class="pull-right remove-outcome-item btn btn-danger btn-xs btn-block">Delete Row</button></td>
+                            </tr>
                         <?php } ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan=2 align=right>Physical Targets</td>
-                        <td>
-                            <?= $form->field($targets[0], "[0]indicator")->textInput(['type' => 'text'])->label(false) ?>
-                            <i class="fa fa-exclamation-circle"></i> Include keyword "%" for indicator using percent as unit of measure
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[0], "[0]q1")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q1-physical-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[0]['q1'] != '' ? $targets[0]['q1'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[0], "[0]q2")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q2-physical-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[0]['q2'] != '' ? $targets[0]['q2'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[0], "[0]q3")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q3-physical-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[0]['q3'] != '' ? $targets[0]['q3'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[0], "[0]q4")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q4-physical-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[0]['q4'] != '' ? $targets[0]['q4'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan=2 align=right>Financial Targets</td>
-                        <td>&nbsp;</td>
-                        <td align=center>
-                            <?= $form->field($targets[1], "[1]q1")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q1-financial-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[1]['q1'] != '' ? $targets[1]['q1'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[1], "[1]q2")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q2-financial-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[1]['q2'] != '' ? $targets[1]['q2'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[1], "[1]q3")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q3-financial-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[1]['q3'] != '' ? $targets[1]['q3'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[1], "[1]q4")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q4-financial-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[1]['q4'] != '' ? $targets[1]['q4'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td rowspan=2 align=right>Persons Employed</td>
-                        <td align=right>Male</td>
-                        <td align=center>&nbsp;</td>
-                        <td align=center>
-                            <?= $form->field($targets[2], "[2]q1")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q1-male-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[2]['q1'] != '' ? $targets[2]['q1'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[2], "[2]q2")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q2-male-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[2]['q2'] != '' ? $targets[2]['q2'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[2], "[2]q3")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q3-male-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[2]['q3'] != '' ? $targets[2]['q3'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[2], "[2]q4")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q4-male-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[2]['q4'] != '' ? $targets[2]['q4'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td align=right>Female</td>
-                        <td align=center>&nbsp;</td>
-                        <td align=center>
-                            <?= $form->field($targets[3], "[3]q1")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q1-female-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[3]['q1'] != '' ? $targets[3]['q1'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[3], "[3]q2")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q2-female-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[3]['q2'] != '' ? $targets[3]['q2'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[3], "[3]q3")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q3-female-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[3]['q3'] != '' ? $targets[3]['q3'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[3], "[3]q4")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q4-female-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[3]['q4'] != '' ? $targets[3]['q4'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td rowspan=2 align=right>No. of Beneficiaries</td>
-                        <td align=right>Individual</td>
-                        <td>&nbsp;</td>
-                        <td align=center>
-                            <?= $form->field($targets[4], "[4]q1")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q1-beneficiary-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[4]['q1'] != '' ? $targets[4]['q1'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[4], "[4]q2")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q2-beneficiary-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[4]['q2'] != '' ? $targets[4]['q2'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[4], "[4]q3")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q3-beneficiary-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[4]['q3'] != '' ? $targets[4]['q3'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[4], "[4]q4")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q4-beneficiary-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[4]['q4'] != '' ? $targets[4]['q4'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td align=right>Group</td>
-                        <td><?= $form->field($targets[5], "[5]indicator")->textInput(['type' => 'text'])->label(false) ?></td>
-                        <td align=center>
-                            <?= $form->field($targets[5], "[5]q1")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q1-group-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[5]['q1'] != '' ? $targets[5]['q1'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[5], "[5]q2")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q2-group-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[5]['q2'] != '' ? $targets[5]['q2'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[5], "[5]q3")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q3-group-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[5]['q3'] != '' ? $targets[5]['q3'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                        <td align=center>
-                            <?= $form->field($targets[5], "[5]q4")->widget(MaskedInput::classname(), [
-                                'options' => [
-                                    'id' => 'q4-group-input',
-                                    'autocomplete' => 'off',
-                                    'value' => $targets[5]['q4'] != '' ? $targets[5]['q4'] : 0,
-                                ],
-                                'clientOptions' => [
-                                    'alias' =>  'decimal',
-                                    'removeMaskOnSubmit' => true,
-                                    'groupSeparator' => ',',
-                                    'autoGroup' => true
-                                ],
-                            ])->label(false) ?>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <h4>Attach Project Profile</h4>
-            <hr>
-            <div class="row" style="margin-left: 1%;">
-                <div class="col-md-3 col-xs-12">
-                    <?= empty($model->files) ? AttachmentsInput::widget([
-                        'id' => 'file-input', // Optional
-                        'model' => $model,
-                        'options' => [ 
-                            'multiple' => false, 
-                            'required' => 'required'
-                        ],
-                        'pluginOptions' => [ 
-                            'showPreview' => false,
-                            'showUpload' => false,
-                            'maxFileCount' => 1,
-                        ]
-                    ]) : AttachmentsInput::widget([
-                        'id' => 'file-input', // Optional
-                        'model' => $model,
-                        'options' => [ 
-                            'multiple' => false, 
-                        ],
-                        'pluginOptions' => [ 
-                            'showPreview' => false,
-                            'showUpload' => false,
-                            'maxFileCount' => 1,
-                        ]
-                    ]) ?>
-                    <p>Allowed file types: pdf (max 2MB)</p>
-                    <?= \file\components\AttachmentsTable::widget(['model' => $model]) ?>
-                    <?= $form->field($model, 'id')->hiddenInput(['value' => $model->id])->label(false) ?>
+                        </tbody>
+                    </table>
+                    <?php DynamicFormWidget::end(); ?>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <h4>Project Profile</h4>
+            <hr>
+            <label class="control-label col-sm-3" for="project-attachments">Project Profile</label>
+            <div class="col-sm-9" style="padding: 10px 10px auto;">
+                <div class="row">
+                    <div class="col-md-12 col-xs-12">
+                        <?= empty($model->files) ? AttachmentsInput::widget([
+                            'id' => 'file-input', // Optional
+                            'model' => $model,
+                            'options' => [ 
+                                'multiple' => true, 
+                                'required' => 'required'
+                            ],
+                            'pluginOptions' => [ 
+                                'showPreview' => true,
+                                'showUpload' => false,
+                                'maxFileCount' => 5,
+                            ]
+                        ]) : AttachmentsInput::widget([
+                            'id' => 'file-input', // Optional
+                            'model' => $model,
+                            'options' => [ 
+                                'multiple' => true, 
+                            ],
+                            'pluginOptions' => [ 
+                                'showPreview' => true,
+                                'showUpload' => false,
+                                'maxFileCount' => 5,
+                            ]
+                        ]) ?>
+                        <p style="text-align: right">Allowed file types: jpg, png, pdf (max 5MB each)</p>
+                        <?php \file\components\AttachmentsTable::widget(['model' => $model]) ?>
+                    </div>
+                </div>
+            </div>
+            <?= $form->field($model, 'remarks')->textarea(['rows' => 4, 'style' => 'resize: none;', 'placeholder' => 'Provide information on the previously approved end dates, if applicable. May also include information on the program/project beneficiaries disaggregated by sex, if available.']) ?>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
-                <?= $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save Project as Draft', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
-                <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? Html::submitButton('Add Project to Monitoring Plan', ['class' => 'btn btn-success', 'onclick' => '$("#file-input").fileinput("upload");', 'data' => ['disabled-text' => 'Please Wait']]) : '' : '' ?>
+                <?php // $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save as draft only', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
+                <?= Html::submitButton('Save project', ['class' => 'btn btn-success', 'onclick' => '$("#file-input").fileinput("upload");', 'data' => ['disabled-text' => 'Please Wait']])?>
             </div>
         </div>
     </div>
+
     <?php ActiveForm::end(); ?>
 
 </div>
 <?php
     $script = '
     $(document).ready(function(){
+
         $(".col-sm-9.col-sm-offset-3").removeClass("col-sm-9 col-sm-offset-3").addClass("col-md-12 col-xs-12");
         $("#project-typhoon").prop("disabled", "disabled");
 
@@ -995,46 +811,96 @@ $this->registerJs($js);
             $("#project-source_id").prop("disabled", "disabled");
         }
 
-        if($("#project-mode_of_implementation_id").val() == 3){            
-            $("#project-other_mode").removeAttr("disabled");
+        if($("#project-mode_of_implementation_id").val() == 3){ 
+            $("#div_other_mode").css("display", "block");                   
         }else{
-            $("#project-other_mode").prop("disabled", "disabled");
+            $("#div_other_mode").css("display", "none"); 
+        }
+
+        if($("#project-mode_of_implementation_id").val() == 1 || $("#project-mode_of_implementation_id").val() == 4 || $("#project-mode_of_implementation_id").val() == 5){ 
+            $("#div_mode_name").css("display", "block");                   
+        }else{
+            $("#div_mode_name").css("display", "none"); 
+        }
+
+        if($("#project-mode_of_implementation_id").val() == 1){ 
+            $("label[for=\"project-mode_name\"]").text("Name of Contractor");             
         }
         
-        if($("#project-fund_source_id").val() != ""){            
-            $("#project-typhoon").removeAttr("disabled");
-        }else{
-            $("#project-typhoon").prop("disabled", "disabled");
+        if($("#project-mode_of_implementation_id").val() == 4){ 
+            $("label[for=\"project-mode_name\"]").text("Name of Development Partner/Funding Agency");             
         }
 
-        $("#project-period").on("change", function(){
-            if($("#project-period").val() == "Carry-Over"){            
-                $("#project-source_id").removeAttr("disabled");
-            }else{
-                $("#project-source_id").prop("disabled", "disabled");
-            }
-        });
-        $("#project-mode_of_implementation_id").on("change", function(){
-            if($("#project-mode_of_implementation_id").val() == 3){            
-                $("#project-other_mode").removeAttr("disabled");
-            }else{
-                $("#project-other_mode").prop("disabled", "disabled");
-            }
-        });
-        if($("#project-typhoon").val() != ""){
-            $("#project-typhoon").removeAttr("disabled");
-        }else{
-            $("#project-typhoon").prop("disabled", "disabled");
+        if($("#project-mode_of_implementation_id").val() == 5){ 
+            $("label[for=\"project-mode_name\"]").text("Name of NGOs/CSOs");             
         }
 
-        $("#project-fund_source_id").on("change", function(){
-            if($("#project-fund_source_id").val() != ""){            
-                $("#project-typhoon").removeAttr("disabled");
-            }else{
-                $("#project-typhoon").prop("disabled", "disabled");
-            }
+        var map = L.map("map").setView([16.6170, 120.3190], 14);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors"
+        }).addTo(map);
+
+        var marker = L.marker([16.6170, 120.3190], { draggable: true }).addTo(map);
+
+        // Function to update map center based on input values
+        function updateMapCenter() {
+            var lat = parseFloat($("#project-lat").val()) || 16.6170;
+            var lng = parseFloat($("#project-lng").val()) || 120.3190;
+    
+            map.setView([lat, lng], 14);
+            marker.setLatLng([lat, lng]);
+        }
+
+        // Initial map center update
+        updateMapCenter();
+
+        // Event listeners for changes in latitude and longitude inputs
+        $(".map-input").on("change", function () {
+            updateMapCenter();
         });
-    });     
+
+        marker.on("dragend", function (event) {
+            var markerLatLng = marker.getLatLng();
+            $("#project-lat").val(markerLatLng.lat);
+            $("#project-lng").val(markerLatLng.lng);
+        });
+
+        });     
+
+    $("#project-period").on("change", function(){
+        if($("#project-period").val() == "Carry-Over"){            
+            $("#project-source_id").removeAttr("disabled");
+        }else{
+            $("#project-source_id").prop("disabled", "disabled");
+        }
+    });
+
+    $("#project-mode_of_implementation_id").on("change", function(){
+        if($("#project-mode_of_implementation_id").val() == 3){ 
+            $("#div_other_mode").css("display", "block");                   
+        }else{
+            $("#div_other_mode").css("display", "none"); 
+        }
+
+        if($("#project-mode_of_implementation_id").val() == 1 || $("#project-mode_of_implementation_id").val() == 4 || $("#project-mode_of_implementation_id").val() == 5){ 
+            $("#div_mode_name").css("display", "block");                   
+        }else{
+            $("#div_mode_name").css("display", "none"); 
+        }
+
+        if($("#project-mode_of_implementation_id").val() == 1){ 
+            $("label[for=\"project-mode_name\"]").text("Name of Contractor");             
+        }
+
+        if($("#project-mode_of_implementation_id").val() == 4){ 
+            $("label[for=\"project-mode_name\"]").text("Name of Development Partner/Funding Agency");             
+        }
+
+        if($("#project-mode_of_implementation_id").val() == 5){ 
+            $("label[for=\"project-mode_name\"]").text("Name of NGOs/CSOs");             
+        }
+    });
 
     $("#save-draft-btn").on("click", function (e) {
         e.preventDefault();
@@ -1060,3 +926,11 @@ $this->registerJs($js);
 
     $this->registerJs($script, View::POS_END);
 ?>
+<style>
+    label.control-label{
+        font-weight: bolder;
+    }
+    hr{
+        opacity: 0.10;
+    }
+</style>
