@@ -78,7 +78,7 @@ class ComponentController extends Controller
                 'only' => ['create', 'update'],
                 'rules' => [
                     [
-                        'actions' => ['create', 'update'],
+                        'actions' => ['create', 'index', 'update', 'delete'],
                         'allow' => true,
                         'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
                     ],

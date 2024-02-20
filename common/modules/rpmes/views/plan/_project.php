@@ -18,7 +18,7 @@ use yii\web\View;
     <?php } ?>
 </td>
 <td align=center>
-    <?= $model->draft == 'Yes' ? $form->field($projects[$project->id], "[$project->id]id")->checkbox([
+    <?= $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $form->field($projects[$project->id], "[$project->id]id")->checkbox([
         'value' => $project->id, 
         'class' => 'check-included-project', 
         'label' => ''

@@ -67,4 +67,14 @@ class ProjectOutcome extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Project::className(), ['id' => 'project_id']);
     }
+
+    public function getAccomplishment($year){
+        $accomplishment = OutcomeAccomplishment::findOne([
+            'project_id' => $this->project_id,
+            'outcome_id' => $this->id,
+            'year' => $this->year,
+        ]);
+
+        return $accomplishment;
+    }
 }

@@ -17,7 +17,7 @@ DisableButtonAsset::register($this);
 /* @var $model common\modules\rpmes\models\Project */
 
 $this->title = 'Accomplishment Report for '.$model->quarter.' '.$model->year;
-$this->params['breadcrumbs'][] = ['label' => 'Accomplishment Reports', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'RPMES Form 2: Physical and Financial Accomplishment Report', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 
@@ -216,7 +216,7 @@ Modal::end();
                     ],
                     'format' => 'raw',
                     'value' => function($plan) use ($model){
-                        return $plan->project->getSlippage($model->year)[$model->quarter] >= 0 ? number_format($plan->project->getSlippage($model->year)[$model->quarter], 2) : '<font style="color:red">'.number_format($plan->project->getSlippage($model->year)[$model->quarter], 2).'</font>';
+                        return $plan->project->getSlippage($model->year)[$model->quarter] > -10 && $plan->project->getSlippage($model->year)[$model->quarter] < 10 ? number_format($plan->project->getSlippage($model->year)[$model->quarter], 2) : '<font style="color:red">'.number_format($plan->project->getSlippage($model->year)[$model->quarter], 2).'</font>';
                     }
                 ],
                 [

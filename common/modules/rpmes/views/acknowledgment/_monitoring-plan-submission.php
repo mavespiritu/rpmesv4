@@ -26,7 +26,7 @@ use yii\web\View;
   Modal::begin([
     'id' => 'acknowledge-monitoring-plan-'.$agency->id.'-modal',
     'size' => "modal-xl",
-    'header' => '<div id="acknowledge-monitoring-plan-'.$agency->id.'-modal-header"><h4>Acknowledge Monitoring Plan</h4></div>',
+    'header' => '<div id="acknowledge-monitoring-plan-'.$agency->id.'-modal-header"><h4>Acknowledge Form 1 Submission</h4></div>',
     'options' => ['tabindex' => false],
   ]);
   echo '<div id="acknowledge-monitoring-plan-'.$agency->id.'-modal-content"></div>';

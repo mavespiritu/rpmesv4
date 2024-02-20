@@ -9,7 +9,7 @@
     DisableButtonAsset::register($this);
     use yii\web\View;
 
-    $this->title = 'Acknowledgment of Monitoring Reports';
+    $this->title = 'Acknowledgment of Form 2 Submissions';
     $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="monitoring-report-index">
@@ -17,7 +17,7 @@
         <div class="col-md-12 col-xs-12">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Acknowledgment of Monitoring Reports Form</h3>
+                    <h3 class="box-title">Form 2 Submissions</h3>
                 </div>
                 <div class="box-body">
                     <?= $this->render('_search-monitoring-report', [

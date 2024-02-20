@@ -17,7 +17,7 @@ DisableButtonAsset::register($this);
 /* @var $model common\modules\rpmes\models\Project */
 
 $this->title = 'Monitoring Plan '.$model->year;
-$this->params['breadcrumbs'][] = ['label' => 'Plans', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'RPMES Form 1: Initial Project Report', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 
@@ -61,7 +61,7 @@ Modal::end();
                     'class' => 'btn btn-box-tool',
                 ]) ?>
                 <?= Yii::$app->user->can('AgencyUser') ? 
-                        $model->draft == 'Yes' ? 
+                        $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? 
                             count($model->plans) < 1 ? 
                                 Html::a('<i class="fa fa-pencil"></i> Update Plan', '#', [
                                     'class' => 'update-button btn btn-box-tool',
@@ -73,7 +73,7 @@ Modal::end();
                         '' : 
                     '' ?>
                 <?= Yii::$app->user->can('AgencyUser') ? 
-                        $model->draft == 'Yes' ? 
+                        $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? 
                             count($model->plans) < 1 ?  
                                 Html::a('<i class="fa fa-trash"></i> Delete Plan', ['delete', 'id' => $model->id], [
                                     'class' => 'btn btn-box-tool',
@@ -215,7 +215,7 @@ Modal::end();
                         'style' => 'background-color: #002060; color: white; font-weight: normal;'
                     ],
                     'value' => function ($plan) use ($form, $projects, $model) {
-                        return $model->draft == 'Yes' ? $form->field($projects[$plan->id], "[$plan->id]id")->checkbox([
+                        return $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? $form->field($projects[$plan->id], "[$plan->id]id")->checkbox([
                             'value' => $plan->id, 
                             'class' => 'check-project', 
                             'id' => 'check-project-'.$plan->id, 
@@ -228,7 +228,7 @@ Modal::end();
 
         <div class="form-group pull-right"> 
             <?= Yii::$app->user->can('AgencyUser') ? 
-                    $model->draft == 'Yes' ? 
+                    $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                         $dataProvider->getCount() > 0 ? 
                             Html::submitButton('Remove Selected', [
                                 'class' => 'btn btn-danger', 

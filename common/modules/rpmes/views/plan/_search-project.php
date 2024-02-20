@@ -33,18 +33,7 @@ use yii\bootstrap\ButtonDropdown;
             Html::a('<i class="fa fa-list"></i> View Targets', ['target', 'id' => $model->id], ['class' => 'btn btn-default']) :
         '';
     ?>
-    <?= /* ButtonDropdown::widget([
-        'label' => '<i class="fa fa-download"></i> Generate Form 1',
-        'encodeLabel' => false,
-        'options' => ['class' => 'btn btn-default'],
-        'dropdown' => [
-            'items' => [
-                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/plan/download', 'id' => $model->id, 'type' => 'excel'])],
-                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/plan/download', 'id' => $model->id, 'type' => 'pdf'])],
-            ],
-        ],
-    ]); */ 
-        Html::a('<i class="fa fa-file-excel-o"></i> Generate Form 1', ['/rpmes/plan/download', 'id' => $model->id, 'type' => 'excel'], ['class' => 'btn btn-default']) ?>
+    <?= Html::a('<i class="fa fa-file-excel-o"></i> Generate Form 1', ['/rpmes/plan/download', 'id' => $model->id, 'type' => 'excel'], ['class' => 'btn btn-default']) ?>
 
     <?= Html::button('<i class="fa fa-print"></i> Print Form 1', ['onClick' => 'printSummary("'.$model->id.'")', 'class' => 'btn btn-default']) ?>
 
@@ -61,6 +50,13 @@ use yii\bootstrap\ButtonDropdown;
                         ]) :
                     '' :
                 '' :
+            '' :
+        '';
+    ?>
+
+    <?= Yii::$app->user->can('Administrator') ?
+            $model->currentStatus == 'Submitted' || $model->currentStatus == 'Acknowledged' ?
+                Html::button('<i class="fa fa-paper-plane-o"></i> Acknowledge Form 1', ['value' => Url::to(['acknowledge', 'id' => $model->id]), 'class' => 'btn btn-success', 'id' => 'acknowledge-button']) :
             '' :
         '';
     ?>
@@ -96,11 +92,24 @@ use yii\bootstrap\ButtonDropdown;
   Modal::end();
 ?>
 <?php
+  Modal::begin([
+    'id' => 'acknowledge-modal',
+    'size' => "modal-lg",
+    'header' => '<div id="acknowledge-modal-header"><h4>Acknowledge Form 1</h4></div>',
+    'options' => ['tabindex' => false],
+  ]);
+  echo '<div id="acknowledge-modal-content"></div>';
+  Modal::end();
+?>
+<?php
     $script = '
         $(document).ready(function(){
             $("#include-button").click(function(){
               $("#include-modal").modal("show").find("#include-modal-content").load($(this).attr("value"));
             });
+            $("#acknowledge-button").click(function(){
+                $("#acknowledge-modal").modal("show").find("#acknowledge-modal-content").load($(this).attr("value"));
+              });
         });     
     ';
 

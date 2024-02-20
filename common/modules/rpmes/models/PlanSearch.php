@@ -19,8 +19,8 @@ class PlanSearch extends Plan
     public function rules()
     {
         return [
-            [['id', 'submission_id', 'project_id', 'submitted_by'], 'integer'],
-            [['year', 'date_submitted', 'globalSearch'], 'safe'],
+            [['id', 'submission_id', 'submitted_by'], 'integer'],
+            [['year', 'date_submitted','project_id', 'globalSearch'], 'safe'],
         ];
     }
 
@@ -80,6 +80,7 @@ class PlanSearch extends Plan
             ->orFilterWhere(['like', 'mode_of_implementation.title', $this->globalSearch]);
 
         $query = $planSubmission ? $query->andWhere(['submission_id' => $planSubmission->id]) : $query->andWhere(['submission_id' => $params['id']]);
+        $query = $this->project_id ? $query->andWhere(['project.id' => $this->project_id]) : $query;
         $query = $query->orderBy(['project.id' => SORT_DESC]);
 
         return $dataProvider;

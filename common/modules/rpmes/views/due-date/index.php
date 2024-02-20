@@ -53,6 +53,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php } ?>
                 <?php } ?>
             </div>
+            <br>
+            <div class="row">
+                <div class="col-md-3 col-xs-12">
+                    <div id="project-results-due-date"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -126,6 +132,28 @@ $this->params['breadcrumbs'][] = $this->title;
         });
     }
 
+    function loadProjectResultsDueDate(year)
+    {
+        $.ajax({
+            url: "'.Url::to(['/rpmes/due-date/project-results-due-date']).'",
+            data: {
+                year: year,
+            },
+            beforeSend: function(){
+                $("#project-results-due-date").html("<div class=\"text-center\" style=\"margin-top: 50px;\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
+            },
+            success: function (data) {
+                $("#project-results-due-date").empty();
+                $("#project-results-due-date").hide();
+                $("#project-results-due-date").fadeIn("slow");
+                $("#project-results-due-date").html(data);
+            },
+            error: function (err) {
+                console.log(err);
+            }
+        });
+    }
+
     $(document).ready(function(){
         loadMonitoringPlanDueDate('.date("Y").');
         loadAccomplishmentDueDate('.date("Y").',"Q1");
@@ -136,6 +164,7 @@ $this->params['breadcrumbs'][] = $this->title;
         loadProjectExceptionDueDate('.date("Y").',"Q2");
         loadProjectExceptionDueDate('.date("Y").',"Q3");
         loadProjectExceptionDueDate('.date("Y").',"Q4");
+        loadProjectResultsDueDate('.date("Y").');
     });     
     ';
 

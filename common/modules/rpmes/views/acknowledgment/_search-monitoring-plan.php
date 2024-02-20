@@ -26,7 +26,7 @@ DisableButtonAsset::register($this);
                 'pluginOptions' => [
                     'allowClear' =>  true,
                 ],
-                ])->label('Year *');
+                ])->label('Select year');
             ?>
         </div>
         <?php if(Yii::$app->user->can('Administrator')){ ?>
@@ -37,14 +37,14 @@ DisableButtonAsset::register($this);
                     'pluginOptions' => [
                         'allowClear' =>  true,
                     ],
-                ]);
+                ])->label('Select agency');
             ?>
         </div>
         <?php } ?>
         <div class="col-md-3 col-xs-12">
             <br>
             <label for="">&nbsp;</label>
-            <?= Html::submitButton('Generate List', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+            <?= Html::submitButton('Search submissions', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
         </div>
     </div>
     <?php ActiveForm::end(); ?>

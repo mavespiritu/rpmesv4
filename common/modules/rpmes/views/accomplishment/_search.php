@@ -16,7 +16,7 @@ use yii\web\View;
     <?= Html::button('<i class="fa fa-plus"></i> Add Accomplishment Report', ['value' => Url::to(['create']), 'class' => 'btn btn-success', 'id' => 'create-button']) ?>
 </div>
 <div class="pull-right">
-    <div class="plan-search">
+    <div class="accomplishment-search">
 
         <?php $form = ActiveForm::begin([
             'action' => ['index'],

@@ -1,97 +1,55 @@
 <?php
 
 use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\widgets\ActiveForm;
-use kartik\select2\Select2;
+use yii\widgets\Pjax;
+use yii\bootstrap\Modal;
+use yii\helpers\Url;
 use yii\web\View;
 
 /* @var $this yii\web\View */
-/* @var $model common\modules\rpmes\models\ProjectResultSearch */
+/* @var $model common\modules\rpmes\models\ProjectSearch */
 /* @var $form yii\widgets\ActiveForm */
-
-$projectsUrl = \yii\helpers\Url::to(['/rpmes/project-result/project-list']);
-
 ?>
 
-<div class="project-result-search">
-
-    <?php $form = ActiveForm::begin([
-    	'options' => ['class' => 'disable-submit-buttons'],
-        'method' => 'get'
-    ]); ?>
-
-    <div class="row">
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
-                'data' => $agencies,
-                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'agency-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Agency');
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'year')->widget(Select2::classname(), [
-                'data' => $years,
-                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Year *');
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'quarter')->widget(Select2::classname(), [
-                'data' => $quarters,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'quarter-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Quarter *');
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <label for="">&nbsp;</label>
-            <br>
-            <?= Html::submitButton('Generate Form', ['class' => 'btn btn-primary']) ?>
-        </div>
-    </div>
-
-    <?php ActiveForm::end(); ?>
+<div class="pull-left">
+    <?= Html::button('<i class="fa fa-plus"></i> Add Project Results Report', ['value' => Url::to(['create']), 'class' => 'btn btn-success', 'id' => 'create-button']) ?>
 </div>
+<div class="pull-right">
+    <div class="project-results-search">
+
+        <?php $form = ActiveForm::begin([
+            'action' => ['index'],
+            'method' => 'get',
+        ]); ?>
+
+        <?= $form->field($model, 'globalSearch')->textInput(['style' => 'border-top: none !important; border-left: none !important; border-right: none !important;', 'placeholder' => 'Search Records'])->label(false) ?>
+
+        <?php ActiveForm::end(); ?>
+
+    </div>
+</div>
+<div class="clearfix"></div>
+
+<?php
+  Modal::begin([
+    'id' => 'create-modal',
+    'size' => "modal-md",
+    'header' => '<div id="create-modal-header"><h4>Add Project Results Report</h4></div>',
+    'options' => ['tabindex' => false],
+  ]);
+  echo '<div id="create-modal-content"></div>';
+  Modal::end();
+?>
 
 <?php
     $script = '
-    $("#search-project-result-form").on("beforeSubmit", function (e) {
-        e.preventDefault();
-     
-        var form = $(this);
-        var formData = form.serialize();
-        
-        $.ajax({
-            url: form.attr("action"),
-            type: form.attr("method"),
-            data: formData,
-            beforeSend: function(){
-                $("#project-result-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
-            },
-            success: function (data) {
-                console.log(this.data);
-                $("#project-result-table").empty();
-                $("#project-result-table-table").hide();
-                $("#project-result-table").fadeIn("slow");
-                $("#project-result-table").html(data);
-            },
-            error: function (err) {
-                console.log(err);
-            }
-        });      
-
-        return false;
-    });
+        $(document).ready(function(){
+            $("#create-button").click(function(){
+              $("#create-modal").modal("show").find("#create-modal-content").load($(this).attr("value"));
+            });
+        });     
     ';
 
     $this->registerJs($script, View::POS_END);
-
+?>
