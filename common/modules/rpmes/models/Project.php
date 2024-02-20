@@ -72,6 +72,7 @@ class Project extends \yii\db\ActiveRecord
                 'start_date', 
                 'completion_date',
                 'cost',
+                'description',
             ], 'required', 'on' => 'projectCreateAdmin'],
             [[
                 'title', 
@@ -81,6 +82,7 @@ class Project extends \yii\db\ActiveRecord
                 'start_date', 
                 'completion_date',
                 'cost',
+                'description',
             ], 'required', 'on' => 'projectCreateUser'],
             [[
                 'source_id',
@@ -92,6 +94,7 @@ class Project extends \yii\db\ActiveRecord
                 'start_date', 
                 'completion_date',
                 'cost',
+                'description',
             ], 'required', 'on' => 'componentProjectCreateAdmin'],
             [[
                 'source_id', 
@@ -102,6 +105,7 @@ class Project extends \yii\db\ActiveRecord
                 'start_date', 
                 'completion_date',
                 'cost',
+                'description',
             ], 'required', 'on' => 'componentProjectCreateUser'],
             //[['typhoon'], 'validateTyphoon', 'skipOnEmpty' => false, 'skipOnError' => false],
             [['source_id', 'year', 'agency_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id', 'submitted_by','category_id','region_id','province_id'], 'integer'],
@@ -169,7 +173,7 @@ class Project extends \yii\db\ActiveRecord
             'agency_id' => 'Agency',
             'program_id' => 'Program Title',
             'title' => 'Program/Project Title',
-            'description' => 'Description',
+            'description' => 'Project Objectives',
             'sector_id' => 'Sector',
             'sub_sector_id' => 'Sub-Sector',
             'location_scope_id' => 'Scope of Location',
@@ -906,6 +910,16 @@ class Project extends \yii\db\ActiveRecord
         return $this->hasMany(ProjectHasOutputIndicators::className(), ['project_id' => 'id']);
     }
 
+     /**
+     * Gets query for [[ProjectHasOutcomeIndicators]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProjectHasOutcomeIndicators()
+    {
+        return $this->hasMany(ProjectHasOutcomeIndicators::className(), ['project_id' => 'id']);
+    }
+
     /**
      * Gets query for [[ProjectExpectedOutputs]].
      *
@@ -1194,7 +1208,7 @@ class Project extends \yii\db\ActiveRecord
         $total = 0;
 
         foreach($months as $mo => $month){
-            $total += floatval($target->$mo);
+            $total += $target ? floatval($target->$mo) : 0;
         }
 
         return $target ? [
@@ -1236,7 +1250,7 @@ class Project extends \yii\db\ActiveRecord
         $total = 0;
 
         foreach($months as $mo => $month){
-            $total += floatval($target->$mo);
+            $total += $target ? floatval($target->$mo) : 0;
         }
 
         $q1 = PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year]) ? PhysicalAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q1', 'year' => $year])->value : 0;
@@ -1310,7 +1324,7 @@ class Project extends \yii\db\ActiveRecord
             ];
         }
 
-        $targets['Q1'] += floatval($target->allocation);
+        $targets['Q1'] += $target ? floatval($target->allocation) : 0;
 
         return $targets;
     }
@@ -1463,5 +1477,15 @@ class Project extends \yii\db\ActiveRecord
         $allocation = ProjectTarget::findOne(['project_id' => $this->id, 'target_type' => 'Female Employed', 'year' => $year]);
 
         return $allocation ? intval($allocation->annual) : 0;
+    }
+
+    public function getProjectExceptions()
+    {
+        return $this->hasMany(ProjectException::className(), ['project_id' => 'id']);
+    }
+
+    public function getProjectExceptionsPerQuarter($year, $quarter)
+    {
+        return $this->getProjectExceptions()->where(['year' => $year, 'quarter' => $quarter])->orderBy(['id' => SORT_ASC])->all();
     }
 }

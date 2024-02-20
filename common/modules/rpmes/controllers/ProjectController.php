@@ -44,6 +44,7 @@ use common\modules\rpmes\models\Submission;
 use common\modules\rpmes\models\ProjectHasRevisedSchedules;
 use common\modules\rpmes\models\ProjectHasFundSources;
 use common\modules\rpmes\models\ProjectHasOutputIndicators;
+use common\modules\rpmes\models\ProjectHasOutcomeIndicators;
 use common\modules\rpmes\models\MultipleModel;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -75,10 +76,10 @@ class ProjectController extends Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['create', 'update', 'draft', 'carry-over'],
+                'only' => ['create', 'index', 'update'],
                 'rules' => [
                     [
-                        'actions' => ['create', 'update', 'draft', 'carry-over'],
+                        'actions' => ['create', 'index', 'update'],
                         'allow' => true,
                         'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
                     ],
@@ -401,7 +402,7 @@ class ProjectController extends Controller
         $rdpSubChapterOutcomeModel = new ProjectRdpSubChapterOutcome();
 
         $expectedOutputModels = [new ProjectHasOutputIndicators()];
-        $outcomeModels = [new ProjectOutcome()];
+        $outcomeModels = [new ProjectHasOutcomeIndicators()];
         $revisedScheduleModels = [new ProjectHasRevisedSchedules()];
         $fundSourceModels = [new ProjectHasFundSources()];
 
@@ -481,7 +482,7 @@ class ProjectController extends Controller
             {
 
             $expectedOutputModels = Model::createMultiple(ProjectHasOutputIndicators::classname());
-            $outcomeModels = Model::createMultiple(ProjectOutcome::classname());
+            $outcomeModels = Model::createMultiple(ProjectHasOutcomeIndicators::classname());
             $revisedScheduleModels = Model::createMultiple(ProjectHasRevisedSchedules::classname());
             $fundSourceModels = Model::createMultiple(ProjectHasFundSources::classname());
             Model::loadMultiple($expectedOutputModels, Yii::$app->request->post());
@@ -751,7 +752,7 @@ class ProjectController extends Controller
             'rdpChapterOutcomeModel' => $rdpChapterOutcomeModel,
             'rdpSubChapterOutcomeModel' => $rdpSubChapterOutcomeModel,
             'expectedOutputModels' => (empty($expectedOutputModels)) ? [new ProjectHasOutputIndicators] : $expectedOutputModels,
-            'outcomeModels' => (empty($outcomeModels)) ? [new ProjectOutcome] : $outcomeModels,
+            'outcomeModels' => (empty($outcomeModels)) ? [new ProjectHasOutcomeIndicators] : $outcomeModels,
             'revisedScheduleModels' => (empty($revisedScheduleModels)) ? [new ProjectHasRevisedSchedules] : $revisedScheduleModels,
             'fundSourceModels' => (empty($fundSourceModels)) ? [new ProjectHasFundSources] : $fundSourceModels,
             'agencies' => $agencies,
@@ -1118,7 +1119,7 @@ class ProjectController extends Controller
         $rdpSubChapterOutcomeModel->rdp_sub_chapter_outcome_id = array_values(ArrayHelper::map($projectRdpSubChapterOutcomes, 'rdp_sub_chapter_outcome_id', 'rdp_sub_chapter_outcome_id'));
         
         $expectedOutputModels = $model->projectHasOutputIndicators;
-        $outcomeModels = $model->projectOutcomes;
+        $outcomeModels = $model->projectHasOutcomeIndicators;
         $revisedScheduleModels = $model->projectHasRevisedSchedules;
         $fundSourceModels = $model->projectHasFundSources;
 
@@ -1285,7 +1286,7 @@ class ProjectController extends Controller
             $oldRdpSubChapterOutcomeIDs = array_values(ArrayHelper::map($projectRdpSubChapterOutcomes, 'rdp_sub_chapter_outcome_id', 'rdp_sub_chapter_outcome_id'));
             
             $expectedOutputModels = Model::createMultiple(ProjectHasOutputIndicators::classname(), $expectedOutputModels);
-            $outcomeModels = Model::createMultiple(ProjectOutcome::classname(), $outcomeModels);
+            $outcomeModels = Model::createMultiple(ProjectHasOutcomeIndicators::classname(), $outcomeModels);
             $revisedScheduleModels = Model::createMultiple(ProjectHasRevisedSchedules::classname(), $revisedScheduleModels);
             $fundSourceModels = Model::createMultiple(ProjectHasFundSources::classname(), $fundSourceModels);
 
@@ -1340,7 +1341,7 @@ class ProjectController extends Controller
 
                         if(!empty($deletedOutcomeIDs))
                         {
-                            ProjectOutcome::deleteAll(['id' => $deletedOutcomeIDs]);
+                            ProjectHasOutcomeIndicators::deleteAll(['id' => $deletedOutcomeIDs]);
                         }
 
                         foreach ($outcomeModels as $outcomeModel) {
@@ -1678,7 +1679,7 @@ class ProjectController extends Controller
             'rdpChapterOutcomeModel' => $rdpChapterOutcomeModel,
             'rdpSubChapterOutcomeModel' => $rdpSubChapterOutcomeModel,
             'expectedOutputModels' => (empty($expectedOutputModels)) ? [new ProjectHasOutputIndicators] : $expectedOutputModels,
-            'outcomeModels' => (empty($outcomeModels)) ? [new ProjectOutcome] : $outcomeModels,
+            'outcomeModels' => (empty($outcomeModels)) ? [new ProjectHasOutcomeIndicators] : $outcomeModels,
             'revisedScheduleModels' => (empty($revisedScheduleModels)) ? [new ProjectHasRevisedSchedules] : $revisedScheduleModels,
             'fundSourceModels' => (empty($fundSourceModels)) ? [new ProjectHasFundSources] : $fundSourceModels,
             'agencies' => $agencies,
@@ -2269,10 +2270,16 @@ class ProjectController extends Controller
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
-        $model->delete();
-        \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
-        //return $project->draft == 'No' ? $this->redirect(['/rpmes/project/']) : $this->redirect(['/rpmes/project/draft']);
-        return $this->redirect(['/rpmes/project/']);
+
+        if(Yii::$app->request->post())
+        {
+            $model->delete();
+            
+            \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
+            //return $project->draft == 'No' ? $this->redirect(['/rpmes/project/']) : $this->redirect(['/rpmes/project/draft']);
+            return $this->redirect(['/rpmes/project/']);
+        }
+        
     }
 
     /**

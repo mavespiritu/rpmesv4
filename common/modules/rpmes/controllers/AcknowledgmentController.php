@@ -73,7 +73,7 @@ class AcknowledgmentController extends \yii\web\Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index'],
+                'only' => ['monitoring-plan', 'monitoring-report'],
                 'rules' => [
                     [
                         'actions' => ['monitoring-plan', 'monitoring-report'],
@@ -88,13 +88,12 @@ class AcknowledgmentController extends \yii\web\Controller
     {
         $model = new Submission();
         $model->scenario = 'acknowledgmentMonitoringPlan';
-        $model->year = date("Y");
 
         $submissions = null;
         $agencyIDs = null;
         $getData = [];
 
-        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = Submission::find()->select(['distinct(year) as year'])->orderBy(['year' => SORT_DESC])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
 
@@ -193,14 +192,13 @@ class AcknowledgmentController extends \yii\web\Controller
     {
         $model = new Submission();
         $model->scenario = 'acknowledgmentMonitoringPlan';
-        $model->year = date("Y");
 
         $submissions = null;
         $agencyIDs = null;
         $getData = [];
         $quarters = ['Q1' => 'First Quarter', 'Q2' => 'Second Quarter', 'Q3' => 'Third Quarter', 'Q4' => 'Fourth Quarter'];
 
-        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = Submission::find()->select(['distinct(year) as year'])->orderBy(['year' => SORT_DESC])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
 

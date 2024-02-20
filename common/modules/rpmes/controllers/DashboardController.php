@@ -99,8 +99,9 @@ class DashboardController extends \yii\web\Controller
         $exceptionQ2 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q2']);
         $exceptionQ3 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q3']);
         $exceptionQ4 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q4']);
+        $projectResults = DueDate::findOne(['report' => 'Project Results', 'year' => date("Y")]);
 
-        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
+        $years = Submission::find()->select(['distinct(year) as year'])->orderBy(['year' => SORT_DESC])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
 
@@ -126,6 +127,7 @@ class DashboardController extends \yii\web\Controller
             'exceptionQ2' => $exceptionQ2,
             'exceptionQ3' => $exceptionQ3,
             'exceptionQ4' => $exceptionQ4,
+            'projectResults' => $projectResults,
             'years' => $years,
             'agencies' => $agencies,
             'logModel' => $logModel,

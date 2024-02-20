@@ -1,43 +1,313 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
+use yii\grid\GridView;
+use yii\bootstrap\Modal;
+use yii\web\View;
+use yii\web\JsExpression;
+use yii\bootstrap\Dropdown;
+use yii\widgets\ActiveForm;
+use yii\widgets\Pjax;
+use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
+DisableButtonAsset::register($this);
 
 /* @var $this yii\web\View */
-/* @var $model common\modules\rpmes\models\ProjectResult */
+/* @var $model common\modules\rpmes\models\Project */
 
-$this->title = $model->id;
-$this->params['breadcrumbs'][] = ['label' => 'Project Results', 'url' => ['index']];
+$this->title = 'Project Results Report for '.$model->year;
+$this->params['breadcrumbs'][] = ['label' => 'RPMES Form 4: Project Results Report', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
+
+$successMessage = \Yii::$app->getSession()->getFlash('success');
 ?>
-<div class="project-result-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
+<?php
+Modal::begin([
+    'id' => 'update-modal',
+    'size' => "modal-md",
+    'header' => '<div id="update-modal-header"><h4>Update Project Results Report</h4></div>',
+    'options' => ['tabindex' => false],
+]);
+echo '<div id="update-modal-content"></div>';
+Modal::end();
+?>
 
-    <p>
-        <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['delete', 'id' => $model->id], [
-            'class' => 'btn btn-danger',
-            'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
-                'method' => 'post',
+<?php foreach ($dataProvider->models as $plan): ?>
+    <?php
+    $modelID = $plan->project->id;
+    Modal::begin([
+        'id' => 'create-findings-modal-'.$modelID,
+        'size' => "modal-lg",
+        'header' => '<div id="create-findings-modal-'.$modelID.'-header"><h4>Add Findings</h4></div>',
+        'options' => ['tabindex' => false],
+    ]);
+    echo '<div id="create-findings-modal-'.$modelID.'-content"></div>';
+    Modal::end();
+
+    ?>
+<?php endforeach; ?>
+
+<div class="project-view">
+    <div class="box box-solid">
+        <div class="box-header with-border">
+            <h3 class="box-title">Status: 
+                <?php if($model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation'){ ?>
+                    <?= $model->currentStatus ?>
+                <?php }else { ?>
+                    <?= $model->currentStatus ?> <small>by <?= $model->currentSubmissionLog->actor ?> last <?= date("F j, Y H:i:s", strtotime($model->currentSubmissionLog->datetime)) ?></small>
+                <?php } ?>
+            </h3>
+            <div class="box-tools pull-right">
+                <?= Html::a('<i class="fa fa-backward"></i> Go back to Project Results Reports', ['index'], [
+                    'class' => 'btn btn-box-tool',
+                ]) ?>
+                <?= Yii::$app->user->can('AgencyUser') ? 
+                        $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
+                            count($model->plans) < 1 ? 
+                                Html::a('<i class="fa fa-pencil"></i> Update Project Results Report', '#', [
+                                    'class' => 'update-button btn btn-box-tool',
+                                    'data-toggle' => 'modal',
+                                    'data-target' => '#update-modal',
+                                    'data-url' => Url::to(['update', 'id' => $model->id]),
+                                ]) : 
+                            '' : 
+                        '' : 
+                    '' ?>
+                <?= Yii::$app->user->can('AgencyUser') ? 
+                        $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
+                            count($model->plans) < 1 ?  
+                                Html::a('<i class="fa fa-trash"></i> Delete Project Results Report', ['delete', 'id' => $model->id], [
+                                    'class' => 'btn btn-box-tool',
+                                    'data' => [
+                                        'confirm' => 'Are you sure want to delete this item?',
+                                        'method' => 'post',
+                                    ],
+                                ]) : 
+                            '' : 
+                        '' : 
+                    '' ?>
+            </div>  
+        </div>
+        <div class="box-body" style="min-height: calc(100vh - 235px);">
+
+        <?= $this->render('_search-project', [
+            'model' => $model,
+            'searchModel' => $searchModel,
+            'dueDate' => $dueDate
+        ]); ?>
+
+        <?= GridView::widget([
+            'options' => [
+                'class' => 'table-responsive'
             ],
-        ]) ?>
-    </p>
+            'tableOptions' => [
+                'class' => 'table table-bordered table-striped table-hover',
+                'id' => 'projects-table'
+            ],
+            'dataProvider' => $dataProvider,
+            //'filterModel' => $searchModel,
+            'columns' => [
+                [
+                    'class' => 'yii\grid\SerialColumn',
+                    'headerOptions' => [
+                        'style' => 'background-color: #002060; color: white; font-weight: normal;'
+                    ]
+                ],
 
-    <?= DetailView::widget([
-        'model' => $model,
-        'attributes' => [
-            'id',
-            'project_id',
-            'objective:ntext',
-            'results_indicator:ntext',
-            'observed_results:ntext',
-            'deadline',
-            'submitted_by',
-            'date_submitted',
-        ],
-    ]) ?>
+                //'id',
+                [
+                    'attribute' => 'project.project_no',
+                    'header' => 'Project No.',
+                    'headerOptions' => [
+                        'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
+                    ]
+                ],
+                [
+                    'attribute' => 'project.title',
+                    'header' => 'Program/Project Title',
+                    'headerOptions' => [
+                        'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
+                    ]
+                ],
+                [
+                    'attribute' => 'project.description',
+                    'headerOptions' => [
+                        'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
+                    ],
+                ],
+                [
+                    'header' => 'Results/Outcome Indicator/Target',
+                    'headerOptions' => [
+                        'style' => 'width: 25%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        $ctr = range('a', 'z');
+                        $indicators = $plan->project->getProjectOutcomes()->where(['year' => $model->year])->orderBy(['id' => SORT_ASC])->all();
+                        $str = '';
 
+                        if($indicators){
+                            foreach($indicators as $i => $indicator){
+                                $str .= '<p>'.strip_tags($ctr[$i].'.&nbsp;'.$indicator->outcome).'</p>';
+                            }
+                        }
+
+                        return $str;
+                    }
+                ],
+                [
+                    'header' => 'Observed Results/Outcome/Impact',
+                    'headerOptions' => [
+                        'style' => 'width: 25%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        $ctr = range('a', 'z');
+                        $indicators = $plan->project->getProjectOutcomes()->where(['year' => $model->year])->orderBy(['id' => SORT_ASC])->all();
+                        $str = '';
+
+                        if($indicators){
+                            foreach($indicators as $i => $indicator){
+                                $str .= $indicator->getAccomplishment($model->year) ? '<p>'.strip_tags($ctr[$i].'.&nbsp;'.$indicator->getAccomplishment($model->year)->value).'</p>' : '<p>'.$ctr[$i].'.</p>';
+                            }
+                        }
+
+                        return $str;
+                    }
+                ],
+            ],
+        ]); ?>
+        </div>
+    </div>
 </div>
+
+
+<?php
+// update plan modal
+$this->registerJs('
+    $(".update-button").click(function(e){
+        e.preventDefault();
+
+        $("#update-modal").modal("show").find("#update-modal-content").load($(this).data("url"));
+        
+        return false;
+    });
+');
+?>
+
+<?php
+$this->registerJs('
+    $(".create-findings-button").click(function(e){
+        e.preventDefault();
+
+        var modalId = $(this).data("target");
+        $(modalId).modal("show").find(modalId + "-content").load($(this).data("url"));
+        
+        return false;
+    });
+');
+?>
+
+<?php foreach ($dataProvider->models as $plan): ?>
+    <?php
+    $this->registerJs('
+        $("#create-findings-'.$plan->project->id.'-button").click(function(e){
+            e.preventDefault();
+
+            var modalId = $(this).data("target");
+            $(modalId).modal("show").find(modalId + "-content").load($(this).data("url"));
+            
+            return false;
+        });');
+    ?>
+
+    <?php
+    $exceptions = $plan->project->getProjectExceptionsPerQuarter($model->year, $model->quarter);
+
+    if($exceptions)
+    {
+        foreach($exceptions as $exception){
+            $this->registerJs('
+                $("#update-findings-'.$exception->id.'-button").click(function(e){
+                    e.preventDefault();
+
+                    var modalId = $(this).data("target");
+                    $(modalId).modal("show").find(modalId + "-content").load($(this).data("url"));
+                    
+                    return false;
+                });
+            ');
+        }
+    }
+    ?>
+<?php endforeach; ?>
+
+<?php
+// alert message for actions
+if ($successMessage) {
+    $this->registerJs("
+        $(document).ready(function() {
+            // Display the flash message
+            $('.alert-success').fadeIn();
+
+            // Hide the flash message after 5 seconds
+            setTimeout(function() {
+                $('.alert-success').fadeOut();
+            }, 5000);
+        });
+    ");
+}
+?>
+
+<?php
+$this->registerJs('
+    $(".oi-button").click(function(e){
+        $("#oi-modal").modal("show").find("#oi-modal-content").load($(this).attr("value"));
+    });
+');
+?>
+
+<?php
+    $script = '
+        function printSummary(id)
+        {
+            var printWindow = window.open(
+                "'.Url::to(['/rpmes/project-result/download']).'?type=print&id=" + id, 
+                "Print",
+                "left=200", 
+                "top=200", 
+                "width=650", 
+                "height=500", 
+                "toolbar=0", 
+                "resizable=0"
+                );
+                printWindow.addEventListener("load", function() {
+                    printWindow.print();
+                    setTimeout(function() {
+                    printWindow.close();
+                }, 1);
+                }, true);
+        }
+    ';
+
+    $this->registerJs($script, View::POS_END);
+?>
+
+<style>
+.isChecked {
+  background-color: #F5F5F5;
+}
+.bold-style {
+    font-weight: bold;
+}
+tr{
+  background-color: white; font-weight: normal;
+}
+/* click-through element */
+.check-project {
+  pointer-events: none;
+}
+</style>

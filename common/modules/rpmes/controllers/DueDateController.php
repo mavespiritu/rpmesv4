@@ -118,6 +118,20 @@ class DueDateController extends Controller
         ]);
     }
 
+    public function actionProjectResultsDueDate($year)
+    {
+        $dueDate = DueDate::findOne([
+            'year' => $year,
+            'report' => 'Project Results',
+        ]);
+
+        return $this->renderAjax('project-results',[
+            'dueDate' => $dueDate,
+            'year' => $year,
+            'report' => 'Project Results',
+        ]);
+    }
+
     public function actionSetMonitoringPlanDueDate($report, $year)
     {
         $model = DueDate::findOne([
@@ -201,6 +215,31 @@ class DueDateController extends Controller
             'report' => $report,
             'year' => $year,
             'quarter' => $quarter,
+        ]);
+    }
+
+    public function actionSetProjectResultsDueDate($report, $year)
+    {
+        $model = DueDate::findOne([
+            'year' => $year,
+            'report' => $report,
+        ]) ? DueDate::findOne([
+            'year' => $year,
+            'report' => $report,
+        ]) : new DueDate();
+
+        $model->report = $report;
+        $model->year = $year;
+
+        if($model->load(Yii::$app->request->post()))
+        {
+            $model->save();
+        }
+
+        return $this->renderAjax('_form',[
+            'model' => $model,
+            'report' => $report,
+            'year' => $year,
         ]);
     }
 

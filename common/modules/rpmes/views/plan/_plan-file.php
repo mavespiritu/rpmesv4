@@ -15,6 +15,9 @@
     *{
         font-family: "Arial";
     }
+    p{
+        font-family: "Arial";
+    }
     table{
         font-family: "Arial";
         border-collapse: collapse;
@@ -45,11 +48,14 @@
     }
 </style>
 <?php } ?>
+<h5 style="text-align: right; font-family: 'Arial'; font-size: 14px; font-weight: bolder;">RPMES FORM 1</h5>
+<br>
 <h5 style="text-align: center; font-family: 'Arial'; font-size: 14px;">
     REGIONAL PROJECT MONITORING AND EVALUATION SYSTEM (RPMES) <br>
     INITIAL PROJECT REPORT <br>
     CY <?= $model->year ?>
 </h5>
+<p><b>Implementing Agency: <u><?= $model->agency->code ?></u></b></p>
 <table class="table table-condensed table-bordered table-striped table-condensed table-responsive" cellspacing="0">
     <thead>
         <tr style="background-color: #002060; color: white">
@@ -133,7 +139,7 @@
                     <?php } ?>
                 </tr>
             <?php } ?>
-            <?php $idx ++ ?>
+            <?php $idx++ ?>
         <?php } ?>
     <?php } ?>
     </tbody>

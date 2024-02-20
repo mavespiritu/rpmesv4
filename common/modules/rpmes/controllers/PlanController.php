@@ -11,6 +11,7 @@ use common\modules\rpmes\models\DueDate;
 use common\modules\rpmes\models\Project;
 use common\modules\rpmes\models\Plan;
 use common\modules\rpmes\models\PlanSearch;
+use common\modules\rpmes\models\Settings;
 use common\modules\rpmes\models\ProjectTarget;
 use common\modules\rpmes\models\ProjectRegion;
 use common\modules\rpmes\models\ProjectProvince;
@@ -44,6 +45,7 @@ use common\modules\rpmes\models\MultipleModel;
 use common\modules\rpmes\models\Submission;
 use common\modules\rpmes\models\SubmissionLog;
 use common\modules\rpmes\models\SubmissionSearch;
+use common\modules\rpmes\models\Acknowledgment;
 use markavespiritu\user\models\User;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -73,10 +75,10 @@ class PlanController extends \yii\web\Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index'],
+                'only' => ['index', 'create', 'update', 'delete', 'view'],
                 'rules' => [
                     [
-                        'actions' => ['index'],
+                        'actions' => ['index', 'create', 'update', 'delete', 'view'],
                         'allow' => true,
                         'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
                     ],
@@ -987,11 +989,14 @@ class PlanController extends \yii\web\Controller
             }
         }
 
-        $model->delete();
+        if(Yii::$app->request->post())
+        {
+            $model->delete();
 
-        \Yii::$app->getSession()->setFlash('success', 'Record deleted');
+            \Yii::$app->getSession()->setFlash('success', 'Record deleted');
 
-        return $this->redirect(['index']);
+            return $this->redirect(['index']);
+        }
     }
 
     public function actionInclude($id)
@@ -1057,6 +1062,16 @@ class PlanController extends \yii\web\Controller
                                     $eoModel->indicator = $oi->indicator;
                                     $eoModel->target = $oi->target;
                                     $eoModel->save(false);
+                                }
+                            }   
+
+                            if($project->projectHasOutcomeIndicators){
+                                foreach($project->projectHasOutcomeIndicators as $oi){
+                                    $outcomeModel = new ProjectOutcome();
+                                    $outcomeModel->project_id = $project->id;
+                                    $outcomeModel->year = $model->year;
+                                    $outcomeModel->outcome = $oi->indicator;
+                                    $outcomeModel->save(false);
                                 }
                             }   
                         }                     
@@ -1318,7 +1333,7 @@ class PlanController extends \yii\web\Controller
                     ->createCommand()->getRawSql();
 
         $citymunTitles = ProjectCitymun::find()
-                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", <br>") as title'])
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,", ",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", <br>") as title'])
                     ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
                     ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
                     ->leftJoin('project', 'project.id = project_citymun.project_id')
@@ -1327,7 +1342,7 @@ class PlanController extends \yii\web\Controller
                     ->createCommand()->getRawSql();
         
         $barangayTitles = ProjectBarangay::find()
-                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", <br>") as title'])
+                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,", ",tblcitymun.citymun_m,", ",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", <br>") as title'])
                     ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
                     ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
                     ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
@@ -1540,312 +1555,57 @@ class PlanController extends \yii\web\Controller
         }
     }
 
-    /* public function actionDownloadMonitoringPlan(
-        $type, 
-        $year, 
-        $agency_id, 
-        $category_id, 
-        $fund_source_id, 
-        $sector_id, 
-        $sub_sector_id, 
-        $region_id,
-        $province_id,
-        $period,
-        $data_type,
-        $project_no,
-        $title
-    )
+    public function actionAcknowledge($id)
     {
-        $region_id = $type == 'print' ? json_decode(str_replace('\'', '"', $region_id), true) : json_decode($region_id, true);
-        $province_id = $type == 'print' ? json_decode(str_replace('\'', '"', $province_id), true) : json_decode($province_id, true);
-        $agency_id = Yii::$app->user->can('AgencyUser') ? Yii::$app->user->identity->userinfo->AGENCY_C : $agency_id;
+        if(!Yii::$app->user->can('Administrator')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
         
-        $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
-        $genders = ['M' => 'Male', 'F' => 'Female'];
+        $officeTitle = Settings::findOne(['Agency Title Long']);
+        $officeAddress = Settings::findOne(['Agency Address']);
+        $officeHead = Settings::findOne(['Agency Head']);
+        $officeTitleShort = Settings::findOne(['Agency Title Short']);
+        $submission = Submission::findOne($id);
+        $agency = Agency::findOne(['id' => $submission->agency_id]);
+        $model = Acknowledgment::findOne(['submission_id' => $submission->id]) ? Acknowledgment::findOne(['submission_id' => $submission->id]) : new Acknowledgment();
 
-        $financialTargets = ProjectTarget::find()->where(['target_type' => 'Financial'])->createCommand()->getRawSql();
-        $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical'])->createCommand()->getRawSql();
-        $maleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Male Employed'])->createCommand()->getRawSql();
-        $femaleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Female Employed'])->createCommand()->getRawSql();
-        $beneficiariesTargets = ProjectTarget::find()->where(['target_type' => 'Beneficiaries'])->createCommand()->getRawSql();
-        $groupBeneficiariesTargets = ProjectTarget::find()->where(['target_type' => 'Group Beneficiaries'])->createCommand()->getRawSql();
+        $lastAcknowledgment = Acknowledgment::find()->orderBy(['id' => SORT_DESC])->one();
+        $lastNumber = $lastAcknowledgment ? intval($lastAcknowledgment->id) + 1 : '1';
+        $model->submission_id = $submission->id;
+        $model->control_no = $model->isNewRecord ? 'NEDARO1-QOP-03-'.date("Y").'001'.$lastNumber : $model->control_no;
+        $model->recipient_name = $agency->head;
+        $model->recipient_designation = $agency->head_designation;
+        $model->recipient_office = $agency->title;
+        $model->recipient_address = $agency->address;
 
-        $regionTitles = ProjectRegion::find()
-                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
-                    ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
-                    ->leftJoin('project', 'project.id = project_region.project_id')
-                    ->where(['project.draft' => 'No'])
-                    ->groupBy(['project_region.project_id'])
-                    ->createCommand()->getRawSql();
-
-        $provinceTitles = ProjectProvince::find()
-                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
-                    ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
-                    ->leftJoin('project', 'project.id = project_province.project_id')
-                    ->where(['project.draft' => 'No'])
-                    ->groupBy(['project_province.project_id'])
-                    ->createCommand()->getRawSql();
-
-        $citymunTitles = ProjectCitymun::find()
-                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
-                    ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
-                    ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
-                    ->leftJoin('project', 'project.id = project_citymun.project_id')
-                    ->where(['project.draft' => 'No'])
-                    ->groupBy(['project_citymun.project_id'])
-                    ->createCommand()->getRawSql();
-        
-        $barangayTitles = ProjectBarangay::find()
-                    ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,",",tblcitymun.citymun_m,",",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR ", ") as title'])
-                    ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
-                    ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
-                    ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
-                    ->leftJoin('project', 'project.id = project_barangay.project_id')
-                    ->where(['project.draft' => 'No'])
-                    ->groupBy(['project_barangay.project_id'])
-                    ->createCommand()->getRawSql();
-        
-        $financialTotal = 'IF(project.data_type = "Cumulative",
-                            IF(COALESCE(financials.q4, 0) <= 0,
-                                IF(COALESCE(financials.q3, 0) <= 0,
-                                    IF(COALESCE(financials.q2, 0) <= 0,
-                                        COALESCE(financials.q1, 0)
-                                    , COALESCE(financials.q2, 0))
-                                , COALESCE(financials.q3, 0))
-                            , COALESCE(financials.q4, 0))
-                        ,   
-                        COALESCE(financials.q1, 0) +
-                        COALESCE(financials.q2, 0) +
-                        COALESCE(financials.q3, 0) +
-                        COALESCE(financials.q4, 0)
-                        )';
-        
-        $physicalTotal = 'IF(project.data_type <> "Default",
-                            IF(COALESCE(physicalTargets.q4, 0) <= 0,
-                                IF(COALESCE(physicalTargets.q3, 0) <= 0,
-                                    IF(COALESCE(physicalTargets.q2, 0) <= 0,
-                                        COALESCE(physicalTargets.q1, 0)
-                                    , COALESCE(physicalTargets.q2, 0))
-                                , COALESCE(physicalTargets.q3, 0))
-                            , COALESCE(physicalTargets.q4, 0))
-                        ,   
-                        COALESCE(physicalTargets.q1, 0) +
-                        COALESCE(physicalTargets.q2, 0) +
-                        COALESCE(physicalTargets.q3, 0) +
-                        COALESCE(physicalTargets.q4, 0)
-                        )';
-        
-        $projects = Project::find()
-                    ->select([
-                        'project.id',
-                        'mode_of_implementation.title as modeOfImplementationTitle',
-                        'project.title as projectTitle',
-                        'sector.title as sectorTitle',
-                        'sub_sector.title as subSectorTitle',
-                        'fund_source.title as fundSourceTitle',
-                        'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
-                        'project.start_date as startDate',
-                        'project.completion_date as completionDate',
-                        'IF(project.data_type <> "", concat(physicalTargets.indicator, " (",project.data_type,")"), concat(physicalTargets.indicator, " (No Data Type)")) as unitOfMeasure',
-                        'financialTargets.q1 as financialQ1',
-                        'financialTargets.q2 as financialQ2',
-                        'financialTargets.q3 as financialQ3',
-                        'financialTargets.q4 as financialQ4',
-                        'COALESCE('.$financialTotal.', 0) as financialTotal',
-                        'physicalTargets.q1 as physicalQ1',
-                        'physicalTargets.q2 as physicalQ2',
-                        'physicalTargets.q3 as physicalQ3',
-                        'physicalTargets.q4 as physicalQ4',
-                        'COALESCE('.$physicalTotal.', 0) as physicalTotal',
-                        'maleEmployedTargets.q1 as maleEmployedQ1',
-                        'maleEmployedTargets.q2 as maleEmployedQ2',
-                        'maleEmployedTargets.q3 as maleEmployedQ3',
-                        'maleEmployedTargets.q4 as maleEmployedQ4',
-                        'femaleEmployedTargets.q1 as femaleEmployedQ1',
-                        'femaleEmployedTargets.q2 as femaleEmployedQ2',
-                        'femaleEmployedTargets.q3 as femaleEmployedQ3',
-                        'femaleEmployedTargets.q4 as femaleEmployedQ4',
-                        'beneficiariesTargets.q1 as beneficiaryQ1',
-                        'beneficiariesTargets.q2 as beneficiaryQ2',
-                        'beneficiariesTargets.q3 as beneficiaryQ3',
-                        'beneficiariesTargets.q4 as beneficiaryQ4',
-                        'groupBeneficiariesTargets.q1 as groupBeneficiaryQ1',
-                        'groupBeneficiariesTargets.q2 as groupBeneficiaryQ2',
-                        'groupBeneficiariesTargets.q3 as groupBeneficiaryQ3',
-                        'groupBeneficiariesTargets.q4 as groupBeneficiaryQ4',
-                    ]);
-        $projects = $projects->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
-        $projects = $projects->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
-        $projects = $projects->leftJoin(['maleEmployedTargets' => '('.$maleEmployedTargets.')'], 'maleEmployedTargets.project_id = project.id');
-        $projects = $projects->leftJoin(['femaleEmployedTargets' => '('.$femaleEmployedTargets.')'], 'femaleEmployedTargets.project_id = project.id');
-        $projects = $projects->leftJoin(['beneficiariesTargets' => '('.$beneficiariesTargets.')'], 'beneficiariesTargets.project_id = project.id');
-        $projects = $projects->leftJoin(['groupBeneficiariesTargets' => '('.$groupBeneficiariesTargets.')'], 'groupBeneficiariesTargets.project_id = project.id');
-        $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
-        $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
-        $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
-        $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
-        $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
-        $projects = $projects->leftJoin('mode_of_implementation', 'mode_of_implementation.id = project.mode_of_implementation_id');
-        $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
-        $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-        $projects = $projects->leftJoin('fund_source', 'fund_source.id = project.fund_source_id');
-        $projects = $projects->andWhere(['project.draft' => 'No']);
-
-        $regionIDs = ProjectRegion::find();
-        $provinceIDs = ProjectProvince::find();
-        $categoryIDs = ProjectCategory::find();
-
-        if($year != '')
+        if($model->load(Yii::$app->request->post()))
         {
-            $projects = $projects->andWhere(['project.year' => $year]);
+            $model->acknowledged_by = Yii::$app->user->id;
+            if($model->save()){
+                $logModel = new SubmissionLog();
+                $logModel->submission_id = $submission->id;
+                $logModel->user_id = Yii::$app->user->id;
+                $logModel->status = 'Acknowledged';
+
+                if($logModel->save())
+                {
+                    \Yii::$app->getSession()->setFlash('success', 'This report has been acknowledged successfully');
+                    return $this->redirect(['view', 'id' => $submission->id]);
+                }
+            }
+
+            
         }
 
-        if($agency_id != '')
-        {
-            $projects = $projects->andWhere(['project.agency_id' => $agency_id]);
-        }
-
-        if($category_id != '')
-        {
-            $categoryIDs = $categoryIDs->andWhere(['category_id' => $category_id]);
-        }
-
-        if($fund_source_id != '')
-        {
-            $projects = $projects->andWhere(['project.fund_source_id' => $fund_source_id]);
-        }
-
-        if($sector_id != '')
-        {
-            $projects = $projects->andWhere(['project.sector_id' => $sector_id]);
-        }
-
-        if($sub_sector_id != '')
-        {
-            $projects = $projects->andWhere(['project.sub_sector_id' => $sub_sector_id]);
-        }
-
-        if($region_id != '')
-        {
-            $regionIDs = $regionIDs->andWhere(['region_id' => $region_id]);
-        }
-
-        if($province_id != '')
-        {
-            $regionIDs = $regionIDs->andWhere(['province_id' => $province_id]);
-        }
-
-        if($period != '')
-        {
-            $projects = $projects->andWhere(['project.period' => $period]);
-        }
-
-        if($data_type != '')
-        {
-            $projects = $projects->andWhere(['project.data_type' => $data_type]);
-        }
-
-        if($project_no != '')
-        {
-            $projects = $projects->andWhere(['like', 'project.project_no', '%'.$project_no.'%', false]);
-        }
-
-        if($title != '')
-        {
-            $projects = $projects->andWhere(['like', 'project.title', '%'.$title.'%', false]);
-        }
-
-        $regionIDs = $regionIDs->all();
-        $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
-
-        $provinceIDs = $provinceIDs->all();
-        $provinceIDs = ArrayHelper::map($provinceIDs, 'project_id', 'project_id');
-
-        $categoryIDs = $categoryIDs->all();
-        $categoryIDs = ArrayHelper::map($categoryIDs, 'project_id', 'project_id');
-
-        if($region_id != '')
-        {
-            $projects = $projects->andWhere(['project.id' => $regionIDs]);
-        }
-
-        if($province_id != '')
-        {
-            $projects = $projects->andWhere(['project.id' => $provinceIDs]);
-        }
-
-        if($category_id != '')
-        {
-            $projects = $projects->andWhere(['project.id' => $categoryIDs]);
-        }
-
-        $projects = $projects 
-                    ->asArray()
-                    ->all();
-
-        $filename = 'Initial Project Report';
-
-        if($type == 'excel')
-        {
-            header("Content-type: application/vnd.ms-excel");
-            header("Content-Disposition: attachment; filename=".$filename.".xls");
-            return $this->renderPartial('_plan-file', [
-                'type' => $type,
-                'projects' => $projects,
-                'quarters' => $quarters,
-                'genders' => $genders,
-            ]);
-        }else if($type == 'pdf')
-        {
-            $content = $this->renderPartial('_plan-file', [
-                'type' => $type,
-                'projects' => $projects,
-                'quarters' => $quarters,
-                'genders' => $genders,
-            ]);
-
-            $pdf = new Pdf([
-                'mode' => Pdf::MODE_CORE,
-                'format' => Pdf::FORMAT_LEGAL, 
-                'orientation' => Pdf::ORIENT_LANDSCAPE, 
-                'destination' => Pdf::DEST_DOWNLOAD, 
-                'filename' => $filename.'.pdf', 
-                'content' => $content,  
-                'marginLeft' => 11.4,
-                'marginRight' => 11.4,
-                'cssInline' => 'table{
-                                    font-family: "Arial";
-                                    border-collapse: collapse;
-                                }
-                                thead{
-                                    font-size: 12px;
-                                    text-align: center;
-                                }
-                            
-                                td{
-                                    font-size: 10px;
-                                    border: 1px solid black;
-                                }
-                            
-                                th{
-                                    text-align: center;
-                                    border: 1px solid black;
-                                }', 
-                ]);
-        
-                $response = Yii::$app->response;
-                $response->format = \yii\web\Response::FORMAT_RAW;
-                $headers = Yii::$app->response->headers;
-                $headers->add('Content-Type', 'application/pdf');
-                return $pdf->render();
-        }else if($type == 'print')
-        {
-            return $this->renderAjax('_plan-file', [
-                'type' => $type,
-                'projects' => $projects,
-                'quarters' => $quarters,
-                'genders' => $genders,
-            ]);
-        }
-    } */
+        return $this->renderAjax('_acknowledgment-form', [
+            'model' => $model,
+            'submission' => $submission,
+            'agency' => $agency,
+            'officeTitle' => $officeTitle,
+            'officeAddress' => $officeAddress,
+            'officeHead' => $officeHead,
+            'officeTitleShort' => $officeTitleShort,
+        ]);
+    }
 }

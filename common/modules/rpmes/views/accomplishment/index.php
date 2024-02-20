@@ -133,7 +133,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
                             'value' => function($model){
-                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged)->datetime) : '' : '';
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged->datetime)) : '' : '';
                             }
                         ],
                         [
@@ -216,7 +216,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             ],
                             'format' => 'raw',
                             'value' => function($model){
-                                return $model->currentStatus;;
+                                return $model->currentStatus;
                             }
                         ],
                         [
@@ -257,7 +257,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
                             'value' => function($model){
-                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged)->datetime) : '' : '';
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged->datetime)) : '' : '';
                             }
                         ],
                         [
@@ -280,8 +280,8 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'buttons' => [
                                 'update' => function($url, $model, $key){
                                     $modalID = $model->id;
-                                    return Yii::$app->user->can('AgencyUser') ? 
-                                                $model->draft == 'Yes' ? 
+                                    return Yii::$app->user->can('Administrator') ? 
+                                                $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ?
                                                     count($model->plans) < 1 ? 
                                                         Html::a('<i class="fa fa-pencil"></i>', '#', [
                                                             'class' => 'update-button',
@@ -294,8 +294,8 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                                             '';
                                 },
                                 'delete' => function($url, $model, $key){
-                                    return Yii::$app->user->can('AgencyUser') ? 
-                                                $model->draft == 'Yes' ? 
+                                    return Yii::$app->user->can('Administrator') ? 
+                                                $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ?
                                                     count($model->plans) < 1 ?
                                                         Html::a('<i class="fa fa-trash"></i>', ['delete', 'id' => $model->id], [
                                                             'data' => [

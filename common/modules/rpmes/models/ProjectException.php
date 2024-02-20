@@ -35,9 +35,17 @@ class ProjectException extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['causes', 'recommendations'], 'required'],
-            [['project_id', 'year', 'submitted_by'], 'integer'],
-            [['quarter', 'findings', 'causes', 'recommendations'], 'string'],
+            [[
+                'findings',
+                'typology_id',
+                'issue_status',
+                'causes', 
+                'action_taken', 
+                'recommendations'
+            ], 'required'],
+            [['for_npmc_action'], 'required', 'on' => 'review'],
+            [['project_id', 'typology_id', 'for_npmc_action', 'year', 'submitted_by'], 'integer'],
+            [['quarter', 'findings', 'causes', 'recommendations', 'requested_action'], 'string'],
             [['date_submitted'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
         ];
@@ -51,13 +59,21 @@ class ProjectException extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'project_id' => 'Project ID',
+            'typology_id' => 'Typology',
+            'other_typology' => 'Other typology',
             'year' => 'Year',
             'quarter' => 'Quarter',
             'findings' => 'Findings',
-            'causes' => 'Causes',
-            'recommendations' => 'Recommendations',
+            'issue_status' => 'Issue Status',
+            'causes' => 'Reasons',
+            'recommendations' => 'Actions to be taken',
+            'action_taken' => 'Actions taken',
+            'for_npmc_action' => 'For NPMC Action',
+            'requested_action' => 'Requested Action',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',
+            'reviewed_by' => 'Reviewed By',
+            'date_reviewed' => 'Date Reviewed',
         ];
     }
 
@@ -69,5 +85,15 @@ class ProjectException extends \yii\db\ActiveRecord
     public function getProject()
     {
         return $this->hasOne(Project::className(), ['id' => 'project_id']);
+    }
+
+    /**
+     * Gets query for [[Typology]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getTypology()
+    {
+        return $this->hasOne(Typology::className(), ['id' => 'typology_id']);
     }
 }

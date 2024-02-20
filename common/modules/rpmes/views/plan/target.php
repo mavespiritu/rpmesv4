@@ -20,7 +20,7 @@ DisableButtonAsset::register($this);
 /* @var $model common\modules\rpmes\models\Project */
 
 $this->title = $model->draft == 'Yes' ? 'Adjust Targets' : 'View Targets';
-$this->params['breadcrumbs'][] = ['label' => 'Plans', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'RPMES Form 1: Initial Project Report', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => 'Monitoring Plan '.$model->year, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
@@ -272,7 +272,7 @@ function renderSummary($page)
             <br>
             <div class="form-group pull-right">
                 <?= Yii::$app->user->can('AgencyUser') ?
-                        $model->draft == 'Yes' ? 
+                        $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? 
                             $projectsPages->totalCount > 0 ?
                                 $dueDate ? 
                                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?

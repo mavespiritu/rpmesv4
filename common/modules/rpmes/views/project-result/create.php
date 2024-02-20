@@ -3,20 +3,17 @@
 use yii\helpers\Html;
 
 /* @var $this yii\web\View */
-/* @var $model common\modules\rpmes\models\ProjectResult */
+/* @var $model common\modules\v1\models\Ris */
 
-$this->title = 'Add New Record';
-$this->params['breadcrumbs'][] = ['label' => 'Project Results', 'url' => ['index']];
+$this->title = 'Create Project Results Report';
+$this->params['breadcrumbs'][] = ['label' => 'Project Results Reports', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="project-result-create">
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
-            <?= $this->render('_form', [
-                'model' => $model,
-                'projects' => $projects,
-                'years' => $years,
-            ]) ?>
-        </div>
-    </div>
+<div class="project-results-create">
+
+    <?= $this->render('_form', [
+        'model' => $model,
+        'agencies' => $agencies,
+    ]) ?>
+
 </div>

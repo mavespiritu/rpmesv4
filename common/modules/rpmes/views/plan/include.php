@@ -58,7 +58,7 @@ DisableButtonAsset::register($this);
 
 <div class="form-group pull-right"> 
     <?= Yii::$app->user->can('AgencyUser') ? 
-            $model->draft == 'Yes' ? 
+            $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? 
                 count($projects) > 0 ?
                     $dueDate ? 
                         strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 

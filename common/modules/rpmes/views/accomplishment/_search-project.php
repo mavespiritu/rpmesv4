@@ -55,9 +55,17 @@ use yii\bootstrap\ButtonDropdown;
             '' :
         '';
     ?>
+
+    <?= Yii::$app->user->can('Administrator') ?
+            $model->currentStatus == 'Submitted' || $model->currentStatus == 'Acknowledged' ?
+                Html::button('<i class="fa fa-paper-plane-o"></i> Acknowledge Form 2', ['value' => Url::to(['acknowledge', 'id' => $model->id]), 'class' => 'btn btn-success', 'id' => 'acknowledge-button']) :
+            '' :
+        '';
+    ?>
+
 </div>
 <div class="pull-right">
-    <div class="plan-search">
+    <div class="accomplishment-search">
 
         <?php $form = ActiveForm::begin([
             'id' => 'project-search-form',
@@ -77,11 +85,21 @@ use yii\bootstrap\ButtonDropdown;
 <div class="clearfix"></div>
 
 <?php
+  Modal::begin([
+    'id' => 'acknowledge-modal',
+    'size' => "modal-lg",
+    'header' => '<div id="acknowledge-modal-header"><h4>Acknowledge Form 2</h4></div>',
+    'options' => ['tabindex' => false],
+  ]);
+  echo '<div id="acknowledge-modal-content"></div>';
+  Modal::end();
+?>
+<?php
     $script = '
         $(document).ready(function(){
-            $("#include-button").click(function(){
-              $("#include-modal").modal("show").find("#include-modal-content").load($(this).attr("value"));
-            });
+            $("#acknowledge-button").click(function(){
+                $("#acknowledge-modal").modal("show").find("#acknowledge-modal-content").load($(this).attr("value"));
+              });
         });     
     ';
 

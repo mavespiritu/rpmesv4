@@ -47,10 +47,16 @@ class Submission extends \yii\db\ActiveRecord
         return [
             [['year'], 'required', 'on' => 'createMonitoringPlan'],
             [['year', 'quarter'], 'required', 'on' => 'createAccomplishmentReport'],
+            [['year', 'quarter'], 'required', 'on' => 'createProjectExceptionReport'],
+            [['year'], 'required', 'on' => 'createProjectResultsReport'],
             [['year','agency_id'], 'validateMonitoringPlan'],
             [['year', 'quarter', 'agency_id'], 'validateAccomplishmentReport'],
+            [['year', 'quarter', 'agency_id'], 'validateProjectExceptionReport'],
+            [['year', 'quarter', 'agency_id'], 'validateProjectResultsReport'],
             [['year', 'agency_id'], 'required', 'on' => 'createMonitoringPlanAdmin'],
             [['year', 'quarter', 'agency_id'], 'required', 'on' => 'createAccomplishmentReportAdmin'],
+            [['year', 'quarter', 'agency_id'], 'required', 'on' => 'createProjectExceptionReportAdmin'],
+            [['year', 'quarter', 'agency_id'], 'required', 'on' => 'createProjectResultsReportAdmin'],
             [['agency_id'], 'required', 'on' => 'monitoringPlanAdmin'],
             [['year'], 'required', 'on' => 'acknowledgmentMonitoringPlan'],
             [['year'], 'required', 'on' => 'acknowledgmentMonitoringReport'],
@@ -98,7 +104,7 @@ class Submission extends \yii\db\ActiveRecord
     {
         if($this->report == 'Monitoring Plan')
         {
-            $model = Submission::findOne(['year' => $this->year, 'agency_id' => $this->agency_id]);
+            $model = Submission::findOne(['report' => 'Monitoring Plan', 'year' => $this->year, 'agency_id' => $this->agency_id]);
 
             if($model)
             {
@@ -111,11 +117,37 @@ class Submission extends \yii\db\ActiveRecord
     {
         if($this->report == 'Accomplishment')
         {
-            $model = Submission::findOne(['year' => $this->year, 'quarter' => $this->quarter, 'agency_id' => $this->agency_id]);
+            $model = Submission::findOne(['report' => 'Accomplishment', 'year' => $this->year, 'quarter' => $this->quarter, 'agency_id' => $this->agency_id]);
 
             if($model)
             {
                 $this->addError($attribute, 'This accomplishment report already exists');
+            }
+        }
+    }
+
+    public function validateProjectExceptionReport($attribute, $params, $validator)
+    {
+        if($this->report == 'Project Exception')
+        {
+            $model = Submission::findOne(['report' => 'Project Exception', 'year' => $this->year, 'quarter' => $this->quarter, 'agency_id' => $this->agency_id]);
+
+            if($model)
+            {
+                $this->addError($attribute, 'This project exception report already exists');
+            }
+        }
+    }
+
+    public function validateProjectResultsReport($attribute, $params, $validator)
+    {
+        if($this->report == 'Project Results')
+        {
+            $model = Submission::findOne(['report' => 'Project Results', 'year' => $this->year, 'agency_id' => $this->agency_id]);
+
+            if($model)
+            {
+                $this->addError($attribute, 'This project results report already exists');
             }
         }
     }
@@ -236,7 +268,7 @@ class Submission extends \yii\db\ActiveRecord
             ])
             ->setFrom('mvespiritu@neda.gov.ph')
             ->setTo($emails)
-            ->setSubject('eRPMES Notification: '.$this->agency->code.' Form 1 Submission');
+            ->setSubject('eRPMES Notification: '.$this->agency->code.' - Form 1 Submission for CY '.$this->year);
 
         if ($message->send()) {
             Yii::info('Email sent successfully', 'email');
@@ -255,7 +287,45 @@ class Submission extends \yii\db\ActiveRecord
             ])
             ->setFrom('mvespiritu@neda.gov.ph')
             ->setTo($emails)
-            ->setSubject('eRPMES Notification: '.$this->agency->code.' Form 2 Submission for '.$this->quarter.' '.$this->year);
+            ->setSubject('eRPMES Notification: '.$this->agency->code.' - Form 2 Submission for '.$this->quarter.' '.$this->year);
+
+        if ($message->send()) {
+            Yii::info('Email sent successfully', 'email');
+        } else {
+            Yii::error('Failed to send email', 'email');
+        }
+    }
+
+    public function sendFormThreeSubmissionNotification($emails)
+    {
+        // Your email sending logic here
+        // Example using Yii2 mailer component:
+        $mailer = Yii::$app->mailer;
+        $message = $mailer->compose('submit-form-three-html', [
+                'model' => $this
+            ])
+            ->setFrom('mvespiritu@neda.gov.ph')
+            ->setTo($emails)
+            ->setSubject('eRPMES Notification: '.$this->agency->code.' - Form 3 Submission for '.$this->quarter.' '.$this->year);
+
+        if ($message->send()) {
+            Yii::info('Email sent successfully', 'email');
+        } else {
+            Yii::error('Failed to send email', 'email');
+        }
+    }
+
+    public function sendFormFourSubmissionNotification($emails)
+    {
+        // Your email sending logic here
+        // Example using Yii2 mailer component:
+        $mailer = Yii::$app->mailer;
+        $message = $mailer->compose('submit-form-four-html', [
+                'model' => $this
+            ])
+            ->setFrom('mvespiritu@neda.gov.ph')
+            ->setTo($emails)
+            ->setSubject('eRPMES Notification: '.$this->agency->code.' - Form 4 Submission for CY '.$this->year);
 
         if ($message->send()) {
             Yii::info('Email sent successfully', 'email');
@@ -296,6 +366,14 @@ class Submission extends \yii\db\ActiveRecord
                 }else if($this->report == 'Accomplishment')
                 {
                     $this->sendFormTwoSubmissionNotification($emails);
+
+                }else if($this->report == 'Project Exception')
+                {
+                    $this->sendFormThreeSubmissionNotification($emails);
+
+                }else if($this->report == 'Project Results')
+                {
+                    $this->sendFormFourSubmissionNotification($emails);
                 }
             }
         }

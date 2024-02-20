@@ -7,7 +7,7 @@
 
 <b>Dear NRO1 Admin,</b>
 
-<p>Please be informed that the <?= $model->agency->title ?> has submitted its Agency Form 1 for FY <?= $model->year ?>. You can login to eRPMES to review the submission.</p>
+<p>Please be informed that the <?= $model->agency->title ?> has submitted its Agency Form 1 for CY <?= $model->year ?>. You can login to eRPMES to review the submission.</p>
 
 <p style="text-align: center;"><a href="<?= Yii::$app->urlManager->createAbsoluteUrl(['/rpmes/plan/view', 'id' => $model->id]) ?>" style="box-sizing:border-box; border-radius:4px; color:#fff; display:inline-block; overflow:hidden; text-decoration:none; background-color:#2d3748; border-bottom:8px solid #2d3748; border-left:18px solid #2d3748; border-right:18px solid #2d3748; border-top:8px solid #2d3748">Review Submission</a></p>
 

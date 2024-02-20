@@ -655,7 +655,7 @@ $this->registerJs($js);
                         'widgetBody' => '.expected-output-items', // required: css class selector
                         'widgetItem' => '.expected-output-item', // required: css class
                         'limit' => 4, // the maximum times, an element can be cloned (default 999)
-                        'min' => 1, // 0 or 1 (default 1)
+                        'min' => 0, // 0 or 1 (default 1)
                         'insertButton' => '.add-expected-output-item', // css class
                         'deleteButton' => '.remove-expected-output-item', // css class
                         'model' => $expectedOutputModels[0],
@@ -697,6 +697,7 @@ $this->registerJs($js);
                     <?php DynamicFormWidget::end(); ?>
                 </div>
             </div>
+            <?= $form->field($model, 'description')->textArea(['rows' => 3, 'style' => 'resize: none;']) ?>
             <div class="form-group">
                 <label class="control-label col-sm-3" for="outcome_indicators">Outcome Indicators</label>
                 <div class="col-sm-9">
@@ -705,13 +706,13 @@ $this->registerJs($js);
                         'widgetBody' => '.outcome-items', // required: css class selector
                         'widgetItem' => '.outcome-item', // required: css class
                         'limit' => 10, // the maximum times, an element can be cloned (default 999)
-                        'min' => 0, // 0 or 1 (default 1)
+                        'min' => 1, // 0 or 1 (default 1)
                         'insertButton' => '.add-outcome-item', // css class
                         'deleteButton' => '.remove-outcome-item', // css class
                         'model' => $outcomeModels[0],
                         'formId' => 'project-form',
                         'formFields' => [
-                            'outcome',
+                            'indicator',
                         ],
                     ]); ?>
                     
@@ -733,7 +734,7 @@ $this->registerJs($js);
                             ?>
                             <tr class="outcome-item">
                                 <td class="outcome-counter" align=center><?= ($oIdx + 1) ?></td>
-                                <td><?= $form->field($outcomeModel, "[{$oIdx}]outcome")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
+                                <td><?= $form->field($outcomeModel, "[{$oIdx}]indicator")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
                                 <td><button type="button" class="pull-right remove-outcome-item btn btn-danger btn-xs btn-block">Delete Row</button></td>
                             </tr>
                         <?php } ?>
