@@ -379,6 +379,12 @@ class ComponentController extends Controller
         $model = $this->findModel($id);
         $model->data_type = 'Default';
 
+        if(!Yii::$app->user->can('Administrator')){
+            if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
+                throw new NotFoundHttpException('The requested page does not exist.');
+            }
+        }
+
         $model->scenario = Yii::$app->user->can('AgencyUser') ? 'componentProjectCreateUser' : 'componentProjectCreateAdmin';
 
         $regionModel = new ProjectRegion();

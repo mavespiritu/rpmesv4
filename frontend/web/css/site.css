@@ -417,3 +417,25 @@ a.desc:after {
 .modal-xl{
   width: 1140px;
 }
+
+*::-webkit-scrollbar
+{
+  width: 12px;
+}
+*::-webkit-scrollbar:horizontal
+{
+  height: 12px;
+}
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb:horizontal
+{
+  background-color: #C1C1C1;
+  border-radius: 6px;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track:horizontal
+{
+  background-color: #f1f1f1;
+  border-radius: 6px;
+}
