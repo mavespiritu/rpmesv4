@@ -23,7 +23,7 @@ DisableButtonAsset::register($this);
 
     <?= $form->field($model, 'quarter')->widget(Select2::classname(), [
             'data' => $quarters,
-            'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'quarter-select'],
+            'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'quarter-select', 'id' => random_int(100000000, 999999999).'-quarter-select'],
             'pluginOptions' => [
                 'allowClear' =>  true,
             ],
@@ -31,7 +31,7 @@ DisableButtonAsset::register($this);
 
     <?= Yii::$app->user->can('Administrator') ? $form->field($model, 'agency_id')->widget(Select2::classname(), [
             'data' => $agencies,
-            'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'agency-select'],
+            'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'agency-select', 'id' => random_int(100000000, 999999999).'-agency-select'],
             'pluginOptions' => [
                 'allowClear' =>  true,
             ],

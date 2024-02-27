@@ -109,7 +109,24 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         'headerOptions' => [
                             'style' => 'background-color: #002060; color: white; font-weight: normal;'
                         ],
-                        'template' => '<center>{update} {delete}</center>'
+                        'template' => '<center>{update} {delete}</center>',
+                        'buttons' => [
+                            'update' => function($url, $model, $key){
+                                $modalID = $model->id;
+                                return Html::a('Update', ['update', 'id' => $model->id], [
+                                    'class' => 'btn btn-warning btn-block btn-xs'
+                                ]);
+                            },
+                            'delete' => function($url, $model, $key){
+                                return Html::a('Delete', ['delete', 'id' => $model->id], [
+                                                    'class' => 'btn btn-danger btn-block btn-xs',
+                                                    'data' => [
+                                                        'confirm' => 'Are you sure want to delete this item?',
+                                                        'method' => 'post',
+                                                    ],
+                                                ]);
+                            },
+                        ],
                     ],
                 ] : [
                     [
@@ -183,7 +200,24 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         'headerOptions' => [
                             'style' => 'background-color: #002060; color: white; font-weight: normal;'
                         ],
-                        'template' => '<center>{update} {delete}</center>'
+                        'template' => '<center>{update} {delete}</center>',
+                        'buttons' => [
+                            'update' => function($url, $model, $key){
+                                $modalID = $model->id;
+                                return Html::a('Update', ['update', 'id' => $model->id], [
+                                    'class' => 'btn btn-warning btn-block btn-xs'
+                                ]);
+                            },
+                            'delete' => function($url, $model, $key){
+                                return Html::a('Delete', ['delete', 'id' => $model->id], [
+                                                    'class' => 'btn btn-danger btn-block btn-xs',
+                                                    'data' => [
+                                                        'confirm' => 'Are you sure want to delete this item?',
+                                                        'method' => 'post',
+                                                    ],
+                                                ]);
+                            },
+                        ],
                     ],
                 ],
             ]); ?>

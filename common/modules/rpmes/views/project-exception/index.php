@@ -157,32 +157,35 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             ],
                             'template' => '<center>{view} {update} {delete}</center>',
                             'buttons' => [
+                                'view' => function($url, $model, $key){
+                                    $modalID = $model->id;
+                                    return Html::a('Open', ['view', 'id' => $model->id], [
+                                        'class' => 'btn btn-success btn-block btn-xs',
+                                    ]);
+                                },
                                 'update' => function($url, $model, $key){
                                     $modalID = $model->id;
                                     return Yii::$app->user->can('Administrator') ? 
-                                                $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ?
-                                                    count($model->plans) < 1 ? 
-                                                        Html::a('<i class="fa fa-pencil"></i>', '#', [
-                                                            'class' => 'update-button',
-                                                            'data-toggle' => 'modal',
-                                                            'data-target' => '#update-modal-'.$modalID,
-                                                            'data-url' => Url::to(['update', 'id' => $model->id]),
-                                                        ]) :
-                                                    '' :
+                                                $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
+                                                    Html::a('Update', '#', [
+                                                        'class' => 'btn btn-warning btn-block btn-xs update-button',
+                                                        'data-toggle' => 'modal',
+                                                        'data-target' => '#update-modal-'.$modalID,
+                                                        'data-url' => Url::to(['update', 'id' => $model->id]),
+                                                    ]) :
                                                 '' :
                                             '';
                                 },
                                 'delete' => function($url, $model, $key){
                                     return Yii::$app->user->can('Administrator') ? 
-                                                $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ?
-                                                    count($model->plans) < 1 ?
-                                                        Html::a('<i class="fa fa-trash"></i>', ['delete', 'id' => $model->id], [
-                                                            'data' => [
-                                                                'confirm' => 'Are you sure want to delete this item?',
-                                                                'method' => 'post',
-                                                            ],
-                                                        ]) :
-                                                    '' :
+                                                $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
+                                                    Html::a('Delete', ['delete', 'id' => $model->id], [
+                                                        'class' => 'btn btn-danger btn-block btn-xs',
+                                                        'data' => [
+                                                            'confirm' => 'Are you sure want to delete this item?',
+                                                            'method' => 'post',
+                                                        ],
+                                                    ]) :
                                                 '' :
                                             '';
                                 },
@@ -285,32 +288,35 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             ],
                             'template' => '<center>{view} {update} {delete}</center>',
                             'buttons' => [
+                                'view' => function($url, $model, $key){
+                                    $modalID = $model->id;
+                                    return Html::a('Open', ['view', 'id' => $model->id], [
+                                        'class' => 'btn btn-success btn-block btn-xs',
+                                    ]);
+                                },
                                 'update' => function($url, $model, $key){
                                     $modalID = $model->id;
-                                    return Yii::$app->user->can('Administrator') ? 
-                                                $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ?
-                                                    count($model->plans) < 1 ? 
-                                                        Html::a('<i class="fa fa-pencil"></i>', '#', [
-                                                            'class' => 'update-button',
-                                                            'data-toggle' => 'modal',
-                                                            'data-target' => '#update-modal-'.$modalID,
-                                                            'data-url' => Url::to(['update', 'id' => $model->id]),
-                                                        ]) :
-                                                    '' :
+                                    return Yii::$app->user->can('AgencyUser') ? 
+                                                $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
+                                                    Html::a('Update', '#', [
+                                                        'class' => 'btn btn-warning btn-block btn-xs update-button',
+                                                        'data-toggle' => 'modal',
+                                                        'data-target' => '#update-modal-'.$modalID,
+                                                        'data-url' => Url::to(['update', 'id' => $model->id]),
+                                                    ]) :
                                                 '' :
                                             '';
                                 },
                                 'delete' => function($url, $model, $key){
-                                    return Yii::$app->user->can('Administrator') ? 
-                                                $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ?
-                                                    count($model->plans) < 1 ?
-                                                        Html::a('<i class="fa fa-trash"></i>', ['delete', 'id' => $model->id], [
-                                                            'data' => [
-                                                                'confirm' => 'Are you sure want to delete this item?',
-                                                                'method' => 'post',
-                                                            ],
-                                                        ]) :
-                                                    '' :
+                                    return Yii::$app->user->can('AgencyUser') ? 
+                                                $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
+                                                    Html::a('Delete', ['delete', 'id' => $model->id], [
+                                                        'class' => 'btn btn-danger btn-block btn-xs',
+                                                        'data' => [
+                                                            'confirm' => 'Are you sure want to delete this item?',
+                                                            'method' => 'post',
+                                                        ],
+                                                    ]) :
                                                 '' :
                                             '';
                                 },

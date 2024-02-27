@@ -59,7 +59,7 @@
                                         <td><?= $accompQ1 ? date("F j, Y", strtotime($accompQ1->due_date)) : 'Not set' ?></td>
                                         <td><?= $accompQ1Submission ? $accompQ1Submission->currentStatus : 'No submission' ?></td>
                                         <td align=center><?= $accompQ1Submission ? $accompQ1Submission->currentSubmissionLog ? $accompQ1Submission->currentSubmissionLog->remarks : '' : '' ?></td>
-                                        <td align=center><?= $accompQ1Submission ? Html::a('View Report', ['/rpmes/accomplishment/view', 'id' => $accompQ1Submission->id],['class' => 'btn btn-default btn-sm']) : Html::a('Create Report', ['/rpmes/accomplishment'],['class' => 'btn btn-default btn-sm'])?></td>
+                                        <td align=center><?= $accompQ1Submission ? Html::a('View Report', ['/rpmes/accomplishment/view', 'id' => $accompQ1Submission->id],['class' => 'btn btn-default btn-sm']) : Html::a('Create Report', ['/rpmes/accomplishment'],['class' => 'btn btn-success btn-sm'])?></td>
                                     </tr>
                                     <tr>
                                         <td>2nd Quarter</td>
@@ -127,6 +127,17 @@
                             <small>as of CY <?= date("Y") ?></small>
                             </h4>
                             <div class="row">
+                                <div class="col-md-12 col-xs-12">
+                                    <div class="box box-solid">
+                                        <div class="box-body">
+                                            <h5>Projects</h5>
+                                            <h1 class="text-center"><b><?= number_format($projectCount, 0) ?></b></h1>
+                                            <p class="text-center" style="font-size: 12px; color: gray;">registered in the system</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-6 col-xs-12">
                                     <div class="box box-solid">
                                         <div class="box-body">
@@ -191,14 +202,20 @@
                     <div class="box box-solid">
                         <div class="box-body">
                         <?php if($log->status == 'Submitted'){ ?>
-                            <p>You submitted the Agency <?= $log->submission->report ?> <?= $log->submission->year ?> Report</p>
-                            <small><?= date("F j, Y", strtotime($log->datetime)) ?></small>
+                            <p><?= Yii::$app->user->can('Administrator') ? ucwords(strtolower($log->actor)) : 'You' ?> submitted the Agency <?= $log->submission->report ?> <?= $log->submission->year ?> Report<?= Yii::$app->user->can('Administrator') ? ' of '.$log->submission->agency->title : '' ?></p>
+                            <small class="pull-left"><?= date("F j, Y", strtotime($log->datetime)) ?></small>
+                            <small class="pull-right"><?= date("h:i:s A", strtotime($log->datetime)) ?></small>
+                            <small class="clearfix"></small>
                         <?php }else if($log->status == 'For further validation'){ ?>
-                            <p><?= ucwords(strtolower($log->actor)) ?> has requested to revise the Agency <?= $log->submission->report ?> <?= $log->submission->year ?> Report</p>
-                            <small><?= date("F j, Y", strtotime($log->datetime)) ?></small>
-                            <?php }else if($log->status == 'Acknowledged'){ ?>
-                            <p><?= ucwords(strtolower($log->actor)) ?> acknowledged your Agency <?= $log->submission->report ?> <?= $log->submission->year ?> Report</p>
-                            <small><?= date("F j, Y", strtotime($log->datetime)) ?></small>
+                            <p><?= Yii::$app->user->can('Administrator') ? 'You' : ucwords(strtolower($log->actor)).' has' ?> requested to revise the Agency <?= $log->submission->report ?> <?= $log->submission->year ?> Report<?= Yii::$app->user->can('Administrator') ? ' of '.$log->submission->agency->title : '' ?></p>
+                            <small class="pull-left"><?= date("F j, Y", strtotime($log->datetime)) ?></small>
+                            <small class="pull-right"><?= date("h:i:s A", strtotime($log->datetime)) ?></small>
+                            <small class="clearfix"></small>
+                        <?php }else if($log->status == 'Acknowledged'){ ?>
+                            <p><?= Yii::$app->user->can('Administrator') ? 'You' : ucwords(strtolower($log->actor)).' of NEDA RO1' ?> acknowledged <?= Yii::$app->user->can('Administrator') ? 'the' : 'your' ?> Agency <?= $log->submission->report ?> <?= $log->submission->year ?> Report<?= Yii::$app->user->can('Administrator') ? ' of '.$log->submission->agency->title : '' ?></p>
+                            <small class="pull-left"><?= date("F j, Y", strtotime($log->datetime)) ?></small>
+                            <small class="pull-right"><?= date("h:i:s A", strtotime($log->datetime)) ?></small>
+                            <small class="clearfix"></small>
                         <?php } ?>
                         </div>
                     </div>

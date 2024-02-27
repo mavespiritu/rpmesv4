@@ -32,17 +32,17 @@
                             ['label' => 'RPMES Form 2', 'icon' => 'folder', 'url' => ['/rpmes/accomplishment'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 3', 'icon' => 'folder', 'url' => ['/rpmes/project-exception'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 4', 'icon' => 'folder', 'url' => ['/rpmes/project-result'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'RPMES Form 5', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'RPMES Form 6', 'icon' => 'folder', 'url' => ['/rpmes/project-status'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'RPMES Form 7', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'RPMES Form 8', 'icon' => 'folder', 'url' => ['/rpmes/project-problem-solving-session'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'RPMES Form 9', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],                         
-                            ['label' => 'RPMES Form 10', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
-                            ['label' => 'RPMES Form 11', 'icon' => 'folder', 'url' => ['/rpmes/project-problem'], 'visible' => !Yii::$app->user->isGuest],
+                            //['label' => 'RPMES Form 5', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],
+                            //['label' => 'RPMES Form 6', 'icon' => 'folder', 'url' => ['/rpmes/project-status'], 'visible' => !Yii::$app->user->isGuest],
+                            //['label' => 'RPMES Form 7', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
+                            //['label' => 'RPMES Form 8', 'icon' => 'folder', 'url' => ['/rpmes/project-problem-solving-session'], 'visible' => !Yii::$app->user->isGuest],
+                            //['label' => 'RPMES Form 9', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],                         
+                            //['label' => 'RPMES Form 10', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
+                            //['label' => 'RPMES Form 11', 'icon' => 'folder', 'url' => ['/rpmes/project-problem'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                         
                     ],
-                    [
+                    /* [
                         'label' => 'Acknowledgment',
                         'icon' => 'folder',
                         'url' => '#',
@@ -51,8 +51,8 @@
                             ['label' => 'Form 1', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'Form 2', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
                         ],
-                    ],
-                    [
+                    ], */
+                    /* [
                         'label' => 'Summary',
                         'icon' => 'folder',
                         'url' => '#',
@@ -61,7 +61,7 @@
                             ['label' => 'Monitoring Plans', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'Monitoring Report', 'icon' => 'folder', 'url' => ['/rpmes/summary/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
                         ],
-                    ],
+                    ], */
                     ['label' => 'Administrator', 'options' => ['class' => 'header'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     ['label' => 'Due Dates', 'icon' => 'clock-o', 'url' => ['/rpmes/due-date'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                     [

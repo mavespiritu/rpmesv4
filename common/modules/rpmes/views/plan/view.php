@@ -16,7 +16,7 @@ DisableButtonAsset::register($this);
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\Project */
 
-$this->title = 'Monitoring Plan '.$model->year;
+$this->title = Yii::$app->user->can('Administrator') ? $model->agency->code.': Monitoring Plan '.$model->year : 'Monitoring Plan '.$model->year;
 $this->params['breadcrumbs'][] = ['label' => 'RPMES Form 1: Initial Project Report', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
