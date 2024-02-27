@@ -91,14 +91,14 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             ],
                             'format' => 'raw',
                             'value' => function($model){
-                                return $model->currentStatus;;
+                                return $model->currentStatus;
                             }
                         ],
                         [
                             'attribute' => 'submitted_by',
                             'header' => 'Submitted By',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 13%; background-color: #002060; color: white; font-weight: normal;'
                             ],
                             'format' => 'raw',
                             'value' => function($model){
@@ -109,8 +109,9 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'attribute' => 'date_submitted',
                             'header' => 'Date Submitted',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 13%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? date("F j, Y H:i:s", strtotime($model->submitted->datetime)) : '' : '';
                             }
@@ -119,8 +120,9 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'attribute' => 'acknowledged_by',
                             'header' => 'Acknowledged By',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 13%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? $model->acknowledged->actor.'<br>'.$model->acknowledged->actorPosition : '' : '';
                             }
@@ -129,18 +131,20 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'attribute' => 'date_acknowledged',
                             'header' => 'Date Acknowledged',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 13%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged)->datetime) : '' : '';
                             }
                         ],
                         [
                             'attribute' => 'remarks',
-                            'header' => 'Remarks',
+                            'header' => 'NEDA Remarks',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus == 'For further validation' ? $model->currentSubmissionLog->remarks : '';
                             }
@@ -222,7 +226,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'attribute' => 'submitted_by',
                             'header' => 'Submitted By',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 13%; background-color: #002060; color: white; font-weight: normal;'
                             ],
                             'format' => 'raw',
                             'value' => function($model){
@@ -233,8 +237,9 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'attribute' => 'date_submitted',
                             'header' => 'Date Submitted',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 13%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? date("F j, Y H:i:s", strtotime($model->submitted->datetime)) : '' : '';
                             }
@@ -243,8 +248,9 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'attribute' => 'acknowledged_by',
                             'header' => 'Acknowledged By',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 13%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? $model->acknowledged->actor.'<br>'.$model->acknowledged->actorPosition : '' : '';
                             }
@@ -253,18 +259,20 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'attribute' => 'date_acknowledged',
                             'header' => 'Date Acknowledged',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 13%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged)->datetime) : '' : '';
                             }
                         ],
                         [
                             'attribute' => 'remarks',
-                            'header' => 'Remarks',
+                            'header' => 'NEDA Remarks',
                             'headerOptions' => [
-                                'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                                'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus == 'For further validation' ? $model->currentSubmissionLog->remarks : '';
                             }

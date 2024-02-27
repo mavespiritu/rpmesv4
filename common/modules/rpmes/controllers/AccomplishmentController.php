@@ -653,6 +653,8 @@ class AccomplishmentController extends \yii\web\Controller
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
                 throw new NotFoundHttpException('The requested page does not exist.');
             }
+        }else{
+            throw new NotFoundHttpException('The requested page does not exist.');
         }
 
         if(!$planSubmission){
@@ -888,6 +890,8 @@ class AccomplishmentController extends \yii\web\Controller
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
                 throw new NotFoundHttpException('The requested page does not exist.');
             }
+        }else{
+            throw new NotFoundHttpException('The requested page does not exist.');
         }
 
         if(!$planSubmission){

@@ -54,6 +54,8 @@ use common\modules\rpmes\models\OutcomeAccomplishment;
 use common\modules\rpmes\models\Accomplishment;
 use common\modules\rpmes\models\PlanSearch;
 use common\modules\rpmes\models\Typology;
+use common\modules\rpmes\models\Acknowledgment;
+use common\modules\rpmes\models\Settings;
 use markavespiritu\user\models\User;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -410,6 +412,8 @@ class ProjectResultController extends Controller
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
                 throw new NotFoundHttpException('The requested page does not exist.');
             }
+        }else{
+            throw new NotFoundHttpException('The requested page does not exist.');
         }
 
         if(!$planSubmission){
@@ -657,5 +661,79 @@ class ProjectResultController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionAcknowledge($id)
+    {
+        $officeTitle = Settings::findOne(['Agency Title Long']);
+        $officeAddress = Settings::findOne(['Agency Address']);
+        $officeHead = Settings::findOne(['Agency Head']);
+        $officeTitleShort = Settings::findOne(['Agency Title Short']);
+        $submission = Submission::findOne($id);
+        $agency = Agency::findOne(['id' => $submission->agency_id]);
+        $model = Acknowledgment::findOne(['submission_id' => $submission->id]) ? Acknowledgment::findOne(['submission_id' => $submission->id]) : new Acknowledgment();
+
+        $lastAcknowledgment = Acknowledgment::find()->orderBy(['id' => SORT_DESC])->one();
+        $lastNumber = $lastAcknowledgment ? intval($lastAcknowledgment->id) + 1 : '1';
+        $model->submission_id = $submission->id;
+        $model->control_no = $model->isNewRecord ? 'NEDARO1-QOP-03-'.date("Y").'001'.$lastNumber : $model->control_no;
+        $model->recipient_name = $agency->head;
+        $model->recipient_designation = $agency->head_designation;
+        $model->recipient_office = $agency->title;
+        $model->recipient_address = $agency->address;
+
+        if($model->load(Yii::$app->request->post()))
+        {
+            $model->acknowledged_by = Yii::$app->user->id;
+            if($model->save()){
+                $logModel = new SubmissionLog();
+                $logModel->submission_id = $submission->id;
+                $logModel->user_id = Yii::$app->user->id;
+                $logModel->status = 'Acknowledged';
+
+                if($logModel->save())
+                {
+                    \Yii::$app->getSession()->setFlash('success', 'This report has been acknowledged successfully');
+                    return $this->redirect(['view', 'id' => $submission->id]);
+                }
+            }
+        }
+
+        return $this->renderAjax('_acknowledgment-form', [
+            'model' => $model,
+            'submission' => $submission,
+            'agency' => $agency,
+            'officeTitle' => $officeTitle,
+            'officeAddress' => $officeAddress,
+            'officeHead' => $officeHead,
+            'officeTitleShort' => $officeTitleShort,
+        ]);
+    }
+
+    public function actionRevert($id)
+    {
+        if(!Yii::$app->user->can('Administrator')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $submission = Submission::findOne($id);
+
+        $model = new SubmissionLog();
+        $model->scenario = 'forFurtherValidation';
+        $model->submission_id = $submission->id;
+        $model->user_id = Yii::$app->user->id;
+        $model->status = 'For further validation';
+
+        if($model->load(Yii::$app->request->post()) && $model->save())
+        {
+            \Yii::$app->getSession()->setFlash('success', 'This report has been sent successfully for further validation');
+            return $this->redirect(['view', 'id' => $submission->id]);
+
+            
+        }
+
+        return $this->renderAjax('_revert-form', [
+            'model' => $model,
+        ]);
     }
 }
