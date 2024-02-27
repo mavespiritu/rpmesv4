@@ -121,7 +121,7 @@ class DashboardController extends \yii\web\Controller
         $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
         $agencies = ArrayHelper::map($agencies, 'id', 'title');
 
-        $projectCount = Yii::$app->user->can('AgencyUser') ? Project::find()->where(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->count() : Project::find()->count();
+        $projectCount = Yii::$app->user->can('AgencyUser') ? Project::find()->where(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->andWhere(['source_id' => null])->count() : Project::find()->andWhere(['source_id' => null])->count();
         $planCount = Yii::$app->user->can('AgencyUser') ? Submission::find()->where(['report' => 'Monitoring Plan', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->count() : Submission::find()->where(['report' => 'Monitoring Plan'])->count();
         $accompCount = Yii::$app->user->can('AgencyUser') ? Submission::find()->where(['report' => 'Accomplishment', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->count() : Submission::find()->where(['report' => 'Accomplishment'])->count();
         $exceptionCount = Yii::$app->user->can('AgencyUser') ? Submission::find()->where(['report' => 'Project Exception', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->count() : Submission::find()->where(['report' => 'Project Exception'])->count();
