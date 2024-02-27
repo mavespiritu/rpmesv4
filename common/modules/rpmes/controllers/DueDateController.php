@@ -231,6 +231,9 @@ class DueDateController extends Controller
         $model->report = $report;
         $model->year = $year;
 
+        $quarter = '';
+
+
         if($model->load(Yii::$app->request->post()))
         {
             $model->save();
@@ -240,6 +243,7 @@ class DueDateController extends Controller
             'model' => $model,
             'report' => $report,
             'year' => $year,
+            'quarter' => $quarter,
         ]);
     }
 

@@ -62,6 +62,7 @@ $report = str_replace(' ', '', $report);
                 loadProjectExceptionDueDate('.$year.',"Q2");
                 loadProjectExceptionDueDate('.$year.',"Q3");
                 loadProjectExceptionDueDate('.$year.',"Q4");
+                loadProjectResultsDueDate('.$year.');
             },
             error: function (err) {
                 console.log(err);
