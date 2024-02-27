@@ -34,6 +34,7 @@ DisableButtonAsset::register($this);
                         loadProjectExceptionDueDate(this.value,"Q2");
                         loadProjectExceptionDueDate(this.value,"Q3");
                         loadProjectExceptionDueDate(this.value,"Q4");
+                        loadProjectResultsDueDate(this.value);
                     }'
 
             ]
