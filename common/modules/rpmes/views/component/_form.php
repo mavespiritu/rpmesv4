@@ -113,7 +113,7 @@ $this->registerJs($js);
 
 <div class="project-form">
     <?php $form = ActiveForm::begin([
-    	'options' => ['id' => 'project-form', 'class' => 'disable-submit-buttons', 'enctype' => 'multipart/form-data'],
+    	'options' => ['id' => 'project-form', 'enctype' => 'multipart/form-data'],
         'layout' => 'horizontal',
         //'enableAjaxValidation' => true,
         'fieldConfig' => [
@@ -595,7 +595,7 @@ $this->registerJs($js);
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
                 <?php // $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save as draft only', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
-                <?= Html::submitButton('Save component project', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']])?>
+                <?= Html::submitButton('Save component project', ['class' => 'btn btn-success'])?>
             </div>
         </div>
     </div>
