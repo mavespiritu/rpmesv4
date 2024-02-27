@@ -49,15 +49,15 @@ DisableButtonAsset::register($this);
         <tr>
             <td colspan=2>
                 <b>Findings:</b>
-                <?= $form->field($model, 'findings')->widget(CKEditor::className(), [
+                <?= Yii::$app->user->can('Administrator') ? $form->field($model, 'findings')->widget(CKEditor::className(), [
                     'options' => ['id' => 'monitoring-report-findings-'.$agency->id.'-'.$submission->quarter, 'rows' => 6, 'style' => 'resize: none;', 'value' => $model->isNewRecord ? '1. '.$submission->projectCount.' project/s enrolled '.$submission->deadlineStatus : $model->findings],
                     'preset' => 'basic'
-                ])->label(false) ?>
+                ])->label(false) : $model->findings ?>
                 <b>Action Taken:</b>
-                <?= $form->field($model, 'action_taken')->widget(CKEditor::className(), [
+                <?= Yii::$app->user->can('Administrator') ? $form->field($model, 'action_taken')->widget(CKEditor::className(), [
                     'options' => ['id' => 'monitoring-report-action_taken-'.$agency->id.'-'.$submission->quarter, 'rows' => 6, 'style' => 'resize: none;', 'value' => $model->isNewRecord ? 'For consideration in the preparation of the CY '.$submission->year.' '.$submission->quarter.' Regional Project Monitoring and Evaluation System (RPMES) Project Monitoring Plan.' : $model->action_taken],
                     'preset' => 'basic'
-                ])->label(false) ?>
+                ])->label(false) : $model->action_taken ?>
             </td>
         </tr>
         <tr>
@@ -75,7 +75,7 @@ DisableButtonAsset::register($this);
             <td>
                 <br>
                 <p style="text-align: center;">
-                    <u><?= date("F j, Y") ?></u> <br>
+                    <u><?= $model->isNewRecord ? date("F j, Y"): date("F j, Y", strtotime($model->date_acknowledged)) ?></u> <br>
                     <b>Date</b>
                 </p>
             </td>
@@ -90,7 +90,7 @@ DisableButtonAsset::register($this);
     </tbody>
 </table>
 <div class="pull-right">
-    <?= Html::submitButton('Acknowledge Report', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+    <?= Yii::$app->user->can('Administrator') ? Html::submitButton('Acknowledge Report', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
 </div>
 <div class="clearfix"></div>
 <?php ActiveForm::end(); ?>

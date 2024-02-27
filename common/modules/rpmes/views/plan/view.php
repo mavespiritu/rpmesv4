@@ -50,7 +50,7 @@ Modal::end();
     <div class="box box-solid">
         <div class="box-header with-border">
             <h3 class="box-title">Status: 
-                <?php if($model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation'){ ?>
+                <?php if($model->currentStatus == 'Draft'){ ?>
                     <?= $model->currentStatus ?>
                 <?php }else { ?>
                     <?= $model->currentStatus ?> <small>by <?= $model->currentSubmissionLog->actor ?> last <?= date("F j, Y H:i:s", strtotime($model->currentSubmissionLog->datetime)) ?></small>
@@ -88,7 +88,7 @@ Modal::end();
             </div>  
         </div>
         <div class="box-body" style="min-height: calc(100vh - 235px);">
-        <p style="color: <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'black' : 'red' : 'black' ?>"><small><i class="fa  fa-info-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Submission is open until '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'Submission is closed. The deadline of submission is '.date("F j, Y", strtotime($dueDate->due_date)).'.' : '' ?></small></p>
+        <p style="color: <?= $model->currentStatus != 'For further validation' ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'black' : 'red' : 'red' : 'red' ?>"><i class="fa  fa-info-circle"></i> <?= $model->currentStatus != 'For further validation' ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Submission is open until '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'Submission is closed. The deadline of submission is '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'No set due date. Contact the administrator for due date setup.' : 'Your submission has been reverted for further validation. Please see remarks for your guidance: ' ?><div style="color: red !important;"><?= $model->currentSubmissionLog ? $model->currentSubmissionLog->remarks : '' ?> <?=  $model->currentStatus == 'For further validation' ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Re-submit not later than '.date("F j, Y", strtotime($dueDate->due_date)).'.' : '' : '' : '' ?> </div></p>
         <?= $this->render('_search-project', [
             'model' => $model,
             'searchModel' => $searchModel,
