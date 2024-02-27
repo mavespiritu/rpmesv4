@@ -94,7 +94,6 @@ class Project extends \yii\db\ActiveRecord
                 'start_date', 
                 'completion_date',
                 'cost',
-                'description',
             ], 'required', 'on' => 'componentProjectCreateAdmin'],
             [[
                 'source_id', 
@@ -105,7 +104,6 @@ class Project extends \yii\db\ActiveRecord
                 'start_date', 
                 'completion_date',
                 'cost',
-                'description',
             ], 'required', 'on' => 'componentProjectCreateUser'],
             //[['typhoon'], 'validateTyphoon', 'skipOnEmpty' => false, 'skipOnError' => false],
             [['source_id', 'year', 'agency_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id', 'submitted_by','category_id','region_id','province_id'], 'integer'],
