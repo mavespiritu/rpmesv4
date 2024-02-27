@@ -109,31 +109,31 @@
                     <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  $type == 'excel' ? "'".$project['endDate'] : $project['endDate']?></td>
                     <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  $project['fundingSourceTitle'] ?></td>
                     <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  $project['fundingAgencyTitle'] ?></td>
-                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['cost'], 2) ?></td>
-                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['appropriations'], 2) ?></td>
-                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['allotment'], 2) ?></td>
-                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['obligations'], 2) ?></td>
-                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['disbursements'], 2) ?></td>
-                    <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['targetOwpa'], 2) ?></td>
-                    <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['actualOwpa'], 2) ?></td>
-                    <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['slippage'], 2) ?></td>
+                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['cost']), 2) ?></td>
+                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['appropriations']), 2) ?></td>
+                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['allotment']), 2) ?></td>
+                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['obligations']), 2) ?></td>
+                    <td align=right rowspan=<?=isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['disbursements']), 2) ?></td>
+                    <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['targetOwpa']), 2) ?></td>
+                    <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['actualOwpa']), 2) ?></td>
+                    <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['slippage']), 2) ?></td>
     
                     <?php if(isset($ois[$project['id']])){ ?>
                         <?php for($i = 0; $i < count($ois[$project['id']]); $i++){ ?>
                             <?php if($i == 0){ ?>
                                     <td><?= isset($ois[$project['id']][$i]['indicator']) ? $ois[$project['id']][$i]['indicator'] : '&nbsp;' ?></td>
-                                    <td align=center><?= isset($ois[$project['id']][$i]['endOfProjectTarget']) ? number_format($ois[$project['id']][$i]['endOfProjectTarget'], 0) : '&nbsp;' ?></td>
-                                    <td align=center><?= isset($ois[$project['id']][$i]['target']) ? number_format($ois[$project['id']][$i]['target'], 0) : '&nbsp;' ?></td>
-                                    <td align=center><?= isset($ois[$project['id']][$i]['actual']) ? number_format($ois[$project['id']][$i]['actual'], 0) : '&nbsp;' ?></td>
-                                    <td align=center rowspan=<?= count($ois[$project['id']]) ?>><?=  number_format($project['maleEmployed'], 0) ?></td>
-                                    <td align=center rowspan=<?= count($ois[$project['id']]) ?>><?=  number_format($project['femaleEmployed'], 0) ?></td>
+                                    <td align=center><?= isset($ois[$project['id']][$i]['endOfProjectTarget']) ? number_format(floatval($ois[$project['id']][$i]['endOfProjectTarget']), 0) : '&nbsp;' ?></td>
+                                    <td align=center><?= isset($ois[$project['id']][$i]['target']) ? number_format(floatval($ois[$project['id']][$i]['target']), 0) : '&nbsp;' ?></td>
+                                    <td align=center><?= isset($ois[$project['id']][$i]['actual']) ? number_format(floatval($ois[$project['id']][$i]['actual']), 0) : '&nbsp;' ?></td>
+                                    <td align=center rowspan=<?= count($ois[$project['id']]) ?>><?=  number_format(floatval($project['maleEmployed']), 0) ?></td>
+                                    <td align=center rowspan=<?= count($ois[$project['id']]) ?>><?=  number_format(floatval($project['femaleEmployed']), 0) ?></td>
                                     <td rowspan=<?= count($ois[$project['id']]) ?>><?=  $project['remarks'] ?></td>
                                 </tr>
                             <?php }else{ ?>
                                     <td><?= isset($ois[$project['id']][$i]['indicator']) ? $ois[$project['id']][$i]['indicator'] : '&nbsp;' ?></td>
-                                    <td align=center><?= isset($ois[$project['id']][$i]['endOfProjectTarget']) ? number_format($ois[$project['id']][$i]['endOfProjectTarget'], 0) : '&nbsp;' ?></td>
-                                    <td align=center><?= isset($ois[$project['id']][$i]['target']) ? number_format($ois[$project['id']][$i]['target'], 0) : '&nbsp;' ?></td>
-                                    <td align=center><?= isset($ois[$project['id']][$i]['actual']) ? number_format($ois[$project['id']][$i]['actual'], 0) : '&nbsp;' ?></td>
+                                    <td align=center><?= isset($ois[$project['id']][$i]['endOfProjectTarget']) ? number_format(floatval($ois[$project['id']][$i]['endOfProjectTarget']), 0) : '&nbsp;' ?></td>
+                                    <td align=center><?= isset($ois[$project['id']][$i]['target']) ? number_format(floatval($ois[$project['id']][$i]['target']), 0) : '&nbsp;' ?></td>
+                                    <td align=center><?= isset($ois[$project['id']][$i]['actual']) ? number_format(floatval($ois[$project['id']][$i]['actual']), 0) : '&nbsp;' ?></td>
                                 </tr>
                             <?php } ?>
                         <?php } ?>
@@ -142,8 +142,8 @@
                             <td>&nbsp;</td>
                             <td>&nbsp;</td>
                             <td>&nbsp;</td>
-                            <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['maleEmployed'], 0) ?></td>
-                            <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format($project['femaleEmployed'], 0) ?></td>
+                            <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['maleEmployed']), 0) ?></td>
+                            <td align=center rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  number_format(floatval($project['femaleEmployed']), 0) ?></td>
                             <td align=left rowspan=<?= isset($ois[$project['id']]) ? count($ois[$project['id']]) : '1' ?>><?=  $project['remarks'] ?></td>
                         </tr>
                     <?php } ?>

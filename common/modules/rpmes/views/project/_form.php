@@ -135,7 +135,7 @@ $this->registerJs($js);
 
 <div class="project-form">
     <?php $form = ActiveForm::begin([
-    	'options' => ['id' => 'project-form', 'class' => 'disable-submit-buttons', 'enctype' => 'multipart/form-data'],
+    	'options' => ['id' => 'project-form', /* 'class' => 'disable-submit-buttons', */ 'enctype' => 'multipart/form-data'],
         'layout' => 'horizontal',
         //'enableAjaxValidation' => true,
         'fieldConfig' => [
@@ -393,7 +393,7 @@ $this->registerJs($js);
                         'formId' => 'project-form',
                         'formFields' => [
                             'fund_source_id',
-                            'type',
+                            //'type',
                             'agency',
                         ],
                     ]); ?>
@@ -403,8 +403,7 @@ $this->registerJs($js);
                             <tr>
                                 <td style="width: 2%;" align=center>#</td>
                                 <td style="width: 34%;">Funding Source</td>
-                                <td style="width: 15%;">Type</td>
-                                <td style="width: 29%;">Agency</td>
+                                <td style="width: 34%;">Agency</td>
                                 <td style="width: 10%;"><button type="button" class="pull-right add-fund-source-item btn btn-info btn-xs btn-block">Add Funding Source</button></td>
                             </tr>
                         </thead>
@@ -425,7 +424,6 @@ $this->registerJs($js);
                                         'allowClear' =>  true,
                                     ],
                                     ])->label(false) ?></td>
-                                <td><?= $form->field($fundSourceModel, "[{$fsIdx}]type")->textInput(['maxlength' => true])->label(false) ?></td>
                                 <td><?= $form->field($fundSourceModel, "[{$fsIdx}]agency")->textInput(['maxlength' => true])->label(false) ?></td>
                                 <td><button type="button" class="pull-right remove-fund-source-item btn btn-danger btn-xs btn-block">Delete Row</button></td>
                             </tr>
@@ -667,7 +665,7 @@ $this->registerJs($js);
                     ]); ?>
                         <div class="clearfix"></div>
                         <br>
-                        <small>Note: The system added the output indicator, <b>"number of individual beneficiaries served"</b> by default. Please add more below.</small>
+                        <small>Note: The system added the output indicator, <b>"number of individual beneficiaries served"</b> by default. Please add another output indicators below.</small>
                         <table class="table table-bordered table-condensed table-responsive">
                             <thead>
                                 <tr>
@@ -750,40 +748,41 @@ $this->registerJs($js);
         <div class="col-md-12 col-xs-12">
             <h4>Project Profile</h4>
             <hr>
-            <label class="control-label col-sm-3" for="project-attachments">Project Profile</label>
-            <div class="col-sm-9" style="padding: 10px 10px auto;">
-                <div class="row">
-                    <div class="col-md-12 col-xs-12">
-                        <?= empty($model->files) ? AttachmentsInput::widget([
-                            'id' => 'file-input', // Optional
-                            'model' => $model,
-                            'options' => [ 
-                                'multiple' => true, 
-                                'required' => 'required'
-                            ],
-                            'pluginOptions' => [ 
-                                'showPreview' => true,
-                                'showUpload' => false,
-                                'maxFileCount' => 5,
-                            ]
-                        ]) : AttachmentsInput::widget([
-                            'id' => 'file-input', // Optional
-                            'model' => $model,
-                            'options' => [ 
-                                'multiple' => true, 
-                            ],
-                            'pluginOptions' => [ 
-                                'showPreview' => true,
-                                'showUpload' => false,
-                                'maxFileCount' => 5,
-                            ]
-                        ]) ?>
-                        <p style="text-align: right">Allowed file types: jpg, png, pdf (max 5MB each)</p>
-                        <?php \file\components\AttachmentsTable::widget(['model' => $model]) ?>
+            <div class="form-group">
+                <label class="control-label col-sm-3" for="project-attachments">Project Profile</label>
+                <div class="col-sm-9"
+                    <div class="row">
+                        <div class="col-md-12 col-xs-12">
+                            <?= empty($model->files) ? AttachmentsInput::widget([
+                                'id' => 'file-input', // Optional
+                                'model' => $model,
+                                'options' => [ 
+                                    'multiple' => true, 
+                                ],
+                                'pluginOptions' => [ 
+                                    'showPreview' => false,
+                                    'showUpload' => false,
+                                    'maxFileCount' => 5,
+                                ]
+                            ]) : AttachmentsInput::widget([
+                                'id' => 'file-input', // Optional
+                                'model' => $model,
+                                'options' => [ 
+                                    'multiple' => true, 
+                                ],
+                                'pluginOptions' => [ 
+                                    'showPreview' => false,
+                                    'showUpload' => false,
+                                    'maxFileCount' => 5,
+                                ]
+                            ]) ?>
+                            <p style="text-align: right">Allowed file types: jpg, png, pdf (max 5MB each)</p>
+                            <?php \file\components\AttachmentsTable::widget(['model' => $model]) ?>
+                        </div>
                     </div>
                 </div>
+                <?= $form->field($model, 'remarks')->textarea(['rows' => 4, 'style' => 'resize: none;', 'placeholder' => 'Provide information on the previously approved end dates, if applicable. May also include information on the program/project beneficiaries disaggregated by sex, if available.']) ?>
             </div>
-            <?= $form->field($model, 'remarks')->textarea(['rows' => 4, 'style' => 'resize: none;', 'placeholder' => 'Provide information on the previously approved end dates, if applicable. May also include information on the program/project beneficiaries disaggregated by sex, if available.']) ?>
         </div>
     </div>
 
@@ -791,7 +790,7 @@ $this->registerJs($js);
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
                 <?php // $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save as draft only', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
-                <?= Html::submitButton('Save project', ['class' => 'btn btn-success', 'onclick' => '$("#file-input").fileinput("upload");', 'data' => ['disabled-text' => 'Please Wait']])?>
+                <?= Html::submitButton('Save project', ['class' => 'btn btn-success', 'onclick' => '$("#file-input").fileinput("upload");'])?>
             </div>
         </div>
     </div>

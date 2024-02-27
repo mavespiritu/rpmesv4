@@ -222,7 +222,7 @@ $this->registerJs($js);
                         'formId' => 'project-form',
                         'formFields' => [
                             'fund_source_id',
-                            'type',
+                            //'type',
                             'agency',
                         ],
                     ]); ?>
@@ -232,8 +232,7 @@ $this->registerJs($js);
                             <tr>
                                 <td style="width: 2%;" align=center>#</td>
                                 <td style="width: 34%;">Funding Source</td>
-                                <td style="width: 15%;">Type</td>
-                                <td style="width: 29%;">Agency</td>
+                                <td style="width: 34%;">Agency</td>
                                 <td style="width: 10%;"><button type="button" class="pull-right add-fund-source-item btn btn-info btn-xs btn-block">Add Funding Source</button></td>
                             </tr>
                         </thead>
@@ -254,7 +253,6 @@ $this->registerJs($js);
                                         'allowClear' =>  true,
                                     ],
                                     ])->label(false) ?></td>
-                                <td><?= $form->field($fundSourceModel, "[{$fsIdx}]type")->textInput(['maxlength' => true])->label(false) ?></td>
                                 <td><?= $form->field($fundSourceModel, "[{$fsIdx}]agency")->textInput(['maxlength' => true])->label(false) ?></td>
                                 <td><button type="button" class="pull-right remove-fund-source-item btn btn-danger btn-xs btn-block">Delete Row</button></td>
                             </tr>

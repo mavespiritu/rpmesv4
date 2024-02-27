@@ -1029,12 +1029,22 @@ class PlanController extends \yii\web\Controller
                     ->andWhere(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])
                     ->andWhere(['source_id' => null])
                     ->andWhere(['draft' => 'No'])
-                    ->andWhere(['not in', 'id', $existingProjects])
-                    ->orderBy(['id' => SORT_DESC])
-                    ->all();
+                    ->andWhere(['not in', 'id', $existingProjects]);                    
+                    /* ->orderBy(['id' => SORT_DESC])
+                    ->all(); */
+        $countProjects = clone $availableProjects;
+        $projectsPages = new Pagination([
+            'totalCount' => $countProjects->count(),
+            'pageSize' => 20
+        ]);
+        $projectsModels = $availableProjects->offset($projectsPages->offset)
+        ->limit($projectsPages->limit)
+        ->orderBy(['id' => SORT_DESC])
+        ->all();
 
-        if($availableProjects){
-            foreach($availableProjects as $project){
+
+        if($projectsModels){
+            foreach($projectsModels as $project){
                 $projects[$project->id] = $project;
             }
         }
@@ -1083,9 +1093,11 @@ class PlanController extends \yii\web\Controller
             return $this->redirect(['view', 'id' => $model->id]);
 
         }
-        return $this->renderAjax('include', [
+        return $this->render('include', [
             'model' => $model,
             'projects' => $projects,
+            'projectsModels' => $projectsModels,
+            'projectsPages' => $projectsPages,
             'dueDate' => $dueDate,
         ]);
 

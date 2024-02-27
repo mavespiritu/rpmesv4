@@ -19,7 +19,7 @@ DisableButtonAsset::register($this);
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\Project */
 
-$this->title = $model->draft == 'Yes' ? 'Adjust Targets' : 'View Targets';
+$this->title = $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? 'Adjust Targets' : 'View Targets';
 $this->params['breadcrumbs'][] = ['label' => 'RPMES Form 1: Initial Project Report', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => 'Monitoring Plan '.$model->year, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = $this->title;
@@ -45,7 +45,8 @@ function renderSummary($page)
                 ]) ?>
             </div>  
         </div>
-        <div class="box-body" style="height: calc(100vh - 210px);">
+        <div class="box-body" style="height: calc(100vh - 170px);">
+            <p style="color: <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'black' : 'red' : 'black' ?>"><small><i class="fa  fa-info-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Submission is open until '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'Submission is closed. The deadline of submission is '.date("F j, Y", strtotime($dueDate->due_date)).'.' : '' ?></small></p>
             <div class="summary"><?= renderSummary($projectsPages) ?></div>
             <div class="pull-right">
                 <p><b><?= $model->draft == 'Yes' ? 'Accomplish' : 'Browse' ?> projects by page (5 per page):</b>

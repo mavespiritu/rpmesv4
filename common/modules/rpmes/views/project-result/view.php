@@ -92,7 +92,7 @@ Modal::end();
             </div>  
         </div>
         <div class="box-body" style="min-height: calc(100vh - 235px);">
-
+        <p style="color: <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'black' : 'red' : 'black' ?>"><i class="fa  fa-info-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Submission is open until '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'Submission is closed. The deadline of submission is '.date("F j, Y", strtotime($dueDate->due_date)).'.' : '' ?></p>
         <?= $this->render('_search-project', [
             'model' => $model,
             'searchModel' => $searchModel,
@@ -126,11 +126,28 @@ Modal::end();
                     ]
                 ],
                 [
-                    'attribute' => 'project.title',
-                    'header' => 'Program/Project Title',
+                    'header' => '
+                                (a) Program/Project Title <br>
+                                (b) Implementing Agency <br>
+                                (c) Sector <br>
+                                (d) Province <br>
+                                (e) City/Municipality <br>
+                                (f) Barangay
+                                ',
                     'headerOptions' => [
                         'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
-                    ]
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        return 
+                            '(a) '.$plan->project->title.'<br>'.
+                            '(b) '.$plan->project->agency->code.'<br>'.
+                            '(c) '.$plan->project->sector->title.'<br>'.
+                            '(d) '.$plan->project->provinceTitle.'<br>'.
+                            '(e) '.$plan->project->citymunTitle.'<br>'.
+                            '(f) '.$plan->project->barangayTitle
+                        ;
+                    }
                 ],
                 [
                     'attribute' => 'project.description',
