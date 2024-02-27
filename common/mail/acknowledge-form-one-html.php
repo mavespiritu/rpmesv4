@@ -7,7 +7,7 @@
 
 <b>Dear <?= $model->submission->agency->title ?>,</b>
 
-<p>Please be informed that your submission of eRPMES Form 1: Initial Project Report for CY <?= $model->submission->year ?> has been acknowledged last <?= date("F j, Y", strtotime($model->date_acknowledged))?> by <?= $model->acknowledger ?>, <?= $model->acknowledgerPosition ?> of the NEDA Regional Office 1. Please see details below for your reference and appropriate action: </p>
+<p>Please be informed that your submission of eRPMES Form 1: Initial Project Report for CY <?= $model->submission->year ?> has been acknowledged last <?= date("F j, Y") ?> by <?= $model->acknowledger ?>, <?= $model->acknowledgerPosition ?> of the NEDA Regional Office 1. Please see details below for your reference and appropriate action: </p>
 
 <p><b>Findings:</b><br>
 <?= $model->findings ?>

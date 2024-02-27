@@ -53,6 +53,8 @@ use common\modules\rpmes\models\ExpectedOutputAccomplishment;
 use common\modules\rpmes\models\Accomplishment;
 use common\modules\rpmes\models\PlanSearch;
 use common\modules\rpmes\models\Typology;
+use common\modules\rpmes\models\Settings;
+use common\modules\rpmes\models\Acknowledgment;
 use markavespiritu\user\models\User;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -1097,11 +1099,6 @@ class ProjectExceptionController extends \yii\web\Controller
 
     public function actionAcknowledge($id)
     {
-        if(!Yii::$app->user->can('Administrator')){
-            throw new NotFoundHttpException('The requested page does not exist.');
-        }
-
-        
         $officeTitle = Settings::findOne(['Agency Title Long']);
         $officeAddress = Settings::findOne(['Agency Address']);
         $officeHead = Settings::findOne(['Agency Head']);
@@ -1146,6 +1143,33 @@ class ProjectExceptionController extends \yii\web\Controller
             'officeAddress' => $officeAddress,
             'officeHead' => $officeHead,
             'officeTitleShort' => $officeTitleShort,
+        ]);
+    }
+
+    public function actionRevert($id)
+    {
+        if(!Yii::$app->user->can('Administrator')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $submission = Submission::findOne($id);
+
+        $model = new SubmissionLog();
+        $model->scenario = 'forFurtherValidation';
+        $model->submission_id = $submission->id;
+        $model->user_id = Yii::$app->user->id;
+        $model->status = 'For further validation';
+
+        if($model->load(Yii::$app->request->post()) && $model->save())
+        {
+            \Yii::$app->getSession()->setFlash('success', 'This report has been sent successfully for further validation');
+            return $this->redirect(['view', 'id' => $submission->id]);
+
+            
+        }
+
+        return $this->renderAjax('_revert-form', [
+            'model' => $model,
         ]);
     }
 }

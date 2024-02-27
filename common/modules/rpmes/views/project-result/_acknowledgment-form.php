@@ -45,7 +45,7 @@ DisableButtonAsset::register($this);
                 </p>
             </td>
         </tr>
-        <tr><td colspan=2><b>Subject: Submission of CY <?= $submission->year ?> <?= $submission->quarter ?> Regional Project Monitoring and Evaluation System (RPMES) Form 3 (Project Exception Report)</b></td></tr>
+        <tr><td colspan=2><b>Subject: Submission of CY <?= $submission->year ?> <?= $submission->quarter ?> Regional Project Monitoring and Evaluation System (RPMES) Form 4 (Project Results Report)</b></td></tr>
         <tr>
             <td colspan=2>
                 <b>Findings:</b>
