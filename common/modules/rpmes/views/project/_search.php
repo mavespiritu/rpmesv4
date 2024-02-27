@@ -9,7 +9,7 @@ use yii\widgets\ActiveForm;
 ?>
 
 <div class="pull-left">
-    <?= Html::a('<i class="fa fa-plus"></i> Add Project', ['create'], ['class' => 'btn btn-success']) ?>
+    <?= Html::a('<i class="fa fa-plus"></i> Add New Project', ['create'], ['class' => 'btn btn-success']) ?>
 </div>
 <div class="pull-right">
     <div class="project-search">

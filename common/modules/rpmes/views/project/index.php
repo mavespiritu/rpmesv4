@@ -47,11 +47,24 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         ]
                     ],
                     [
-                        'attribute' => 'title',
-                        'header' => 'Program/Project Title',
+                        'header' => '
+                                    (a) Program/Project Title <br>
+                                    (b) Province <br>
+                                    (c) City/Municipality <br>
+                                    (d) Barangay
+                                    ',
                         'headerOptions' => [
                             'style' => 'width: 30%; background-color: #002060; color: white; font-weight: normal;'
-                        ]
+                        ],
+                        'format' => 'raw',
+                        'value' => function($model){
+                            return 
+                                '(a) '.$model->title.'<br>'.
+                                '(b) '.$model->provinceTitle.'<br>'.
+                                '(c) '.$model->citymunTitle.'<br>'.
+                                '(e) '.$model->barangayTitle
+                            ;
+                        }
                     ],
                     [
                         'attribute' => 'agency.code',
@@ -115,11 +128,24 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         ]
                     ],
                     [
-                        'attribute' => 'title',
-                        'header' => 'Program/Project Title',
+                        'header' => '
+                                    (a) Program/Project Title <br>
+                                    (b) Province <br>
+                                    (c) City/Municipality <br>
+                                    (d) Barangay
+                                    ',
                         'headerOptions' => [
-                            'style' => 'width: 40%; background-color: #002060; color: white; font-weight: normal;'
-                        ]
+                            'style' => 'width: 30%; background-color: #002060; color: white; font-weight: normal;'
+                        ],
+                        'format' => 'raw',
+                        'value' => function($model){
+                            return 
+                                '(a) '.$model->title.'<br>'.
+                                '(b) '.$model->provinceTitle.'<br>'.
+                                '(c) '.$model->citymunTitle.'<br>'.
+                                '(e) '.$model->barangayTitle
+                            ;
+                        }
                     ],
                     [
                         'attribute' => 'sector.title',

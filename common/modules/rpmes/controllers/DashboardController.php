@@ -101,6 +101,17 @@ class DashboardController extends \yii\web\Controller
         $exceptionQ4 = DueDate::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q4']);
         $projectResults = DueDate::findOne(['report' => 'Project Results', 'year' => date("Y")]);
 
+        $monitoringPlanSubmission = Submission::findOne(['report' => 'Monitoring Plan', 'year' => date("Y"), 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $accompQ1Submission = Submission::findOne(['report' => 'Accomplishment', 'year' => date("Y"), 'quarter' => 'Q1', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $accompQ2Submission = Submission::findOne(['report' => 'Accomplishment', 'year' => date("Y"), 'quarter' => 'Q2', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $accompQ3Submission = Submission::findOne(['report' => 'Accomplishment', 'year' => date("Y"), 'quarter' => 'Q3', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $accompQ4Submission = Submission::findOne(['report' => 'Accomplishment', 'year' => date("Y"), 'quarter' => 'Q4', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $exceptionQ1Submission = Submission::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q1', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $exceptionQ2Submission = Submission::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q2', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $exceptionQ3Submission = Submission::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q3', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $exceptionQ4Submission = Submission::findOne(['report' => 'Project Exception', 'year' => date("Y"), 'quarter' => 'Q4', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+        $projectResultsSubmission = Submission::findOne(['report' => 'Project Results', 'year' => date("Y"), 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]);
+
         $years = Submission::find()->select(['distinct(year) as year'])->orderBy(['year' => SORT_DESC])->asArray()->all();
         $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
         array_unique($years);
@@ -109,6 +120,11 @@ class DashboardController extends \yii\web\Controller
         $agencies = Yii::$app->user->can('AgencyUser') ? $agencies->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $agencies;
         $agencies = $agencies->orderBy(['code' => SORT_ASC])->asArray()->all();
         $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        $planCount = Yii::$app->user->can('AgencyUser') ? Submission::find()->where(['report' => 'Monitoring Plan', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->count() : Submission::find()->where(['report' => 'Monitoring Plan'])->count();
+        $accompCount = Yii::$app->user->can('AgencyUser') ? Submission::find()->where(['report' => 'Accomplishment', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->count() : Submission::find()->where(['report' => 'Accomplishment'])->count();
+        $exceptionCount = Yii::$app->user->can('AgencyUser') ? Submission::find()->where(['report' => 'Project Exception', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->count() : Submission::find()->where(['report' => 'Project Exception'])->count();
+        $resultCount = Yii::$app->user->can('AgencyUser') ? Submission::find()->where(['report' => 'Project Results', 'agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])->count() : Submission::find()->where(['report' => 'Project Results'])->count();
 
         $logs = SubmissionLog::find()
                 ->leftJoin('submission', 'submission.id = submission_log.submission_id')
@@ -128,10 +144,24 @@ class DashboardController extends \yii\web\Controller
             'exceptionQ3' => $exceptionQ3,
             'exceptionQ4' => $exceptionQ4,
             'projectResults' => $projectResults,
+            'monitoringPlanSubmission' => $monitoringPlanSubmission,
+            'accompQ1Submission' => $accompQ1Submission,
+            'accompQ2Submission' => $accompQ2Submission,
+            'accompQ3Submission' => $accompQ3Submission,
+            'accompQ4Submission' => $accompQ4Submission,
+            'exceptionQ1Submission' => $exceptionQ1Submission,
+            'exceptionQ2Submission' => $exceptionQ2Submission,
+            'exceptionQ3Submission' => $exceptionQ3Submission,
+            'exceptionQ4Submission' => $exceptionQ4Submission,
+            'projectResultsSubmission' => $projectResultsSubmission,
             'years' => $years,
             'agencies' => $agencies,
             'logModel' => $logModel,
             'logs' => $logs,
+            'planCount' => $planCount,
+            'accompCount' => $accompCount,
+            'exceptionCount' => $exceptionCount,
+            'resultCount' => $resultCount,
         ]);
     }
 

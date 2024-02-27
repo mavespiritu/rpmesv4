@@ -19,7 +19,7 @@
                 'items' => [
                     ['label' => 'MAIN MENU', 'options' => ['class' => 'header']],
                     ['label' => 'Home', 'icon' => 'home', 'url' => ['/rpmes/dashboard']],
-                    ['label' => 'Add Project', 'icon' => 'plus', 'url' => ['/rpmes/project/create'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'Add New Project', 'icon' => 'plus', 'url' => ['/rpmes/project/create'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Projects', 'icon' => 'folder', 'url' => ['/rpmes/project/'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'Components', 'icon' => 'folder', 'url' => ['/rpmes/component/'], 'visible' => !Yii::$app->user->isGuest],
                     [

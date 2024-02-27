@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
 *{
-  font-family: "Poppins" , sans-serif;
+  font-family: "Source Sans 3" , sans-serif;
 }
 
 html,
 body {
     height: 100%;
-    font-family: "Poppins" , sans-serif;
+    font-family: "Source Sans 3" , sans-serif;
 }
 table.bordered-table{
   width: 100%;
@@ -57,7 +57,7 @@ h3,
 h4,
 h5,
 h6{
-  font-family: "Poppins" , sans-serif !important;
+  font-family: "Source Sans 3" , sans-serif !important;
 }
 
 .box{
@@ -127,7 +127,7 @@ a.asc:after, a.desc:after {
     position: relative;
     top: 1px;
     display: inline-block;
-    font-family: "Poppins" , sans-serif;
+    font-family: "Source Sans 3" , sans-serif;
     font-style: normal;
     font-weight: normal;
     line-height: 1;

@@ -75,7 +75,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         ],
                         [
                             'attribute' => 'projectCount',
-                            'header' => 'No. of Projects',
+                            'header' => 'No. of Projects Enrolled',
                             'headerOptions' => [
                                 'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
                             ],
@@ -214,7 +214,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         ],
                         [
                             'attribute' => 'projectCount',
-                            'header' => 'No. of Projects',
+                            'header' => 'No. of Projects Enrolled',
                             'headerOptions' => [
                                 'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
                             ],

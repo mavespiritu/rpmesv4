@@ -916,9 +916,6 @@ class PlanController extends \yii\web\Controller
 
     public function actionCreate()
     {
-        if(!Yii::$app->user->can('AgencyUser')){
-            throw new NotFoundHttpException('The requested page does not exist.');
-        }
 
         $model = new Submission();
         $model->scenario = Yii::$app->user->can('Administrator') ? 'createMonitoringPlanAdmin' : 'createMonitoringPlan';
