@@ -1126,16 +1126,34 @@ class AccomplishmentController extends \yii\web\Controller
                 'mar' => 'Mar',
             ],
             'Q2' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
                 'apr' => 'Apr',
                 'may' => 'May',
                 'jun' => 'Jun',
             ],
             'Q3' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
+                'apr' => 'Apr',
+                'may' => 'May',
+                'jun' => 'Jun',
                 'jul' => 'Jul',
                 'aug' => 'Aug',
                 'sep' => 'Sep',
             ],
             'Q4' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
+                'apr' => 'Apr',
+                'may' => 'May',
+                'jun' => 'Jun',
+                'jul' => 'Jul',
+                'aug' => 'Aug',
+                'sep' => 'Sep',
                 'oct' => 'Oct',
                 'nov' => 'Nov',
                 'dec' => 'Dec',
@@ -1267,7 +1285,7 @@ class AccomplishmentController extends \yii\web\Controller
             $targetOwpa[$q] = 'IF(physicalTargets.type = "Numerical", 
                                 IF('.$physicalTotal.' > 0, ';
 
-            $con =  $q == 'Q1' ? 'COALESCE(physicalTargets.baseline, 0) + ' : '';
+            $con =  'COALESCE(physicalTargets.baseline, 0) + ';
 
             foreach ($mos as $mo => $month) {
                 $con .= $month === end($mos) ? 'COALESCE(physicalTargets.'.$mo.', 0)' : 'COALESCE(physicalTargets.'.$mo.', 0) + ';
@@ -1275,7 +1293,7 @@ class AccomplishmentController extends \yii\web\Controller
 
             $targetOwpa[$q] .= '(('.$con.')/('.$physicalTotal.')*100)';
             $targetOwpa[$q] .= ',('.$con.'/('.$physicalTotal.'))*100), '.$con.')';
-        }     
+        }  
         
         $financialAccomplishment = FinancialAccomplishment::find()->where([
             'year' => $model->year,
@@ -1520,6 +1538,33 @@ class AccomplishmentController extends \yii\web\Controller
             'officeAddress' => $officeAddress,
             'officeHead' => $officeHead,
             'officeTitleShort' => $officeTitleShort,
+        ]);
+    }
+
+    public function actionRevert($id)
+    {
+        if(!Yii::$app->user->can('Administrator')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $submission = Submission::findOne($id);
+
+        $model = new SubmissionLog();
+        $model->scenario = 'forFurtherValidation';
+        $model->submission_id = $submission->id;
+        $model->user_id = Yii::$app->user->id;
+        $model->status = 'For further validation';
+
+        if($model->load(Yii::$app->request->post()) && $model->save())
+        {
+            \Yii::$app->getSession()->setFlash('success', 'This report has been sent successfully for further validation');
+            return $this->redirect(['view', 'id' => $submission->id]);
+
+            
+        }
+
+        return $this->renderAjax('_revert-form', [
+            'model' => $model,
         ]);
     }
 }

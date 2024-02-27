@@ -50,7 +50,7 @@ Modal::end();
     <div class="box box-solid">
         <div class="box-header with-border">
             <h3 class="box-title">Status: 
-                <?php if($model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation'){ ?>
+                <?php if($model->currentStatus == 'Draft'){ ?>
                     <?= $model->currentStatus ?>
                 <?php }else { ?>
                     <?= $model->currentStatus ?> <small>by <?= $model->currentSubmissionLog->actor ?> last <?= date("F j, Y H:i:s", strtotime($model->currentSubmissionLog->datetime)) ?></small>
@@ -88,7 +88,7 @@ Modal::end();
             </div>  
         </div>
         <div class="box-body" style="min-height: calc(100vh - 235px);">
-
+        <p style="color: <?= $model->currentStatus != 'For further validation' ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'black' : 'red' : 'red' : 'red' ?>"><i class="fa  fa-info-circle"></i> <?= $model->currentStatus != 'For further validation' ? $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Submission is open until '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'Submission is closed. The deadline of submission is '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'No set due date. Contact the administrator for due date setup.' : 'Your submission has been reverted for further validation. Please see remarks for your guidance: ' ?><div style="color: red !important;"><?= $model->currentSubmissionLog->remarks ?></div></p>
         <?= $this->render('_search-project', [
             'model' => $model,
             'searchModel' => $searchModel,
@@ -122,14 +122,44 @@ Modal::end();
                     ]
                 ],
                 [
-                    'attribute' => 'project.title',
-                    'header' => 'Program/Project Title',
+                    'header' => '
+                                (a) Program/Project Title <br>
+                                (b) Implementing Agency <br>
+                                (c) Sector <br>
+                                (d) Province <br>
+                                (e) City/Municipality <br>
+                                (f) Barangay
+                                ',
                     'headerOptions' => [
-                        'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
-                    ]
+                        'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        return 
+                            '(a) '.$plan->project->title.'<br>'.
+                            '(b) '.$plan->project->agency->code.'<br>'.
+                            '(c) '.$plan->project->sector->title.'<br>'.
+                            '(d) '.$plan->project->provinceTitle.'<br>'.
+                            '(e) '.$plan->project->citymunTitle.'<br>'.
+                            '(f) '.$plan->project->barangayTitle
+                        ;
+                    }
                 ],
                 [
-                    'header' => 'Appropriations',
+                    'header' => 'Target to date <br> (Appropriations)',
+                    'headerOptions' => [
+                        'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
+                    ],
+                    'contentOptions' => [
+                        'style' => 'text-align: right;'
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        return number_format($plan->project->getFinancialTargetPerQuarter($model->year)[$model->quarter], 2);
+                    }
+                ],
+                [
+                    'header' => 'Actual to date <br> (Appropriations)',
                     'headerOptions' => [
                         'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
                     ],

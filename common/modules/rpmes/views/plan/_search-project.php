@@ -17,7 +17,7 @@ use yii\bootstrap\ButtonDropdown;
             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
                 $dueDate ? 
                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 
-                        Html::button('<i class="fa fa-plus"></i> Include Projects', ['value' => Url::to(['include', 'id' => $model->id]), 'class' => 'btn btn-default', 'id' => 'include-button']) :
+                        Html::a('<i class="fa fa-plus"></i> Include Projects', ['include', 'id' => $model->id], ['class' => 'btn btn-default']) :
                     '' :
                 '' :
             '' :
@@ -33,9 +33,9 @@ use yii\bootstrap\ButtonDropdown;
             Html::a('<i class="fa fa-list"></i> View Targets', ['target', 'id' => $model->id], ['class' => 'btn btn-default']) :
         '';
     ?>
-    <?= Html::a('<i class="fa fa-file-excel-o"></i> Generate Form 1', ['/rpmes/plan/download', 'id' => $model->id, 'type' => 'excel'], ['class' => 'btn btn-default']) ?>
+    <?= $dataProvider->getCount() > 0 ? Html::a('<i class="fa fa-file-excel-o"></i> Generate Form 1', ['/rpmes/plan/download', 'id' => $model->id, 'type' => 'excel'], ['class' => 'btn btn-default']) : '' ?>
 
-    <?= Html::button('<i class="fa fa-print"></i> Print Form 1', ['onClick' => 'printSummary("'.$model->id.'")', 'class' => 'btn btn-default']) ?>
+    <?= $dataProvider->getCount() > 0 ? Html::button('<i class="fa fa-print"></i> Print Form 1', ['onClick' => 'printSummary("'.$model->id.'")', 'class' => 'btn btn-default']) : '' ?>
 
     <?= Yii::$app->user->can('AgencyUser') ?
             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
@@ -83,16 +83,6 @@ use yii\bootstrap\ButtonDropdown;
 
 <?php
   Modal::begin([
-    'id' => 'include-modal',
-    'size' => "modal-xl",
-    'header' => '<div id="include-modal-header"><h4>Include Projects</h4></div>',
-    'options' => ['tabindex' => false],
-  ]);
-  echo '<div id="include-modal-content"></div>';
-  Modal::end();
-?>
-<?php
-  Modal::begin([
     'id' => 'acknowledge-modal',
     'size' => "modal-lg",
     'header' => '<div id="acknowledge-modal-header"><h4>Acknowledge Form 1</h4></div>',
@@ -104,9 +94,7 @@ use yii\bootstrap\ButtonDropdown;
 <?php
     $script = '
         $(document).ready(function(){
-            $("#include-button").click(function(){
-              $("#include-modal").modal("show").find("#include-modal-content").load($(this).attr("value"));
-            });
+
             $("#acknowledge-button").click(function(){
                 $("#acknowledge-modal").modal("show").find("#acknowledge-modal-content").load($(this).attr("value"));
               });

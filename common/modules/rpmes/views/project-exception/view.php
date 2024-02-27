@@ -109,7 +109,7 @@ Modal::end();
             </div>  
         </div>
         <div class="box-body" style="min-height: calc(100vh - 235px);">
-
+        <p style="color: <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'black' : 'red' : 'black' ?>"><i class="fa  fa-info-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Submission is open until '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'Submission is closed. The deadline of submission is '.date("F j, Y", strtotime($dueDate->due_date)).'.' : '' ?></p>
         <?= $this->render('_search-project', [
             'model' => $model,
             'searchModel' => $searchModel,
@@ -143,16 +143,33 @@ Modal::end();
                     ]
                 ],
                 [
-                    'attribute' => 'project.title',
-                    'header' => 'Program/Project Title',
+                    'header' => '
+                                (a) Program/Project Title <br>
+                                (b) Implementing Agency <br>
+                                (c) Sector <br>
+                                (d) Province <br>
+                                (e) City/Municipality <br>
+                                (f) Barangay
+                                ',
                     'headerOptions' => [
-                        'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
-                    ]
+                        'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        return 
+                            '(a) '.$plan->project->title.'<br>'.
+                            '(b) '.$plan->project->agency->code.'<br>'.
+                            '(c) '.$plan->project->sector->title.'<br>'.
+                            '(d) '.$plan->project->provinceTitle.'<br>'.
+                            '(e) '.$plan->project->citymunTitle.'<br>'.
+                            '(f) '.$plan->project->barangayTitle
+                        ;
+                    }
                 ],
                 [
                     'header' => 'Slippage <br> (%)',
                     'headerOptions' => [
-                        'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
+                        'style' => 'width: 5%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
                     ],
                     'contentOptions' => [
                         'style' => 'text-align: center;'
@@ -168,7 +185,7 @@ Modal::end();
                         'style' => 'width: 15%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
                     ],
                     'format' => 'raw',
-                    'value' => function($plan) use ($model){
+                    'value' => function($plan) use ($model, $dueDate){
                         $ctr = range('a', 'z');
                         $exceptions = $plan->project->getProjectExceptionsPerQuarter($model->year, $model->quarter);
                         $str = '';
@@ -178,28 +195,36 @@ Modal::end();
                                 $str .= '<p>'.strip_tags($ctr[$i].'.&nbsp;'.$exception->findings);
                                 $str.= '<br>';
                                 $str .= Yii::$app->user->can('AgencyUser') ? 
-                                            $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
+                                            $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
                                                 count($model->plans) < 1 ? 
-                                                    Html::a('Update', '#', [
-                                                        'class' => 'btn btn-link',
-                                                        'id' => 'update-findings-'.$exception->id.'-button',
-                                                        'data-toggle' => 'modal',
-                                                        'data-target' => '#update-findings-modal-'.$exception->id,
-                                                        'data-url' => Url::to(['update-findings', 'id' => $model->id, 'project_id' => $plan->project->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
-                                                    ]) : 
+                                                    $dueDate ? 
+                                                        strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
+                                                            Html::a('Update', '#', [
+                                                                'class' => 'btn btn-link',
+                                                                'id' => 'update-findings-'.$exception->id.'-button',
+                                                                'data-toggle' => 'modal',
+                                                                'data-target' => '#update-findings-modal-'.$exception->id,
+                                                                'data-url' => Url::to(['update-findings', 'id' => $model->id, 'project_id' => $plan->project->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
+                                                            ]) : 
+                                                        '' : 
+                                                    '' : 
                                                 '' : 
                                             '' : 
                                         '';
                                 $str .= Yii::$app->user->can('AgencyUser') ? 
                                             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
-                                                count($model->plans) < 1 ? 
-                                                '&nbsp;|&nbsp;'.Html::a('Delete', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1], [
-                                                        'class' => 'btn btn-link',
-                                                        'data' => [
-                                                            'confirm' => 'Are you sure want to delete this findings?',
-                                                            'method' => 'post',
-                                                        ],
-                                                    ]) : 
+                                                count($model->plans) < 1 ?
+                                                    $dueDate ? 
+                                                        strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
+                                                            '&nbsp;|&nbsp;'.Html::a('Delete', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1], [
+                                                                    'class' => 'btn btn-link',
+                                                                    'data' => [
+                                                                        'confirm' => 'Are you sure want to delete this findings?',
+                                                                        'method' => 'post',
+                                                                    ],
+                                                                ]) : 
+                                                        '' : 
+                                                    '' : 
                                                 '' : 
                                             '' : 
                                         '';
@@ -319,18 +344,22 @@ Modal::end();
                         'style' => 'text-align: center'
                     ],
                     'format' => 'raw',
-                    'value' => function($plan) use ($model){
+                    'value' => function($plan) use ($model, $dueDate){
                         $modalID = $plan->project->id;
                         return  Yii::$app->user->can('AgencyUser') ? 
                                     $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                                         count($model->plans) < 1 ? 
-                                            Html::a('Add findings', '#', [
-                                                'class' => 'btn btn-xs btn-block btn-success',
-                                                'id' => 'create-findings-'.$modalID.'-button',
-                                                'data-toggle' => 'modal',
-                                                'data-target' => '#create-findings-modal-'.$modalID,
-                                                'data-url' => Url::to(['create-findings', 'id' => $model->id, 'project_id' => $plan->project->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
-                                            ]) : 
+                                            $dueDate ? 
+                                                strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
+                                                    Html::a('Add findings', '#', [
+                                                        'class' => 'btn btn-xs btn-block btn-success',
+                                                        'id' => 'create-findings-'.$modalID.'-button',
+                                                        'data-toggle' => 'modal',
+                                                        'data-target' => '#create-findings-modal-'.$modalID,
+                                                        'data-url' => Url::to(['create-findings', 'id' => $model->id, 'project_id' => $plan->project->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
+                                                    ]) : 
+                                                '' : 
+                                            '' : 
                                         '' : 
                                     '' : 
                                 '';

@@ -63,6 +63,13 @@ use yii\bootstrap\ButtonDropdown;
         '';
     ?>
 
+<?= Yii::$app->user->can('Administrator') ?
+            $model->currentStatus == 'Submitted' ?
+                Html::button('<i class="fa fa-paper-plane-o"></i> Send Form 2 for further validation', ['value' => Url::to(['revert', 'id' => $model->id]), 'class' => 'btn btn-danger', 'id' => 'revert-button']) :
+            '' :
+        '';
+    ?>
+
 </div>
 <div class="pull-right">
     <div class="accomplishment-search">
@@ -95,10 +102,24 @@ use yii\bootstrap\ButtonDropdown;
   Modal::end();
 ?>
 <?php
+  Modal::begin([
+    'id' => 'revert-modal',
+    'size' => "modal-lg",
+    'header' => '<div id="revert-modal-header"><h4>Send Form 2 for further validation</h4></div>',
+    'options' => ['tabindex' => false],
+  ]);
+  echo '<div id="revert-modal-content"></div>';
+  Modal::end();
+?>
+<?php
     $script = '
         $(document).ready(function(){
             $("#acknowledge-button").click(function(){
                 $("#acknowledge-modal").modal("show").find("#acknowledge-modal-content").load($(this).attr("value"));
+              });
+
+            $("#revert-button").click(function(){
+                $("#revert-modal").modal("show").find("#revert-modal-content").load($(this).attr("value"));
               });
         });     
     ';

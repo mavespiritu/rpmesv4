@@ -36,11 +36,11 @@ use yii\bootstrap\ButtonDropdown;
         '';
     ?>
 
-    <?= Yii::$app->user->can('Administrator') ? Html::a('<i class="fa fa-tag"></i> Provide NPMC Endorsement', ['endorse', 'id' => $model->id], [
+    <?php /* Yii::$app->user->can('Administrator') ? Html::a('<i class="fa fa-tag"></i> Provide NPMC Endorsement', ['endorse', 'id' => $model->id], [
         'class' => 'btn btn-success',
     ]) : Html::a('<i class="fa fa-tag"></i> View NPMC Endorsement', ['endorse', 'id' => $model->id], [
         'class' => 'btn btn-default',
-    ])
+    ]) */
     ?>
 
     <?= Yii::$app->user->can('Administrator') ?

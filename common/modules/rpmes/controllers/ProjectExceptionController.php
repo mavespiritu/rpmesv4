@@ -455,16 +455,34 @@ class ProjectExceptionController extends \yii\web\Controller
                 'mar' => 'Mar',
             ],
             'Q2' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
                 'apr' => 'Apr',
                 'may' => 'May',
                 'jun' => 'Jun',
             ],
             'Q3' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
+                'apr' => 'Apr',
+                'may' => 'May',
+                'jun' => 'Jun',
                 'jul' => 'Jul',
                 'aug' => 'Aug',
                 'sep' => 'Sep',
             ],
             'Q4' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
+                'apr' => 'Apr',
+                'may' => 'May',
+                'jun' => 'Jun',
+                'jul' => 'Jul',
+                'aug' => 'Aug',
+                'sep' => 'Sep',
                 'oct' => 'Oct',
                 'nov' => 'Nov',
                 'dec' => 'Dec',
@@ -506,7 +524,7 @@ class ProjectExceptionController extends \yii\web\Controller
             $targetOwpa[$q] = 'IF(physicalTargets.type = "Numerical", 
                                 IF('.$physicalTotal.' > 0, ';
 
-            $con =  $q == 'Q1' ? 'COALESCE(physicalTargets.baseline, 0) + ' : '';
+            $con = 'COALESCE(physicalTargets.baseline, 0) + ';
 
             foreach ($mos as $mo => $month) {
                 $con .= $month === end($mos) ? 'COALESCE(physicalTargets.'.$mo.', 0)' : 'COALESCE(physicalTargets.'.$mo.', 0) + ';
@@ -539,7 +557,7 @@ class ProjectExceptionController extends \yii\web\Controller
 
         if(!empty($projects)){
             foreach($projects as $project){
-                if($project['slippage'] < -10 || $project['slippage'] > 10){
+                if($project['slippage'] <= -10 || $project['slippage'] >= 10){
                     $slippages[] = $project;
                 }
             }
@@ -771,16 +789,34 @@ class ProjectExceptionController extends \yii\web\Controller
                 'mar' => 'Mar',
             ],
             'Q2' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
                 'apr' => 'Apr',
                 'may' => 'May',
                 'jun' => 'Jun',
             ],
             'Q3' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
+                'apr' => 'Apr',
+                'may' => 'May',
+                'jun' => 'Jun',
                 'jul' => 'Jul',
                 'aug' => 'Aug',
                 'sep' => 'Sep',
             ],
             'Q4' => [
+                'jan' => 'Jan',
+                'feb' => 'Feb',
+                'mar' => 'Mar',
+                'apr' => 'Apr',
+                'may' => 'May',
+                'jun' => 'Jun',
+                'jul' => 'Jul',
+                'aug' => 'Aug',
+                'sep' => 'Sep',
                 'oct' => 'Oct',
                 'nov' => 'Nov',
                 'dec' => 'Dec',
@@ -851,7 +887,7 @@ class ProjectExceptionController extends \yii\web\Controller
             $targetOwpa[$q] = 'IF(physicalTargets.type = "Numerical", 
                                 IF('.$physicalTotal.' > 0, ';
 
-            $con =  $q == 'Q1' ? 'COALESCE(physicalTargets.baseline, 0) + ' : '';
+            $con = 'COALESCE(physicalTargets.baseline, 0) + ';
 
             foreach ($mos as $mo => $month) {
                 $con .= $month === end($mos) ? 'COALESCE(physicalTargets.'.$mo.', 0)' : 'COALESCE(physicalTargets.'.$mo.', 0) + ';
@@ -884,7 +920,7 @@ class ProjectExceptionController extends \yii\web\Controller
 
         if(!empty($projectsWithSlippage)){
             foreach($projectsWithSlippage as $project){
-                if($project['slippage'] < -10 || $project['slippage'] > 10){
+                if($project['slippage'] <= -10 || $project['slippage'] >= 10){
                     $slippages[] = $project;
                 }
             }

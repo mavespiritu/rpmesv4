@@ -112,29 +112,29 @@
                 <td rowspan=13><i><?=  $project['outputIndicatorTitle'] ?></i></td>
                 <td>Total Target for the Year</td>
                 <td align=right><?= number_format($project['financialTotal'], 2) ?></td>
-                <td align=center><?= $project['metrics'] == 'Percentage' ? number_format($project['physicalTotal'], 0) : '100' ?></td>
+                <td align=center><?= $project['metrics'] == 'Percentage' ? number_format($project['physicalTotal'], 0) : number_format($project['physicalTotal'], 0).' (100.00)' ?></td>
                 <?php if(!empty($targets['outputIndicators'][$project['id']])){ ?>
                     <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
-                        <td align=center><?= isset($targets['outputIndicators'][$project['id']][$i]) ? number_format(floatval($targets['outputIndicators'][$project['id']][$i]['total']), 2) : '&nbsp;' ?></td>
+                        <td align=center><?= isset($targets['outputIndicators'][$project['id']][$i]) ? number_format(floatval($targets['outputIndicators'][$project['id']][$i]['rawTotal']), 0).' ('.number_format(floatval($targets['outputIndicators'][$project['id']][$i]['total']), 2).')' : '0 (0.00)' ?></td>
                     <?php } ?>
                 <?php }else{ ?>
                     <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
-                        <td>&nbsp;</td>
+                        <td>0.00</td>
                     <?php } ?>
                 <?php } ?>
             </tr>
             <?php foreach($months as $mo => $month){ ?>
                 <tr>
                     <td><?= $month ?></td>
-                    <td align=right><?= isset($targets['financial'][$project['id']]) ? number_format(floatval($targets['financial'][$project['id']][$mo]), 2) : '' ?></td>
-                    <td align=center><?= isset($targets['physical'][$project['id']]) ? number_format($project['metrics'] == 'Numerical' ? $project['physicalTotal'] > 0 ? (floatval($targets['physical'][$project['id']][$mo])/floatval($project['physicalTotal'])) * 100 : 0 : floatval($targets['physical'][$project['id']][$mo]), 2) : '' ?></td>
+                    <td align=right><?= isset($targets['financial'][$project['id']]) ? number_format(floatval($targets['financial'][$project['id']][$mo]), 2) : '0.00' ?></td>
+                    <td align=center><?= isset($targets['physical'][$project['id']]) ? $project['metrics'] == 'Numerical' ? $project['physicalTotal'] > 0 ? number_format(floatval($targets['physical'][$project['id']][$mo]), 0).' ('.number_format(floatval($targets['physical'][$project['id']][$mo])/floatval($project['physicalTotal']) * 100, 2).')' : '0 (0.00)' : number_format(floatval($targets['physical'][$project['id']][$mo]), 2) : '0 .00' ?></td>
                     <?php if(!empty($targets['outputIndicators'][$project['id']])){ ?>
                         <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
-                            <td align=center><?= isset($targets['outputIndicators'][$project['id']][$i]) ? number_format($targets['outputIndicators'][$project['id']][$i]['type'] == 'Numerical' ? $targets['outputIndicators'][$project['id']][$i]['total'] > 0 ? floatval(($targets['outputIndicators'][$project['id']][$i][$mo]/$targets['outputIndicators'][$project['id']][$i]['rawTotal']) * 100) : 0 : floatval($targets['outputIndicators'][$project['id']][$i][$mo]), 2) : '&nbsp;' ?></td>
+                            <td align=center><?= isset($targets['outputIndicators'][$project['id']][$i]) ? $targets['outputIndicators'][$project['id']][$i]['total'] > 0 ? number_format(floatval($targets['outputIndicators'][$project['id']][$i][$mo]), 0).' ('.number_format(floatval(($targets['outputIndicators'][$project['id']][$i][$mo]/$targets['outputIndicators'][$project['id']][$i]['rawTotal']) * 100), 2).')' : '0 (0.00)' : '0 (0.00)' ?></td>
                         <?php } ?>
                     <?php }else{ ?>
                         <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
-                            <td>&nbsp;</td>
+                            <td>0.00</td>
                         <?php } ?>
                     <?php } ?>
                 </tr>

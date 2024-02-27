@@ -46,6 +46,7 @@ function renderSummary($page)
             </div>  
         </div>
         <div class="box-body" style="height: calc(100vh - 210px);">
+            <p style="color: <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'black' : 'red' : 'black' ?>"><i class="fa  fa-info-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Submission is open until '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'Submission is closed. The deadline of submission is '.date("F j, Y", strtotime($dueDate->due_date)).'.' : '' ?></p>
             <div class="summary"><?= renderSummary($projectsPages) ?></div>
             <div class="pull-right">
                 <p><b><?= $model->draft == 'Yes' ? 'Accomplish' : 'Browse' ?> projects by page (5 per page):</b>
@@ -64,8 +65,8 @@ function renderSummary($page)
                         <tr style="background-color: #002060; color: white; font-weight: normal;">
                             <td style="width: 5%; text-align: center;">#</td>
                             <td style="width: 20%; text-align: center;">Program/Project Title</td>
-                            <td style="width: 40%; text-align: center;">Results/Outcome Indicator/Target</td>
-                            <td style="width: 40%; text-align: center;">Observed Results/Outcome/Impact</td>
+                            <td style="width: 20%; text-align: center;">Results/Outcome Indicator/Target</td>
+                            <td style="width: 80%; text-align: center;">Observed Results/Outcome/Impact</td>
                             
                         </tr>
                     </thead>

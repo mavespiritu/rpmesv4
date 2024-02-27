@@ -88,10 +88,11 @@ Modal::end();
             </div>  
         </div>
         <div class="box-body" style="min-height: calc(100vh - 235px);">
-
+        <p style="color: <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'black' : 'red' : 'black' ?>"><small><i class="fa  fa-info-circle"></i> <?= $dueDate ? strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 'Submission is open until '.date("F j, Y", strtotime($dueDate->due_date)).'.' : 'Submission is closed. The deadline of submission is '.date("F j, Y", strtotime($dueDate->due_date)).'.' : '' ?></small></p>
         <?= $this->render('_search-project', [
             'model' => $model,
             'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
             'dueDate' => $dueDate
         ]); ?>
             
@@ -127,11 +128,28 @@ Modal::end();
                     ]
                 ],
                 [
-                    'attribute' => 'project.title',
-                    'header' => 'Program/Project Title',
+                    'header' => '
+                                (a) Program/Project Title <br>
+                                (b) Implementing Agency <br>
+                                (c) Sector <br>
+                                (d) Province <br>
+                                (e) City/Municipality <br>
+                                (f) Barangay
+                                ',
                     'headerOptions' => [
                         'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
-                    ]
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        return 
+                            '(a) '.$plan->project->title.'<br>'.
+                            '(b) '.$plan->project->agency->code.'<br>'.
+                            '(c) '.$plan->project->sector->title.'<br>'.
+                            '(d) '.$plan->project->provinceTitle.'<br>'.
+                            '(e) '.$plan->project->citymunTitle.'<br>'.
+                            '(f) '.$plan->project->barangayTitle
+                        ;
+                    }
                 ],
                 [
                     'header' => 'Financial Target<br> (in PhP)',
@@ -214,13 +232,19 @@ Modal::end();
                     'headerOptions' => [
                         'style' => 'background-color: #002060; color: white; font-weight: normal;'
                     ],
-                    'value' => function ($plan) use ($form, $projects, $model) {
-                        return $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? $form->field($projects[$plan->id], "[$plan->id]id")->checkbox([
-                            'value' => $plan->id, 
-                            'class' => 'check-project', 
-                            'id' => 'check-project-'.$plan->id, 
-                            'label' => ''
-                        ]) : '';
+                    'value' => function ($plan) use ($form, $projects, $model, $dataProvider, $dueDate) {
+                        return Yii::$app->user->can('AgencyUser') ? 
+                                    $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
+                                        $dataProvider->getCount() > 0 ? 
+                                            $form->field($projects[$plan->id], "[$plan->id]id")->checkbox([
+                                                'value' => $plan->id, 
+                                                'class' => 'check-project', 
+                                                'id' => 'check-project-'.$plan->id, 
+                                                'label' => ''
+                                            ]) : 
+                                        '' :
+                                    '' :
+                                '';
                     },
                 ],
             ],
@@ -230,16 +254,16 @@ Modal::end();
             <?= Yii::$app->user->can('AgencyUser') ? 
                     $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                         $dataProvider->getCount() > 0 ? 
-                            Html::submitButton('Remove Selected', [
-                                'class' => 'btn btn-danger', 
-                                'id' => 'remove-project-button', 
-                                'data' => [
-                                    'disabled-text' => 'Please Wait', 
-                                    'method' => 'post', 
-                                    'confirm' => 'Are you sure you want to remove selected projects to this monitoring plan?'
-                                ], 
-                                'disabled' => true
-                            ]) : 
+                                Html::submitButton('Remove Selected', [
+                                    'class' => 'btn btn-danger', 
+                                    'id' => 'remove-project-button', 
+                                    'data' => [
+                                        'disabled-text' => 'Please Wait', 
+                                        'method' => 'post', 
+                                        'confirm' => 'Are you sure you want to remove selected projects to this monitoring plan?'
+                                    ], 
+                                    'disabled' => true
+                                ]) :
                         '' : 
                     '' : 
                 '' ?>

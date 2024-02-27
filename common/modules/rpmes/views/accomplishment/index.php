@@ -92,7 +92,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             ],
                             'format' => 'raw',
                             'value' => function($model){
-                                return $model->currentStatus;;
+                                return $model->currentStatus;
                             }
                         ],
                         [
@@ -101,6 +101,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? $model->submitted->actor.'<br>'.$model->submitted->actorPosition : '' : '';
@@ -112,6 +113,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? date("F j, Y H:i:s", strtotime($model->submitted->datetime)) : '' : '';
                             }
@@ -122,6 +124,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? $model->acknowledged->actor.'<br>'.$model->acknowledged->actorPosition : '' : '';
                             }
@@ -132,16 +135,18 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged->datetime)) : '' : '';
                             }
                         ],
                         [
                             'attribute' => 'remarks',
-                            'header' => 'Remarks',
+                            'header' => 'NEDA Remarks',
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus == 'For further validation' ? $model->currentSubmissionLog->remarks : '';
                             }
@@ -236,6 +241,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->submitted ? date("F j, Y H:i:s", strtotime($model->submitted->datetime)) : '' : '';
                             }
@@ -246,6 +252,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? $model->acknowledged->actor.'<br>'.$model->acknowledged->actorPosition : '' : '';
                             }
@@ -256,16 +263,18 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged->datetime)) : '' : '';
                             }
                         ],
                         [
                             'attribute' => 'remarks',
-                            'header' => 'Remarks',
+                            'header' => 'NEDA Remarks',
                             'headerOptions' => [
                                 'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
                             ],
+                            'format' => 'raw',
                             'value' => function($model){
                                 return $model->currentStatus == 'For further validation' ? $model->currentSubmissionLog->remarks : '';
                             }

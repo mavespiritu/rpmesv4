@@ -56,10 +56,10 @@ if (class_exists('backend\assets\AppAsset')) {
     <?php $this->beginBody() ?>
     <div class="wrapper">
 
-        <?= $this->render(
+        <?= !Yii::$app->user->isGuest ? $this->render(
             'header.php',
             ['directoryAsset' => $directoryAsset]
-        ) ?>
+        ) : '' ?>
 
         <?php if(!Yii::$app->user->isGuest){ ?>
             <?= $this->render(

@@ -1182,6 +1182,54 @@ class Project extends \yii\db\ActiveRecord
         return !empty($locations) ? implode(" &#8226; ", $locations) : 'No location';
     }
 
+    public function getProvinceTitle()
+    {
+        $provinces = ProjectProvince::findAll(['project_id' => $this->id, 'year' => $this->year]);
+        $locations = [];
+
+        if($provinces)
+        {
+            foreach($provinces as $province)
+            {
+                $locations[] = $province->provinceName;
+            }
+        }
+
+        return !empty($locations) ? implode(" &#8226; ", $locations) : '';
+    }
+
+    public function getCitymunTitle()
+    {
+        $citymuns = ProjectCitymun::findAll(['project_id' => $this->id, 'year' => $this->year]);
+        $locations = [];
+        
+        if($citymuns)
+        {
+            foreach($citymuns as $citymun)
+            {
+                $locations[] = $citymun->citymunName.', '.$citymun->provinceName;
+            }
+        }
+
+        return !empty($locations) ? implode(" &#8226; ", $locations) : '';
+    }
+
+    public function getBarangayTitle()
+    {
+        $barangays = ProjectBarangay::findAll(['project_id' => $this->id, 'year' => $this->year]);
+    
+        $locations = [];
+        if($barangays)
+        {
+            foreach($barangays as $barangay)
+            {
+                $locations[] = $barangay->barangayName.', '.$barangay->citymunName.', '.$barangay->provinceName;
+            }
+        }
+
+        return !empty($locations) ? implode(" &#8226; ", $locations) : '';
+    }
+
     public function getTargetOwpa($year)
     {
         $target = ProjectTarget::find()->where([
@@ -1213,9 +1261,9 @@ class Project extends \yii\db\ActiveRecord
 
         return $target ? [
             'Q1' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar))/$total)*100 : 0 : floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar),
-            'Q2' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->apr) + floatval($target->may) + floatval($target->jun))/$total)*100 : 0 : floatval($target->apr) + floatval($target->may) + floatval($target->jun),
-            'Q3' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->jul) + floatval($target->aug) + floatval($target->sep))/$total)*100 : 0 : floatval($target->jul) + floatval($target->aug) + floatval($target->sep),
-            'Q4' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->oct) + floatval($target->nov) + floatval($target->dec))/$total)*100 : 0 : floatval($target->oct) + floatval($target->nov) + floatval($target->dec)
+            'Q2' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar) + floatval($target->apr) + floatval($target->may) + floatval($target->jun))/$total)*100 : 0 : floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar) + floatval($target->apr) + floatval($target->may) + floatval($target->jun),
+            'Q3' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar) + floatval($target->apr) + floatval($target->may) + floatval($target->jun) + floatval($target->jul) + floatval($target->aug) + floatval($target->sep))/$total)*100 : 0 : floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar) + floatval($target->apr) + floatval($target->may) + floatval($target->jun) + floatval($target->jul) + floatval($target->aug) + floatval($target->sep),
+            'Q4' => $target->type == 'Numerical' ? $total > 0 ? ((floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar) + floatval($target->apr) + floatval($target->may) + floatval($target->jun) + floatval($target->jul) + floatval($target->aug) + floatval($target->sep) + floatval($target->oct) + floatval($target->nov) + floatval($target->dec))/$total)*100 : 0 : floatval($target->baseline) + floatval($target->jan) + floatval($target->feb) + floatval($target->mar) + floatval($target->apr) + floatval($target->may) + floatval($target->jun) + floatval($target->jul) + floatval($target->aug) + floatval($target->sep) + floatval($target->oct) + floatval($target->nov) + floatval($target->dec)
         ] : [
             'Q1' => 0,
             'Q2' => 0,
@@ -1326,7 +1374,12 @@ class Project extends \yii\db\ActiveRecord
 
         $targets['Q1'] += $target ? floatval($target->allocation) : 0;
 
-        return $targets;
+        return [
+            'Q1' => floatval($targets['Q1']),
+            'Q2' => floatval($targets['Q1']) + floatval($targets['Q2']),
+            'Q3' => floatval($targets['Q1']) + floatval($targets['Q2']) + floatval($targets['Q3']),
+            'Q4' => floatval($targets['Q1']) + floatval($targets['Q2']) + floatval($targets['Q3']) + floatval($targets['Q4']),
+        ];
     }
 
     public function getNewAccomplishedAppropriationsForQuarter($year)
