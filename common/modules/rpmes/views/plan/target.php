@@ -59,7 +59,7 @@ function renderSummary($page)
                 'options' => ['id' => 'target-form', 'class' => 'disable-submit-buttons'],
                 
             ]); ?>
-            <div class="target-table-container" style="height: calc(100vh - 410px);">
+            <div class="target-table-container" style="height: calc(100vh - 210px);">
                 <table id="target-table" class="table table-bordered table-responsive table-striped table-hover" cellspacing="0" style="min-width: 3500px;">
                     <thead>
                         <tr style="background-color: #002060; color: white; font-weight: normal;">

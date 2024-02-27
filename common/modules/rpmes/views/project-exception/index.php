@@ -135,7 +135,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             ],
                             'format' => 'raw',
                             'value' => function($model){
-                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged)->datetime) : '' : '';
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged->datetime)) : '' : '';
                             }
                         ],
                         [
@@ -263,7 +263,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             ],
                             'format' => 'raw',
                             'value' => function($model){
-                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged)->datetime) : '' : '';
+                                return $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? $model->acknowledged ? date("F j, Y H:i:s", strtotime($model->acknowledged->datetime)) : '' : '';
                             }
                         ],
                         [
