@@ -1490,10 +1490,6 @@ class AccomplishmentController extends \yii\web\Controller
 
     public function actionAcknowledge($id)
     {
-        if(!Yii::$app->user->can('Administrator')){
-            throw new NotFoundHttpException('The requested page does not exist.');
-        }
-
         $officeTitle = Settings::findOne(['Agency Title Long']);
         $officeAddress = Settings::findOne(['Agency Address']);
         $officeHead = Settings::findOne(['Agency Head']);

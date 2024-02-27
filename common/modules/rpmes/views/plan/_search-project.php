@@ -38,7 +38,7 @@ use yii\bootstrap\ButtonDropdown;
     <?= $dataProvider->getCount() > 0 ? Html::button('<i class="fa fa-print"></i> Print Form 1', ['onClick' => 'printSummary("'.$model->id.'")', 'class' => 'btn btn-default']) : '' ?>
 
     <?= Yii::$app->user->can('AgencyUser') ?
-            $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
+            $model->currentStatus == 'Draft' ?
                 $dueDate ? 
                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
                         Html::a('<i class="fa fa-paper-plane-o"></i> Submit Form 1', ['submit', 'id' => $model->id], [
@@ -54,9 +54,40 @@ use yii\bootstrap\ButtonDropdown;
         '';
     ?>
 
+    <?= Yii::$app->user->can('AgencyUser') ?
+            $model->currentStatus == 'For further validation' ?
+                $dueDate ? 
+                    strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
+                        Html::a('<i class="fa fa-paper-plane-o"></i> Re-submit Form 1', ['submit', 'id' => $model->id], [
+                            'class' => 'btn btn-success',
+                            'data' => [
+                                'confirm' => 'Are you sure want to re-submit this Form 1?',
+                                'method' => 'post',
+                            ],
+                        ]) :
+                    '' :
+                '' :
+            '' :
+        '';
+    ?>
+
     <?= Yii::$app->user->can('Administrator') ?
             $model->currentStatus == 'Submitted' || $model->currentStatus == 'Acknowledged' ?
                 Html::button('<i class="fa fa-paper-plane-o"></i> Acknowledge Form 1', ['value' => Url::to(['acknowledge', 'id' => $model->id]), 'class' => 'btn btn-success', 'id' => 'acknowledge-button']) :
+            '' :
+        '';
+    ?>
+
+    <?= Yii::$app->user->can('AgencyUser') ?
+            $model->currentStatus == 'Acknowledged' ?
+                Html::button('<i class="fa fa-file-o"></i> View Acknowledgment', ['value' => Url::to(['acknowledge', 'id' => $model->id]), 'class' => 'btn btn-default', 'id' => 'acknowledge-button']) :
+            '' :
+        '';
+    ?>
+
+    <?= Yii::$app->user->can('Administrator') ?
+            $model->currentStatus == 'Submitted' ?
+                Html::button('<i class="fa fa-paper-plane-o"></i> Send Form 1 for further validation', ['value' => Url::to(['revert', 'id' => $model->id]), 'class' => 'btn btn-danger', 'id' => 'revert-button']) :
             '' :
         '';
     ?>
@@ -85,18 +116,31 @@ use yii\bootstrap\ButtonDropdown;
   Modal::begin([
     'id' => 'acknowledge-modal',
     'size' => "modal-lg",
-    'header' => '<div id="acknowledge-modal-header"><h4>Acknowledge Form 1</h4></div>',
+    'header' => Yii::$app->user->can('Administrator') ? '<div id="acknowledge-modal-header"><h4>Acknowledge Form 1</h4></div>' : '<div id="acknowledge-modal-header"><h4>View Acknowledgment</h4></div>',
     'options' => ['tabindex' => false],
   ]);
   echo '<div id="acknowledge-modal-content"></div>';
   Modal::end();
 ?>
 <?php
+  Modal::begin([
+    'id' => 'revert-modal',
+    'size' => "modal-lg",
+    'header' => '<div id="revert-modal-header"><h4>Send Form 1 for further validation</h4></div>',
+    'options' => ['tabindex' => false],
+  ]);
+  echo '<div id="revert-modal-content"></div>';
+  Modal::end();
+?>
+<?php
     $script = '
         $(document).ready(function(){
-
             $("#acknowledge-button").click(function(){
                 $("#acknowledge-modal").modal("show").find("#acknowledge-modal-content").load($(this).attr("value"));
+              });
+
+            $("#revert-button").click(function(){
+                $("#revert-modal").modal("show").find("#revert-modal-content").load($(this).attr("value"));
               });
         });     
     ';
