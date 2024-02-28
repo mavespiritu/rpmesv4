@@ -767,7 +767,7 @@ class Project extends \yii\db\ActiveRecord
         $q4 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q4']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q4'])->action == 1 ? true : false : false; 
         
         return [
-            'Q1' => $q1,
+            'Q1' => false,
             'Q2' => $q1,
             'Q3' => $q1 || $q2,
             'Q4' => $q1 || $q2 || $q3,
