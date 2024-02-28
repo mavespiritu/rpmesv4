@@ -18,7 +18,7 @@
     <div class="row">
         <div class="col-md-9 col-xs-12">
             <div class="box box-solid">
-                <div class="box-body" style="height: calc(100vh - 180px); scroll; padding: 20px;">
+                <div class="box-body" style="min-height: calc(100vh - 180px); scroll; padding: 20px;">
                     <div class="pull-left">
                         <h4><b>Hello, <?= ucwords(strtolower(Yii::$app->user->identity->userinfo->fullName)) ?></b><br>
                         <small>Today is <?= date("l, j F Y") ?></small>
