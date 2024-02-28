@@ -646,6 +646,22 @@ class AccomplishmentController extends \yii\web\Controller
 
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
 
+        $nextQuarters = [
+            'Q1' => [
+                'Q2' => 'Q2',
+                'Q3' => 'Q3',
+                'Q4' => 'Q4',
+            ],
+            'Q2' => [
+                'Q3' => 'Q3',
+                'Q4' => 'Q4',
+            ],
+            'Q3' => [
+                'Q4' => 'Q4',
+            ],
+            'Q4' => []
+        ];
+
         if(!Yii::$app->user->can('Administrator')){
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
                 throw new NotFoundHttpException('The requested page does not exist.');
@@ -776,7 +792,28 @@ class AccomplishmentController extends \yii\web\Controller
                     $financial->expenditures = $this->removeMask($financialValue['expenditures']);
                     $financial->save(false);
 
-
+                    if(!empty($nextQuarters)){
+                        foreach($nextQuarters[$model->quarter] as $nextQuarter){
+                            $financial = FinancialAccomplishment::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'quarter' => $nextQuarter
+                            ]) ? FinancialAccomplishment::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'quarter' => $nextQuarter
+                            ]) : new FinancialAccomplishment();
+            
+                            $financial->project_id = $projectID;
+                            $financial->year = $model->year;
+                            $financial->quarter = $nextQuarter;
+                            $financial->allocation = $this->removeMask($financialValue['allocation']);
+                            $financial->releases = $this->removeMask($financialValue['releases']);
+                            $financial->obligation = $this->removeMask($financialValue['obligation']);
+                            $financial->expenditures = $this->removeMask($financialValue['expenditures']);
+                            $financial->save(false);
+                        }
+                    }
                 }
             }
 
@@ -799,6 +836,26 @@ class AccomplishmentController extends \yii\web\Controller
                     $physical->quarter = $model->quarter;
                     $physical->value = $this->removeMask($physicalValue['value']);
                     $physical->save(false);
+
+                    if(!empty($nextQuarters)){
+                        foreach($nextQuarters[$model->quarter] as $nextQuarter){
+                            $physical = PhysicalAccomplishment::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'quarter' => $nextQuarter
+                            ]) ? PhysicalAccomplishment::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'quarter' => $nextQuarter
+                            ]) : new PhysicalAccomplishment();
+            
+                            $physical->project_id = $projectID;
+                            $physical->year = $model->year;
+                            $physical->quarter = $nextQuarter;
+                            $physical->value = $this->removeMask($physicalValue['value']);
+                            $physical->save(false);
+                        }
+                    }
                 }
             }
 
@@ -822,6 +879,27 @@ class AccomplishmentController extends \yii\web\Controller
                     $personEmployed->male = $this->removeMask($personEmployedValue['male']);
                     $personEmployed->female = $this->removeMask($personEmployedValue['female']);
                     $personEmployed->save(false);
+
+                    if(!empty($nextQuarters)){
+                        foreach($nextQuarters[$model->quarter] as $nextQuarter){
+                            $personEmployed = PersonEmployedAccomplishment::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'quarter' => $nextQuarter
+                            ]) ? PersonEmployedAccomplishment::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'quarter' => $nextQuarter
+                            ]) : new PersonEmployedAccomplishment();
+            
+                            $personEmployed->project_id = $projectID;
+                            $personEmployed->year = $model->year;
+                            $personEmployed->quarter = $nextQuarter;
+                            $personEmployed->male = $this->removeMask($personEmployedValue['male']);
+                            $personEmployed->female = $this->removeMask($personEmployedValue['female']);
+                            $personEmployed->save(false);
+                        }
+                    }
                 }
             }
 
@@ -846,6 +924,28 @@ class AccomplishmentController extends \yii\web\Controller
                     $accomplishment->remarks = $accomplishmentValue['remarks'];
                     $accomplishment->submitted_by = Yii::$app->user->id;
                     $accomplishment->save(false);
+
+                    if(!empty($nextQuarters)){
+                        foreach($nextQuarters[$model->quarter] as $nextQuarter){
+                            $accomplishment = Accomplishment::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'quarter' => $nextQuarter
+                            ]) ? Accomplishment::findOne([
+                                'project_id' => $projectID,
+                                'year' => $model->year,
+                                'quarter' => $nextQuarter
+                            ]) : new Accomplishment();
+            
+                            $accomplishment->project_id = $projectID;
+                            $accomplishment->year = $model->year;
+                            $accomplishment->quarter = $nextQuarter;
+                            $accomplishment->action = $accomplishmentValue['action'];
+                            $accomplishment->remarks = $accomplishmentValue['remarks'];
+                            $accomplishment->submitted_by = Yii::$app->user->id;
+                            $accomplishment->save(false);
+                        }
+                    }
                 }
             }
 
@@ -883,6 +983,22 @@ class AccomplishmentController extends \yii\web\Controller
         $dueDate = DueDate::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'report' => 'Accomplishment']);
 
         $quarters = ['Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'];
+
+        $nextQuarters = [
+            'Q1' => [
+                'Q2' => 'Q2',
+                'Q3' => 'Q3',
+                'Q4' => 'Q4',
+            ],
+            'Q2' => [
+                'Q3' => 'Q3',
+                'Q4' => 'Q4',
+            ],
+            'Q3' => [
+                'Q4' => 'Q4',
+            ],
+            'Q4' => []
+        ];
 
         if(!Yii::$app->user->can('Administrator')){
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
@@ -978,6 +1094,31 @@ class AccomplishmentController extends \yii\web\Controller
                             $expectedOutput->male = isset($eoModel['male']) ? $this->removeMask($eoModel['male']) : 0;
                             $expectedOutput->female = isset($eoModel['female']) ? $this->removeMask($eoModel['female']) : 0;
                             $expectedOutput->save(false);
+
+                            if(!empty($nextQuarters)){
+                                foreach($nextQuarters[$model->quarter] as $nextQuarter){
+                                    $expectedOutput = ExpectedOutputAccomplishment::findOne([
+                                        'project_id' => $projectID,
+                                        'expected_output_id' => $eoID,
+                                        'year' => $model->year,
+                                        'quarter' => $nextQuarter
+                                    ]) ? ExpectedOutputAccomplishment::findOne([
+                                        'project_id' => $projectID,
+                                        'expected_output_id' => $eoID,
+                                        'year' => $model->year,
+                                        'quarter' => $nextQuarter
+                                    ]) : new ExpectedOutputAccomplishment();
+        
+                                    $expectedOutput->project_id = $projectID;
+                                    $expectedOutput->expected_output_id = $eoID;
+                                    $expectedOutput->year = $model->year;
+                                    $expectedOutput->quarter = $nextQuarter;
+                                    $expectedOutput->value = isset($eoModel['value']) ? $this->removeMask($eoModel['value']) : 0;
+                                    $expectedOutput->male = isset($eoModel['male']) ? $this->removeMask($eoModel['male']) : 0;
+                                    $expectedOutput->female = isset($eoModel['female']) ? $this->removeMask($eoModel['female']) : 0;
+                                    $expectedOutput->save(false);
+                                }
+                            }
                         }
                     }
                 }
