@@ -842,6 +842,7 @@ class AccomplishmentController extends \yii\web\Controller
                     $accomplishment->project_id = $projectID;
                     $accomplishment->year = $model->year;
                     $accomplishment->quarter = $model->quarter;
+                    $accomplishment->action = $accomplishmentValue['action'];
                     $accomplishment->remarks = $accomplishmentValue['remarks'];
                     $accomplishment->submitted_by = Yii::$app->user->id;
                     $accomplishment->save(false);
