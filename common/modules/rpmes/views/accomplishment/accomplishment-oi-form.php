@@ -26,6 +26,9 @@ $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 
 $successMessage = \Yii::$app->getSession()->getFlash('success');
+$allComplete = 0;
+
+$lastNumber = $projectsPages->pageCount - 1 == $projectsPages->page ? $projectsPages->totalCount : ($projectsPages->page + 1) * $projectsPages->limit;
 
 function renderSummary($page)
 {
@@ -59,7 +62,7 @@ function renderSummary($page)
                 'options' => ['id' => 'accomplishment-form', 'class' => 'disable-submit-buttons'],
                 
             ]); ?>
-            <div class="accomplishment-table-container" style="height: calc(100vh - 410px);">
+            <div class="accomplishment-table-container" style="height: calc(100vh - 380px);">
                 <table id="accomplishment-table" class="table table-bordered table-responsive table-striped table-hover" cellspacing="0" style="min-width: 1000px;">
                     <thead>
                         <tr style="background-color: #002060; color: white; font-weight: normal;">
@@ -79,6 +82,7 @@ function renderSummary($page)
                         <?php $i = $projectsPages->offset + 1; ?>
                         <?php foreach($projectsModels as $plan){ ?>
                             <?php $project = $plan->project; ?>
+                            <?php $allComplete += $project->getIsCompleted($model->year)[$model->quarter] == true ? 1 : 0 ?>
                             <tr>
                                 <td><b><?= $i ?></b></td>
                                 <td colspan=7><b><?= $project->project_no.': '.$project->title ?></b></td>
@@ -100,20 +104,28 @@ function renderSummary($page)
                                             <td><?= $eo->indicator ?></td>
                                             <td align=center><?= number_format($eo->getEndOfProjectTarget($model->year), 0) ?></td>
                                             <td align=center><?= number_format($eo->getPhysicalTargetPerQuarter($model->year)[$model->quarter], 0) ?></td>
-                                            <td><?= $eo->indicator != 'number of individual beneficiaries served' ? $form->field($outputIndicators[$project->id][$eo->id], "[$project->id][$eo->id]value")->widget(MaskedInput::classname(), [
-                                                'options' => [
-                                                    'autocomplete' => 'off',
-                                                    'value' => $outputIndicators[$project->id][$eo->id]['value'] != '' ? $outputIndicators[$project->id][$eo->id]['value'] : 0,
-                                                    'onkeyup' => 'updateAccomplishmentTable()',
-                                                ],
-                                                'clientOptions' => [
-                                                    'alias' =>  'decimal',
-                                                    'removeMaskOnSubmit' => true,
-                                                    'groupSeparator' => ',',
-                                                    'autoGroup' => true
-                                                ],
-                                            ])->label(false) : '' ?></td>
-                                            <td><?= $eo->indicator == 'number of individual beneficiaries served' ? $form->field($outputIndicators[$project->id][$eo->id], "[$project->id][$eo->id]male")->widget(MaskedInput::classname(), [
+                                            <?php if($project->getIsCompleted($model->year)[$model->quarter] == true){ ?>
+                                                    <?= $eo->indicator != 'number of individual beneficiaries served' ? '<td align=center>'.number_format(floatval($outputIndicators[$project->id][$eo->id]['value']), 0).'</td>' : '<td>&nbsp;</td>' ?>
+                                            <?php }else{ ?>
+                                                    <?= $eo->indicator != 'number of individual beneficiaries served' ? '<td>'.$form->field($outputIndicators[$project->id][$eo->id], "[$project->id][$eo->id]value")->widget(MaskedInput::classname(), [
+                                                        'options' => [
+                                                            'autocomplete' => 'off',
+                                                            'value' => $outputIndicators[$project->id][$eo->id]['value'] != '' ? $outputIndicators[$project->id][$eo->id]['value'] : 0,
+                                                            'onkeyup' => 'updateAccomplishmentTable()',
+                                                        ],
+                                                        'clientOptions' => [
+                                                            'alias' =>  'decimal',
+                                                            'removeMaskOnSubmit' => true,
+                                                            'groupSeparator' => ',',
+                                                            'autoGroup' => true
+                                                        ],
+                                                    ])->label(false).'</td>' : '<td>&nbsp;</td>' ?>
+                                            <?php } ?>
+                               
+                                            <?php if($project->getIsCompleted($model->year)[$model->quarter] == true){ ?>
+                                                    <?= $eo->indicator == 'number of individual beneficiaries served' ? '<td align=center>'.number_format(floatval($outputIndicators[$project->id][$eo->id]['male']), 0).'</td>' : '<td>&nbsp;</td>' ?>
+                                            <?php }else{ ?>
+                                                    <?= $eo->indicator == 'number of individual beneficiaries served' ? '<td>'.$form->field($outputIndicators[$project->id][$eo->id], "[$project->id][$eo->id]male")->widget(MaskedInput::classname(), [
                                                 'options' => [
                                                     'autocomplete' => 'off',
                                                     'value' => $outputIndicators[$project->id][$eo->id]['male'] != '' ? $outputIndicators[$project->id][$eo->id]['male'] : 0,
@@ -125,11 +137,16 @@ function renderSummary($page)
                                                     'groupSeparator' => ',',
                                                     'autoGroup' => true
                                                 ],
-                                            ])->label(false) : '' ?></td>
-                                            <td><?= $eo->indicator == 'number of individual beneficiaries served' ? $form->field($outputIndicators[$project->id][$eo->id], "[$project->id][$eo->id]female")->widget(MaskedInput::classname(), [
+                                            ])->label(false).'</td>' : '<td>&nbsp;</td>' ?>
+                                            <?php } ?>
+                                            
+                                            <?php if($project->getIsCompleted($model->year)[$model->quarter] == true){ ?>
+                                                    <?= $eo->indicator == 'number of individual beneficiaries served' ? '<td align=center>'.number_format(floatval($outputIndicators[$project->id][$eo->id]['female']), 0).'</td>' : '<td>&nbsp;</td>' ?>
+                                            <?php }else{ ?>
+                                                    <?= $eo->indicator == 'number of individual beneficiaries served' ? '<td>'.$form->field($outputIndicators[$project->id][$eo->id], "[$project->id][$eo->id]female")->widget(MaskedInput::classname(), [
                                                 'options' => [
                                                     'autocomplete' => 'off',
-                                                    'value' => $outputIndicators[$project->id][$eo->id]['male'] != '' ? $outputIndicators[$project->id][$eo->id]['female'] : 0,
+                                                    'value' => $outputIndicators[$project->id][$eo->id]['female'] != '' ? $outputIndicators[$project->id][$eo->id]['female'] : 0,
                                                     'onkeyup' => 'updateAccomplishmentTable()',
                                                 ],
                                                 'clientOptions' => [
@@ -138,7 +155,8 @@ function renderSummary($page)
                                                     'groupSeparator' => ',',
                                                     'autoGroup' => true
                                                 ],
-                                            ])->label(false) : '' ?></td>
+                                            ])->label(false).'</td>' : '<td>&nbsp;</td>' ?>
+                                            <?php } ?>
                                         </tr>
                                     <?php } ?>
                             <?php } ?>
@@ -156,7 +174,9 @@ function renderSummary($page)
                             $projectsPages->totalCount > 0 ?
                                 $dueDate ? 
                                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
-                                        Html::submitButton('Save Form 2 OI/s', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) :
+                                        $allComplete != $lastNumber ? 
+                                            Html::submitButton('Save Form 2 OI/s', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) :
+                                        '' :
                                     '' :
                                 '' :
                             '' :
