@@ -758,15 +758,20 @@ class Project extends \yii\db\ActiveRecord
         return $status;
     }
 
-    public function getIsCompleted()
+    public function getIsCompleted($year)
     {
-        $isCompleted = false;
-        $q1 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => 'Q1']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => 'Q1'])->action == 1 ? true : false : false;
-        $q2 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => 'Q2']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => 'Q2'])->action == 1 ? true : false : false;
-        $q3 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => 'Q3']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => 'Q3'])->action == 1 ? true : false : false;
-        $q4 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => 'Q4']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $this->year, 'quarter' => 'Q4'])->action == 1 ? true : false : false;
+
+        $q1 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q1']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q1'])->action == 1 ? true : false : false;
+        $q2 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q2']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q2'])->action == 1 ? true : false : false;
+        $q3 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q3']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q3'])->action == 1 ? true : false : false;
+        $q4 = Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q4']) ? Accomplishment::findOne(['project_id' => $this->id, 'year' => $year, 'quarter' => 'Q4'])->action == 1 ? true : false : false; 
         
-        return $q1 || $q2 || $q3 || $q4;
+        return [
+            'Q1' => $q1,
+            'Q2' => $q1,
+            'Q3' => $q1 || $q2,
+            'Q4' => $q1 || $q2 || $q3,
+        ];
     }
 
     /**

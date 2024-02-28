@@ -152,7 +152,7 @@ function renderSummary($page)
             <br>
             <div class="form-group pull-right">
                 <?= Yii::$app->user->can('AgencyUser') ?
-                        $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? 
+                        $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                             $projectsPages->totalCount > 0 ?
                                 $dueDate ? 
                                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
