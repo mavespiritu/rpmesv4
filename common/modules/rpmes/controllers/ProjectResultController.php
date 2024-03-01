@@ -372,8 +372,6 @@ class ProjectResultController extends Controller
 
         $projectIDs = $planSubmission ? $planSubmission->plans ? ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id') : [] : [];
 
-        $projectIDs = ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id');
-
         $dueDate = DueDate::findOne(['year' => $model->year, 'report' => 'Project Results']);
 
         if(!Yii::$app->user->can('Administrator')){

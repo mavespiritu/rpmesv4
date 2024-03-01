@@ -1303,6 +1303,7 @@ class ProjectController extends Controller
 
             $deletedExpectedOutputIDs = array_diff($oldExpectedOutputIDs, array_filter(ArrayHelper::map($expectedOutputModels, 'id', 'id')));
             $deletedOutcomeIDs = array_diff($oldOutcomeIDs, array_filter(ArrayHelper::map($outcomeModels, 'id', 'id')));
+            //echo "<pre>"; print_r($outcomeModels); exit;
             $deletedRevisedScheduleIDs = array_diff($oldRevisedScheduleIDs, array_filter(ArrayHelper::map($revisedScheduleModels, 'id', 'id')));
             $deletedFundSourceIDs = array_diff($oldFundSourceIDs, array_filter(ArrayHelper::map($fundSourceModels, 'id', 'id')));
             $deletedRegionIDs = $regionModel->region_id != '' ? array_diff($oldRegionIDs, array_filter($regionModel->region_id)) : array_diff($oldRegionIDs, []);

@@ -76,8 +76,10 @@
             <td style="font-weight: bolder;" rowspan=2 align=center>Month</td>
             <td style="font-weight: bolder;" rowspan=2 align=center>Financial Targets</td>
             <td style="font-weight: bolder;" rowspan=2 align=center>Physical Targets<br>(in %)</td>
-            <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
-                <td style="font-weight: bolder;" rowspan=2 align=center>Targets of Output Indicator <?= $i ?></td>
+            <?php if(!empty($maxOutputIndicator)){ ?>
+                <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
+                    <td style="font-weight: bolder;" rowspan=2 align=center>Targets of Output Indicator <?= $i ?></td>
+                <?php } ?>
             <?php } ?>
         </tr>
         <tr style="background-color: #002060; color: white">
@@ -118,8 +120,10 @@
                         <td align=center><?= isset($targets['outputIndicators'][$project['id']][$i]) ? number_format(floatval($targets['outputIndicators'][$project['id']][$i]['rawTotal']), 0).' ('.number_format(floatval($targets['outputIndicators'][$project['id']][$i]['total']), 2).')' : '0 (0.00)' ?></td>
                     <?php } ?>
                 <?php }else{ ?>
-                    <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
-                        <td>0.00</td>
+                    <?php if(!empty($maxOutputIndicator)){ ?>
+                        <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
+                            <td>0.00</td>
+                        <?php } ?>
                     <?php } ?>
                 <?php } ?>
             </tr>
@@ -133,8 +137,10 @@
                             <td align=center><?= isset($targets['outputIndicators'][$project['id']][$i]) ? $targets['outputIndicators'][$project['id']][$i]['total'] > 0 ? number_format(floatval($targets['outputIndicators'][$project['id']][$i][$mo]), 0).' ('.number_format(floatval(($targets['outputIndicators'][$project['id']][$i][$mo]/$targets['outputIndicators'][$project['id']][$i]['rawTotal']) * 100), 2).')' : '0 (0.00)' : '0 (0.00)' ?></td>
                         <?php } ?>
                     <?php }else{ ?>
-                        <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
-                            <td>0.00</td>
+                        <?php if(!empty($maxOutputIndicator)){ ?>
+                            <?php for($i = 1; $i <= $maxOutputIndicator['total']; $i++){ ?>
+                                <td>0.00</td>
+                            <?php } ?>
                         <?php } ?>
                     <?php } ?>
                 </tr>

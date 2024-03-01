@@ -357,7 +357,7 @@ $this->registerJs($js);
                     'alias' =>  'decimal',
                     'removeMaskOnSubmit' => true,
                     'groupSeparator' => ',',
-                    'autoGroup' => true
+                    'autoGroup' => true,
                 ],
             ])->label('Total Project Cost (in PhP)') ?>
 
@@ -660,7 +660,6 @@ $this->registerJs($js);
                         'formId' => 'project-form',
                         'formFields' => [
                             'indicator',
-                            'target',
                         ],
                     ]); ?>
                         <div class="clearfix"></div>
@@ -671,7 +670,6 @@ $this->registerJs($js);
                                 <tr>
                                     <td align=center>#</td>
                                     <td>Title of Output Indicator</td>
-                                    <td>Target Output</td>
                                     <td style="width: 10%;"><button type="button" class="pull-right add-expected-output-item btn btn-info btn-xs">Add Output Indicator</button></td>
                                 </tr>
                             </thead>
@@ -686,7 +684,6 @@ $this->registerJs($js);
                                 <tr class="expected-output-item">
                                     <td class="expected-output-counter" align=center><?= $eoIdx + 1 ?></td>
                                     <td><?= $form->field($expectedOutputModel, "[{$eoIdx}]indicator")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
-                                    <td><?= $form->field($expectedOutputModel, "[{$eoIdx}]target")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
                                     <td><button type="button" class="pull-right remove-expected-output-item btn btn-danger btn-xs btn-block">Delete Row</button></td>
                                 </tr>
                             <?php } ?>

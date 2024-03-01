@@ -1318,12 +1318,13 @@ class PlanController extends \yii\web\Controller
                     $targets['outputIndicators'][$target['project_id']][$currentIndex]['total'] = $targets['outputIndicators'][$target['project_id']][$currentIndex]['rawTotal'] > 0 ? 100 : 0;
                 }
             }
-        
+
             // Reindex the array numerically
-            foreach ($targets['outputIndicators'] as &$outputIndicators) {
+            foreach ($targets['outputIndicators'] as $outputIndicators) {
                 $outputIndicators = array_values($outputIndicators);
             }
         }
+
 
         $regionTitles = ProjectRegion::find()
                     ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", <br>") as title'])

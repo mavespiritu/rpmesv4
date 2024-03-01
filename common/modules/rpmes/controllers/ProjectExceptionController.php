@@ -401,8 +401,6 @@ class ProjectExceptionController extends \yii\web\Controller
 
         $projectIDs = $planSubmission ? $planSubmission->plans ? ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id') : [] : [];
 
-        $projectIDs = ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id');
-
         $slippages = [];
 
         $dueDate = DueDate::findOne(['year' => $model->year, 'quarter' => $model->quarter, 'report' => 'Project Exception']);

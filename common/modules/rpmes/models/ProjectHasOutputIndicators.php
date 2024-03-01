@@ -30,7 +30,7 @@ class ProjectHasOutputIndicators extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['indicator', 'target'], 'required'],
+            [['indicator'], 'required'],
             [['project_id'], 'integer'],
             [['indicator', 'target'], 'string'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
