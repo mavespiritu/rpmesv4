@@ -174,31 +174,23 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                                 'update' => function($url, $model, $key){
                                     $modalID = $model->id;
                                     return Yii::$app->user->can('Administrator') ? 
-                                                $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
-                                                    count($model->plans) < 1 ? 
-                                                        Html::a('Update', '#', [
-                                                            'class' => 'btn btn-warning btn-xs btn-block update-button',
-                                                            'data-toggle' => 'modal',
-                                                            'data-target' => '#update-modal-'.$modalID,
-                                                            'data-url' => Url::to(['update', 'id' => $model->id]),
-                                                        ]) :
-                                                    '' :
-                                                '' :
+                                                Html::a('Update', '#', [
+                                                    'class' => 'btn btn-warning btn-xs btn-block update-button',
+                                                    'data-toggle' => 'modal',
+                                                    'data-target' => '#update-modal-'.$modalID,
+                                                    'data-url' => Url::to(['update', 'id' => $model->id]),
+                                                ]) :
                                             '';
                                 },
                                 'delete' => function($url, $model, $key){
                                     return Yii::$app->user->can('Administrator') ? 
-                                                $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
-                                                    count($model->plans) < 1 ?
-                                                        Html::a('Delete', ['delete', 'id' => $model->id], [
-                                                            'class' => 'btn btn-danger btn-block btn-xs',
-                                                            'data' => [
-                                                                'confirm' => 'Are you sure want to delete this item?',
-                                                                'method' => 'post',
-                                                            ],
-                                                        ]) :
-                                                    '' :
-                                                '' :
+                                                Html::a('Delete', ['delete', 'id' => $model->id], [
+                                                    'class' => 'btn btn-danger btn-block btn-xs',
+                                                    'data' => [
+                                                        'confirm' => 'Are you sure want to delete this item?',
+                                                        'method' => 'post',
+                                                    ],
+                                                ]) :
                                             '';
                                 },
                             ],
