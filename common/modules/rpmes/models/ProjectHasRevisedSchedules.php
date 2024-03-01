@@ -60,7 +60,7 @@ class ProjectHasRevisedSchedules extends \yii\db\ActiveRecord
         $startDate = strtotime($this->start_date);
         $endDate = strtotime($this->end_date);
 
-        if ($startDate >= $endDate) {
+        if ($startDate > $endDate) {
             $this->addError($attribute, 'End date must be greater than start date.');
         }
     }

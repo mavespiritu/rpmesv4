@@ -188,7 +188,17 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             $str = '';
                             if($model->files){
                                 foreach($model->files as $file){
-                                    $str.= Html::a($file->name.'.'.$file->type, ['/file/file/download', 'id' => $file->id]).'<br>';
+                                    $str.= '<table style="width: 100%">';
+                                    $str.= '<tr>';
+                                    $str.= '<td>'.Html::a($file->name.'.'.$file->type, ['/file/file/download', 'id' => $file->id]).'</td>';
+                                    $str.= '<td style="vertical-align: top;" align=right>'.Html::a('<i class="fa fa-trash"></i>',['/file/file/delete', 'id' => $file->id],[
+                                        'data' => [
+                                            'confirm' => 'Are you sure want to delete this file?',
+                                            'method' => 'post',
+                                        ],
+                                    ]).'</td>';
+                                    $str.= '</tr>';
+                                    $str.= '</table>';
                                 }
                             }
                             return $str;

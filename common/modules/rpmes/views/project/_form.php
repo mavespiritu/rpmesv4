@@ -409,12 +409,6 @@ $this->registerJs($js);
                         </thead>
                         <tbody class="fund-source-items">
                         <?php foreach ($fundSourceModels as $fsIdx => $fundSourceModel){ ?>
-                            <?php
-                                // necessary for update action.
-                                if (!$fundSourceModel->isNewRecord) {
-                                    echo Html::activeHiddenInput($fundSourceModel, "[{$fsIdx}]id");
-                                }
-                            ?>
                             <tr class="fund-source-item">
                                 <td class="fund_source-counter" align=center><?= ($fsIdx + 1) ?></td>
                                 <td><?= $form->field($fundSourceModel, "[{$fsIdx}]fund_source_id")->widget(Select2::classname(), [
@@ -605,12 +599,6 @@ $this->registerJs($js);
                         </thead>
                         <tbody class="revised-schedule-items">
                         <?php foreach ($revisedScheduleModels as $rsIdx => $revisedScheduleModel){ ?>
-                            <?php
-                                // necessary for update action.
-                                if (!$revisedScheduleModel->isNewRecord) {
-                                    echo Html::activeHiddenInput($revisedScheduleModel, "[{$rsIdx}]id");
-                                }
-                            ?>
                             <tr class="revised-schedule-item">
                                 <td class="revised_schedule-counter" align=center><?= ($rsIdx + 1) ?></td>
                                 <td><?= $form->field($revisedScheduleModel, "[{$rsIdx}]start_date")->widget(DatePicker::className(), [
@@ -675,12 +663,6 @@ $this->registerJs($js);
                             </thead>
                             <tbody class="expected-output-items">
                             <?php foreach ($expectedOutputModels as $eoIdx => $expectedOutputModel){ ?>
-                                <?php
-                                    // necessary for update action.
-                                    if (!$expectedOutputModel->isNewRecord) {
-                                        echo Html::activeHiddenInput($expectedOutputModel, "[{$eoIdx}]id");
-                                    }
-                                ?>
                                 <tr class="expected-output-item">
                                     <td class="expected-output-counter" align=center><?= $eoIdx + 1 ?></td>
                                     <td><?= $form->field($expectedOutputModel, "[{$eoIdx}]indicator")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
@@ -721,12 +703,7 @@ $this->registerJs($js);
                         </thead>
                         <tbody class="outcome-items">
                         <?php foreach ($outcomeModels as $oIdx => $outcomeModel){ ?>
-                            <?php
-                                // necessary for update action.
-                                if (!$outcomeModel->isNewRecord) {
-                                    echo Html::activeHiddenInput($outcomeModel, "[{$oIdx}]id");
-                                }
-                            ?>
+                        
                             <tr class="outcome-item">
                                 <td class="outcome-counter" align=center><?= ($oIdx + 1) ?></td>
                                 <td><?= $form->field($outcomeModel, "[{$oIdx}]indicator")->textArea(['rows' => 2, 'style' => 'resize: none;'])->label(false) ?></td>
@@ -755,6 +732,7 @@ $this->registerJs($js);
                                 'model' => $model,
                                 'options' => [ 
                                     'multiple' => true, 
+                                    'required' => 'required'
                                 ],
                                 'pluginOptions' => [ 
                                     'showPreview' => false,
@@ -765,16 +743,15 @@ $this->registerJs($js);
                                 'id' => 'file-input', // Optional
                                 'model' => $model,
                                 'options' => [ 
-                                    'multiple' => true, 
+                                    'multiple' => true
                                 ],
                                 'pluginOptions' => [ 
                                     'showPreview' => false,
                                     'showUpload' => false,
                                     'maxFileCount' => 5,
                                 ]
-                            ]) ?>
+                            ])  ?>
                             <p style="text-align: right">Allowed file types: jpg, png, pdf (max 5MB each)</p>
-                            <?php \file\components\AttachmentsTable::widget(['model' => $model]) ?>
                         </div>
                     </div>
                 </div>
@@ -787,7 +764,7 @@ $this->registerJs($js);
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
                 <?php // $model->draft == 'Yes' || $model->draft == '' ? Html::button('Save as draft only', ['class' => 'btn btn-primary', 'id' => 'save-draft-btn', 'data' => ['disabled-text' => 'Please Wait']]) : '' ?>
-                <?= Html::submitButton('Save project', ['class' => 'btn btn-success', 'onclick' => '$("#file-input").fileinput("upload");'])?>
+                <?= Html::submitButton('Save project', ['class' => 'btn btn-success'])?>
             </div>
         </div>
     </div>
