@@ -23,12 +23,14 @@ services:
       - ./:/app
 
   mysql:
-    image: mysql:5.7
+    image: mysql:10.4.22
+    ports:
+        - 3306:3306
     environment:
       - MYSQL_ROOT_PASSWORD=verysecret
-      - MYSQL_DATABASE=yii2advanced
-      - MYSQL_USER=yii2advanced
-      - MYSQL_PASSWORD=secret
+      - MYSQL_DATABASE=db_neda_rpmes
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=
 
   #pgsql:
   #  image: postgres:9.5

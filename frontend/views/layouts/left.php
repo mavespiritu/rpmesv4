@@ -43,6 +43,7 @@
                         
                     ],
                     ['label' => 'Guidelines', 'icon' => 'folder', 'url' => ['/rpmes/guideline/'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'System Updates', 'icon' => 'folder', 'url' => ['/rpmes/guideline/updates'], 'visible' => !Yii::$app->user->isGuest],
                     /* [
                         'label' => 'Acknowledgment',
                         'icon' => 'folder',

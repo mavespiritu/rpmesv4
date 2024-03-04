@@ -33,7 +33,6 @@ class ProjectExpectedOutput extends \yii\db\ActiveRecord
         return [
             [[
                 'indicator', 
-                'target',
             ], 'required'],
             [['project_id', 'year'], 'integer'],
             [[

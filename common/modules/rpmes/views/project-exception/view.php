@@ -64,7 +64,7 @@ Modal::end();
                 Modal::end();
             }
         }
-        ?>
+    ?>
 <?php endforeach; ?>
 
 <div class="project-view">

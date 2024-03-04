@@ -221,11 +221,11 @@ function renderSummary($page)
                                 <td>&nbsp;</td>
                             </tr>
                             <?php if(!empty($oiTargets[$project->id])){ ?>
-                                <?php $i = 1; ?>
+                                <?php $j = 1; ?>
                                 <?php foreach($oiTargets[$project->id] as $idx => $oi){ ?>
                                     <tr>
                                         <td>&nbsp;</td>
-                                        <td align=right>Output Indicator <?= $i++ ?>: <?= $oi->indicator ?></td>
+                                        <td align=right>Output Indicator <?= $j++ ?>: <?= $oi->indicator ?></td>
                                         <td>&nbsp;</td>
                                         <td>&nbsp;
                                         <?= Html::hiddenInput('ProjectExpectedOutput['.$project->id.']['.$oi->indicator.'][target]', $oi->target) ?></td>

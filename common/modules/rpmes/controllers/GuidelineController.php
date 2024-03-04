@@ -9,4 +9,9 @@ class GuidelineController extends \yii\web\Controller
         return $this->render('index');
     }
 
+    public function actionUpdates()
+    {
+        return $this->render('updates');
+    }
+
 }

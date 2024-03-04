@@ -717,49 +717,13 @@ class PlanController extends \yii\web\Controller
 
                 $targets[$plan->project_id]['femaleEmployed'] = $femaleEmployed;
 
-                $ois = $plan->project->projectHasOutputIndicators;
-
-                $beneficiariesModel = ProjectExpectedOutput::findOne([
-                    'project_id' => $plan->project_id,
-                    'year' => $plan->year,
-                    'indicator' => 'number of individual beneficiaries served',
-                ]) ? ProjectExpectedOutput::findOne([
-                    'project_id' => $plan->project_id,
-                    'year' => $plan->year,
-                    'indicator' => 'number of individual beneficiaries served',
-                ]) : new ProjectExpectedOutput();
+                $ois = $plan->project->getProjectExpectedOutputs()->where(['year' => $model->year])->all();
 
                 if($ois){
                     foreach($ois as $oi){
-                        $eoModel = ProjectExpectedOutput::find()->where([
-                            'project_id' => $plan->project->id,
-                            'year' => $plan->year,
-                            'indicator' => $oi->indicator,
-                            'target' => $oi->target
-                        ])->one() ? ProjectExpectedOutput::find()->where([
-                            'project_id' => $plan->project->id,
-                            'year' => $plan->year,
-                            'indicator' => $oi->indicator,
-                            'target' => $oi->target
-                        ])->one() : new ProjectExpectedOutput();
-
-                        $eoModel->project_id = $plan->project->id;
-                        $eoModel->year = $plan->year;
-                        $eoModel->indicator = $oi->indicator;
-                        $eoModel->target = $oi->target;
-
-                        $oiTargets[$plan->project->id][$oi->indicator] = $eoModel; 
+                        $oiTargets[$plan->project->id][$oi->indicator] = $oi; 
                     }
                 }
-
-                $beneficiariesModel->project_id = $plan->project->id;
-                $beneficiariesModel->year = $plan->year;
-                $beneficiariesModel->indicator = 'number of individual beneficiaries served';
-
-                $oiTargets[$plan->project->id]['number of individual beneficiaries served'] = $beneficiariesModel;
-                
-                $indicators[$plan->project_id] = ArrayHelper::map($plan->project->projectHasOutputIndicators, 'indicator', 'indicator');
-
             }
         }
 
@@ -909,7 +873,6 @@ class PlanController extends \yii\web\Controller
             'targets' => $targets,
             'oiTargets' => $oiTargets,
             'metrics' => $metrics,
-            'indicators' => $indicators,
             'dueDate' => $dueDate,
         ]);
     }
@@ -1100,11 +1063,13 @@ class PlanController extends \yii\web\Controller
 
     }
 
-    public function actionOutputIndicator($id, $year)
+    public function actionOutputIndicator($id, $plan_id, $year)
     {
-        $model = Plan::findOne($id);
+        $model = Submission::findOne($id);
 
-        $expectedOutputs = $model->project->getProjectExpectedOutputs()->where(['year' => $year])->all();
+        $plan = Plan::findOne($plan_id);
+
+        $expectedOutputs = $plan->project->getProjectExpectedOutputs()->where(['year' => $year])->all();
 
         $months = [
             'jan' => 'Jan',
@@ -1123,9 +1088,96 @@ class PlanController extends \yii\web\Controller
 
         return $this->renderAjax('output-indicator', [
             'model' => $model,
+            'plan' => $plan,
             'months' => $months,
             'expectedOutputs' => $expectedOutputs
         ]);
+    }
+
+    public function actionCreateOutputIndicator($plan_id, $submission_id)
+    {
+        $plan = Plan::findOne($plan_id);
+
+        $submission = Submission::findOne($submission_id);
+
+        $model = new ProjectExpectedOutput();
+        $model->project_id = $plan->project_id;
+        $model->year = $plan->year;
+
+        if($model->load(Yii::$app->request->post()) && $model->save()){
+            $getData = Yii::$app->request->get();
+
+            \Yii::$app->getSession()->setFlash('success', 'Output indicator has been added successfully');
+            return isset($getData['page']) ? 
+                $this->redirect(['view', 
+                    'id' => $submission->id, 
+                    'page' => $getData['page'],
+                ]) : $this->redirect(['view', 
+                    'id' => $submission->id,
+                ]);
+        }
+
+        return $this->renderAjax('_output-indicator-form', [
+            'model' => $model,
+            'plan' => $plan,
+            'submission' => $submission,
+        ]);
+    }
+
+    public function actionUpdateOutputIndicator($id, $plan_id, $submission_id)
+    {
+        $model = ProjectExpectedOutput::findOne($id);
+
+        $plan = Plan::findOne($plan_id);
+
+        $submission = Submission::findOne($submission_id);
+
+        if($model->load(Yii::$app->request->post()) && $model->save()){
+            $getData = Yii::$app->request->get();
+
+            \Yii::$app->getSession()->setFlash('success', 'Output indicator has been updated successfully');
+            return isset($getData['page']) ? 
+                $this->redirect(['view', 
+                    'id' => $submission->id, 
+                    'page' => $getData['page'],
+                ]) : $this->redirect(['view', 
+                    'id' => $submission->id,
+                ]);
+        }
+
+        return $this->renderAjax('_output-indicator-form', [
+            'model' => $model,
+            'plan' => $plan,
+            'submission' => $submission,
+        ]);
+    }
+
+    public function actionDeleteOutputIndicator($id, $plan_id, $submission_id)
+    {
+        $model = ProjectExpectedOutput::findOne($id);
+
+        $plan = Plan::findOne($plan_id);
+
+        $submission = Submission::findOne($submission_id);
+
+        if(Yii::$app->request->post())
+        {
+            $getData = Yii::$app->request->get();
+
+            if($model->delete())
+            {
+                \Yii::$app->getSession()->setFlash('success', 'Output indicator has been deleted successfully');
+                    return isset($getData['page']) ? 
+                        $this->redirect(['view', 
+                            'id' => $submission->id, 
+                            'page' => $getData['page'],
+                        ]) : $this->redirect(['view', 
+                            'id' => $submission->id,
+                        ]);
+                    }
+        }
+
+        
     }
 
     public function actionMonitoringPlan($filters)

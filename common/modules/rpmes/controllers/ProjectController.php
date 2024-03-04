@@ -513,6 +513,7 @@ class ProjectController extends Controller
                         
                         foreach ($expectedOutputModels as $expectedOutputModel) {
                             $expectedOutputModel->project_id = $model->id;
+                            $expectedOutputModel->indicator = str_replace('/', ' or ', $expectedOutputModel->indicator);
                             if (! ($flag = $expectedOutputModel->save())) {
                                 $transaction->rollBack();
                                 break;
@@ -521,6 +522,7 @@ class ProjectController extends Controller
 
                         foreach ($outcomeModels as $outcomeModel) {
                             $outcomeModel->project_id = $model->id;
+                            $outcomeModel->indicator = str_replace('/', ' or ', $outcomeModel->indicator);
                             if (! ($flag = $outcomeModel->save())) {
                                 $transaction->rollBack();
                                 break;
