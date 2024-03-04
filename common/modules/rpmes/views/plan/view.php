@@ -261,7 +261,11 @@ Modal::end();
                     'format' => 'raw',
                     'value' => function($plan) use ($model){
                         $modalID = $plan->id;
-                        $str = !Yii::$app->user->can('Administrator') ? 
+                        $str = '<div class="pull-left">';
+                        $str .= Html::button('View All', ['value' => Url::to(['output-indicator', 'id' => $model->id, 'plan_id' => $plan->id, 'year' => $model->year]), 'class' => 'btn btn-link oi-button']);
+                        $str .= '</div>';
+                        $str .= '<div class="pull-right">';
+                        $str .= !Yii::$app->user->can('Administrator') ? 
                                     $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                                         Html::a('Add Output Indicator', '#', [
                                             'class' => 'btn btn-link pull-right',
@@ -278,8 +282,8 @@ Modal::end();
                                     'data-target' => '#create-oi-modal-'.$modalID,
                                     'data-url' => Url::to(['create-output-indicator', 'plan_id' => $plan->id, 'submission_id' => $model->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
                                 ]);
-                        $str .= '<br>';
-                        $str .= '<br>';
+                        $str .= '</div>';
+                        $str .= '<div class="clearfix"></div>';
                         $str .= '<table style="width: 100%;">';
                         $ois = $plan->project->getProjectExpectedOutputs()->where(['year' => $model->year])->all();
 
@@ -295,7 +299,7 @@ Modal::end();
                                                         'id' => 'update-oi-'.$oi->id.'-button',
                                                         'data-toggle' => 'modal',
                                                         'data-target' => '#update-oi-modal-'.$oi->id,
-                                                        'data-url' => Url::to(['update-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id]),
+                                                        'data-url' => Url::to(['update-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
                                                     ]).'</td>' :
                                                 '' :
                                             '' :
@@ -304,12 +308,12 @@ Modal::end();
                                             'id' => 'update-oi-'.$oi->id.'-button',
                                             'data-toggle' => 'modal',
                                             'data-target' => '#update-oi-modal-'.$oi->id,
-                                            'data-url' => Url::to(['update-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id]),
+                                            'data-url' => Url::to(['update-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
                                         ]).'</td>';
                                 $str.= !Yii::$app->user->can('Administrator') ? 
                                             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                                                 $oi->indicator != 'number of individual beneficiaries served' ?
-                                                    '<td style="vertical-align:top; width: 10%;" align=center>'.Html::a('Remove', ['/rpmes/plan/delete-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id],[
+                                                    '<td style="vertical-align:top; width: 10%;" align=center>'.Html::a('Remove', ['/rpmes/plan/delete-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1],[
                                                         'class' => 'btn btn-link',
                                                         'data' => [
                                                             'confirm' => 'Are you sure want to remove this output indicator?',
@@ -318,7 +322,7 @@ Modal::end();
                                                     ]).'</td>' :
                                                 '' :
                                             '' :
-                                        '<td style="vertical-align:top; width: 10%;" align=center>'.Html::a('Remove', ['/rpmes/plan/delete-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id],[
+                                        '<td style="vertical-align:top; width: 10%;" align=center>'.Html::a('Remove', ['/rpmes/plan/delete-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1],[
                                             'class' => 'btn btn-link',
                                             'data' => [
                                                 'confirm' => 'Are you sure want to remove this output indicator?',
@@ -330,9 +334,6 @@ Modal::end();
                         }
 
                         $str .= '</table>';
-                        /* return $plan->project->getProjectExpectedOutputs()->where(['year' => $model->year])->count() > 1 ? 
-                            Html::button('<i class="fa fa-list"></i> '.$plan->project->getProjectExpectedOutputs()->where(['year' => $model->year])->count().' OI/s', ['value' => Url::to(['output-indicator', 'id' => $model->id, 'plan_id' => $plan->id, 'year' => $model->year]), 'class' => 'btn btn-link oi-button']) : 
-                            Html::button('<i class="fa fa-list"></i> '.$plan->project->getProjectExpectedOutputs()->where(['year' => $model->year])->count().' OI', ['value' => Url::to(['output-indicator', 'id' => $model->id, 'plan_id' => $plan->id, 'year' => $model->year]), 'class' => 'btn btn-link oi-button']); */
                         
                         return $str;
                     }

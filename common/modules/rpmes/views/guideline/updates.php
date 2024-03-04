@@ -22,6 +22,11 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="box-header with-border"><h3 class="box-title">System Updates</h3></div>
             <div class="box-body" style="height: calc(100vh - 200px); width: 100%;">
                 <ul>
+                    <li>04 March, 2024
+                        <ul>
+                            <li>Creating, updating and deleting an output indicator is enabled in Form 1 if the submission status is draft or for further validation to provide more output indicators specific for an implementation year.</li>
+                        </ul>
+                    </li>
                     <li>01 March, 2024
                         <ul>
                             <li>Deleting attached project profile is available in projects table.</li>
