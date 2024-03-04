@@ -40,15 +40,3 @@ Project No. <?= $plan->project->project_no.': '.$plan->project->title ?>
         <?php } ?>
     </tbody>
 </table>
-<?php
-$this->registerJs('
-    $(".update-button").click(function(e){
-        e.preventDefault();
-
-        var modalId = $(this).data("target");
-        $(modalId).modal("show").find(modalId + "-content").load($(this).data("url"));
-        
-        return false;
-    });
-');
-?>
