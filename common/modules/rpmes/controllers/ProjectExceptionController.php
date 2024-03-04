@@ -564,12 +564,10 @@ class ProjectExceptionController extends \yii\web\Controller
         }
 
         $slippages = ArrayHelper::map($slippages, 'id', 'id');
-
-        
         
         $searchModel = new PlanSearch();
         $searchModel->submission_id = $planSubmission ? $planSubmission->id : $searchModel->submission_id;
-        $searchModel->project_id = $slippages;
+        $searchModel->project_id = !empty($slippages) ? $slippages : [0];
 
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 

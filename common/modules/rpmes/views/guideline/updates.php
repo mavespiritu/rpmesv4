@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <ul>
                     <li>04 March, 2024
                         <ul>
-                            <li>Creating, updating and deleting an output indicator is enabled in Form 1 if the submission status is draft or for further validation to provide more output indicators specific for an implementation year.</li>
+                            <li>Creating, updating and deleting an output indicator is enabled in Form 1 if the submission status is "Draft" or "For further validation", to provide more output indicators specific for an implementation year.</li>
                         </ul>
                     </li>
                     <li>01 March, 2024

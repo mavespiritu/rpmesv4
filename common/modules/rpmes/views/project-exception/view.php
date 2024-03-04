@@ -192,14 +192,16 @@ Modal::end();
 
                         if($exceptions){
                             foreach($exceptions as $i => $exception){
-                                $str .= '<p>'.strip_tags($ctr[$i].'.&nbsp;'.$exception->findings);
-                                $str.= '<br>';
-                                $str .= Yii::$app->user->can('AgencyUser') ? 
+                                $str .= '<p>'.$ctr[$i].'.&nbsp;'.strip_tags($exception->findings).'</p>';
+                                $str.= '<table style="width: 100%; background-color: transparent !important;">';
+                                $str.= '<tr>';
+                                $str.= '<td style="width: 50%" align=center>';
+                                $str .= !Yii::$app->user->can('Administrator') ? 
                                             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
                                                 count($model->plans) < 1 ? 
                                                     $dueDate ? 
                                                         strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
-                                                            Html::a('Update', '#', [
+                                                            Html::a('Edit Findings', '#', [
                                                                 'class' => 'btn btn-link',
                                                                 'id' => 'update-findings-'.$exception->id.'-button',
                                                                 'data-toggle' => 'modal',
@@ -210,13 +212,21 @@ Modal::end();
                                                     '' : 
                                                 '' : 
                                             '' : 
-                                        '';
-                                $str .= Yii::$app->user->can('AgencyUser') ? 
+                                        Html::a('Edit Findings', '#', [
+                                            'class' => 'btn btn-link',
+                                            'id' => 'update-findings-'.$exception->id.'-button',
+                                            'data-toggle' => 'modal',
+                                            'data-target' => '#update-findings-modal-'.$exception->id,
+                                            'data-url' => Url::to(['update-findings', 'id' => $model->id, 'project_id' => $plan->project->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
+                                        ]);
+                                $str .= '</td>';
+                                $str.= '<td style="width: 50%" align=center>';
+                                $str .= !Yii::$app->user->can('AgencyUser') ? 
                                             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                                                 count($model->plans) < 1 ?
                                                     $dueDate ? 
                                                         strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
-                                                            '&nbsp;|&nbsp;'.Html::a('Delete', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1], [
+                                                            Html::a('Delete Findings', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ?  Yii::$app->request->queryParams['page'] : 1], [
                                                                     'class' => 'btn btn-link',
                                                                     'data' => [
                                                                         'confirm' => 'Are you sure want to delete this findings?',
@@ -227,8 +237,17 @@ Modal::end();
                                                     '' : 
                                                 '' : 
                                             '' : 
-                                        '';
-                                $str .= '</p>';
+                                        Html::a('Delete Findings', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ?  Yii::$app->request->queryParams['page'] : 1], [
+                                            'class' => 'btn btn-link',
+                                            'data' => [
+                                                'confirm' => 'Are you sure want to delete this findings?',
+                                                'method' => 'post',
+                                            ],
+                                        ]);
+                                $str .= '</td>';
+                                $str .= '</tr>';
+                                $str .= '</table>';
+                                $str .= '<br>';
                             }
                         }
 
@@ -248,7 +267,7 @@ Modal::end();
 
                         if($exceptions){
                             foreach($exceptions as $i => $exception){
-                                $str .= $exception->typology ? '<p class="pull-left">'.$ctr[$i].'.&nbsp;'.$exception->typology->title.'</p>' : '';
+                                $str .= $exception->typology ? '<p>'.$ctr[$i].'.&nbsp;'.$exception->typology->title.'</p>' : '';
                             }
                         }
 
@@ -268,7 +287,7 @@ Modal::end();
 
                         if($exceptions){
                             foreach($exceptions as $i => $exception){
-                                $str .= '<p class="pull-left">'.$ctr[$i].'.&nbsp;'.$exception->issue_status.'</p>';
+                                $str .= '<p>'.$ctr[$i].'.&nbsp;'.$exception->issue_status.'</p>';
                             }
                         }
 
@@ -288,7 +307,7 @@ Modal::end();
 
                         if($exceptions){
                             foreach($exceptions as $i => $exception){
-                                $str .= '<p class="pull-left">'.$ctr[$i].'.&nbsp;'.$exception->causes.'</p>';
+                                $str .= '<p>'.$ctr[$i].'.&nbsp;'.strip_tags($exception->causes).'</p>';
                             }
                         }
 
@@ -308,7 +327,7 @@ Modal::end();
 
                         if($exceptions){
                             foreach($exceptions as $i => $exception){
-                                $str .= '<p class="pull-left">'.$ctr[$i].'.&nbsp;'.$exception->action_taken.'</p>';
+                                $str .= '<p>'.$ctr[$i].'.&nbsp;'.strip_tags($exception->action_taken).'</p>';
                             }
                         }
 
@@ -328,7 +347,7 @@ Modal::end();
 
                         if($exceptions){
                             foreach($exceptions as $i => $exception){
-                                $str .= '<p class="pull-left">'.$ctr[$i].'.&nbsp;'.$exception->recommendations.'</p>';
+                                $str .= '<p>'.$ctr[$i].'.&nbsp;'.strip_tags($exception->recommendations).'</p>';
                             }
                         }
 
@@ -352,7 +371,7 @@ Modal::end();
                                             $dueDate ? 
                                                 strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
                                                     Html::a('Add findings', '#', [
-                                                        'class' => 'btn btn-xs btn-block btn-success',
+                                                        'class' => 'btn btn-link',
                                                         'id' => 'create-findings-'.$modalID.'-button',
                                                         'data-toggle' => 'modal',
                                                         'data-target' => '#create-findings-modal-'.$modalID,

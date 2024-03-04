@@ -372,6 +372,20 @@ class ProjectResultController extends Controller
 
         $projectIDs = $planSubmission ? $planSubmission->plans ? ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id') : [] : [];
 
+        $completedProjects = Accomplishment::find()
+                        ->select([
+                            'project_id',
+                        ])
+                        ->andWhere([
+                            'year' => $model->year,
+                            'action' => 1,
+                        ])
+                        ->andWhere(['project_id' => $projectIDs])
+                        ->asArray()
+                        ->all();
+
+        $completedProjects = ArrayHelper::map($completedProjects, 'project_id', 'project_id');
+
         $dueDate = DueDate::findOne(['year' => $model->year, 'report' => 'Project Results']);
 
         if(!Yii::$app->user->can('Administrator')){
@@ -381,7 +395,8 @@ class ProjectResultController extends Controller
         }
         
         $searchModel = new PlanSearch();
-        $searchModel->submission_id = $planSubmission ? $planSubmission->id : $searchModel->submission_id;
+        $searchModel->submission_id = $planSubmission ? $planSubmission->id: $searchModel->submission_id;
+        $searchModel->project_id = !empty($completedProjects) ? $completedProjects : [0];
 
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
