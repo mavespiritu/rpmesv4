@@ -436,10 +436,23 @@ class ProjectResultController extends Controller
         $outcomeIndicators = [];
 
         $projectIDs = $planSubmission ? $planSubmission->plans ? ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id') : [] : [];
+        $completedProjects = Accomplishment::find()
+                        ->select([
+                            'project_id',
+                        ])
+                        ->andWhere([
+                            'year' => $model->year,
+                            'action' => 1,
+                        ])
+                        ->andWhere(['project_id' => $projectIDs])
+                        ->asArray()
+                        ->all();
+
+        $completedProjects = ArrayHelper::map($completedProjects, 'project_id', 'project_id');
 
         $projectsPaging = Plan::find();
         $projectsPaging 
-            ->andWhere(['project_id' => $projectIDs])
+            ->andWhere(['project_id' => $completedProjects])
             ->andWhere(['submission_id' => $planSubmission->id]);
         $countProjects = clone $projectsPaging;
         $projectsPages = new Pagination([
@@ -574,6 +587,20 @@ class ProjectResultController extends Controller
 
         $projectIDs = ArrayHelper::map($planSubmission->plans, 'project_id', 'project_id');
 
+        $completedProjects = Accomplishment::find()
+                        ->select([
+                            'project_id',
+                        ])
+                        ->andWhere([
+                            'year' => $model->year,
+                            'action' => 1,
+                        ])
+                        ->andWhere(['project_id' => $projectIDs])
+                        ->asArray()
+                        ->all();
+
+        $completedProjects = ArrayHelper::map($completedProjects, 'project_id', 'project_id');
+
         if(!Yii::$app->user->can('Administrator')){
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
                 throw new NotFoundHttpException('The requested page does not exist.');
@@ -589,7 +616,7 @@ class ProjectResultController extends Controller
         $projects = $projects->andWhere(['project.draft' => 'No']);
         $projects = $projects->andWhere(['project.source_id' => null]);
         $projects = $projects->andWhere(['project.agency_id' => $model->agency_id]);
-        $projects = $projects->andWhere(['project.id' => $projectIDs]);
+        $projects = $projects->andWhere(['project.id' => $completedProjects]);
         $projects = $projects 
                     ->asArray()
                     ->all();

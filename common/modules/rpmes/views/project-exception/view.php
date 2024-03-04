@@ -193,61 +193,63 @@ Modal::end();
                         if($exceptions){
                             foreach($exceptions as $i => $exception){
                                 $str .= '<p>'.$ctr[$i].'.&nbsp;'.strip_tags($exception->findings).'</p>';
-                                $str.= '<table style="width: 100%; background-color: transparent !important;">';
-                                $str.= '<tr>';
-                                $str.= '<td style="width: 50%" align=center>';
-                                $str .= !Yii::$app->user->can('Administrator') ? 
-                                            $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
-                                                count($model->plans) < 1 ? 
-                                                    $dueDate ? 
-                                                        strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
-                                                            Html::a('Edit Findings', '#', [
+                                if(!Yii::$app->user->can('Administrator')){
+                                    if($model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation'){
+                                        if(count($model->plans) < 1){
+                                            if($dueDate){
+                                                if(strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date)){
+                                                    $str.= '<table style="width: 100%; background-color: transparent !important;">';
+                                                    $str.= '<tr>';
+                                                    $str.= '<td style="width: 50%" align=center>';
+                                                    $str .=  Html::a('Edit Findings', '#', [
                                                                 'class' => 'btn btn-link',
                                                                 'id' => 'update-findings-'.$exception->id.'-button',
                                                                 'data-toggle' => 'modal',
                                                                 'data-target' => '#update-findings-modal-'.$exception->id,
                                                                 'data-url' => Url::to(['update-findings', 'id' => $model->id, 'project_id' => $plan->project->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
-                                                            ]) : 
-                                                        '' : 
-                                                    '' : 
-                                                '' : 
-                                            '' : 
-                                        Html::a('Edit Findings', '#', [
-                                            'class' => 'btn btn-link',
-                                            'id' => 'update-findings-'.$exception->id.'-button',
-                                            'data-toggle' => 'modal',
-                                            'data-target' => '#update-findings-modal-'.$exception->id,
-                                            'data-url' => Url::to(['update-findings', 'id' => $model->id, 'project_id' => $plan->project->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
-                                        ]);
-                                $str .= '</td>';
-                                $str.= '<td style="width: 50%" align=center>';
-                                $str .= !Yii::$app->user->can('AgencyUser') ? 
-                                            $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
-                                                count($model->plans) < 1 ?
-                                                    $dueDate ? 
-                                                        strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
-                                                            Html::a('Delete Findings', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ?  Yii::$app->request->queryParams['page'] : 1], [
-                                                                    'class' => 'btn btn-link',
-                                                                    'data' => [
-                                                                        'confirm' => 'Are you sure want to delete this findings?',
-                                                                        'method' => 'post',
-                                                                    ],
-                                                                ]) : 
-                                                        '' : 
-                                                    '' : 
-                                                '' : 
-                                            '' : 
-                                        Html::a('Delete Findings', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ?  Yii::$app->request->queryParams['page'] : 1], [
-                                            'class' => 'btn btn-link',
-                                            'data' => [
-                                                'confirm' => 'Are you sure want to delete this findings?',
-                                                'method' => 'post',
-                                            ],
-                                        ]);
-                                $str .= '</td>';
-                                $str .= '</tr>';
-                                $str .= '</table>';
-                                $str .= '<br>';
+                                                            ]); 
+                                                    $str .= '</td>';
+                                                    $str.= '<td style="width: 50%" align=center>';
+                                                    $str .= Html::a('Delete Findings', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ?         Yii::$app->request->queryParams['page'] : 1], [
+                                                                'class' => 'btn btn-link',
+                                                                'data' => [
+                                                                    'confirm' => 'Are you sure want to delete this findings?',
+                                                                    'method' => 'post',
+                                                                ],
+                                                            ]);
+                                                    $str .= '</td>';
+                                                    $str .= '</tr>';
+                                                    $str .= '</table>';
+                                                    $str .= '<br>';
+                                                }
+                                            }
+                                        }
+                                    }
+                                }else{
+                                    $str.= '<table style="width: 100%; background-color: transparent !important;">';
+                                    $str.= '<tr>';
+                                    $str.= '<td style="width: 50%" align=center>';
+                                    $str .=  Html::a('Edit Findings', '#', [
+                                                'class' => 'btn btn-link',
+                                                'id' => 'update-findings-'.$exception->id.'-button',
+                                                'data-toggle' => 'modal',
+                                                'data-target' => '#update-findings-modal-'.$exception->id,
+                                                'data-url' => Url::to(['update-findings', 'id' => $model->id, 'project_id' => $plan->project->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1]),
+                                            ]); 
+                                    $str .= '</td>';
+                                    $str.= '<td style="width: 50%" align=center>';
+                                    $str .= Html::a('Delete Findings', ['delete-findings', 'id' => $model->id, 'exception_id' => $exception->id, 'page' => isset(Yii::$app->request->queryParams['page']) ?         Yii::$app->request->queryParams['page'] : 1], [
+                                                'class' => 'btn btn-link',
+                                                'data' => [
+                                                    'confirm' => 'Are you sure want to delete this findings?',
+                                                    'method' => 'post',
+                                                ],
+                                            ]);
+                                    $str .= '</td>';
+                                    $str .= '</tr>';
+                                    $str .= '</table>';
+                                    $str .= '<br>';
+                                }
                             }
                         }
 
