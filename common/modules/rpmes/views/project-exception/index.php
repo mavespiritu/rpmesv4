@@ -165,29 +165,21 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                                 },
                                 'update' => function($url, $model, $key){
                                     $modalID = $model->id;
-                                    return Yii::$app->user->can('Administrator') ? 
-                                                $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
-                                                    Html::a('Update', '#', [
-                                                        'class' => 'btn btn-warning btn-block btn-xs update-button',
-                                                        'data-toggle' => 'modal',
-                                                        'data-target' => '#update-modal-'.$modalID,
-                                                        'data-url' => Url::to(['update', 'id' => $model->id]),
-                                                    ]) :
-                                                '' :
-                                            '';
+                                    return Html::a('Update', '#', [
+                                                'class' => 'btn btn-warning btn-block btn-xs update-button',
+                                                'data-toggle' => 'modal',
+                                                'data-target' => '#update-modal-'.$modalID,
+                                                'data-url' => Url::to(['update', 'id' => $model->id]),
+                                            ]);
                                 },
                                 'delete' => function($url, $model, $key){
-                                    return Yii::$app->user->can('Administrator') ? 
-                                                $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
-                                                    Html::a('Delete', ['delete', 'id' => $model->id], [
-                                                        'class' => 'btn btn-danger btn-block btn-xs',
-                                                        'data' => [
-                                                            'confirm' => 'Are you sure want to delete this item?',
-                                                            'method' => 'post',
-                                                        ],
-                                                    ]) :
-                                                '' :
-                                            '';
+                                    return Html::a('Delete', ['delete', 'id' => $model->id], [
+                                            'class' => 'btn btn-danger btn-block btn-xs',
+                                            'data' => [
+                                                'confirm' => 'Are you sure want to delete this item?',
+                                                'method' => 'post',
+                                            ],
+                                        ]);
                                 },
                             ],
                         ],
