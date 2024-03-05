@@ -76,8 +76,8 @@ function renderSummary($page)
                             <td style="width: 10%; text-align: center;" rowspan=3>Remarks</td>
                         </tr>
                         <tr style="background-color: #002060; color: white; font-weight: normal;">
-                            <td style="width: 10%; text-align: center;" colspan=2>Appropriations</td>
-                            <td style="width: 5%; text-align: center;" rowspan=2>Allotment</td>
+                            <td style="width: 10%; text-align: center;" rowspan=2>Appropriations</td>
+                            <td style="width: 5%; text-align: center;" colspan=2>Allotment</td>
                             <td style="width: 5%; text-align: center;" rowspan=2>Obligations</td>
                             <td style="width: 5%; text-align: center;" rowspan=2>Disbursements</td>
                             <td style="width: 5%; text-align: center;" rowspan=2>Indicator</td>
@@ -105,7 +105,6 @@ function renderSummary($page)
                                 <td><?= $i ?></td>
                                 <td><?= $project->project_no.': '.$project->title ?><br>
                                 </td>
-                                <td align=right><?= number_format($plan->project->getFinancialTargetPerQuarter($model->year)[$model->quarter], 2) ?></td>
                                 <?= $project->getIsCompleted($model->year)[$model->quarter] == false ? '<td>'.$form->field($accomplishments[$project->id]['financial'], "[$project->id][financial]allocation")->widget(MaskedInput::classname(), [
                                     'options' => [
                                         'autocomplete' => 'off',
@@ -119,6 +118,7 @@ function renderSummary($page)
                                         'autoGroup' => true
                                     ],
                                 ])->label(false).'</td>' : '<td align=right>'.number_format(floatval($accomplishments[$project->id]['financial']['allocation']), 2).'</td>' ?>
+                                <td align=right><?= number_format($plan->project->getFinancialTargetPerQuarter($model->year)[$model->quarter], 2) ?></td>
                                 <?= $project->getIsCompleted($model->year)[$model->quarter] == false ? '<td>'.$form->field($accomplishments[$project->id]['financial'], "[$project->id][financial]releases")->widget(MaskedInput::classname(), [
                                     'options' => [
                                         'autocomplete' => 'off',

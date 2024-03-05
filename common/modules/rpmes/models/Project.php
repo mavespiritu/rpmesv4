@@ -275,6 +275,7 @@ class Project extends \yii\db\ActiveRecord
                         $value += floatval($allocation->$mo);
                     }
                 }
+                $value += floatval($allocation->releases);
                 break;
             case 'Cumulative':
                 $value = $allocation ? floatval($allocations[0]) : 0;
@@ -863,6 +864,17 @@ class Project extends \yii\db\ActiveRecord
     {
         return $this->completion_date != "" ? date("F j, Y", strtotime($this->completion_date)) : 'No completion date';
     }
+
+    /**
+     * Gets query for [[Plan]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPlans()
+    {
+        return $this->hasMany(Plan::className(), ['project_id' => 'id']);
+    }
+
     /**
      * Gets query for [[ProjectBarangays]].
      *
@@ -1375,7 +1387,7 @@ class Project extends \yii\db\ActiveRecord
             ];
         }
 
-        $targets['Q1'] += $target ? floatval($target->allocation) : 0;
+        $targets['Q1'] += $target ? floatval($target->releases) : 0;
 
         return [
             'Q1' => floatval($targets['Q1']),

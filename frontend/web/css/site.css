@@ -35,6 +35,7 @@ li.user-header,
 a.logo,
 nav{
   background-color: #1E3A8A !important;
+  text-align: left !important;
 }
 
 a.btn-primary,

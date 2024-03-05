@@ -6,7 +6,11 @@ use yii\helpers\Html;
 ?>
 
 <header class="main-header">
-
+    <?php if(!Yii::$app->user->isGuest){ ?>
+        <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button" style="background-color: #1E3A8A;">
+            <span class="sr-only">Toggle navigation</span>
+        </a>
+    <?php } ?>
     <?= !Yii::$app->user->isGuest ? Html::a('<span class="logo-mini">eRPMES</span><span class="logo-lg">' . Yii::$app->name . '</span>', Yii::$app->homeUrl, ['class' => 'logo']) : '' ?>
 
     <nav class="navbar navbar-static-top" role="navigation">
@@ -14,11 +18,6 @@ use yii\helpers\Html;
             <div class="navbar-header">
                 <a href="#" class="navbar-brand">eRPMES</a>
             </div>
-        <?php } ?>
-        <?php if(!Yii::$app->user->isGuest){ ?>
-        <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
-            <span class="sr-only">Toggle navigation</span>
-        </a>
         <?php } ?>
         <div class="navbar-custom-menu">
             <ul class="nav navbar-nav">

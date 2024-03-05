@@ -21,6 +21,7 @@ class ProjectProblemSearch extends ProjectProblem
     public $projectCitymuns;
     public $projectProvinces;
     public $projectRegions;
+    public $globalSearch;
     
     /**
      * {@inheritdoc}
@@ -29,7 +30,7 @@ class ProjectProblemSearch extends ProjectProblem
     {
         return [
             [['id', 'project_id', 'submitted_by','year'], 'integer'],
-            [['nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned', 'date_submitted','projectTitle','sectorTitle','quarter','subSectorTitle','allocationTotal','projectBarangays','projectCitymuns','projectProvinces','projectRegions','agency'], 'safe'],
+            [['year', 'nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned', 'globalSearch'], 'safe'],
         ];
     }
 
@@ -54,16 +55,7 @@ class ProjectProblemSearch extends ProjectProblem
         $query = ProjectProblem::find()
                 ->joinWith('project')
                 ->joinWith('project.sector')
-                ->joinWith('project.subSector')
-                ->joinWith('project.agency')
-                ->joinWith('project.projectBarangays')
-                ->joinWith('project.projectCitymuns')
-                ->joinWith('project.projectProvinces')
-                ->joinWith('project.projectRegions')
-                ->joinWith('project.projectBarangays.barangay')
-                ->joinWith('project.projectCitymuns.citymun')
-                ->joinWith('project.projectProvinces.province')
-                ->joinWith('project.projectRegions.region')
+                ->joinWith('project.modeOfImplementation');
                 ;
 
         // add conditions that should always apply here
@@ -72,7 +64,7 @@ class ProjectProblemSearch extends ProjectProblem
             'query' => $query,
         ]);
 
-        $dataProvider->setSort([
+        /* $dataProvider->setSort([
             'attributes' => [
                 'id',
                 'year',
@@ -116,7 +108,7 @@ class ProjectProblemSearch extends ProjectProblem
                 'responsible_entity',
                 'lesson_learned',
             ]
-        ]);
+        ]); */
 
         $this->load($params);
 
@@ -127,30 +119,18 @@ class ProjectProblemSearch extends ProjectProblem
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'project_problem.id' => $this->id,
-            'project.id' => $this->project_id,
-            'submitted_by' => $this->submitted_by,
-            'date_submitted' => $this->date_submitted,
-        ]);
 
-        $query->andFilterWhere(['like', 'project_problem.id', $this->id])
-            ->andFilterWhere(['like', 'sector.title', $this->sectorTitle])
-            ->andFilterWhere(['like', 'project_problem.year', $this->year])
-            ->andFilterWhere(['like', 'project_problem.quarter', $this->quarter])
-            ->andFilterWhere(['like', 'sub_sector.title', $this->subSectorTitle])
-            ->andFilterWhere(['like', 'agency.code', $this->agency])
-            ->andFilterWhere(['like', 'nature', $this->nature])
-            ->andFilterWhere(['like', 'detail', $this->detail])
-            ->andFilterWhere(['like', 'strategy', $this->strategy])
-            ->andFilterWhere(['like', 'responsible_entity', $this->responsible_entity])
-            ->andFilterWhere(['like', 'lesson_learned', $this->lesson_learned])
-            ->andFilterWhere(['like', 'project.title', $this->projectTitle])
-            ->andFilterWhere(['like', 'tblbarangay.barangay_m', $this->projectBarangays])
-            ->andFilterWhere(['like', 'tblcitymun.citymun_m', $this->projectCitymuns])
-            ->andFilterWhere(['like', 'tblprovince.province_m', $this->projectProvinces])
-            ->andFilterWhere(['like', 'tblregion.abbreviation', $this->projectRegions])
-            ;
+        $query
+        ->orFilterWhere(['like', 'project.project_no', $this->globalSearch])
+        ->orFilterWhere(['like', 'project.title', $this->globalSearch])
+        ->orFilterWhere(['like', 'project_problem.year', $this->globalSearch])
+        ->orFilterWhere(['like', 'nature', $this->globalSearch])
+        ->orFilterWhere(['like', 'detail', $this->globalSearch])
+        ->orFilterWhere(['like', 'strategy', $this->globalSearch])
+        ->orFilterWhere(['like', 'responsible_entity', $this->globalSearch])
+        ->orFilterWhere(['like', 'lesson_learned', $this->globalSearch]);
+
+        $query = $query->orderBy(['project_problem.id' => SORT_DESC]);
 
         return $dataProvider;
     }

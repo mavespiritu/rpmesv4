@@ -146,20 +146,7 @@ Modal::end();
                     }
                 ],
                 [
-                    'header' => 'Target to date <br> (Appropriations)',
-                    'headerOptions' => [
-                        'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
-                    ],
-                    'contentOptions' => [
-                        'style' => 'text-align: right;'
-                    ],
-                    'format' => 'raw',
-                    'value' => function($plan) use ($model){
-                        return number_format($plan->project->getFinancialTargetPerQuarter($model->year)[$model->quarter], 2);
-                    }
-                ],
-                [
-                    'header' => 'Actual to date <br> (Appropriations)',
+                    'header' => 'Appropriations',
                     'headerOptions' => [
                         'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
                     ],
@@ -172,7 +159,20 @@ Modal::end();
                     }
                 ],
                 [
-                    'header' => 'Allotment',
+                    'header' => 'Target to date <br> (Allotment)',
+                    'headerOptions' => [
+                        'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
+                    ],
+                    'contentOptions' => [
+                        'style' => 'text-align: right;'
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        return number_format($plan->project->getFinancialTargetPerQuarter($model->year)[$model->quarter], 2);
+                    }
+                ],
+                [
+                    'header' => 'Actual to date <br> (Allotment)',
                     'headerOptions' => [
                         'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
                     ],

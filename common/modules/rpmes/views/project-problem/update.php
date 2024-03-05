@@ -10,11 +10,13 @@ $this->params['breadcrumbs'][] = ['label' => 'Form 11: Key Lessons Learned from 
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="project-problem-update">
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
+    <div class="box box-solid">
+        <div class="box-header with-border"><h3 class="box-title">Record Entry Form</h3></div>
+        <div class="box-body">
             <?= $this->render('_form', [
                 'model' => $model,
                 'projects' => $projects,
+                'natures' => $natures,
             ]) ?>
         </div>
     </div>

@@ -68,7 +68,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                     ],
                     [
                         'attribute' => 'agency.code',
-                        'header' => 'Agency',
+                        'header' => 'Implementing Agency',
                         'headerOptions' => [
                             'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
                         ]
@@ -88,7 +88,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         ]
                     ],
                     [
-                        'header' => 'Project Profile',
+                        'header' => 'Project Profile (Attachment)',
                         'format' => 'raw',
                         'headerOptions' => [
                             'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
@@ -97,7 +97,17 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                             $str = '';
                             if($model->files){
                                 foreach($model->files as $file){
-                                    $str.= Html::a($file->name.'.'.$file->type, ['/file/file/download', 'id' => $file->id]).'<br>';
+                                    $str.= '<table style="width: 100%">';
+                                    $str.= '<tr>';
+                                    $str.= '<td>'.Html::a($file->name.'.'.$file->type, ['/file/file/download', 'id' => $file->id]).'</td>';
+                                    $str.= '<td style="vertical-align: top;" align=right>'.Html::a('<i class="fa fa-trash"></i>',['/file/file/delete', 'id' => $file->id],[
+                                        'data' => [
+                                            'confirm' => 'Are you sure want to delete this file?',
+                                            'method' => 'post',
+                                        ],
+                                    ]).'</td>';
+                                    $str.= '</tr>';
+                                    $str.= '</table>';
                                 }
                             }
                             return $str;
@@ -179,7 +189,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         ]
                     ],
                     [
-                        'header' => 'Project Profile',
+                        'header' => 'Project Profile (Attachment)',
                         'format' => 'raw',
                         'headerOptions' => [
                             'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
@@ -219,13 +229,13 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                                 ]);
                             },
                             'delete' => function($url, $model, $key){
-                                return Html::a('Delete', ['delete', 'id' => $model->id], [
+                                return count($model->plans) == 0 ? Html::a('Delete', ['delete', 'id' => $model->id], [
                                                     'class' => 'btn btn-danger btn-block btn-xs',
                                                     'data' => [
                                                         'confirm' => 'Are you sure want to delete this item?',
                                                         'method' => 'post',
                                                     ],
-                                                ]);
+                                                ]) : '';
                             },
                         ],
                     ],

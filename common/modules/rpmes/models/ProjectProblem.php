@@ -35,7 +35,7 @@ class ProjectProblem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['project_id', 'nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned', 'quarter'], 'required'],
+            [['project_id', 'nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned', 'year'], 'required'],
             [['project_id', 'submitted_by', 'year'], 'integer'],
             [['nature', 'detail', 'strategy', 'responsible_entity', 'lesson_learned'], 'string'],
             [['date_submitted'], 'safe'],
