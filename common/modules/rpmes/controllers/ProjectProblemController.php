@@ -94,7 +94,7 @@ class ProjectProblemController extends Controller
             throw new NotFoundHttpException('The requested page does not exist.');
         }
 
-        $projects = Project::find()->select(['id','CONCAT(project_no,": ",project.title) as title'])->where(['draft' => 'No'])->orderBy(['title' => SORT_ASC])->asArray()->all();
+        $projects = Project::find()->select(['id','CONCAT(project_no,": ",project.title) as title'])->where(['draft' => 'No', 'source_id' => null])->orderBy(['title' => SORT_ASC])->asArray()->all();
         $projects = ArrayHelper::map($projects, 'id', 'title');
 
         $natures = Typology::find()->all();
@@ -130,7 +130,7 @@ class ProjectProblemController extends Controller
             throw new NotFoundHttpException('The requested page does not exist.');
         }
         
-        $projects = Project::find()->select(['id','CONCAT(project_no,": ",project.title) as title'])->where(['draft' => 'No'])->orderBy(['title' => SORT_ASC])->asArray()->all();
+        $projects = Project::find()->select(['id','CONCAT(project_no,": ",project.title) as title'])->where(['draft' => 'No', 'source_id' => null])->orderBy(['title' => SORT_ASC])->asArray()->all();
         $projects = ArrayHelper::map($projects, 'id', 'title');
 
         $natures = Typology::find()->all();
