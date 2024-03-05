@@ -37,7 +37,7 @@
                             //['label' => 'RPMES Form 7', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
                             //['label' => 'RPMES Form 8', 'icon' => 'folder', 'url' => ['/rpmes/project-problem-solving-session'], 'visible' => !Yii::$app->user->isGuest],
                             //['label' => 'RPMES Form 9', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],                         
-                            ['label' => 'RPMES Form 10', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest],
+                            //['label' => 'RPMES Form 10', 'icon' => 'folder', 'url' => ['/rpmes/resolution'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 11', 'icon' => 'folder', 'url' => ['/rpmes/project-problem'], 'visible' => !Yii::$app->user->isGuest],
                         ],
                         
