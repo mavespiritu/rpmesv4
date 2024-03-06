@@ -6,6 +6,7 @@ use Yii;
 use common\modules\rpmes\models\Resolution;
 use common\modules\rpmes\models\ResolutionSearch;
 use common\modules\rpmes\models\Project;
+use common\modules\rpmes\models\Settings;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -32,10 +33,10 @@ class ResolutionController extends Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index'],
+                'only' => ['index', 'create', 'update', 'generate', 'delete'],
                 'rules' => [
                     [
-                        'actions' => ['index', 'create', 'update', 'view', 'delete'],
+                        'actions' => ['index', 'create', 'update', 'generate', 'delete'],
                         'allow' => true,
                         'roles' => ['Administrator', 'SuperAdministrator'],
                     ],
@@ -54,15 +55,10 @@ class ResolutionController extends Controller
         $searchModel = new ResolutionSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
-        $years = Project::find()->select(['distinct(year) as year'])->asArray()->all();
-        $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
-        array_unique($years);
-
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
             'model' => $model,
-            'years' => $years,
         ]);
     }
 
@@ -88,12 +84,15 @@ class ResolutionController extends Controller
     {
         $model = new Resolution();
 
-        $model->year = date("Y");
+        if(!Yii::$app->user->can('Administrator')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
 
         if ($model->load(Yii::$app->request->post())) {
             $model->submitted_by = Yii::$app->user->id;
             $model->date_submitted = date('Y-m-d H:i:s');
-            $model->save();
+            $model->save(false);
+
             \Yii::$app->getSession()->setFlash('success', 'Record Saved');
             return $this->redirect(['index']);
         }
@@ -114,10 +113,15 @@ class ResolutionController extends Controller
     {
         $model = $this->findModel($id);
 
+        if(!Yii::$app->user->can('Administrator')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
         if ($model->load(Yii::$app->request->post())) {
             $model->submitted_by = Yii::$app->user->id;
             $model->date_submitted = date('Y-m-d H:i:s');
-            $model->save();
+            $model->save(false);
+
             \Yii::$app->getSession()->setFlash('success', 'Record Updated');
             return $this->redirect(['index']);
         }
@@ -136,9 +140,101 @@ class ResolutionController extends Controller
      */
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
-        \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
-        return $this->redirect(['index']);
+        if(Yii::$app->request->post())
+        {
+            $this->findModel($id)->delete();
+            \Yii::$app->getSession()->setFlash('success', 'Record Deleted');
+            return $this->redirect(['index']);
+        }
+    }
+
+    public function actionGenerate()
+    {
+        if(!Yii::$app->user->can('Administrator')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $model = new Resolution();
+        $model->scenario = 'generate';
+
+        $years = Resolution::find()->select(['distinct(year) as year'])
+                ->orderBy(['year' => SORT_DESC])
+                ->asArray()
+                ->all();
+
+        $years = ArrayHelper::map($years, 'year', 'year');
+
+        if(Yii::$app->request->post()){
+            $postData = Yii::$app->request->post('Resolution');
+
+            $records = Resolution::find()
+                ->select([
+                    'year',
+                    'resolution_number',
+                    'resolution_title',
+                    'resolution',
+                    'date_approved',
+                    'resolution_url',
+                ]);
+
+            $records = !empty($postData['year']) ? $records->andWhere(['year' => $postData['year']]) : $records;
+
+            $records = $records
+                        ->orderBy(['id' => SORT_DESC])
+                        ->asArray()
+                        ->all();
+
+            $director = Settings::findOne(['title' => 'Agency Head']);
+
+            $filename = date("YmdHis").'_RPMES_Form_10';
+
+            header("Content-type: application/vnd.ms-excel");
+            header("Content-Disposition: attachment; filename=".$filename.".xls");
+            return $this->renderPartial('_report-file', [
+                'records' => $records,
+                'year' => $postData['year'],
+                'director' => $director,
+                'type' => 'excel',
+            ]);
+        }
+
+        return $this->renderAjax('generate', [
+            'model' => $model,
+            'years' => $years,
+        ]);
+    }
+
+    public function actionPrint($year)
+    {
+        if(!Yii::$app->user->can('Administrator')){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $records = Resolution::find()
+            ->select([
+                'year',
+                'resolution_number',
+                'resolution_title',
+                'resolution',
+                'date_approved',
+                'resolution_url',
+            ]);
+
+        $records = $year != '' ? $records->andWhere(['year' => $year]) : $records;
+
+        $records = $records
+                    ->orderBy(['id' => SORT_DESC])
+                    ->asArray()
+                    ->all();
+
+        $director = Settings::findOne(['title' => 'Agency Head']);
+
+        return $this->renderAjax('_report-file', [
+            'records' => $records,
+            'year' => $year,
+            'director' => $director,
+            'type' => 'print',
+        ]);
     }
 
     /**
@@ -155,136 +251,5 @@ class ResolutionController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
-    }
-
-    public function actionPrintFormTen($year,$quarter,$resolutionNumber,$resolution,$dateApproved,$rpmcAction)
-    {
-        $model = [];
-        $model['year'] = $year;
-        $model['quarter'] = $quarter;
-        $model['resolution_number'] = $resolutionNumber;
-        $model['resolution'] = $resolution;
-        $model['date_approved'] = $dateApproved;
-        $model['rpmc_action'] = $rpmcAction;
-
-        $resolutions = Resolution::find();
-
-        if($model['year'] != '')
-        {
-            $resolutions = $resolutions->andWhere(['resolution.year' => $model['year']]);
-        }
-
-        if($model['quarter'] != '')
-        {
-            $resolutions = $resolutions->andWhere(['resolution.quarter' => $model['quarter']]);
-        }
-
-        if($model['resolution_number'] != '')
-        {
-            $resolutions = $resolutions->andWhere(['resolution.resolution_number' => $model['resolution_number']]);
-        }
-
-        if($model['resolution'] != '')
-        {
-            $resolutions = $resolutions->andWhere(['resolution.resolution' => $model['resolution']]);
-        }
-
-        if($model['date_approved'] != '')
-        {
-            $resolutions = $resolutions->andWhere(['resolution.date_approved' => $model['date_approved']]);
-        }
-
-        if($model['rpmc_action'] != '')
-        {
-            $resolutions = $resolutions->andWhere(['resolution.rpmc_action' => $model['rpmc_action']]);
-        }
-
-        $resolutions = $resolutions->orderBy(['resolution.resolution' => SORT_ASC])->all();
-
-        return $this->renderAjax('form-ten', [
-            'model' => $model,
-            'type' => 'print',
-            'resolutions' => $resolutions
-        ]);
-    }
-    public function actionDownloadFormTen($type, $year, $quarter, $model)
-    {
-        $model = json_decode($model, true); 
-        $model['year'] = $year;
-        $model['quarter'] = $quarter;
-
-        $resolutions = Resolution::find()
-                    ->select(['id','resolution_number','resolution','date_approved','rpmc_action','quarter','year']);
-
-        if($model['year'] != '')
-        {
-            $resolutions = $resolutions->andWhere(['resolution.year' => $model['year']]);
-        }
-        if($model['quarter'] != '')
-        {
-            $resolutions = $resolutions->andWhere(['resolution.quarter' => $model['quarter']]);
-        }
-
-        $resolutions = $resolutions->orderBy(['resolution.quarter' => SORT_ASC])->all();
-
-        $filename = 'RPMES Form 10: LIST OF RESOLUTIONS';
-
-        if($type == 'excel')
-        {
-            header("Content-type: application/vnd.ms-excel");
-            header("Content-Disposition: attachment; filename=".$filename.".xls");
-            return $this->renderPartial('form-ten', [
-                'model' => $model,
-                'type' => $type,
-                'resolutions' => $resolutions,
-            ]);
-        }else if($type == 'pdf')
-        {
-            $content = $this->renderPartial('form-ten', [
-                'model' => $model,
-                'type' => $type,
-                'resolutions' => $resolutions,
-            ]);
-
-            $pdf = new Pdf([
-                'mode' => Pdf::MODE_CORE,
-                'format' => Pdf::FORMAT_LEGAL, 
-                'orientation' => Pdf::ORIENT_LANDSCAPE, 
-                'destination' => Pdf::DEST_DOWNLOAD, 
-                'filename' => $filename.'.pdf', 
-                'content' => $content,  
-                'marginLeft' => 11.4,
-                'marginRight' => 11.4,
-                'cssInline' => '*{font-family: "Arial";}
-                                table{
-                                    font-family: "Arial";
-                                    border-collapse: collapse;
-                                }
-                                thead{
-                                    font-size: 12px;
-                                    text-align: center;
-                                }
-                            
-                                td{
-                                    font-size: 10px;
-                                    border: 1px solid black;
-                                }
-                            
-                                th{
-                                    text-align: center;
-                                    border: 1px solid black;
-                                }
-                                h1,h2,h3,h4,h5,h6{
-                                    text-align: center;
-                                    font-weight: bolder;
-                                }', 
-                ]);
-        
-                $response = Yii::$app->response;
-                $response->format = \yii\web\Response::FORMAT_RAW;
-                $headers = Yii::$app->response->headers;
-                $headers->add('Content-Type', 'application/pdf');
-                return $pdf->render();
-        }
     }
 }

@@ -595,6 +595,10 @@ class AccomplishmentController extends \yii\web\Controller
     {
         $model = Submission::findOne($id);
 
+        if(!$model){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
         $planSubmission = Submission::findOne([
             'year' => $model->year,
             'agency_id' => $model->agency_id,

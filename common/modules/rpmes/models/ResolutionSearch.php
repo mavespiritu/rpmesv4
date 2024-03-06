@@ -11,6 +11,8 @@ use common\modules\rpmes\models\Resolution;
  */
 class ResolutionSearch extends Resolution
 {
+    public $globalSearch;
+
     /**
      * {@inheritdoc}
      */
@@ -18,7 +20,7 @@ class ResolutionSearch extends Resolution
     {
         return [
             [['id', 'resolution_number'], 'integer'],
-            [['resolution', 'date_approved', 'rpmc_action','quarter','year'], 'safe'],
+            [['resolution', 'date_approved', 'rpmc_action','quarter','year','globalSearch'], 'safe'],
         ];
     }
 
@@ -57,20 +59,16 @@ class ResolutionSearch extends Resolution
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'resolution_number' => $this->resolution_number,
-            'resolution' => $this->resolution,
-            'quarter' => $this->quarter,
-            'year' => $this->year,
-        ]);
 
-        $query->andFilterWhere(['like', 'resolution', $this->resolution])
-            ->andFilterWhere(['like', 'resolution_number', $this->resolution_number])
-            ->andFilterWhere(['like', 'date_approved', $this->date_approved])
-            ->andFilterWhere(['like', 'rpmc_action', $this->rpmc_action])
-            ->andFilterWhere(['like', 'quarter', $this->quarter])
-            ->andFilterWhere(['like', 'year', $this->year]);
+        $query
+            ->orFilterWhere(['like', 'resolution', $this->globalSearch])
+            ->orFilterWhere(['like', 'resolution_number', $this->globalSearch])
+            ->orFilterWhere(['like', 'date_approved', $this->globalSearch])
+            ->orFilterWhere(['like', 'resolution_title', $this->globalSearch])
+            ->orFilterWhere(['like', 'resolution_url', $this->globalSearch])
+            ->orFilterWhere(['like', 'year', $this->globalSearch]);
+
+        $query = $query->orderBy(['id' => SORT_DESC]);
 
         return $dataProvider;
     }

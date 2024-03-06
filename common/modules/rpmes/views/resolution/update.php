@@ -6,12 +6,13 @@ use yii\helpers\Html;
 /* @var $model common\modules\rpmes\models\Resolution */
 
 $this->title = 'Update Resolution';
-$this->params['breadcrumbs'][] = ['label' => 'Form 10: List of Resolutions Passed', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'Form 10: RPMC and RDC Resolutions Related to Implementation of RPMES', 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="resolution-update">
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
+    <div class="box box-solid">
+        <div class="box-header with-border"><h3 class="box-title">Record Entry Form</h3></div>
+        <div class="box-body">
             <?= $this->render('_form', [
                 'model' => $model,
             ]) ?>

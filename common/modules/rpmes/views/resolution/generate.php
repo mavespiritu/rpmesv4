@@ -13,9 +13,9 @@ DisableButtonAsset::register($this);
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="project-problem-form">
+<div class="resolution-form">
     <?php $form = ActiveForm::begin([
-        'id' => 'project-problem-generate-form',
+        'id' => 'resolution-generate-form',
     ]); ?>
 
     <?= $form->field($model, 'year')->widget(Select2::classname(), [
@@ -43,7 +43,7 @@ DisableButtonAsset::register($this);
         function printSummary(id)
         {
             var printWindow = window.open(
-                "'.Url::to(['/rpmes/project-problem/print']).'?year=" + $(".year-select").val(), 
+                "'.Url::to(['/rpmes/resolution/print']).'?year=" + $(".year-select").val(), 
                 "Print",
                 "left=200", 
                 "top=200", 

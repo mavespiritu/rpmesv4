@@ -755,6 +755,7 @@ $this->registerJs($js);
                         </div>
                     </div>
                 </div>
+                
                 <?= $form->field($model, 'remarks')->textarea(['rows' => 4, 'style' => 'resize: none;', 'placeholder' => 'Provide information on the previously approved end dates, if applicable. May also include information on the program/project beneficiaries disaggregated by sex, if available.']) ?>
             </div>
         </div>

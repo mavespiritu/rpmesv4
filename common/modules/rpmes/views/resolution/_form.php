@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\widgets\ActiveForm;
+use yii\bootstrap\ActiveForm;
 use kartik\select2\Select2;
 use faryshta\disableSubmitButtons\Asset as DisableButtonAsset;
 use kartik\daterange\DateRangePicker;
@@ -18,73 +18,78 @@ DisableButtonAsset::register($this);
 <div class="resolution-form">
 
     <?php $form = ActiveForm::begin([
-    	'options' => ['class' => 'disable-submit-buttons'],
+        'options' => ['enctype' => 'multipart/form-data'],
+        'layout' => 'horizontal',
+        'fieldConfig' => [
+            'horizontalCssClasses' => [
+                'wrapper' => 'col-sm-9',
+            ],
+        ],
     ]); ?>
 
-    <?= $form->field($model, 'year')->widget(Select2::classname(), [
-        'data' => $model->YearsList,
-        'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
-        'pluginOptions' => [
-            'allowClear' =>  true,
-        ],
-        ])->label('Year *');
-    ?>
+    <?= $form->field($model, 'year')->textInput(['maxlength' => true, 'type' => 'number'])->label('Year') ?>
 
-    <?= $form->field($model, 'quarter')->dropDownList(['' => '', 'Q1' => '1st Quarter', 'Q2' => '2nd Quarter', 'Q3' => '3rd Quarter', 'Q4' => '4th Quarter'])->label('Quarter *'); ?>
+    <?= $form->field($model, 'resolution_number')->textInput(['maxlength' => true])->label('Resolution No.') ?>
 
-    <?= $form->field($model, 'resolution_number')->textInput() ?>
-
-    <?= $form->field($model, 'resolution')->textarea(['rows' => 2])->label('Resolution/s Passed *'); ?>
+    <?= $form->field($model, 'resolution_title')->textInput(['maxlength' => true])->label('Resolution Title') ?>
 
     <?= $form->field($model, 'date_approved')->widget(DatePicker::className(), [
-                'type' => DatePicker::TYPE_COMPONENT_APPEND,
-                'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
-                'pluginOptions' => [
-                    'autoclose'=>true,
-                    'format' => 'yyyy-mm-dd'
-                ],
-            ])->label('Date Approved *'); ?>
+            'type' => DatePicker::TYPE_COMPONENT_APPEND,
+            'options' => ['placeholder' => 'Enter date', 'autocomplete' => 'off'],
+            'pluginOptions' => [
+                'autoclose'=>true,
+                'format' => 'yyyy-mm-dd'
+            ],
+    ])->label('Date Approved'); ?>
 
-    <?= $form->field($model, 'rpmc_action')->textarea(['rows' => 2])->label('RPMC Actions / Remarks *'); ?>
+    <?= $form->field($model, 'resolution')->textarea(['rows' => 2])->label('Resolution (Specific actions done by the RPMC, or additional information if the title does not sufficiently describe the resolution)'); ?>
 
-    <h5>Upload Scanned File</h5>
-            <hr>
-            <div class="row" style="margin-left: 1%;">
-                <div class="col-md-3 col-xs-12">
-                    <?= empty($model->files) ? AttachmentsInput::widget([
-                        'id' => 'file-input', // Optional
-                        'model' => $model,
-                        'options' => [ 
-                            'multiple' => false, 
-                            'required' => 'required'
-                        ],
-                        'pluginOptions' => [ 
-                            'showPreview' => false,
-                            'showUpload' => false,
-                            'maxFileCount' => 1,
-                        ]
-                    ]) : AttachmentsInput::widget([
-                        'id' => 'file-input', // Optional
-                        'model' => $model,
-                        'options' => [ 
-                            'multiple' => false, 
-                        ],
-                        'pluginOptions' => [ 
-                            'showPreview' => false,
-                            'showUpload' => false,
-                            'maxFileCount' => 1,
-                        ]
-                    ]) ?>
-                    <p>Allowed file types: pdf (max 2MB)</p>
-                    <?= \file\components\AttachmentsTable::widget(['model' => $model]) ?>
-                    <?= $form->field($model, 'id')->hiddenInput(['value' => $model->id])->label(false) ?>
+    <?= $form->field($model, 'resolution_url')->textInput(['maxlength' => true])->label('Link to the Resolution') ?>
+
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="form-group">
+                <label class="control-label col-sm-3" for="project-attachments">Scanned Copy of Resolution</label>
+                <div class="col-sm-9"
+                    <div class="row">
+                        <div class="col-md-12 col-xs-12">
+                            <?= AttachmentsInput::widget([
+                                'id' => 'file-input', // Optional
+                                'model' => $model,
+                                'options' => [ 
+                                    'multiple' => true
+                                ],
+                                'pluginOptions' => [ 
+                                    'showPreview' => false,
+                                    'showUpload' => false,
+                                    'maxFileCount' => 1,
+                                ]
+                            ]) ?>
+                            <p style="text-align: right">Allowed file types: jpg, png, pdf (max 5MB each)</p>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+    <div class="row">
+        <div class="col-md-12 col-xs-12">
+            <div class="pull-right">
+                <?= Html::submitButton('Save Record', ['class' => 'btn btn-success']) ?>
+            </div>
+            <div class="clearfix"></div>
+        </div>
     </div>
 
     <?php ActiveForm::end(); ?>
 
 </div>
+<style>
+    label.control-label{
+        font-weight: bolder;
+    }
+    hr{
+        opacity: 0.10;
+    }
+</style>

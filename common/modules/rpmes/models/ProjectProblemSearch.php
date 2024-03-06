@@ -2,6 +2,7 @@
 
 namespace common\modules\rpmes\models;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use common\modules\rpmes\models\ProjectProblem;
@@ -130,6 +131,7 @@ class ProjectProblemSearch extends ProjectProblem
         ->orFilterWhere(['like', 'responsible_entity', $this->globalSearch])
         ->orFilterWhere(['like', 'lesson_learned', $this->globalSearch]);
 
+        $query = Yii::$app->user->can('AgencyUser') ? $query->andWhere(['project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $query;
         $query = $query->orderBy(['project_problem.id' => SORT_DESC]);
 
         return $dataProvider;

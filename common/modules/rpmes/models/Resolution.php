@@ -30,10 +30,9 @@ class Resolution extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['resolution_number', 'resolution', 'date_approved','rpmc_action','quarter','year'], 'required'],
-            [['resolution_number'], 'unique', 'message' => 'The resolution number has been used already'],
+            [['resolution_number', 'resolution_title', 'date_approved', 'year'], 'required'],
             [['submitted_by'], 'integer'],
-            [['resolution_number','resolution', 'rpmc_action'], 'string'],
+            [['resolution_number','resolution_title', 'resolution', 'rpmc_action', 'resolution_url'], 'string'],
             [['date_approved','date_submitted'], 'safe'],
         ];
     }
@@ -55,7 +54,9 @@ class Resolution extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'resolution_number' => 'Resolution Number',
-            'resolution' => 'Resolutions Passed',
+            'resolution_title' => 'Resolution Title',
+            'resolution_url' => 'Link to the Resolution',
+            'resolution' => 'Resolution',
             'date_approved' => 'Date Approved',
             'rpmc_action' => 'Rpmc Action/Remarks',
             'quarter' => 'Quarter',
@@ -63,23 +64,5 @@ class Resolution extends \yii\db\ActiveRecord
             'date_submitted' => 'Date Submitted',
             'submitted_by' => 'Submitted By'
         ];
-    }
-
-    public function getYearsList() 
-    {
-        $currentYear = date('Y');
-        $leastYear = date('Y') - 3;
-        $maxYear = date('Y') + 3;
-        $yearRange = range($leastYear, $maxYear);
-        return array_combine($yearRange, $yearRange);
-    }
-
-    public function getTotalParticipant($id)
-    {
-        $data = Project::findOne($this->id);
-
-        $total_participant = $data->male_participant + $data->female_participant;
-
-        return $total_participant;
     }
 }

@@ -54,7 +54,7 @@ DisableButtonAsset::register($this);
     <div class="row">
         <div class="col-md-12 col-xs-12">
             <div class="pull-right">
-                <?= Html::submitButton('Save', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+                <?= Html::submitButton('Save Record', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]) ?>
             </div>
         </div>
     </div>

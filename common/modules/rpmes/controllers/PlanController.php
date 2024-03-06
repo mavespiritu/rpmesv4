@@ -535,6 +535,10 @@ class PlanController extends \yii\web\Controller
     {
         $model = Submission::findOne($id);
 
+        if(!$model){
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
         $dueDate = DueDate::findOne(['year' => $model->year, 'report' => 'Monitoring Plan']);
 
         if(!Yii::$app->user->can('Administrator')){

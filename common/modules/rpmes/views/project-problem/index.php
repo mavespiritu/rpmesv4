@@ -27,7 +27,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
     <div class="box box-solid">
         <div class="box-header with-border"><h3 class="box-title">Key Lessons and Best Practices</h3></div>
         <div class="box-body">
-            <?= $this->render('_search', ['model' => $searchModel,]) ?>
+            <?= $this->render('_search', ['model' => $searchModel]) ?>
             
             <?= GridView::widget([
                 'options' => [
@@ -215,32 +215,6 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
         </div>
     </div>
 </div>
-<?php
-    $script = '
-        function printFormElevenReport(year,quarter)
-        {
-            var printWindow = window.open(
-                "'.Url::to(['/rpmes/project-problem/print-form-eleven']).'?year=" + year + "&quarter=" + quarter, 
-                "Print",
-                "left=200", 
-                "top=200", 
-                "width=650", 
-                "height=500", 
-                "toolbar=0", 
-                "resizable=0"
-                );
-                printWindow.addEventListener("load", function() {
-                    printWindow.print();
-                    setTimeout(function() {
-                    printWindow.close();
-                }, 1);
-                }, true);
-        }
-    ';
-
-    $this->registerJs($script, View::POS_END);
-
-?>
 
 <?php
 if ($successMessage) {
