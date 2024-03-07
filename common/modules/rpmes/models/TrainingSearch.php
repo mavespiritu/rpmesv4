@@ -11,6 +11,7 @@ use common\modules\rpmes\models\Training;
  */
 class TrainingSearch extends Training
 {
+    public $globalSearch;
     /**
      * {@inheritdoc}
      */
@@ -18,7 +19,7 @@ class TrainingSearch extends Training
     {
         return [
             [['id', 'male_participant', 'female_participant', 'submitted_by'], 'integer'],
-            [['title', 'objective', 'office', 'organization', 'start_date', 'end_date', 'date_submitted','quarter','year'], 'safe'],
+            [['title', 'objective', 'office', 'organization', 'start_date', 'end_date', 'date_submitted','quarter','year', 'action', 'feedback', 'globalSearch'], 'safe'],
         ];
     }
 
@@ -40,7 +41,7 @@ class TrainingSearch extends Training
      */
     public function search($params)
     {
-        $query = Training::find()->joinWith('submitter');
+        $query = Training::find();
 
         // add conditions that should always apply here
 
@@ -50,27 +51,6 @@ class TrainingSearch extends Training
 
         $this->load($params);
 
-        $dataProvider->setSort([
-            'attributes' => [
-                'submitterName' => [
-                    'asc' => ['concat(user_info.FIRST_M)' => SORT_ASC],
-                    'desc' => ['concat(user_info.FIRST_M)' => SORT_DESC],
-                ],
-                'title',
-                'objective',
-                'office',
-                'organization',
-                'start_date',
-                'end_date',
-                'male_participant',
-                'female_participant',
-                'total_participant',
-                'date_submitted',
-                'quarter',
-                'year',
-            ]
-        ]);
-
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails
             // $query->where('0=1');
@@ -78,26 +58,20 @@ class TrainingSearch extends Training
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'submitterName' => $this->submitted_by,
-            'quarter'=> $this->quarter
-        ]);
 
-        $query->andFilterWhere(['like', 'title', $this->title])
-            ->andFilterWhere(['like', 'objective', $this->objective])
-            ->andFilterWhere(['like', 'quarter', $this->quarter])
-            ->andFilterWhere(['like', 'office', $this->office])
-            ->andFilterWhere(['like', 'organization', $this->organization])
-            ->andFilterWhere(['like', 'quarter', $this->quarter]);
+        $query
+            ->orFilterWhere(['like', 'title', $this->globalSearch])
+            ->orFilterWhere(['like', 'objective', $this->globalSearch])
+            ->orFilterWhere(['like', 'office', $this->globalSearch])
+            ->orFilterWhere(['like', 'action', $this->globalSearch])
+            ->orFilterWhere(['like', 'office', $this->globalSearch])
+            ->orFilterWhere(['like', 'organization', $this->globalSearch])
+            ->orFilterWhere(['like', 'feedback', $this->globalSearch])
+            ->orFilterWhere(['like', 'year', $this->globalSearch]);
+
+        $query = $query->orderBy(['id' => SORT_DESC]);
 
         return $dataProvider;
     }
-    public function getYearsList() 
-    {
-        $currentYear = 2099;
-        $yearFrom = 1900;
-        $yearsRange = range($yearFrom, $currentYear);
-        return array_combine($yearsRange, $yearsRange);
-    }
+   
 }

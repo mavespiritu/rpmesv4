@@ -19,10 +19,6 @@ use Yii;
  */
 class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
 {
-    public $agency_id;
-    public $sector_id;
-    public $region_id;
-    public $province_id;
     /**
      * {@inheritdoc}
      */
@@ -37,10 +33,17 @@ class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['year', 'quarter','project_id', 'pss_date', 'agreement_reached', 'next_step'], 'required'],
-            [['year', 'quarter'], 'required', 'on' => 'projectProblemSolvingSession'],
-            [['year', 'project_id', 'submitted_by','agency_id', 'sector_id', 'region_id', 'province_id'], 'integer'],
-            [['quarter', 'agreement_reached', 'next_step', 'slippage'], 'string'],
+            [[
+                'year', 
+                'quarter',
+                'project_id', 
+                'issue_details', 
+                'issue_typology', 
+                'pss_date', 
+                'agencies', 
+                'agreement_reached'], 'required'],
+            [['year', 'project_id', 'submitted_by'], 'integer'],
+            [['quarter', 'issue_details', 'issue_typology', 'agencies', 'agreement_reached', 'next_step', 'slippage'], 'string'],
             [['pss_date', 'date_submitted'], 'safe'],
         ];
     }
@@ -54,17 +57,15 @@ class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
             'id' => 'ID',
             'year' => 'Year',
             'quarter' => 'Quarter',
-            'project_id' => 'Project ID',
-            'projectTitle' => 'Project Title',
-            'pss_date' => 'Pss Date',
-            'agreement_reached' => 'Agreement Reached',
+            'project_id' => 'Project',
+            'issue_details' => 'Issue Details',
+            'issue_typology' => 'Issue Typology',
+            'pss_date' => 'Date of Meeting',
+            'agencies' => 'Concerned Agencies',
+            'agreement_reached' => 'Agreements Reached',
             'next_step' => 'Next Step',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',
-            'agency_id' => 'Agency',
-            'sector_id' => 'Sector',
-            'region_id' => 'Region',
-            'province_id' => 'Province',
             'slippage' => 'Slippage',
         ];
     }
@@ -72,10 +73,5 @@ class ProjectProblemSolvingSession extends \yii\db\ActiveRecord
     public function getProject()
     {
         return $this->hasOne(Project::className(), ['id' => 'project_id']);
-    }
-
-    public function getProjectTitle()
-    {
-        return $this->project ? $this->project->title : 'No Project';
     }
 }

@@ -6,17 +6,17 @@ use yii\helpers\Html;
 /* @var $model common\modules\rpmes\models\ProjectProblemSolvingSession */
 
 $this->title = 'Add New Record';
-$this->params['breadcrumbs'][] = ['label' => 'Form 8: Problem Solving Session/Facilitation Meeting Conducted', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'RPMES Form 8: Problem-Solving Session/Facilitation Meeting Conducted', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="project-problem-solving-session-create">
-    <div class="row">
-        <div class="col-md-6 col-xs-12">
+    <div class="box box-solid">
+        <div class="box-header with-border"><h3 class="box-title">Record Entry Form</h3></div>
+        <div class="box-body">
             <?= $this->render('_form', [
                 'model' => $model,
                 'projects' => $projects,
-                'quarters' => $quarters,
-                'years' => $years
+                'natures' => $natures,
             ]) ?>
         </div>
     </div>

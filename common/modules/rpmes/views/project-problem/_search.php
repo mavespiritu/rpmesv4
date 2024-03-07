@@ -12,8 +12,6 @@ use yii\bootstrap\ButtonDropdown;
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="project-problem-search">
-
 <div class="pull-left">
     <?= Yii::$app->user->can('Administrator') ? Html::a('<i class="fa fa-plus"></i> Add New Record', ['create'],['class' => 'btn btn-success', 'id' => 'create-button']) : '' ?>
 

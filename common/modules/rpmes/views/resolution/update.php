@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $model common\modules\rpmes\models\Resolution */
 
 $this->title = 'Update Resolution';
-$this->params['breadcrumbs'][] = ['label' => 'Form 10: RPMC and RDC Resolutions Related to Implementation of RPMES', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'RPMES Form 10: RPMC and RDC Resolutions Related to Implementation of RPMES', 'url' => ['index']];
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="resolution-update">

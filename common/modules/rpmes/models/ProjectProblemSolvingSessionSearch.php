@@ -2,6 +2,7 @@
 
 namespace common\modules\rpmes\models;
 
+use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use common\modules\rpmes\models\ProjectProblemSolvingSession;
@@ -11,16 +12,15 @@ use common\modules\rpmes\models\ProjectProblemSolvingSession;
  */
 class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
 {
-    public $projectTitle;
+    public $globalSearch;
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['year', 'quarter'], 'required'],
             [['id', 'year', 'project_id', 'submitted_by'], 'integer'],
-            [['quarter', 'pss_date', 'agreement_reached', 'next_step', 'projectTitle', 'date_submitted'], 'safe'],
+            [['quarter', 'pss_date', 'agreement_reached', 'next_step', 'date_submitted', 'issue_details', 'issue_typology', 'agencies','globalSearch'], 'safe'],
         ];
     }
 
@@ -51,19 +51,6 @@ class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
             'query' => $query,
         ]);
 
-        $dataProvider->setSort([
-            'attributes' => [
-                'id',
-                'year',
-                'quarter',
-                'projectTitle' => [
-                    'asc' => ['concat(project.title)' => SORT_ASC],
-                    'desc' => ['concat(project.title)' => SORT_DESC],
-                ],
-                'pss_date'
-            ]
-        ]);
-
         $this->load($params);
 
         if (!$this->validate()) {
@@ -73,18 +60,18 @@ class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
         }
 
         // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'year' => $this->year,
-            'project_id' => $this->project_id,
-            'pss_date' => $this->pss_date,
-            'submitted_by' => $this->submitted_by,
-            'date_submitted' => $this->date_submitted,
-        ]);
+        $query
+        ->orFilterWhere(['like', 'project.project_no', $this->globalSearch])
+        ->orFilterWhere(['like', 'project.title', $this->globalSearch])
+        ->orFilterWhere(['like', 'project_problem_solving_session.year', $this->globalSearch])
+        ->orFilterWhere(['like', 'quarter', $this->globalSearch])
+        ->orFilterWhere(['like', 'issue_details', $this->globalSearch])
+        ->orFilterWhere(['like', 'issue_typology', $this->globalSearch])
+        ->orFilterWhere(['like', 'agencies', $this->globalSearch])
+        ->orFilterWhere(['like', 'agreement_reached', $this->globalSearch]);
 
-        $query->andFilterWhere(['like', 'quarter', $this->quarter])
-            ->andFilterWhere(['like', 'agreement_reached', $this->agreement_reached])
-            ->andFilterWhere(['like', 'next_step', $this->next_step]);
+        $query = Yii::$app->user->can('AgencyUser') ? $query->andWhere(['project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $query;
+        $query = $query->orderBy(['project_problem_solving_session.id' => SORT_DESC]);
 
         return $dataProvider;
     }

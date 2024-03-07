@@ -15,7 +15,7 @@ DisableButtonAsset::register($this);
 /* @var $searchModel common\modules\rpmes\models\ResolutionSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Form 10: RPMC and RDC Resolutions Related to Implementation of RPMES';
+$this->title = 'RPMES Form 10: RPMC and RDC Resolutions Related to Implementation of RPMES';
 $this->params['breadcrumbs'][] = $this->title;
 
 $successMessage = \Yii::$app->getSession()->getFlash('success');
@@ -42,6 +42,13 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         ],
                     ],
                     [
+                        'attribute' => 'year',
+                        'header' => 'Year',
+                        'headerOptions' => [
+                            'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                        ]
+                    ],
+                    [
                         'attribute' => 'resolution_number',
                         'header' => 'Resolution No.',
                         'headerOptions' => [
@@ -60,7 +67,11 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
                         'header' => 'Date Approved',
                         'headerOptions' => [
                             'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
-                        ]
+                        ],
+                        'format' => 'raw',
+                        'value' => function ($model){
+                            return date("F j, Y", strtotime($model->date_approved)); 
+                        }
                     ],
                     [
                         'attribute' => 'resolution',

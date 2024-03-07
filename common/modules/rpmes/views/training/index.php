@@ -15,70 +15,131 @@ DisableButtonAsset::register($this);
 /* @var $searchModel common\modules\rpmes\models\TrainingSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Form 9: List of Training/Workshops Conducted';
+$this->title = 'RPMES Form 9: Trainings/Workshops conducted/facilitated/attended by the RPMC';
 $this->params['breadcrumbs'][] = $this->title;
+
+$successMessage = \Yii::$app->getSession()->getFlash('success');
 ?>
 <div class="training-index">
-    <div class="row">
-        <div class="col-md-12 col-xs-12">
-            <div class="box box-primary">
-                <div class="box-header with-border">
-                    <h3 class="box-title">List of Training/Workshops Conducted Report</h3>
-                </div>
-                <div class="box-body">
-                    <?= $this->render('_search', [
-                            'searchModel' => $searchModel,
-                            'years' => $years,
-                    ]) ?>
-                    <hr>
-                <div class="pull-right">
-                        <?= !Yii::$app->user->can('AgencyUser') ? ButtonDropdown::widget([
-                        'label' => '<i class="fa fa-download"></i> Export',
-                        'encodeLabel' => false,
-                        'options' => ['class' => 'btn btn-success btn-sm'],
-                        'dropdown' => [
-                            'items' => [
-                                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/training/download-form-nine', 'type' => 'excel', 'year' => $searchModel->year == null ? '' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'title' => $searchModel->title == null ? '2022' : $searchModel->title, 'objective' => $searchModel->objective == null ? '' : $searchModel->objective, 'office' => $searchModel->office == null ? '' : $searchModel->office, 'organization' => $searchModel->organization == null ? '' : $searchModel->organization, 'startDate' => $searchModel->start_date == null ? '' : $searchModel->start_date, 'endDate' => $searchModel->end_date == null ? '' : $searchModel->end_date, 'maleParticipant' => $searchModel->male_participant == null ? '' : $searchModel->male_participant, 'femaleParticipant' => $searchModel->female_participant == null ? '' : $searchModel->female_participant, 'model' => json_encode($searchModel)])],
-                                
-                                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/training/download-form-nine', 'type' => 'pdf', 'year' => $searchModel->year == null ? '2022' : $searchModel->year, 'quarter' => $searchModel->quarter == null ? '' : $searchModel->quarter, 'title' => $searchModel->title == null ? '2022' : $searchModel->title, 'objective' => $searchModel->objective == null ? '' : $searchModel->objective, 'office' => $searchModel->office == null ? '' : $searchModel->office, 'organization' => $searchModel->organization == null ? '' : $searchModel->organization, 'startDate' => $searchModel->start_date == null ? '' : $searchModel->start_date, 'endDate' => $searchModel->end_date == null ? '' : $searchModel->end_date, 'maleParticipant' => $searchModel->male_participant == null ? '' : $searchModel->male_participant, 'femaleParticipant' => $searchModel->female_participant == null ? '' : $searchModel->female_participant, 'model' => json_encode($searchModel)])],
-                            ],
+    <div class="flash-success" style="display: none;">
+        <?= $successMessage ?>
+    </div>
+    <div class="box box-solid">
+        <div class="box-header with-border">
+            <h3 class="box-title">List of Trainings/Workshops Conducted/Facilitated/Attended</h3>
+        </div>
+        <div class="box-body">
+            <?= $this->render('_search', ['model' => $searchModel]) ?>
+            
+            <?= GridView::widget([
+                'options' => [
+                    'class' => 'table-responsive',
+                ],
+                'dataProvider' => $dataProvider,
+                'columns' => [
+                    [
+                        'class' => 'yii\grid\SerialColumn',
+                        'headerOptions' => [
+                            'style' => 'background-color: #002060; color: white; font-weight: normal;'
+                        ],
                     ],
-                    ]) : '' ?>
-                    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printFormNineReport("'.$searchModel->year.'", "'.$searchModel->quarter.'", "'.$searchModel->title.'", "'.$searchModel->objective.'", "'.$searchModel->office.'", "'.$searchModel->organization.'", "'.$searchModel->start_date.'", "'.$searchModel->end_date.'", "'.$searchModel->male_participant.'", "'.$searchModel->female_participant.'")', 'class' => 'btn btn-danger btn-sm']) ?>
-                    </div>
-                    <div class="pull-left">
-                        <?= Html::a('<i class="fa fa-plus"></i> Add New', ['create'], ['class' => 'btn btn-success']) ?>
-                    </div>
-                    <div class="clearfix"></div>
-                    <br>
-                    
-                    <?= GridView::widget(['options' => ['class' => 'table-responsive',],
-                            'dataProvider' => $dataProvider,
-                            'filterModel' => $searchModel,
-                            'columns' => [
-                                    ['class' => 'yii\grid\SerialColumn'],
-
-                                                //'id',
-                                                'title:ntext',
-                                                'objective:ntext',
-                                                'office:ntext',
-                                                'organization:ntext',
-                                                'start_date',
-                                                'end_date',
-                                                'male_participant',
-                                                'female_participant',
-                                                [
-                                                'label' => 'Total Participants',
-                                                'value' => function ($model) {
-                                                return $model->getTotalParticipant();
-                                                            }
-                                                ],
-                                                ['class' => 'yii\grid\ActionColumn', 'template' => '{update}{delete}'],
-                                         ],
-                                        ]); 
-                    ?>
-                </div>
-            </div>
+                    [
+                        'attribute' => 'year',
+                        'header' => 'Year',
+                        'headerOptions' => [
+                            'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                        ]
+                    ],
+                    [
+                        'attribute' => 'title',
+                        'header' => 'Title of Training/Workshop',
+                        'headerOptions' => [
+                            'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                        ]
+                    ],
+                    [
+                        'attribute' => 'objective',
+                        'header' => 'Objective of Training/Workshop',
+                        'headerOptions' => [
+                            'style' => 'width: 20%; background-color: #002060; color: white; font-weight: normal;'
+                        ]
+                    ],
+                    [
+                        'attribute' => 'start_date',
+                        'header' => 'Date',
+                        'headerOptions' => [
+                            'style' => 'width: 15%; background-color: #002060; color: white; font-weight: normal;'
+                        ],
+                        'format' => 'raw',
+                        'value' => function ($model){
+                            return strtotime($model->start_date) == strtotime($model->end_date) ? date("F j, Y", strtotime($model->start_date)) : date("F j, Y", strtotime($model->start_date)).' to '.date("F j, Y", strtotime($model->end_date)); 
+                        }
+                    ],
+                    [
+                        'attribute' => 'action',
+                        'header' => 'Conducted/<br>Facilitated/<br>Attended',
+                        'headerOptions' => [
+                            'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                        ]
+                    ],
+                    [
+                        'attribute' => 'office',
+                        'header' => 'Lead Office/Unit',
+                        'headerOptions' => [
+                            'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
+                        ]
+                    ],
+                    [
+                        'attribute' => 'organization',
+                        'header' => 'Participating Offices/Agencies/Organizations',
+                        'headerOptions' => [
+                            'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
+                        ]
+                    ],
+                    [
+                        'header' => 'Total No. of Participants',
+                        'headerOptions' => [
+                            'style' => 'width: 5%; background-color: #002060; color: white; font-weight: normal;'
+                        ],
+                        'format' => 'raw',
+                        'value' => function ($model){
+                            return number_format($model->totalParticipants, 0); 
+                        }
+                    ],
+                    [
+                        'attribute' => 'feedback',
+                        'header' => 'Results and Feedback',
+                        'headerOptions' => [
+                            'style' => 'width: 10%; background-color: #002060; color: white; font-weight: normal;'
+                        ]
+                    ],
+                    [
+                        'class' => 'yii\grid\ActionColumn', 
+                        'headerOptions' => [
+                            'style' => 'background-color: #002060; color: white; font-weight: normal;'
+                        ],
+                        'template' => '<center>{update} {delete}</center>',
+                        'buttons' => [
+                            'update' => function($url, $model, $key){
+                                $modalID = $model->id;
+                                return Html::a('Update', ['update', 'id' => $model->id], [
+                                    'class' => 'btn btn-warning btn-block btn-xs'
+                                ]);
+                            },
+                            'delete' => function($url, $model, $key){
+                                return Html::a('Delete', ['delete', 'id' => $model->id], [
+                                        'class' => 'btn btn-danger btn-block btn-xs',
+                                        'data' => [
+                                            'confirm' => 'Are you sure want to delete this item?',
+                                            'method' => 'post',
+                                        ],
+                                    ]);
+                            },
+                        ],
+                    ],
+                ]
+            ]); 
+            ?>
         </div>
     </div>
 </div>

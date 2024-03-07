@@ -14,7 +14,7 @@ use common\components\helpers\HtmlHelper;
 /* @var $searchModel common\modules\rpmes\models\ProjectProblemSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Form 11: Key Lessons Learned from Issues Resolved and Best Practices';
+$this->title = 'RPMES Form 11: Key Lessons Learned from Issues Resolved and Best Practices';
 $this->params['breadcrumbs'][] = $this->title;
 
 $successMessage = \Yii::$app->getSession()->getFlash('success');
@@ -25,7 +25,7 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
         <?= $successMessage ?>
     </div>
     <div class="box box-solid">
-        <div class="box-header with-border"><h3 class="box-title">Key Lessons and Best Practices</h3></div>
+        <div class="box-header with-border"><h3 class="box-title">List of Key Lessons and Best Practices</h3></div>
         <div class="box-body">
             <?= $this->render('_search', ['model' => $searchModel]) ?>
             

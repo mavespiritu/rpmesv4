@@ -1,135 +1,56 @@
 <?php
-
 use yii\helpers\Html;
-use yii\helpers\Url;
 use yii\widgets\ActiveForm;
-use kartik\select2\Select2;
+use yii\bootstrap\Modal;
+use yii\helpers\Url;
 use yii\web\View;
+use yii\widgets\Pjax;
+use yii\bootstrap\ButtonDropdown;
 /* @var $this yii\web\View */
 /* @var $model common\modules\rpmes\models\ProjectProblemSolvingSessionSearch */
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="project-problem-solving-session-search">
+<div class="pull-left">
+    <?= Yii::$app->user->can('Administrator') ? Html::a('<i class="fa fa-plus"></i> Add New Record', ['create'],['class' => 'btn btn-success', 'id' => 'create-button']) : '' ?>
 
-    <?php $form = ActiveForm::begin([
-        'id' => 'search-project-problem-solving-session-form'
-    ]); ?>
-
-    <div class="row">
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'year')->widget(Select2::classname(), [
-                'data' => $years,
-                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'year-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Year *');
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'quarter')->widget(Select2::classname(), [
-                'data' => $quarters,
-                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'quarter-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Quarter *');
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'agency_id')->widget(Select2::classname(), [
-                'data' => $agencies,
-                'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'agency-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ])->label('Agency');
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'sector_id')->widget(Select2::classname(), [
-                'data' => $sectors,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'sector-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ]);
-            ?>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'region_id')->widget(Select2::classname(), [
-                'data' => $regions,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'region-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                'pluginEvents'=>[
-                    'select2:select select2:unselect'=>'
-                        function(){
-                            $.ajax({
-                                url: "'.Url::to(['/rpmes/project/province-list-single']).'",
-                                data: {
-                                        id: this.value,
-                                    }
-                            }).done(function(result) {
-                                $(".province-select").html("").select2({ data:result, multiple:false, theme:"krajee", width:"100%",placeholder:"Select one", allowClear: true});
-                                $(".province-select").select2("val","");
-                            });
-                        }'
-    
-                ]
-                ]);
-            ?>
-        </div>
-        <div class="col-md-3 col-xs-12">
-            <?= $form->field($model, 'province_id')->widget(Select2::classname(), [
-                'data' => $provinces,
-                'options' => ['multiple' => false, 'placeholder' => 'Select one', 'class'=>'province-select'],
-                'pluginOptions' => [
-                    'allowClear' =>  true,
-                ],
-                ]);
-            ?>
-        </div>
-    </div>
-    <div class="form-group pull-right">
-            <?= Html::submitButton('Generate Data', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;']) ?>
-    </div>
-    <?php ActiveForm::end(); ?>
-
+    <?= Yii::$app->user->can('Administrator') ? Html::button('<i class="fa fa-print"></i> Generate Form 8', ['value' => Url::to(['/rpmes/project-problem-solving-session/generate']), 'class' => 'btn btn-default', 'id' => 'generate-button']) : '' ?>
 </div>
+
+<div class="pull-right">
+    <div class="project-problem-search">
+
+        <?php $form = ActiveForm::begin([
+            'action' => ['index'],
+            'method' => 'get',
+        ]); ?>
+
+        <?= $form->field($model, 'globalSearch')->textInput(['style' => 'border-top: none !important; border-left: none !important; border-right: none !important;', 'placeholder' => 'Search Records'])->label(false) ?>
+
+        <?php ActiveForm::end(); ?>
+
+    </div>
+</div>
+<div class="clearfix"></div>
+
+<?php
+  Modal::begin([
+    'id' => 'generate-modal',
+    'size' => "modal-sm",
+    'header' => '<div id="generate-modal-header"><h4>Generate Form 8</h4></div>',
+    'options' => ['tabindex' => false],
+  ]);
+  echo '<div id="generate-modal-content"></div>';
+  Modal::end();
+?>
 <?php
     $script = '
-    $("#search-project-problem-solving-session-form").on("beforeSubmit", function (e) {
-        e.preventDefault();
-     
-        var form = $(this);
-        var formData = form.serialize();
-        
-        $.ajax({
-            url: form.attr("action"),
-            type: form.attr("method"),
-            data: formData,
-            beforeSend: function(){
-                $("#project-problem-solving-session-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
-            },
-            success: function (data) {
-                console.log(this.data);
-                $("#project-problem-solving-session-table").empty();
-                $("#project-problem-solving-session-table").hide();
-                $("#project-problem-solving-session-table").fadeIn("slow");
-                $("#project-problem-solving-session-table").html(data);
-            },
-            error: function (err) {
-                console.log(err);
-            }
-        });      
-
-        return false;
-    });
+        $(document).ready(function(){
+            $("#generate-button").click(function(){
+                $("#generate-modal").modal("show").find("#generate-modal-content").load($(this).attr("value"));
+              });
+        });     
     ';
 
     $this->registerJs($script, View::POS_END);
+?>

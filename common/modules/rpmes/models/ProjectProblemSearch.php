@@ -12,16 +12,6 @@ use common\modules\rpmes\models\ProjectProblem;
  */
 class ProjectProblemSearch extends ProjectProblem
 {
-    public $projectTitle;
-    public $sectorTitle;
-    public $subSectorTitle;
-    public $location;
-    public $allocationTotal;
-    public $agency;
-    public $projectBarangays;
-    public $projectCitymuns;
-    public $projectProvinces;
-    public $projectRegions;
     public $globalSearch;
     
     /**
@@ -54,62 +44,13 @@ class ProjectProblemSearch extends ProjectProblem
     public function search($params)
     {
         $query = ProjectProblem::find()
-                ->joinWith('project')
-                ->joinWith('project.sector')
-                ->joinWith('project.modeOfImplementation');
-                ;
+                ->joinWith('project');
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
-
-        /* $dataProvider->setSort([
-            'attributes' => [
-                'id',
-                'year',
-                'quarter',
-                'projectTitle' => [
-                    'asc' => ['concat(project.title)' => SORT_ASC],
-                    'desc' => ['concat(project.title)' => SORT_DESC],
-                ],
-                'sectorTitle' => [
-                    'asc' => ['concat(sector.title)' => SORT_ASC],
-                    'desc' => ['concat(sector.title)' => SORT_DESC],
-                ],
-                'subSectorTitle' => [
-                    'asc' => ['concat(sub_sector.title)' => SORT_ASC],
-                    'desc' => ['concat(sub_sector.title)' => SORT_DESC],
-                ],
-                'projectBarangays' => [
-                    'asc' => ['concat(tblbarangay.barangay_m)' => SORT_ASC],
-                    'desc' => ['concat(tblbarangay.barangay_m)' => SORT_DESC],
-                ],
-                'projectCitymuns' => [
-                    'asc' => ['concat(tblcitymun.citymun_m)' => SORT_ASC],
-                    'desc' => ['concat(tblcitymun.citymun_m)' => SORT_DESC],
-                ],
-                'projectProvinces' => [
-                    'asc' => ['concat(tblprovince.province_m)' => SORT_ASC],
-                    'desc' => ['concat(tblprovince.province_m)' => SORT_DESC],
-                ],
-                'projectRegions' => [
-                    'asc' => ['concat(tblregion.region_m)' => SORT_ASC],
-                    'desc' => ['concat(tblregion.region_m)' => SORT_DESC],
-                ],
-                'agency' => [
-                    'asc' => ['concat(agency.code)' => SORT_ASC],
-                    'desc' => ['concat(agency.code)' => SORT_DESC],
-                ],
-                'nature',
-                'detail',
-                'strategy',
-                'salutation',
-                'responsible_entity',
-                'lesson_learned',
-            ]
-        ]); */
 
         $this->load($params);
 

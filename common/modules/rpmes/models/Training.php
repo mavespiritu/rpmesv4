@@ -36,8 +36,8 @@ class Training extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title', 'objective', 'office', 'organization','start_date', 'end_date', 'date_submitted','male_participant', 'female_participant', 'submitted_by','quarter','year'], 'required'],
-            [['title', 'objective', 'office', 'organization'], 'string'],
+            [['title', 'objective', 'office', 'organization','start_date', 'end_date', 'date_submitted','male_participant', 'female_participant', 'year', 'action', 'feedback'], 'required'],
+            [['title', 'objective', 'office', 'organization', 'action'], 'string'],
             [['start_date', 'end_date', 'date_submitted'], 'safe'],
             [['male_participant', 'female_participant', 'submitted_by'], 'integer'],
         ];
@@ -50,18 +50,20 @@ class Training extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'title' => 'Title of Training',
-            'objective' => 'Objective of Training',
-            'office' => 'Lead Office',
-            'organization' => 'Participating Offices / Agencies / Organizations',
+            'title' => 'Title of Training/Workshop',
+            'objective' => 'Objective of Training/Workshop',
+            'office' => 'Lead Office/Unit',
+            'organization' => 'Participating Offices/Agencies/Organizations',
             'start_date' => 'Start Date',
             'end_date' => 'End Date',
-            'male_participant' => 'Male Participant',
-            'female_participant' => 'Female Participant',
+            'male_participant' => 'Total No. of Male Participants',
+            'female_participant' => 'Total No. of Female Participants',
             'submitted_by' => 'Submitted By',
             'date_submitted' => 'Date Submitted',
             'quarter' => 'Quarter',
-            'year' => 'Year'
+            'year' => 'Year',
+            'action' => 'Conducted/Facilitated/Attended',
+            'feedback' => 'Results and Feedback'
         ];
     }
 
@@ -83,20 +85,8 @@ class Training extends \yii\db\ActiveRecord
     {
         return $this->submitter ? $this->submitter->fullName : '';
     }
-    public function getTotalParticipant()
+    public function getTotalParticipants()
     {
-        $data = Training::findOne($this->id);
-
-        $total_participant = $data->male_participant + $data->female_participant;
-
-        return $total_participant;
-    }
-    public function getYearsList() 
-    {
-        $currentYear = date('Y');
-        $leastYear = date('Y') - 3;
-        $maxYear = date('Y') + 3;
-        $yearRange = range($leastYear, $maxYear);
-        return array_combine($yearRange, $yearRange);
+        return $this->male_participant + $this->female_participant;
     }
 }

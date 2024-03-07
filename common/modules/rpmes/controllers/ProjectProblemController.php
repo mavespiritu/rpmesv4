@@ -48,7 +48,7 @@ class ProjectProblemController extends Controller
                         'roles' => ['@'],
                     ],
                     [
-                        'actions' => ['index', 'create', 'update', 'generate', 'delete'],
+                        'actions' => ['index', 'create', 'update', 'generate', 'delete', 'print'],
                         'allow' => true,
                         'roles' => ['Administrator', 'SuperAdministrator'],
                     ],
@@ -69,19 +69,6 @@ class ProjectProblemController extends Controller
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-        ]);
-    }
-
-    /**
-     * Displays a single ProjectProblem model.
-     * @param integer $id
-     * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionView($id)
-    {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
         ]);
     }
 
