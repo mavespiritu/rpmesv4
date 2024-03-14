@@ -102,7 +102,7 @@ class Acknowledgment extends \yii\db\ActiveRecord
         $message = $mailer->compose('acknowledge-form-one-html', [
                 'model' => $this
             ])
-            ->setFrom('mvespiritu@neda.gov.ph')
+            ->setFrom('nro1.mailer@neda.gov.ph')
             ->setTo($emails)
             ->setSubject('eRPMES Notification: Acknowledgment of '.$this->submission->agency->code.' - Form 1 Submission for CY '.$this->submission->year);
 
@@ -121,7 +121,7 @@ class Acknowledgment extends \yii\db\ActiveRecord
         $message = $mailer->compose('acknowledge-form-two-html', [
                 'model' => $this
             ])
-            ->setFrom('mvespiritu@neda.gov.ph')
+            ->setFrom('nro1.mailer@neda.gov.ph')
             ->setTo($emails)
             ->setSubject('eRPMES Notification: Acknowledgment of '.$this->submission->agency->code.' - Form 2 Submission for '.$this->submission->quarter.' '.$this->submission->year);
 
@@ -140,7 +140,7 @@ class Acknowledgment extends \yii\db\ActiveRecord
         $message = $mailer->compose('acknowledge-form-three-html', [
                 'model' => $this
             ])
-            ->setFrom('mvespiritu@neda.gov.ph')
+            ->setFrom('nro1.mailer@neda.gov.ph')
             ->setTo($emails)
             ->setSubject('eRPMES Notification: Acknowledgment of '.$this->submission->agency->code.' - Form 3 Submission for '.$this->submission->quarter.' '.$this->submission->year);
 
@@ -159,7 +159,7 @@ class Acknowledgment extends \yii\db\ActiveRecord
         $message = $mailer->compose('acknowledge-form-four-html', [
                 'model' => $this
             ])
-            ->setFrom('mvespiritu@neda.gov.ph')
+            ->setFrom('nro1.mailer@neda.gov.ph')
             ->setTo($emails)
             ->setSubject('eRPMES Notification: Acknowledgment of '.$this->submission->agency->code.' - Form 4 Submission for '.$this->submission->year);
 

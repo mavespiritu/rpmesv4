@@ -735,8 +735,8 @@ class PlanController extends \yii\web\Controller
             $postData = Yii::$app->request->post();
             $getData = Yii::$app->request->get();
 
-            $targetModels = $postData['ProjectTarget'];
-            $oiTargetModels = $postData['ProjectExpectedOutput'];
+            $targetModels = isset($postData['ProjectTarget']) ? $postData['ProjectTarget'] : [];
+            $oiTargetModels = isset($postData['ProjectExpectedOutput']) ? $postData['ProjectExpectedOutput'] : [];
 
             if(!empty($targetModels)){
                 foreach($targetModels as $projectID => $targetModel){
@@ -827,35 +827,36 @@ class PlanController extends \yii\web\Controller
                     $femaleEmployedModel->annual = $this->removeMask($femaleEmployedValue['annual']);
 
                     $femaleEmployedModel->save(false);
+                    
+                    if(!empty($oiTargetModels)){
+                        if(!empty($oiTargetModels[$projectID])){
+                            foreach($oiTargetModels[$projectID] as $oiID => $oiTarget){
+        
+                                $oiModel = ProjectExpectedOutput::findOne([
+                                    'project_id' => $projectID,
+                                    'year' => $model->year,
+                                    'indicator' => $oiID,
+                                ]) ? ProjectExpectedOutput::findOne([
+                                    'project_id' => $projectID,
+                                    'year' => $model->year,
+                                    'indicator' => $oiID,
+                                ]) : new ProjectExpectedOutput();
+        
+                                $oiModel->project_id = $projectID;
+                                $oiModel->year = $model->year;
+                                $oiModel->indicator = $oiID;
+                                $oiModel->target = $oiTarget['target'];
+                                $oiModel->type = 'Numerical';
+                                $oiModel->baseline = $this->removeMask($oiTarget['baseline']);
 
-                    if(!empty($oiTargetModels[$projectID])){
-                        foreach($oiTargetModels[$projectID] as $oiID => $oiTarget){
-    
-                            $oiModel = ProjectExpectedOutput::findOne([
-                                'project_id' => $projectID,
-                                'year' => $model->year,
-                                'indicator' => $oiID,
-                            ]) ? ProjectExpectedOutput::findOne([
-                                'project_id' => $projectID,
-                                'year' => $model->year,
-                                'indicator' => $oiID,
-                            ]) : new ProjectExpectedOutput();
-    
-                            $oiModel->project_id = $projectID;
-                            $oiModel->year = $model->year;
-                            $oiModel->indicator = $oiID;
-                            $oiModel->target = $oiTarget['target'];
-                            $oiModel->type = 'Numerical';
-                            $oiModel->baseline = $this->removeMask($oiTarget['baseline']);
+                                foreach($months as $mo => $month){
+                                    $oiModel->$mo = $this->removeMask($oiTarget[$mo]);
+                                }
 
-                            foreach($months as $mo => $month){
-                                $oiModel->$mo = $this->removeMask($oiTarget[$mo]);
+                                $oiModel->save(false);
                             }
-
-                            $oiModel->save(false);
                         }
                     }
-
                 }
             }
 

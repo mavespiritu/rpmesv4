@@ -1,4 +1,4 @@
 <?php
 return [
-    'adminEmail' => 'mvespiritu@neda.gov.ph',
+    'adminEmail' => 'nro1.mailer@neda.gov.ph',
 ];

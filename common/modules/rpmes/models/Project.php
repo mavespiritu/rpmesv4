@@ -275,7 +275,7 @@ class Project extends \yii\db\ActiveRecord
                         $value += floatval($allocation->$mo);
                     }
                 }
-                $value += floatval($allocation->releases);
+                $value += $allocation ? floatval($allocation->releases) : 0;
                 break;
             case 'Cumulative':
                 $value = $allocation ? floatval($allocations[0]) : 0;

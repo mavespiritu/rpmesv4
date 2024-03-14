@@ -37,7 +37,7 @@ return [
             'enableConfirmation' => true,
             'enablePasswordRecovery' => true,
             'mailer' => [
-                    'sender'                => 'mvespiritu@neda.gov.ph',
+                    'sender'                => 'nro1.mailer@neda.gov.ph',
                     'welcomeSubject'        => 'Welcome to the NEDA RO1 eRPMES',
                     'confirmationSubject'   => 'Confirm your NEDA RO1 eRPMES account',
                     'reconfirmationSubject' => 'Reconfirm your NEDA RO1 eRPMES account',
