@@ -44,16 +44,18 @@
                     ],
                     ['label' => 'Guidelines', 'icon' => 'folder', 'url' => ['/rpmes/guideline/'], 'visible' => !Yii::$app->user->isGuest],
                     ['label' => 'System Updates', 'icon' => 'folder', 'url' => ['/rpmes/guideline/updates'], 'visible' => !Yii::$app->user->isGuest],
-                    /* [
+                    [
                         'label' => 'Acknowledgment',
                         'icon' => 'folder',
                         'url' => '#',
                         'visible' => !Yii::$app->user->isGuest,
                         'items' => [
-                            ['label' => 'Form 1', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest],
-                            ['label' => 'Form 2', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/monitoring-report'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'RPMES Form 1', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/monitoring-plan'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
+                            ['label' => 'RPMES Form 2', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/monitoring-report'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
+                            ['label' => 'RPMES Form 3', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/project-exception'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
+                            ['label' => 'RPMES Form 4', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/project-results'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                         ],
-                    ], */
+                    ],
                     /* [
                         'label' => 'Summary',
                         'icon' => 'folder',

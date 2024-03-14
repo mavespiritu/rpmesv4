@@ -11,7 +11,7 @@ DisableButtonAsset::register($this);
 /* @var $form yii\widgets\ActiveForm */
 ?>
 
-<div class="acknowledgment-monitoring-plan-search">
+<div class="acknowledgment-project-exception-search">
 
     <?php $form = ActiveForm::begin([
     	'options' => ['class' => 'disable-submit-buttons'],

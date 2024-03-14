@@ -44,7 +44,7 @@ DisableButtonAsset::register($this);
         <div class="col-md-3 col-xs-12">
             <br>
             <label for="">&nbsp;</label>
-            <?= Html::submitButton('Search submissions', ['class' => 'btn btn-primary', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
+            <?= Html::submitButton('Search submissions', ['class' => 'btn btn-success', 'style' => 'margin-top: 5px;', 'data' => ['disabled-text' => 'Please Wait']]) ?>
         </div>
     </div>
     <?php ActiveForm::end(); ?>

@@ -30,12 +30,13 @@ use yii\web\View;
                     </tr>
                 </table>
                 <br>
-                <span class="pull-right"><?= Yii::$app->user->can('Administrator') ? $agency->getMonitoringReportSubmission($getData['year'], $q) ? Html::button('Acknowledge', ['value' => Url::to(['/rpmes/acknowledgment/acknowledge-monitoring-report', 'id' => $agency->getMonitoringReportSubmission($getData['year'], $q)->id]), 'class' => 'btn btn-success btn-sm', 'id' => 'acknowledge-monitoring-report-'.$agency->id.'-'.$q.'-button']) : '' : '' ?>
+                <!-- <span class="pull-right"><?= Yii::$app->user->can('Administrator') ? $agency->getMonitoringReportSubmission($getData['year'], $q) ? Html::button('Acknowledge', ['value' => Url::to(['/rpmes/acknowledgment/acknowledge-monitoring-report', 'id' => $agency->getMonitoringReportSubmission($getData['year'], $q)->id]), 'class' => 'btn btn-success btn-sm', 'id' => 'acknowledge-monitoring-report-'.$agency->id.'-'.$q.'-button']) : '' : '' ?>
                 <?= $agency->getMonitoringReportAcknowledgment($getData['year'], $q) ? Html::button('Print', ['onClick' => 'printAcknowledgmentMonitoringReport('.$agency->getMonitoringReportAcknowledgment($getData['year'], $q)->id.')', 'class' => 'btn btn-info btn-sm']) : '' ?>
                 <?= Yii::$app->user->can('Administrator') ? $agency->getMonitoringReportSubmission($getData['year'], $q) ? Html::a('Delete', ['/rpmes/acknowledgment/delete-submission', 'id' => $agency->getMonitoringReportSubmission($getData['year'], $q)->id, 'report' => 'Accomplishment'], ['class' => 'btn btn-danger btn-sm', 'id' => 'delete-monitoring-report-'.$agency->id.'-button', 'data' => [
                     'confirm' => 'Are you sure you want to remove submission of this agency?',
                     'method' => 'post',
-                ],]) : '' : '' ?></span>
+                ],]) : '' : '' ?></span> -->
+                <?= $agency->getMonitoringReportSubmission($getData['year'], $q) ? Html::a('View Submission', ['/rpmes/accomplishment/view', 'id' => $agency->getMonitoringReportSubmission($getData['year'], $q)->id], ['class' => 'btn btn-block btn-success btn-sm', 'target' => '_blank']) : '' ?>
             </td>
         <?php } ?>
     <?php } ?>
@@ -48,7 +49,7 @@ if(!empty($quarters)){
         Modal::begin([
             'id' => 'acknowledge-monitoring-report-'.$agency->id.'-'.$q.'-modal',
             'size' => "modal-xl",
-            'header' => '<div id="acknowledge-monitoring-report-'.$agency->id.'-'.$q.'-modal-header"><h4>Acknowledge Monitoring Report</h4></div>',
+            'header' => '<div id="acknowledge-monitoring-report-'.$agency->id.'-'.$q.'-modal-header"><h4>Acknowledge Form 2 Submission</h4></div>',
             'options' => ['tabindex' => false],
           ]);
         echo '<div id="acknowledge-monitoring-report-'.$agency->id.'-'.$q.'-modal-content"></div>';

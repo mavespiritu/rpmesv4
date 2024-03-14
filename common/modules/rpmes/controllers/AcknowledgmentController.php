@@ -73,12 +73,12 @@ class AcknowledgmentController extends \yii\web\Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['monitoring-plan', 'monitoring-report'],
+                'only' => ['monitoring-plan', 'monitoring-report', 'project-exception', 'project-results'],
                 'rules' => [
                     [
-                        'actions' => ['monitoring-plan', 'monitoring-report'],
+                        'actions' => ['monitoring-plan', 'monitoring-report', 'project-exception', 'project-results'],
                         'allow' => true,
-                        'roles' => ['Administrator', 'SuperAdministrator', 'AgencyUser'],
+                        'roles' => ['Administrator', 'SuperAdministrator'],
                     ],
                 ],
             ],
@@ -284,6 +284,214 @@ class AcknowledgmentController extends \yii\web\Controller
         $officeTitleShort = Settings::findOne(['Agency Title Short']);
 
         return $this->renderAjax('_monitoring-report', [
+            'acknowledgment' => $acknowledgment,
+            'submission' => $submission,
+            'officeTitle' => $officeTitle,
+            'officeAddress' => $officeAddress,
+            'officeHead' => $officeHead,
+            'officeTitleShort' => $officeTitleShort,
+        ]);
+    }
+
+    public function actionProjectException()
+    {
+        $model = new Submission();
+        $model->scenario = 'acknowledgmentMonitoringPlan';
+
+        $submissions = null;
+        $agencyIDs = null;
+        $getData = [];
+        $quarters = ['Q1' => 'First Quarter', 'Q2' => 'Second Quarter', 'Q3' => 'Third Quarter', 'Q4' => 'Fourth Quarter'];
+
+        $years = Submission::find()->select(['distinct(year) as year'])->orderBy(['year' => SORT_DESC])->asArray()->all();
+        $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
+        array_unique($years);
+
+        $agencies = Agency::find()->select(['id', 'code as title'])->orderBy(['code' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+        
+        if($model->load(Yii::$app->request->get()))
+        {
+            $getData = Yii::$app->request->get('Submission');
+            $submissions = Agency::find();
+
+            $agencyIDs = Project::find()->where(['year' => $model->year])->asArray()->all();
+            $agencyIDs = ArrayHelper::map($agencyIDs, 'agency_id', 'agency_id');
+
+            $submissions = $submissions->andWhere(['id' => $agencyIDs]);
+
+            if($model->agency_id != '')
+            {
+                $submissions = $submissions->andWhere(['id' => $model->agency_id]);
+            }
+
+            $submissions = Yii::$app->user->can('AgencyUser') ? $submissions->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $submissions;
+
+            $submissions = $submissions->orderBy(['code' => SORT_ASC])->all();
+
+        }
+
+        return $this->render('project-exception', [
+            'model' => $model,
+            'years' => $years,
+            'agencies' => $agencies,
+            'submissions' => $submissions,
+            'getData' => $getData,
+            'quarters' => $quarters,
+        ]);
+    }
+
+    public function actionAcknowledgeProjectException($id)
+    {
+        $officeTitle = Settings::findOne(['Agency Title Long']);
+        $officeAddress = Settings::findOne(['Agency Address']);
+        $officeHead = Settings::findOne(['Agency Head']);
+        $officeTitleShort = Settings::findOne(['Agency Title Short']);
+        $submission = Submission::findOne(['id' => $id]);
+        $agency = Agency::findOne(['id' => $submission->agency_id]);
+        $model = Acknowledgment::findOne(['submission_id' => $submission->id]) ? Acknowledgment::findOne(['submission_id' => $submission->id]) : new Acknowledgment();
+        $lastAcknowledgment = Acknowledgment::find()->orderBy(['id' => SORT_DESC])->one();
+        $lastNumber = $lastAcknowledgment ? intval($lastAcknowledgment->id) + 1 : '1';
+        $model->submission_id = $submission->id;
+        $model->control_no = $model->isNewRecord ? 'NEDARO1-QOP-03-'.date("Y").'001'.$lastNumber : $model->control_no;
+        $model->recipient_name = $agency->head;
+        $model->recipient_designation = $agency->head_designation;
+        $model->recipient_office = $agency->title;
+        $model->recipient_address = $agency->address;
+        $model->acknowledged_by = Yii::$app->user->id;
+
+        if($model->load(Yii::$app->request->post()))
+        {
+            $model->save();
+
+            \Yii::$app->getSession()->setFlash('success', 'Acknowledgment has been saved successfully');
+            return $this->redirect(['/rpmes/acknowledgment/project-exception', 'Submission[year]' => $submission->year]);
+        }
+
+        return $this->renderAjax('_project-exception-form', [
+            'model' => $model,
+            'submission' => $submission,
+            'agency' => $agency,
+            'officeTitle' => $officeTitle,
+            'officeAddress' => $officeAddress,
+            'officeHead' => $officeHead,
+            'officeTitleShort' => $officeTitleShort,
+        ]);
+    }
+    public function actionPrintProjectException($id)
+    {
+        $acknowledgment = Acknowledgment::findOne(['id' => $id]);
+        $submission = Submission::findOne(['id' => $acknowledgment->submission_id]);
+        $officeTitle = Settings::findOne(['Agency Title Long']);
+        $officeAddress = Settings::findOne(['Agency Address']);
+        $officeHead = Settings::findOne(['Agency Head']);
+        $officeTitleShort = Settings::findOne(['Agency Title Short']);
+
+        return $this->renderAjax('_project-exception', [
+            'acknowledgment' => $acknowledgment,
+            'submission' => $submission,
+            'officeTitle' => $officeTitle,
+            'officeAddress' => $officeAddress,
+            'officeHead' => $officeHead,
+            'officeTitleShort' => $officeTitleShort,
+        ]);
+    }
+
+    public function actionProjectResults()
+    {
+        $model = new Submission();
+        $model->scenario = 'acknowledgmentMonitoringPlan';
+
+        $submissions = null;
+        $agencyIDs = null;
+        $getData = [];
+
+        $years = Submission::find()->select(['distinct(year) as year'])->orderBy(['year' => SORT_DESC])->asArray()->all();
+        $years = [date("Y") => date("Y")] + ArrayHelper::map($years, 'year', 'year');
+        array_unique($years);
+
+        $agencies = Agency::find()->select(['id', 'code as title'])->orderBy(['code' => SORT_ASC])->asArray()->all();
+        $agencies = ArrayHelper::map($agencies, 'id', 'title');
+
+        if($model->load(Yii::$app->request->get()))
+        {
+            $getData = Yii::$app->request->get('Submission');
+            $submissions = Agency::find();
+
+            $agencyIDs = Project::find()->where(['year' => $model->year])->asArray()->all();
+            $agencyIDs = ArrayHelper::map($agencyIDs, 'agency_id', 'agency_id');
+
+            $submissions = $submissions->andWhere(['id' => $agencyIDs]);
+
+            if($model->agency_id != '')
+            {
+                $submissions = $submissions->andWhere(['id' => $model->agency_id]);
+            }
+
+            $submissions = Yii::$app->user->can('AgencyUser') ? $submissions->andWhere(['id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $submissions;
+
+            $submissions = $submissions->orderBy(['code' => SORT_ASC])->all();
+
+        }
+
+        return $this->render('project-results', [
+            'model' => $model,
+            'years' => $years,
+            'agencies' => $agencies,
+            'submissions' => $submissions,
+            'getData' => $getData,
+        ]);
+
+    }
+
+    public function actionAcknowledgeProjectResults($id)
+    {
+        $officeTitle = Settings::findOne(['Agency Title Long']);
+        $officeAddress = Settings::findOne(['Agency Address']);
+        $officeHead = Settings::findOne(['Agency Head']);
+        $officeTitleShort = Settings::findOne(['Agency Title Short']);
+        $submission = Submission::findOne(['id' => $id]);
+        $agency = Agency::findOne(['id' => $submission->agency_id]);
+        $model = Acknowledgment::findOne(['submission_id' => $submission->id]) ? Acknowledgment::findOne(['submission_id' => $submission->id]) : new Acknowledgment();
+        $lastAcknowledgment = Acknowledgment::find()->orderBy(['id' => SORT_DESC])->one();
+        $lastNumber = $lastAcknowledgment ? intval($lastAcknowledgment->id) + 1 : '1';
+        $model->submission_id = $submission->id;
+        $model->control_no = $model->isNewRecord ? 'NEDARO1-QOP-03-'.date("Y").'001'.$lastNumber : $model->control_no;
+        $model->recipient_name = $agency->head;
+        $model->recipient_designation = $agency->head_designation;
+        $model->recipient_office = $agency->title;
+        $model->recipient_address = $agency->address;
+        $model->acknowledged_by = Yii::$app->user->id;
+
+        if($model->load(Yii::$app->request->post()))
+        {
+            $model->save();
+
+            \Yii::$app->getSession()->setFlash('success', 'Acknowledgment has been saved successfully');
+            return $this->redirect(['/rpmes/acknowledgment/project-results', 'Submission[year]' => $submission->year]);
+        }
+
+        return $this->renderAjax('_project-results-form', [
+            'model' => $model,
+            'submission' => $submission,
+            'agency' => $agency,
+            'officeTitle' => $officeTitle,
+            'officeAddress' => $officeAddress,
+            'officeHead' => $officeHead,
+            'officeTitleShort' => $officeTitleShort,
+        ]);
+    }
+
+    public function actionPrintProjectResults($id)
+    {
+        $acknowledgment = Acknowledgment::findOne(['id' => $id]);
+        $submission = Submission::findOne(['id' => $acknowledgment->submission_id]);
+        $officeTitle = Settings::findOne(['Agency Title Long']);
+        $officeAddress = Settings::findOne(['Agency Address']);
+        $officeHead = Settings::findOne(['Agency Head']);
+        $officeTitleShort = Settings::findOne(['Agency Title Short']);
+
+        return $this->renderAjax('_monitoring-plan', [
             'acknowledgment' => $acknowledgment,
             'submission' => $submission,
             'officeTitle' => $officeTitle,

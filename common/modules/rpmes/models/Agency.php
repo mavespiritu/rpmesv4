@@ -91,12 +91,22 @@ class Agency extends \yii\db\ActiveRecord
 
     public function getMonitoringPlanSubmission($year)
     {
-        return Submission::findOne(['agency_id' => $this->id, 'year' => $year, 'report' => 'Monitoring Plan', 'draft' => 'No']);
+        return Submission::findOne(['agency_id' => $this->id, 'year' => $year, 'report' => 'Monitoring Plan']);
     }
 
     public function getMonitoringReportSubmission($year, $quarter)
     {
-        return Submission::findOne(['agency_id' => $this->id, 'year' => $year, 'quarter' => $quarter, 'report' => 'Accomplishment', 'draft' => 'No']);
+        return Submission::findOne(['agency_id' => $this->id, 'year' => $year, 'quarter' => $quarter, 'report' => 'Accomplishment']);
+    }
+
+    public function getProjectExceptionSubmission($year, $quarter)
+    {
+        return Submission::findOne(['agency_id' => $this->id, 'year' => $year, 'quarter' => $quarter, 'report' => 'Project Exception']);
+    }
+
+    public function getProjectResultsSubmission($year)
+    {
+        return Submission::findOne(['agency_id' => $this->id, 'year' => $year, 'report' => 'Project Results']);
     }
 
     public function getMonitoringPlanAcknowledgment($year)
@@ -109,6 +119,20 @@ class Agency extends \yii\db\ActiveRecord
     public function getMonitoringReportAcknowledgment($year, $quarter)
     {
         $submission = $this->getMonitoringReportSubmission($year, $quarter);
+
+        return $submission ? $submission->acknowledgment : [];
+    }
+
+    public function getProjectExceptionAcknowledgment($year, $quarter)
+    {
+        $submission = $this->getProjectExceptionSubmission($year, $quarter);
+
+        return $submission ? $submission->acknowledgment : [];
+    }
+
+    public function getProjectResultsAcknowledgment($year)
+    {
+        $submission = $this->getProjectResultsSubmission($year);
 
         return $submission ? $submission->acknowledgment : [];
     }
