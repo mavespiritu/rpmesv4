@@ -43,7 +43,7 @@ class ProjectException extends \yii\db\ActiveRecord
                 'action_taken', 
                 'recommendations'
             ], 'required'],
-            [['for_npmc_action'], 'required', 'on' => 'review'],
+            [['requested_action'], 'required', 'on' => 'endorse'],
             [['project_id', 'typology_id', 'for_npmc_action', 'year', 'submitted_by'], 'integer'],
             [['quarter', 'findings', 'causes', 'recommendations', 'requested_action'], 'string'],
             [['date_submitted'], 'safe'],
@@ -63,7 +63,7 @@ class ProjectException extends \yii\db\ActiveRecord
             'other_typology' => 'Other typology',
             'year' => 'Year',
             'quarter' => 'Quarter',
-            'findings' => 'Findings',
+            'findings' => 'Issue Details',
             'issue_status' => 'Issue Status',
             'causes' => 'Reasons',
             'recommendations' => 'Actions to be taken',

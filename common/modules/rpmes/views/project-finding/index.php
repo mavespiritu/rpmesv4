@@ -10,7 +10,7 @@ use yii\web\View;
 /* @var $searchModel common\modules\rpmes\models\ProjectFindingSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'RPMES Form 7: Project Inspection Report';
+$this->title = 'RPMES Form 7: Project Inspection Reports';
 $this->params['breadcrumbs'][] = $this->title;
 
 $successMessage = \Yii::$app->getSession()->getFlash('success');

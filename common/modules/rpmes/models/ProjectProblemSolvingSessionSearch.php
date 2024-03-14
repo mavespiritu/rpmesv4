@@ -64,6 +64,7 @@ class ProjectProblemSolvingSessionSearch extends ProjectProblemSolvingSession
         ->orFilterWhere(['like', 'project.project_no', $this->globalSearch])
         ->orFilterWhere(['like', 'project.title', $this->globalSearch])
         ->orFilterWhere(['like', 'project_problem_solving_session.year', $this->globalSearch])
+        ->orFilterWhere(['like', 'project_problem_solving_session.quarter', $this->globalSearch])
         ->orFilterWhere(['like', 'quarter', $this->globalSearch])
         ->orFilterWhere(['like', 'issue_details', $this->globalSearch])
         ->orFilterWhere(['like', 'issue_typology', $this->globalSearch])

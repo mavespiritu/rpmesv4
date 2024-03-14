@@ -5,12 +5,12 @@ namespace common\modules\rpmes\models;
 use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use common\modules\rpmes\models\ProjectFinding;
+use common\modules\rpmes\models\ProjectException;
 
 /**
  * ProjectFindingSearch represents the model behind the search form of `common\modules\rpmes\models\ProjectFinding`.
  */
-class ProjectFindingSearch extends ProjectFinding
+class ProjectExceptionSearch extends ProjectException
 {
     public $globalSearch;
     /**
@@ -20,7 +20,7 @@ class ProjectFindingSearch extends ProjectFinding
     {
         return [
             [['id', 'year', 'project_id'], 'integer'],
-            [['quarter', 'inspection_date', 'site_details', 'major_finding', 'issues', 'action', 'action_to_be_taken', 'globalSearch'], 'safe'],
+            [['quarter', 'issue_status', 'findings', 'causes', 'action_taken', 'recommendations', 'for_npmc_action', 'requested_action', 'globalSearch'], 'safe'],
         ];
     }
 
@@ -42,7 +42,7 @@ class ProjectFindingSearch extends ProjectFinding
      */
     public function search($params)
     {
-        $query = ProjectFinding::find()
+        $query = ProjectException::find()
                 ->joinWith('project');
 
         // add conditions that should always apply here
@@ -59,21 +59,23 @@ class ProjectFindingSearch extends ProjectFinding
             return $dataProvider;
         }
 
+
         // grid filtering conditions
         $query
         ->orFilterWhere(['like', 'project.project_no', $this->globalSearch])
         ->orFilterWhere(['like', 'project.title', $this->globalSearch])
-        ->orFilterWhere(['like', 'project_finding.year', $this->globalSearch])
-        ->orFilterWhere(['like', 'project_finding.quarter', $this->globalSearch])
-        ->orFilterWhere(['like', 'inspection_date', $this->globalSearch])
-        ->orFilterWhere(['like', 'site_details', $this->globalSearch])
-        ->orFilterWhere(['like', 'major_finding', $this->globalSearch])
-        ->orFilterWhere(['like', 'issues', $this->globalSearch])
-        ->orFilterWhere(['like', 'action', $this->globalSearch])
-        ->orFilterWhere(['like', 'action_to_be_taken', $this->globalSearch]);
+        ->orFilterWhere(['like', 'project_exception.year', $this->globalSearch])
+        ->orFilterWhere(['like', 'project_exception.quarter', $this->globalSearch])
+        ->orFilterWhere(['like', 'issue_status', $this->globalSearch])
+        ->orFilterWhere(['like', 'findings', $this->globalSearch])
+        ->orFilterWhere(['like', 'causes', $this->globalSearch])
+        ->orFilterWhere(['like', 'action_taken', $this->globalSearch])
+        ->orFilterWhere(['like', 'recommendations', $this->globalSearch])
+        ->orFilterWhere(['like', 'for_npmc_action', $this->globalSearch])
+        ->orFilterWhere(['like', 'requested_action', $this->globalSearch]);
 
         $query = Yii::$app->user->can('AgencyUser') ? $query->andWhere(['project.agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C]) : $query;
-        $query = $query->orderBy(['project_finding.id' => SORT_DESC]);
+        $query = $query->orderBy(['project_exception.quarter' => SORT_DESC, 'project_exception.year' => SORT_DESC, 'project.project_no' => SORT_DESC]);
 
         return $dataProvider;
     }

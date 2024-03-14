@@ -33,7 +33,7 @@
                             ['label' => 'RPMES Form 3', 'icon' => 'folder', 'url' => ['/rpmes/project-exception'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 4', 'icon' => 'folder', 'url' => ['/rpmes/project-result'], 'visible' => !Yii::$app->user->isGuest],
                             //['label' => 'RPMES Form 5', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],
-                            //['label' => 'RPMES Form 6', 'icon' => 'folder', 'url' => ['/rpmes/project-status'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'RPMES Form 6', 'icon' => 'folder', 'url' => ['/rpmes/project-endorsement'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 7', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 8', 'icon' => 'folder', 'url' => ['/rpmes/project-problem-solving-session'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 9', 'icon' => 'folder', 'url' => ['/rpmes/training'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],                         

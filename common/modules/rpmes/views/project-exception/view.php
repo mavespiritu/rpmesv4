@@ -180,7 +180,7 @@ Modal::end();
                     }
                 ],
                 [
-                    'header' => 'Findings',
+                    'header' => 'Issue Details',
                     'headerOptions' => [
                         'style' => 'width: 15%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
                     ],
