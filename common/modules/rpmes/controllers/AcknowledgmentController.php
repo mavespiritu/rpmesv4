@@ -105,7 +105,7 @@ class AcknowledgmentController extends \yii\web\Controller
             $getData = Yii::$app->request->get('Submission');
             $submissions = Agency::find();
 
-            $agencyIDs = Project::find()->where(['year' => $model->year])->asArray()->all();
+            $agencyIDs = Plan::find()->where(['year' => $model->year])->asArray()->all();
             $agencyIDs = ArrayHelper::map($agencyIDs, 'agency_id', 'agency_id');
 
             $submissions = $submissions->andWhere(['id' => $agencyIDs]);
@@ -210,7 +210,7 @@ class AcknowledgmentController extends \yii\web\Controller
             $getData = Yii::$app->request->get('Submission');
             $submissions = Agency::find();
 
-            $agencyIDs = Project::find()->where(['year' => $model->year])->asArray()->all();
+            $agencyIDs = Plan::find()->where(['year' => $model->year])->asArray()->all();
             $agencyIDs = ArrayHelper::map($agencyIDs, 'agency_id', 'agency_id');
 
             $submissions = $submissions->andWhere(['id' => $agencyIDs]);
@@ -315,7 +315,7 @@ class AcknowledgmentController extends \yii\web\Controller
             $getData = Yii::$app->request->get('Submission');
             $submissions = Agency::find();
 
-            $agencyIDs = Project::find()->where(['year' => $model->year])->asArray()->all();
+            $agencyIDs = Plan::find()->where(['year' => $model->year])->asArray()->all();
             $agencyIDs = ArrayHelper::map($agencyIDs, 'agency_id', 'agency_id');
 
             $submissions = $submissions->andWhere(['id' => $agencyIDs]);
@@ -418,7 +418,7 @@ class AcknowledgmentController extends \yii\web\Controller
             $getData = Yii::$app->request->get('Submission');
             $submissions = Agency::find();
 
-            $agencyIDs = Project::find()->where(['year' => $model->year])->asArray()->all();
+            $agencyIDs = Plan::find()->where(['year' => $model->year])->asArray()->all();
             $agencyIDs = ArrayHelper::map($agencyIDs, 'agency_id', 'agency_id');
 
             $submissions = $submissions->andWhere(['id' => $agencyIDs]);
