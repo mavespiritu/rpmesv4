@@ -175,20 +175,20 @@ class Acknowledgment extends \yii\db\ActiveRecord
         parent::afterSave($insert, $changedAttributes);
 
         if ($insert) {
-            $adminRole = Yii::$app->authManager->getRole('Administrator');
-            //$userRole = Yii::$app->authManager->getRole('AgencyUser');
+            //$adminRole = Yii::$app->authManager->getRole('Administrator');
+            $userRole = Yii::$app->authManager->getRole('AgencyUser');
 
-            //if ($userRole !== null) {
-            if ($adminRole !== null) {
+            if ($userRole !== null) {
+            ///if ($adminRole !== null) {
            
-                //$userIDs = UserInfo::find()->where(['AGENCY_C' => $this->submission->agency_id])->all();
-               ///$userIDs = ArrayHelper::map($userIDs, 'user_id', 'user_id');
+                $userIDs = UserInfo::find()->where(['AGENCY_C' => $this->submission->agency_id])->all();
+                $userIDs = ArrayHelper::map($userIDs, 'user_id', 'user_id');
 
                 $admins = User::find()
                 ->innerJoin('auth_assignment', 'auth_assignment.user_id = user.id')
-                //->where(['auth_assignment.item_name' => $userRole->name])
-                ->where(['auth_assignment.item_name' => $adminRole->name])
-                //->andWhere(['id' => $userIDs])
+                ->where(['auth_assignment.item_name' => $userRole->name])
+                //->where(['auth_assignment.item_name' => $adminRole->name])
+                ->andWhere(['id' => $userIDs])
                 ->all();
 
                 $emails = [];
@@ -218,20 +218,20 @@ class Acknowledgment extends \yii\db\ActiveRecord
             }
 
         } else {
-            $adminRole = Yii::$app->authManager->getRole('Administrator');
-            //$userRole = Yii::$app->authManager->getRole('AgencyUser');
+            //$adminRole = Yii::$app->authManager->getRole('Administrator');
+            $userRole = Yii::$app->authManager->getRole('AgencyUser');
 
-            //if ($userRole !== null) {
-            if ($adminRole !== null) {
+            if ($userRole !== null) {
+            //if ($adminRole !== null) {
            
-                //$userIDs = UserInfo::find()->where(['AGENCY_C' => $this->submission->agency_id])->all();
-               ///$userIDs = ArrayHelper::map($userIDs, 'user_id', 'user_id');
+                $userIDs = UserInfo::find()->where(['AGENCY_C' => $this->submission->agency_id])->all();
+                $userIDs = ArrayHelper::map($userIDs, 'user_id', 'user_id');
 
                 $admins = User::find()
                 ->innerJoin('auth_assignment', 'auth_assignment.user_id = user.id')
-                //->where(['auth_assignment.item_name' => $userRole->name])
-                ->where(['auth_assignment.item_name' => $adminRole->name])
-                //->andWhere(['id' => $userIDs])
+                ->where(['auth_assignment.item_name' => $userRole->name])
+                //->where(['auth_assignment.item_name' => $adminRole->name])
+                ->andWhere(['id' => $userIDs])
                 ->all();
 
                 $emails = [];
