@@ -1438,7 +1438,7 @@ class PlanController extends \yii\web\Controller
         $fundingSourceTitles = ProjectHasFundSources::find()
                     ->select([
                         'phfs.project_id',
-                        'GROUP_CONCAT(DISTINCT CONCAT(row_number, ". ", fund_source.title, " ", phfs.type) ORDER BY phfs.id ASC SEPARATOR "<br>") as title'
+                        'GROUP_CONCAT(DISTINCT CONCAT(row_number, ". ", fund_source.title) ORDER BY phfs.id ASC SEPARATOR "<br>") as title'
                     ])
                     ->from(['phfs' => ProjectHasFundSources::tableName()])
                     ->leftJoin('fund_source', 'fund_source.id = phfs.fund_source_id')
