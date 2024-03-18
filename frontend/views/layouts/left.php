@@ -32,7 +32,7 @@
                             ['label' => 'RPMES Form 2', 'icon' => 'folder', 'url' => ['/rpmes/accomplishment'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 3', 'icon' => 'folder', 'url' => ['/rpmes/project-exception'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 4', 'icon' => 'folder', 'url' => ['/rpmes/project-result'], 'visible' => !Yii::$app->user->isGuest],
-                            //['label' => 'RPMES Form 5', 'icon' => 'folder', 'url' => ['/rpmes/summary/summary-accomplishment'], 'visible' => !Yii::$app->user->isGuest],
+                            ['label' => 'RPMES Form 5', 'icon' => 'folder', 'url' => ['/rpmes/project-summary'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 6', 'icon' => 'folder', 'url' => ['/rpmes/project-endorsement'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 7', 'icon' => 'folder', 'url' => ['/rpmes/project-finding'], 'visible' => !Yii::$app->user->isGuest],
                             ['label' => 'RPMES Form 8', 'icon' => 'folder', 'url' => ['/rpmes/project-problem-solving-session'], 'visible' => !Yii::$app->user->isGuest],
@@ -42,8 +42,6 @@
                         ],
                         
                     ],
-                    ['label' => 'Guidelines', 'icon' => 'folder', 'url' => ['/rpmes/guideline/'], 'visible' => !Yii::$app->user->isGuest],
-                    ['label' => 'System Updates', 'icon' => 'folder', 'url' => ['/rpmes/guideline/updates'], 'visible' => !Yii::$app->user->isGuest],
                     [
                         'label' => 'Acknowledgment',
                         'icon' => 'folder',
@@ -56,6 +54,8 @@
                             ['label' => 'RPMES Form 4', 'icon' => 'folder', 'url' => ['/rpmes/acknowledgment/project-results'], 'visible' => !Yii::$app->user->isGuest && (in_array('SuperAdministrator', $userRoles) || in_array('Administrator', $userRoles))],
                         ],
                     ],
+                    ['label' => 'Guidelines', 'icon' => 'folder', 'url' => ['/rpmes/guideline/'], 'visible' => !Yii::$app->user->isGuest],
+                    ['label' => 'System Updates', 'icon' => 'folder', 'url' => ['/rpmes/guideline/updates'], 'visible' => !Yii::$app->user->isGuest],
                     /* [
                         'label' => 'Summary',
                         'icon' => 'folder',

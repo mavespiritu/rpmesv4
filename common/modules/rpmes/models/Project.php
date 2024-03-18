@@ -617,14 +617,12 @@ class Project extends \yii\db\ActiveRecord
         $q3 = PersonEmployedAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $this->year]) ? PersonEmployedAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $this->year])->male : 0;
         $q4 = PersonEmployedAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $this->year]) ? PersonEmployedAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $this->year])->male : 0;
 
-        $value = 0;
-        
-             if($quarter == 'Q1'){ $value = intval($q1); }
-        else if($quarter == 'Q2'){ $value = intval($q1) + intval($q2); }
-        else if($quarter == 'Q3'){ $value = intval($q1) + intval($q2) + intval($q3); }
-        else if($quarter == 'Q4'){ $value = intval($q1) + intval($q2) + intval($q3) + intval($q4); }
-
-        return $value;
+        return [
+            'Q1' => intval($q1),
+            'Q2' => intval($q2),
+            'Q3' => intval($q3),
+            'Q4' => intval($q4),
+        ];
     }
 
     public function getFemalesEmployedActual($quarter)
@@ -634,14 +632,12 @@ class Project extends \yii\db\ActiveRecord
         $q3 = PersonEmployedAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $this->year]) ? PersonEmployedAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q3', 'year' => $this->year])->female : 0;
         $q4 = PersonEmployedAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $this->year]) ? PersonEmployedAccomplishment::findOne(['project_id' => $this->id, 'quarter' => 'Q4', 'year' => $this->year])->female : 0;
 
-        $value = 0;
-        
-             if($quarter == 'Q1'){ $value = intval($q1); }
-        else if($quarter == 'Q2'){ $value = intval($q1) + intval($q2); }
-        else if($quarter == 'Q3'){ $value = intval($q1) + intval($q2) + intval($q3); }
-        else if($quarter == 'Q4'){ $value = intval($q1) + intval($q2) + intval($q3) + intval($q4); }
-
-        return $value;
+        return [
+            'Q1' => intval($q1),
+            'Q2' => intval($q2),
+            'Q3' => intval($q3),
+            'Q4' => intval($q4),
+        ];
     }
 
     public function getEmployedActual($quarter)
