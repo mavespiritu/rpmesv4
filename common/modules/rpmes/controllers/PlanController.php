@@ -75,10 +75,10 @@ class PlanController extends \yii\web\Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'create', 'update', 'delete', 'view'],
+                'only' => ['index', 'create', 'update', 'delete', 'view', 'include', 'target'],
                 'rules' => [
                     [
-                        'actions' => ['index', 'create', 'update', 'delete', 'view'],
+                        'actions' => ['index', 'create', 'update', 'delete', 'view', 'include', 'target'],
                         'allow' => true,
                         'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
                     ],
@@ -845,12 +845,12 @@ class PlanController extends \yii\web\Controller
                                 $oiModel->project_id = $projectID;
                                 $oiModel->year = $model->year;
                                 $oiModel->indicator = $oiID;
-                                $oiModel->target = $oiTarget['target'];
+                                $oiModel->target = isset($oiTarget['target']) ? $oiTarget['target'] : '';
                                 $oiModel->type = 'Numerical';
-                                $oiModel->baseline = $this->removeMask($oiTarget['baseline']);
+                                $oiModel->baseline = isset($oiTarget['baseline']) ? $this->removeMask($oiTarget['baseline']) : 0;
 
                                 foreach($months as $mo => $month){
-                                    $oiModel->$mo = $this->removeMask($oiTarget[$mo]);
+                                    $oiModel->$mo = isset($oiTarget[$mo]) ? $this->removeMask($oiTarget[$mo]) : 0; 
                                 }
 
                                 $oiModel->save(false);
@@ -972,11 +972,9 @@ class PlanController extends \yii\web\Controller
         $dueDate = DueDate::findOne(['year' => $model->year, 'report' => 'Monitoring Plan']);
 
         if($dueDate){
-            if(strtotime(date("Y-m-d")) >= strtotime($dueDate->due_date)){
+            if(strtotime(date("Y-m-d")) > strtotime($dueDate->due_date)){
                 throw new NotFoundHttpException('The requested page does not exist.');
             }
-        }else{
-            throw new NotFoundHttpException('The requested page does not exist.');
         }
 
         if(!Yii::$app->user->can('Administrator')){

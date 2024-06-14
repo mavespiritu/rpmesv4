@@ -159,19 +159,6 @@ Modal::end();
                     }
                 ],
                 [
-                    'header' => 'Target to date <br> (Allotment)',
-                    'headerOptions' => [
-                        'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
-                    ],
-                    'contentOptions' => [
-                        'style' => 'text-align: right;'
-                    ],
-                    'format' => 'raw',
-                    'value' => function($plan) use ($model){
-                        return number_format($plan->project->getFinancialTargetPerQuarter($model->year)[$model->quarter], 2);
-                    }
-                ],
-                [
                     'header' => 'Actual to date <br> (Allotment)',
                     'headerOptions' => [
                         'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
@@ -195,6 +182,19 @@ Modal::end();
                     'format' => 'raw',
                     'value' => function($plan) use ($model){
                         return number_format($plan->project->getNewAccomplishedObligationForQuarter($model->year)[$model->quarter], 2);
+                    }
+                ],
+                [
+                    'header' => 'Disbursement Target',
+                    'headerOptions' => [
+                        'style' => 'width: 10%; text-align: center; background-color: #002060; color: white; font-weight: normal;'
+                    ],
+                    'contentOptions' => [
+                        'style' => 'text-align: right;'
+                    ],
+                    'format' => 'raw',
+                    'value' => function($plan) use ($model){
+                        return number_format($plan->project->getFinancialTargetPerQuarter($model->year)[$model->quarter], 2);
                     }
                 ],
                 [

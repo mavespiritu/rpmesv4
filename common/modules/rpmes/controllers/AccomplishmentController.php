@@ -83,10 +83,10 @@ class AccomplishmentController extends \yii\web\Controller
             ],
             'access' => [
                 'class' => AccessControl::className(),
-                'only' => ['index', 'create', 'update', 'delete', 'view'],
+                'only' => ['index', 'create', 'update', 'delete', 'view', 'accomplish-form', 'accomplish-oi'],
                 'rules' => [
                     [
-                        'actions' => ['index', 'create', 'update', 'delete', 'view'],
+                        'actions' => ['index', 'create', 'update', 'delete', 'view', 'accomplish-form', 'accomplish-oi'],
                         'allow' => true,
                         'roles' => ['AgencyUser', 'Administrator', 'SuperAdministrator'],
                     ],
@@ -670,8 +670,6 @@ class AccomplishmentController extends \yii\web\Controller
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
                 throw new NotFoundHttpException('The requested page does not exist.');
             }
-        }else{
-            throw new NotFoundHttpException('The requested page does not exist.');
         }
 
         if(!$planSubmission){
@@ -1008,8 +1006,6 @@ class AccomplishmentController extends \yii\web\Controller
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
                 throw new NotFoundHttpException('The requested page does not exist.');
             }
-        }else{
-            throw new NotFoundHttpException('The requested page does not exist.');
         }
 
         if(!$planSubmission){

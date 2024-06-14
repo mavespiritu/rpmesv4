@@ -473,6 +473,7 @@ class Project extends \yii\db\ActiveRecord
         switch($this->data_type){
             case 'Default':
                 if($allocation){
+                    $value += floatval($allocation->baseline);
                     foreach($months as $mo => $month){
                         $value += floatval($allocation->$mo);
                     }
