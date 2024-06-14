@@ -92,7 +92,7 @@ function renderSummary($page)
                 </table>
 
                 <div class="form-group pull-right"> 
-                    <?= Yii::$app->user->can('AgencyUser') ? 
+                    <?= !Yii::$app->user->can('Administrator') ? 
                             $model->currentStatus != 'Draft' || $model->currentStatus != 'For further validation' ? 
                                 count($projects) > 0 ?
                                     $dueDate ? 
@@ -102,7 +102,7 @@ function renderSummary($page)
                                     '' : 
                                 '' : 
                             '' : 
-                        '' ?>
+                        Html::submitButton('Include Selected', ['class' => 'btn btn-success', 'id' => 'include-project-button', 'data' => ['disabled-text' => 'Please Wait', 'method' => 'post', 'confirm' => 'Are you sure you want to include selected projects to this monitoring plan?'], 'disabled' => true]) ?>
                 </div>
                 <div class="clearfix"></div>
 

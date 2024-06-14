@@ -971,15 +971,15 @@ class PlanController extends \yii\web\Controller
 
         $dueDate = DueDate::findOne(['year' => $model->year, 'report' => 'Monitoring Plan']);
 
-        if($dueDate){
-            if(strtotime(date("Y-m-d")) > strtotime($dueDate->due_date)){
-                throw new NotFoundHttpException('The requested page does not exist.');
-            }
-        }
-
         if(!Yii::$app->user->can('Administrator')){
             if($model->agency_id != Yii::$app->user->identity->userinfo->AGENCY_C){
                 throw new NotFoundHttpException('The requested page does not exist.');
+            }
+            
+            if($dueDate){
+                if(strtotime(date("Y-m-d")) > strtotime($dueDate->due_date)){
+                    throw new NotFoundHttpException('The requested page does not exist.');
+                }
             }
         }
 
@@ -989,7 +989,7 @@ class PlanController extends \yii\web\Controller
         $projects = [];
 
         $availableProjects = Project::find()
-                    ->andWhere(['agency_id' => Yii::$app->user->identity->userinfo->AGENCY_C])
+                    ->andWhere(['agency_id' => $model->agency_id])
                     ->andWhere(['source_id' => null])
                     ->andWhere(['draft' => 'No'])
                     ->andWhere(['not in', 'id', $existingProjects]);                    

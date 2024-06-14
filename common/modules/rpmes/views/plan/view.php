@@ -345,7 +345,7 @@ Modal::end();
                         'style' => 'background-color: #002060; color: white; font-weight: normal;'
                     ],
                     'value' => function ($plan) use ($form, $projects, $model, $dataProvider, $dueDate) {
-                        return Yii::$app->user->can('AgencyUser') ? 
+                        return !Yii::$app->user->can('Administrator') ? 
                                     $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                                         $dataProvider->getCount() > 0 ? 
                                             $form->field($projects[$plan->id], "[$plan->id]id")->checkbox([
@@ -356,14 +356,19 @@ Modal::end();
                                             ]) : 
                                         '' :
                                     '' :
-                                '';
+                                $form->field($projects[$plan->id], "[$plan->id]id")->checkbox([
+                                    'value' => $plan->id, 
+                                    'class' => 'check-project', 
+                                    'id' => 'check-project-'.$plan->id, 
+                                    'label' => ''
+                                ]);
                     },
                 ],
             ],
         ]); ?>
 
         <div class="form-group pull-right"> 
-            <?= Yii::$app->user->can('AgencyUser') ? 
+            <?= Yii::$app->user->can('Administrator') ? 
                     $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                         $dataProvider->getCount() > 0 ? 
                                 Html::submitButton('Remove Selected', [
@@ -378,7 +383,16 @@ Modal::end();
                                 ]) :
                         '' : 
                     '' : 
-                '' ?>
+                Html::submitButton('Remove Selected', [
+                    'class' => 'btn btn-danger', 
+                    'id' => 'remove-project-button', 
+                    'data' => [
+                        'disabled-text' => 'Please Wait', 
+                        'method' => 'post', 
+                        'confirm' => 'Are you sure you want to remove selected projects to this monitoring plan?'
+                    ], 
+                    'disabled' => true
+                ]) ?>
         </div>
         <div class="clearfix"></div>
 

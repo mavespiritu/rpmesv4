@@ -169,7 +169,7 @@ function renderSummary($page)
             </div>
             <br>
             <div class="form-group pull-right">
-                <?= Yii::$app->user->can('AgencyUser') ?
+                <?= !Yii::$app->user->can('Administrator') ?
                         $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                             $projectsPages->totalCount > 0 ?
                                 $dueDate ? 
@@ -181,7 +181,7 @@ function renderSummary($page)
                                 '' :
                             '' :
                         '' :
-                    '';
+                    Html::submitButton('Save Form 2 OI/s', ['class' => 'btn btn-success', 'data' => ['disabled-text' => 'Please Wait']]);
                 ?>        
             </div>
             <?php ActiveForm::end(); ?>

@@ -13,7 +13,7 @@ use yii\bootstrap\ButtonDropdown;
 ?>
 
 <div class="pull-left">
-    <?= Yii::$app->user->can('AgencyUser') ?
+    <?= !Yii::$app->user->can('Administrator') ?
             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                 $dueDate ? 
                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
@@ -21,10 +21,10 @@ use yii\bootstrap\ButtonDropdown;
                     Html::a('<i class="fa fa-list"></i> View Form 2', ['accomplish-form', 'id' => $model->id], ['class' => 'btn btn-default']) :
                 Html::a('<i class="fa fa-list"></i> View Form 2', ['accomplish-form', 'id' => $model->id], ['class' => 'btn btn-default']) :
             Html::a('<i class="fa fa-list"></i> View Form 2', ['accomplish-form', 'id' => $model->id], ['class' => 'btn btn-default']) :
-        '';
+        Html::a('<i class="fa fa-list"></i> Accomplish Form 2', ['accomplish-form', 'id' => $model->id], ['class' => 'btn btn-default']);
     ?>
 
-    <?= Yii::$app->user->can('AgencyUser') ?
+    <?= !Yii::$app->user->can('Administrator') ?
             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
                 $dueDate ? 
                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
@@ -32,7 +32,7 @@ use yii\bootstrap\ButtonDropdown;
                     Html::a('<i class="fa fa-list"></i> View Form 2 OI/s', ['accomplish-oi', 'id' => $model->id], ['class' => 'btn btn-default']) :
                 Html::a('<i class="fa fa-list"></i> View Form 2 OI/s', ['accomplish-oi', 'id' => $model->id], ['class' => 'btn btn-default']) :
             Html::a('<i class="fa fa-list"></i> View Form 2 OI/s', ['accomplish-oi', 'id' => $model->id], ['class' => 'btn btn-default']) :
-        '';
+        Html::a('<i class="fa fa-list"></i> Accomplish Form 2 OI/s', ['accomplish-oi', 'id' => $model->id], ['class' => 'btn btn-default']);
     ?>
 
     <?= Html::a('<i class="fa fa-file-excel-o"></i> Generate Form 2', ['/rpmes/accomplishment/download', 'id' => $model->id, 'type' => 'excel'], ['class' => 'btn btn-default']) ?>

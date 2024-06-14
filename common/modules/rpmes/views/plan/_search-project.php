@@ -13,7 +13,7 @@ use yii\bootstrap\ButtonDropdown;
 ?>
 
 <div class="pull-left">
-    <?= Yii::$app->user->can('AgencyUser') ?
+    <?= !Yii::$app->user->can('Administrator') ?
             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
                 $dueDate ? 
                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ? 
@@ -21,9 +21,9 @@ use yii\bootstrap\ButtonDropdown;
                     '' :
                 '' :
             '' :
-        '';
+        Html::a('<i class="fa fa-plus"></i> Include Projects', ['include', 'id' => $model->id], ['class' => 'btn btn-default']);
     ?>
-    <?= Yii::$app->user->can('AgencyUser') ?
+    <?= !Yii::$app->user->can('Administrator') ?
             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ?
                 $dueDate ? 
                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
@@ -31,7 +31,7 @@ use yii\bootstrap\ButtonDropdown;
                     Html::a('<i class="fa fa-list"></i> View Targets', ['target', 'id' => $model->id], ['class' => 'btn btn-default']) :
                 Html::a('<i class="fa fa-list"></i> View Targets', ['target', 'id' => $model->id], ['class' => 'btn btn-default']) :
             Html::a('<i class="fa fa-list"></i> View Targets', ['target', 'id' => $model->id], ['class' => 'btn btn-default']) :
-        '';
+        Html::a('<i class="fa fa-list"></i> Adjust Targets', ['target', 'id' => $model->id], ['class' => 'btn btn-default']);
     ?>
     <?= $dataProvider->getCount() > 0 ? Html::a('<i class="fa fa-file-excel-o"></i> Generate Form 1', ['/rpmes/plan/download', 'id' => $model->id, 'type' => 'excel'], ['class' => 'btn btn-default']) : '' ?>
 
