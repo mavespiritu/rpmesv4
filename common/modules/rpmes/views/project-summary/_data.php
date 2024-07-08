@@ -18,10 +18,7 @@ DisableButtonAsset::register($this);
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
         <thead>
             <tr style="background-color: #002060; color: white; font-weight: normal">
-                <td colspan=5 rowspan=3 align=center style="width: 10% !important;">Program/Project Title</td>
-                <td colspan=2 align=center>Implementation Schedule</td>
-                <td rowspan=3 align=center>Fund Source</td>
-                <td rowspan=3 align=center>Funding Agency</td>
+                <td colspan=5 rowspan=3 align=center style="width: 10% !important;">Grouping</td>
                 <td rowspan=3 align=center>Total<br>Program/Project<br>Cost</td>
                 <td colspan=6 align=center>Financial Status of Reporting Period</td>
                 <td colspan=6 align=center>Physical Status of Reporting Period</td>
@@ -30,8 +27,6 @@ DisableButtonAsset::register($this);
                 <td colspan=5 align=center>Implementation Status</td>
             </tr>
             <tr style="background-color: #002060; color: white; font-weight: normal">
-                <td rowspan=2 align=center>Start Date<br>(mm-dd-yy)</td>
-                <td rowspan=2 align=center>End Date<br>(mm-dd-yy)</td>
                 <td rowspan=2 align=center>Appropriations</td>
                 <td rowspan=2 align=center>Allotment</td>
                 <td rowspan=2 align=center>Obligations</td>
@@ -62,10 +57,6 @@ DisableButtonAsset::register($this);
         <tbody>
             <tr style="font-weight: bolder;">
                 <td colspan=5>Grand Total</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
                 <td align=right><?= number_format($totals['cost'], 2) ?></td>
                 <td align=right><?= number_format($totals['appropriations'], 2) ?></td>
                 <td align=right><?= number_format($totals['allotment'], 2) ?></td>
@@ -96,10 +87,6 @@ DisableButtonAsset::register($this);
                 <tr style="font-weight: bolder;">
                     <td>&nbsp;</td>
                     <td colspan=4><?= $i ?>. <?= $firstLevel ?></td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
                     <td align=right><?= number_format($firstLevels['content']['cost'], 2) ?></td>
                     <td align=right><?= number_format($firstLevels['content']['appropriations'], 2) ?></td>
                     <td align=right><?= number_format($firstLevels['content']['allotment'], 2) ?></td>
@@ -131,10 +118,6 @@ DisableButtonAsset::register($this);
                             <td align=right>&nbsp;</td>
                             <td align=right>&nbsp;</td>
                             <td colspan=3><?= $i.'.'.$j ?>. <?= $secondLevel ?></td>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
-                            <td>&nbsp;</td>
                             <td align=right><?= number_format($secondLevels['content']['cost'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['appropriations'], 2) ?></td>
                             <td align=right><?= number_format($secondLevels['content']['allotment'], 2) ?></td>
@@ -167,10 +150,6 @@ DisableButtonAsset::register($this);
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
                                     <td colspan=2><?= $i.'.'.$j.'.'.$k ?>. <?= $thirdLevel ?></td>
-                                    <td>&nbsp;</td>
-                                    <td>&nbsp;</td>
-                                    <td>&nbsp;</td>
-                                    <td>&nbsp;</td>
                                     <td align=right><?= number_format($thirdLevels['content']['cost'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['appropriations'], 2) ?></td>
                                     <td align=right><?= number_format($thirdLevels['content']['allotment'], 2) ?></td>
