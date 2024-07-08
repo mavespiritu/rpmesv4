@@ -293,7 +293,7 @@ Modal::end();
                                 $str .= '<td style="width: 80%; padding: 5px;">'.($i+1).'. '.$oi->indicator.'</td>'; 
                                 $str.= !Yii::$app->user->can('Administrator') ? 
                                             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
-                                                $oi->indicator != 'number of individual beneficiaries served' ?
+                                                $oi->indicator != 'number of individual beneficiaries served' || $oi->indicator != 'number of group beneficiaries served' ?
                                                     '<td style="vertical-align:top; width: 10%; padding-right: 5px;" align=center>'.Html::a('Edit', '#', [
                                                         'class' => 'btn btn-link update-oi-button',
                                                         'id' => 'update-oi-'.$oi->id.'-button',
@@ -312,7 +312,7 @@ Modal::end();
                                         ]).'</td>';
                                 $str.= !Yii::$app->user->can('Administrator') ? 
                                             $model->currentStatus == 'Draft' || $model->currentStatus == 'For further validation' ? 
-                                                $oi->indicator != 'number of individual beneficiaries served' ?
+                                                $oi->indicator != 'number of individual beneficiaries served' || $oi->indicator != 'number of group beneficiaries served' ?
                                                     '<td style="vertical-align:top; width: 10%;" align=center>'.Html::a('Remove', ['/rpmes/plan/delete-output-indicator', 'id' => $oi->id, 'plan_id' => $plan->id, 'submission_id' => $model->id, 'page' => isset(Yii::$app->request->queryParams['page']) ? Yii::$app->request->queryParams['page'] : 1],[
                                                         'class' => 'btn btn-link',
                                                         'data' => [

@@ -510,6 +510,16 @@ class ProjectController extends Controller
                 $model->draft = 'No';
                 try {
                     if ($flag = $model->save(false)) {
+
+                        $individualModel = new ProjectHasOutputIndicators();
+                        $individualModel->project_id = $model->id;
+                        $individualModel->indicator = "number of individual beneficiaries served";
+                        $individualModel->save(false);
+
+                        $groupModel = new ProjectHasOutputIndicators();
+                        $groupModel->project_id = $model->id;
+                        $groupModel->indicator = "number of group beneficiaries served";
+                        $groupModel->save(false);
                         
                         foreach ($expectedOutputModels as $expectedOutputModel) {
                             $expectedOutputModel->project_id = $model->id;
@@ -1124,8 +1134,13 @@ class ProjectController extends Controller
         $rdpSubChapterOutcomeModel = new ProjectRdpSubChapterOutcome();
         $projectRdpSubChapterOutcomes = $model->projectRdpSubChapterOutcomes;
         $rdpSubChapterOutcomeModel->rdp_sub_chapter_outcome_id = array_values(ArrayHelper::map($projectRdpSubChapterOutcomes, 'rdp_sub_chapter_outcome_id', 'rdp_sub_chapter_outcome_id'));
+
+        $defaultOutputIndicators = [
+            'number of individual beneficiaries served',
+            'number of group beneficiaries served',
+        ];
         
-        $expectedOutputModels = $model->projectHasOutputIndicators;
+        $expectedOutputModels = $model->getProjectHasOutputIndicators()->where(['not in', 'indicator', $defaultOutputIndicators])->all();
         $outcomeModels = $model->projectHasOutcomeIndicators;
         $revisedScheduleModels = $model->projectHasRevisedSchedules;
         $fundSourceModels = $model->projectHasFundSources;

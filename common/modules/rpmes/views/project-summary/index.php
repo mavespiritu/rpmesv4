@@ -26,8 +26,20 @@ $successMessage = \Yii::$app->getSession()->getFlash('success');
             <h3 class="box-title">List of Projects with Physical and Financial Accomplishment</h3>
         </div>
         <div class="box-body">
-            <?= $this->render('_search', ['model' => $searchModel]) ?>
-            <?= GridView::widget([
+            <?= $this->render('_search', [
+                'model' => $model,
+                'years' => $years,
+                'agencies' => $agencies,
+                'sectors' => $sectors,
+                'modes' => $modes,
+                'regions' => $regions,
+                'provinces' => $provinces,
+                'citymuns' => $citymuns,
+                'fundSources' => $fundSources,
+                'sorts' => $sorts,
+            ]) ?>
+            <div id="summary-accomplishment-table"></div>
+            <?php GridView::widget([
                 'options' => [
                     'class' => 'table-responsive',
                 ],

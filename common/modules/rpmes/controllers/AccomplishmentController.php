@@ -1352,7 +1352,7 @@ class AccomplishmentController extends \yii\web\Controller
         $fundingSourceTitles = ProjectHasFundSources::find()
                     ->select([
                         'phfs.project_id',
-                        'GROUP_CONCAT(DISTINCT CONCAT(row_number, ". ", fund_source.title, " ", phfs.type) ORDER BY phfs.id ASC SEPARATOR "<br>") as title'
+                        'GROUP_CONCAT(DISTINCT CONCAT(row_number, ". ", fund_source.title) ORDER BY phfs.id ASC SEPARATOR "<br>") as title'
                     ])
                     ->from(['phfs' => ProjectHasFundSources::tableName()])
                     ->leftJoin('fund_source', 'fund_source.id = phfs.fund_source_id')
@@ -1403,24 +1403,30 @@ class AccomplishmentController extends \yii\web\Controller
         
         $financialTotal = 'IF(project.data_type = "Cumulative",';
         $physicalTotal = 'IF(project.data_type <> "Default",';
+
         foreach(array_reverse($monthsWithoutJanuary) as $mo => $month){
             $financialTotal .= 'IF(COALESCE(financialTargets.'.$mo.', 0) <= 0,';
             $physicalTotal .= 'IF(COALESCE(physicalTargets.'.$mo.', 0) <= 0,';
         }
+
         $financialTotal .= 'COALESCE(financialTargets.jan, 0)';
         $physicalTotal .= 'COALESCE(physicalTargets.jan, 0)';
+
         foreach($monthsWithoutJanuary as $mo => $month){
             $financialTotal .= ', COALESCE(financialTargets.'.$mo.', 0))';
             $physicalTotal .= ', COALESCE(physicalTargets.'.$mo.', 0))';
         }
+
         $financialTotal .= ',';
         $physicalTotal .= ',';
+
         foreach($monthsWithoutDecember as $mo => $month){
             $financialTotal .= 'COALESCE(financialTargets.'.$mo.', 0) +';
             $physicalTotal .= 'COALESCE(physicalTargets.'.$mo.', 0) +';
         }
+        
         $financialTotal .= 'COALESCE(financialTargets.dec, 0))';
-        $physicalTotal .= 'COALESCE(physicalTargets.dec, 0))';
+        $physicalTotal .= 'COALESCE(physicalTargets.dec, 0) + COALESCE(physicalTargets.baseline, 0))';
 
         $targetOwpa = [];
 

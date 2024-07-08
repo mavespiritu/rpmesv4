@@ -49,6 +49,8 @@ class Project extends \yii\db\ActiveRecord
     public $category_id;
     public $region_id;
     public $province_id;
+    public $citymun_id;
+    public $grouping;
     /**
      * {@inheritdoc}
      */
@@ -105,6 +107,11 @@ class Project extends \yii\db\ActiveRecord
                 'completion_date',
                 'cost',
             ], 'required', 'on' => 'componentProjectCreateUser'],
+            [[
+                'year', 
+                'quarter', 
+                'grouping', 
+            ], 'required', 'on' => 'searchSummary'],
             //[['typhoon'], 'validateTyphoon', 'skipOnEmpty' => false, 'skipOnError' => false],
             [['source_id', 'year', 'agency_id', 'sector_id', 'sub_sector_id', 'location_scope_id', 'mode_of_implementation_id', 'fund_source_id', 'submitted_by','category_id','region_id','province_id'], 'integer'],
             [['title', 'description', 'data_type', 'period', 'other_mode', 'mode_name'], 'string'],
@@ -197,8 +204,10 @@ class Project extends \yii\db\ActiveRecord
             'category_id' => 'Category',
             'region_id' => 'Region',
             'province_id' => 'Province',
+            'citymun_id' => 'City/Municipality',
             'cost' => 'Total Project Cost',
-            'remarks' => 'Remarks'
+            'remarks' => 'Remarks',
+            'grouping' => 'Grouping',
         ];
     }
 
@@ -1251,6 +1260,7 @@ class Project extends \yii\db\ActiveRecord
         ])->one();
 
         $months = [
+            'baseline' => 'Baseline',
             'jan' => 'Jan',
             'feb' => 'Feb',
             'mar' => 'Mar',
@@ -1293,6 +1303,7 @@ class Project extends \yii\db\ActiveRecord
         ])->one();
 
         $months = [
+            'baseline' => 'Baseline',
             'jan' => 'Jan',
             'feb' => 'Feb',
             'mar' => 'Mar',

@@ -652,7 +652,7 @@ $this->registerJs($js);
                     ]); ?>
                         <div class="clearfix"></div>
                         <br>
-                        <small>Note: The system added the output indicator, <b>"number of individual beneficiaries served"</b> by default. Please add another output indicators below.</small>
+                        <small>Note: The system added the output indicators, <b>"number of individual beneficiaries served"</b> and <b>"number of group beneficiaries served"</b> by default. Please add another output indicators except what is added by default.</small>
                         <table class="table table-bordered table-condensed table-responsive">
                             <thead>
                                 <tr>
