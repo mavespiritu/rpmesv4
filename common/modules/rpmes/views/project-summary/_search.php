@@ -156,7 +156,6 @@ use kartik\select2\Select2;
                 $("#summary-accomplishment-table").html("<div class=\"text-center\"><svg class=\"spinner\" width=\"30px\" height=\"30px\" viewBox=\"0 0 66 66\" xmlns=\"http://www.w3.org/2000/svg\"><circle class=\"path\" fill=\"none\" stroke-width=\"6\" stroke-linecap=\"round\" cx=\"33\" cy=\"33\" r=\"30\"></circle></svg></div>");
             },
             success: function (data) {
-                console.log(this.data);
                 $("#summary-accomplishment-table").empty();
                 $("#summary-accomplishment-table").hide();
                 $("#summary-accomplishment-table").fadeIn("slow");

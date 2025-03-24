@@ -680,6 +680,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_agency_by_location') {
@@ -743,6 +751,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_agency_by_sector_by_sub_sector') {
@@ -819,6 +835,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_agency_by_sdg') {
@@ -882,6 +906,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_agency_by_rdp') {
@@ -945,6 +977,15 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+                        
+                        // should be computed
+                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
+                    
                     }
                 }
             }else if ($model->grouping == '_agency_by_fund_source') {
@@ -1008,6 +1049,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_sector_by_agency') {
@@ -1071,6 +1120,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_sector_by_location_by_agency') {
@@ -1147,6 +1204,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+                        
+                        // should be computed
+                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_sector_by_sub_sector') {
@@ -1210,6 +1275,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_sector_by_sdg') {
@@ -1273,6 +1346,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_sector_by_rdp') {
@@ -1336,6 +1417,14 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+
+                        // should be computed
+                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }else if ($model->grouping == '_sector_by_fund_source') {
@@ -1399,6 +1488,13 @@ class ProjectSummaryController extends \yii\web\Controller
                         $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
                         $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
                         $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+                        // should be computed
+                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
+                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
+                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
+
+                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
+                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
                 }
             }
@@ -1407,6 +1503,8 @@ class ProjectSummaryController extends \yii\web\Controller
             $smallCaps = range('a', 'z');
             $numbers = range('1', '100');
             $genders = ['M' => 'Male', 'F' => 'Female'];
+
+            //echo "<pre>"; print_r($data); exit;
 
             return $this->renderAjax('_data', [
                 'model' => $model,

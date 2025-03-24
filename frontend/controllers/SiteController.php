@@ -150,6 +150,11 @@ class SiteController extends \yii\web\Controller
         ]);
     }
 
+    public function actionDashboard()
+    {
+        return $this->render('_dashboard');
+    }
+
     public function actionsectors()
     {
         $model = new Submission();
