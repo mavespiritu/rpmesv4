@@ -37,7 +37,7 @@ use yii\bootstrap\ButtonDropdown;
 
     <?= $dataProvider->getCount() > 0 ? Html::button('<i class="fa fa-print"></i> Print Form 1', ['onClick' => 'printSummary("'.$model->id.'")', 'class' => 'btn btn-default']) : '' ?>
 
-    <?= Yii::$app->user->can('AgencyUser') ?
+    <?= Yii::$app->user->can('AgencyUser') || Yii::$app->user->can('Administrator') ?
             $model->currentStatus == 'Draft' ?
                 $dueDate ? 
                     strtotime(date("Y-m-d")) <= strtotime($dueDate->due_date) ?
