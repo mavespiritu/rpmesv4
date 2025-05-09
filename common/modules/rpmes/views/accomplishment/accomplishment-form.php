@@ -294,6 +294,35 @@ $this->registerJs('
     $this->registerJs($script, View::POS_END);
 ?>
 
+<?php
+$this->registerJs("
+$('#accomplishment-form').on('beforeSubmit', function(e) {
+    let isValid = true;
+    let errorMessages = [];
+
+    // Loop through all visible input fields with class 'required'
+    $('#accomplishment-form input.required:visible').each(function() {
+        const val = $(this).val().replace(/,/g, '').trim(); // remove commas
+
+        if (val === '' || isNaN(val) || parseFloat(val) === 0) {
+            isValid = false;
+            errorMessages.push('Please fill out all required numeric fields properly.');
+            $(this).addClass('has-error');
+        } else {
+            $(this).removeClass('has-error');
+        }
+    });
+
+    if (!isValid) {
+        alert([...new Set(errorMessages)].join('\\n')); // unique error messages
+        return false; // prevent form submission
+    }
+
+    return true; // proceed with form submission
+});
+");
+?>
+
 
 <style>
     .pagination{

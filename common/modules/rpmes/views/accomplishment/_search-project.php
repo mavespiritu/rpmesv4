@@ -46,7 +46,7 @@ use yii\bootstrap\ButtonDropdown;
                         Html::a('<i class="fa fa-paper-plane-o"></i> Submit Form 2', ['submit', 'id' => $model->id], [
                             'class' => 'btn btn-success',
                             'data' => [
-                                'confirm' => 'Are you sure want to submit this Form 2?',
+                                'confirm' => 'The data I encoded had been duly approved by my Agency Head. I am providing my name and designation in the appropriate fields as an attestation of my submission\'s data integrity. Are you sure you want to submit this Form 2?',
                                 'method' => 'post',
                             ],
                         ]) :

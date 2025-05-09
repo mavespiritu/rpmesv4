@@ -40,9 +40,25 @@ class FinancialAccomplishment extends \yii\db\ActiveRecord
             [['quarter', 'remarks'], 'string'],
             [['releases', 'obligation', 'expenditures'], 'safe'],
             [['project_id'], 'exist', 'skipOnError' => true, 'targetClass' => Project::className(), 'targetAttribute' => ['project_id' => 'id']],
+            /* ['obligation', 'validateObligation'],
+            ['expenditures', 'validateDisbursement'], */
         ];
     }
 
+    /* public function validateObligation($attribute, $params)
+    {
+        if ($this->obligation > $this->releases || $this->obligation > $this->allocation) {
+            $this->addError($attribute, 'Obligation should not be greater than allotment or appropriation.');
+        }
+    }
+
+    public function validateDisbursement($attribute, $params)
+    {
+        if ($this->expenditures > $this->obligation || $this->expenditures > $this->releases || $this->disbursement > $this->allocation) {
+            $this->addError($attribute, 'Disbursement should not be greater than obligation, allotment, or appropriation.');
+        }
+    }
+ */
     /**
      * {@inheritdoc}
      */
