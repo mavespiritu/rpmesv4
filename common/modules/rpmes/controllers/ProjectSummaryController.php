@@ -114,27 +114,20 @@ class ProjectSummaryController extends \yii\web\Controller
 
         $sorts = [
             '_agency_by_sector' => 'Agency by Sector',
-            '_agency_by_location' => 'Agency by Location',
-            '_agency_by_sector_by_sub_sector' => 'Agency by Sector by Sub-sector',
-            '_agency_by_sdg' => 'Agency by SDG',
-            '_agency_by_rdp' => 'Agency by RDP',
+            //'_agency_by_location' => 'Agency by Location',
+            //'_agency_by_sector_by_sub_sector' => 'Agency by Sector by Sub-sector',
+            //'_agency_by_sdg' => 'Agency by SDG',
+            //'_agency_by_rdp' => 'Agency by RDP',
             '_agency_by_fund_source' => 'Agency by Fund Source',
             '_sector_by_agency' => 'Sector by Agency', 
-            '_sector_by_location_by_agency' => 'Sector by Location by Agency',
-            '_sector_by_sub_sector' => 'Sector by Sub-Sector',
-            '_sector_by_sdg' => 'Sector by SDG',
-            '_sector_by_rdp' => 'Sector by RDP',
+            //'_sector_by_location_by_agency' => 'Sector by Location by Agency',
+            //'_sector_by_sub_sector' => 'Sector by Sub-Sector',
+            //'_sector_by_sdg' => 'Sector by SDG',
+            //'_sector_by_rdp' => 'Sector by RDP',
             '_sector_by_fund_source' => 'Sector by Fund Source',
         ];
 
         if($model->load(Yii::$app->request->post())){
-            $financialTargets = ProjectTarget::find()->where(['target_type' => 'Financial', 'year' => $model->year])->createCommand()->getRawSql();
-            $physicalTargets = ProjectTarget::find()->where(['target_type' => 'Physical', 'year' => $model->year])->createCommand()->getRawSql();
-            $maleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Male Employed', 'year' => $model->year])->createCommand()->getRawSql();
-            $femaleEmployedTargets = ProjectTarget::find()->where(['target_type' => 'Female Employed', 'year' => $model->year])->createCommand()->getRawSql();
-
-            $projectIDs = Plan::find()->select(['project_id'])->where(['year' => $model->year])->asArray()->all();
-            $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
 
             $regionIDs = ProjectRegion::find();
             $provinceIDs = ProjectProvince::find();
@@ -164,383 +157,263 @@ class ProjectSummaryController extends \yii\web\Controller
             $fundSourceIDs = $fundSourceIDs->all();
             $fundSourceIDs = ArrayHelper::map($fundSourceIDs, 'project_id', 'project_id');
 
-            $sdgGoalTitles = ProjectSdgGoal::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat("SDG #",sdg_goal.sdg_no,": ",sdg_goal.title) ORDER BY sdg_goal.sdg_no ASC SEPARATOR ", ") as title'])
-                ->leftJoin('sdg_goal', 'sdg_goal.id = project_sdg_goal.sdg_goal_id')
-                ->leftJoin('project', 'project.id = project_sdg_goal.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_sdg_goal.project_id'])
-                ->createCommand()->getRawSql();
+            $projects = Accomplishment::find()
+            ->alias('acc')
+            ->select([
+                'acc.project_id as id',
+                'acc.year',
+                'acc.quarter',
+                'p.project_no as projectNo',
+                'p.title as projectTitle',
+                'DATE_FORMAT(p.start_date, "%m-%d-%y") as startDate',
+                'DATE_FORMAT(p.completion_date, "%m-%d-%y") as endDate',
+                'a.code AS agencyTitle',
+                's.title AS sectorTitle',
+                //'ss.title AS subSectorTitle',
+                //'rdp.title AS rdpChapterTitle',
+                //'sdg.title AS sdgGoalTitle',
+                'fs.title AS fundingSourceTitle',
+                'fa.title AS fundingAgencyTitle',
+                'COALESCE(p.cost, 0) AS cost',
+                'COALESCE(fia.allocation, 0) AS appropriations',
+                'COALESCE(fia.releases, 0) AS allotment',
+                'COALESCE(fia.obligation, 0) AS obligations',
+                'COALESCE(fia.expenditures, 0) AS disbursements',
+                'COALESCE((fia.releases / fia.allocation) * 100, 0) AS fundingSupport',
+                'COALESCE((fia.expenditures / fia.releases) * 100, 0) AS fundingUtilizationRate',
+                'COALESCE(target_owpa.target, 0) AS targetOwpa',
+                'COALESCE(actual_owpa.actual, 0) AS actualOwpa',
+                'COALESCE(tcpa.total, 0) as perAgencyCost',
+                'COALESCE(p.cost/tcpa.total, 0) as weight',
+                'COALESCE(target_owpa.target*(p.cost/tcpa.total), 0) as weightedTarget',
+                'COALESCE(actual_owpa.actual*(p.cost/tcpa.total), 0) as weightedAccomplishment',
+                'COALESCE(actual_owpa.actual-target_owpa.target, 0) as slippage',
+                'persons_employed.male as maleEmployed',
+                'persons_employed.female as femaleEmployed',
+                'COALESCE(persons_employed.male+persons_employed.female, 0) as totalEmployed',
+                'COALESCE(ib.male+ib.female, 0) as individualBeneficiaries',
+                'COALESCE(gb.value, 0) as groupBeneficiaries',
+                'acc.action as isCompleted',
+                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE((actual_owpa.actual*(p.cost/tcpa.total))-(target_owpa.target*(p.cost/tcpa.total))) < 0, 1 , 0), 0), 0) as isBehindSchedule',
+                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE((actual_owpa.actual*(p.cost/tcpa.total))-(target_owpa.target*(p.cost/tcpa.total))) = 0, 1 , 0), 0), 0) as isOnTime',
+                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE((actual_owpa.actual*(p.cost/tcpa.total))-(target_owpa.target*(p.cost/tcpa.total))) > 0, 1 , 0), 0), 0) as isAheadOfSchedule',
+                'IF(acc.action = 0, IF(p_acc.value = 0, IF(p_tar.total > 0, 1, 0), 0), 0) as isNotYetStarted',
+                'IF(acc.action = 0, 1, 0) as isOngoing'
+            ]);
 
-            $rdpChapterTitles = ProjectRdpChapter::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat("Chapter ",rdp_chapter.chapter_no,": ", rdp_chapter.title) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter.title ASC SEPARATOR ", ") as title'])
-                ->leftJoin('rdp_chapter', 'rdp_chapter.id = project_rdp_chapter.rdp_chapter_id')
-                ->leftJoin('project', 'project.id = project_rdp_chapter.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_rdp_chapter.project_id'])
-                ->createCommand()->getRawSql();
+            $projects = $projects->leftJoin('project p', 'p.id = acc.project_id');
+            $projects = $projects->leftJoin('agency a', 'p.agency_id = a.id');
+            $projects = $projects->leftJoin('sector s', 'p.sector_id = s.id');
+            $projects = $projects->leftJoin('sub_sector ss', 'p.sub_sector_id = ss.id');
+            // region name
+            $projects = $projects->leftJoin(['r' => "(
+                SELECT project_id, GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ', ') AS title
+                FROM project_region
+                LEFT JOIN tblregion ON tblregion.region_c = project_region.region_id
+                GROUP BY project_id
+            )"], 'r.project_id = p.id');
+            // province name
+            $projects = $projects->leftJoin(['pr' => "(
+                SELECT project_id, GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ', ') AS title
+                FROM project_province
+                LEFT JOIN tblprovince ON tblprovince.province_c = project_province.province_id
+                GROUP BY project_id
+            )"], 'pr.project_id = p.id'); 
+            // rdp chapter name
+            /* $projects = $projects->leftJoin(['rdp' => "(
+                SELECT project_id, GROUP_CONCAT(DISTINCT CONCAT('Chapter ', rdp_chapter.chapter_no, ': ', rdp_chapter.title) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter.title ASC SEPARATOR ', ') AS title
+                FROM project_rdp_chapter
+                LEFT JOIN rdp_chapter ON rdp_chapter.id = project_rdp_chapter.rdp_chapter_id
+                GROUP BY project_id
+            )"], 'rdp.project_id = p.id'); */
+            // sdg name
+            /* $projects = $projects->leftJoin(['sdg' => "(
+                SELECT project_id, GROUP_CONCAT(DISTINCT CONCAT('SDG #', sdg_goal.sdg_no, ': ', sdg_goal.title) ORDER BY sdg_goal.sdg_no ASC SEPARATOR ', ') AS title
+                FROM project_sdg_goal
+                LEFT JOIN sdg_goal ON sdg_goal.id = project_sdg_goal.sdg_goal_id
+                GROUP BY project_id
+            )"], 'sdg.project_id = p.id'); */
+            // fund source name
+            $projects = $projects->leftJoin(['fs' => "(
+                SELECT phfs.project_id, GROUP_CONCAT(DISTINCT fund_source.title ORDER BY phfs.id ASC SEPARATOR ', ') AS title
+                FROM project_has_fund_sources phfs
+                LEFT JOIN fund_source ON fund_source.id = phfs.fund_source_id
+                GROUP BY phfs.project_id
+            )"], 'fs.project_id = p.id');
+            // funding agency name
+            $projects = $projects->leftJoin(['fa' => "(
+                SELECT phfs.project_id, GROUP_CONCAT(DISTINCT CONCAT(phfs.agency) ORDER BY phfs.id ASC SEPARATOR ', ') AS title
+                FROM project_has_fund_sources phfs
+                GROUP BY phfs.project_id
+            )"], 'fa.project_id = p.id');
+            // allocations, releases, obligations, expenditures
+            $projects = $projects->leftJoin(['fia' => "(
+                SELECT project_id, year, quarter, allocation, releases, obligation, expenditures
+                FROM financial_accomplishment
+            )"], 'fia.project_id = acc.project_id and fia.year = acc.year and fia.quarter = acc.quarter');
+            // target owpa
+            $projects = $projects->leftJoin(['target_owpa' => "(
+                SELECT 
+                    pa.project_id, 
+                    pa.year, 
+                    pa.quarter, 
+                    CASE 
+                        WHEN pt.type = 'Numerical' THEN 
+                            CASE 
+                                WHEN pa.quarter = 'Q1' THEN 
+                                    ((COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.baseline, 0)) 
+                                    / 
+                                    (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + 
+                                    COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + 
+                                    COALESCE(pt.sep, 0) + COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(`dec`, 0) + COALESCE(pt.baseline, 0))) * 100
+                                WHEN pa.quarter = 'Q2' THEN 
+                                    ((COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.baseline, 0)) 
+                                    / 
+                                    (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + 
+                                    COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + 
+                                    COALESCE(pt.sep, 0) + COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(`dec`, 0) + COALESCE(pt.baseline, 0))) * 100
+                                WHEN pa.quarter = 'Q3' THEN 
+                                    ((COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + 
+                                    COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + COALESCE(pt.baseline, 0)) 
+                                    / 
+                                    (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + 
+                                    COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + 
+                                    COALESCE(pt.sep, 0) + COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(`dec`, 0) + COALESCE(pt.baseline, 0))) * 100
+                                WHEN pa.quarter = 'Q4' THEN 
+                                    ((COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + 
+                                    COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + 
+                                    COALESCE(pt.sep, 0) + COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(`dec`, 0) + COALESCE(pt.baseline, 0)) 
+                                    / 
+                                    (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + 
+                                    COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + 
+                                    COALESCE(pt.sep, 0) + COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(`dec`, 0) + COALESCE(pt.baseline, 0))) * 100
+                            END
+                        WHEN pt.type = 'Percentage' THEN 
+                            CASE 
+                                WHEN pa.quarter = 'Q1' THEN COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.baseline, 0)
+                                WHEN pa.quarter = 'Q2' THEN COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.baseline, 0)
+                                WHEN pa.quarter = 'Q3' THEN COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + COALESCE(pt.baseline, 0)
+                                WHEN pa.quarter = 'Q4' THEN COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(`dec`, 0) + COALESCE(pt.baseline, 0)
+                            END
+                        ELSE 0
+                    END AS target
+                FROM 
+                    physical_accomplishment pa
+                LEFT JOIN 
+                    project_target pt 
+                    ON pa.project_id = pt.project_id AND pa.year = pt.year
+                WHERE 
+                    pt.target_type = 'Physical'
+            )"], 'target_owpa.project_id = acc.project_id and target_owpa.year = acc.year and target_owpa.quarter = acc.quarter');
+            // actual owpa
+            $projects = $projects->leftJoin(['actual_owpa' => "(
+                SELECT 
+                pa.project_id, 
+                    pa.year, 
+                    pa.quarter, 
+                    CASE 
+                            WHEN pt.type = 'Numerical' THEN 
+                                CASE 
+                                    WHEN pa.quarter = 'Q1' THEN COALESCE(pa.value, 0) / 
+                                        (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.baseline, 0)) * 100
+                                    WHEN pa.quarter = 'Q2' THEN COALESCE(pa.value, 0) / 
+                                        (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + 
+                                        COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.baseline, 0)) * 100
+                                    WHEN pa.quarter = 'Q3' THEN COALESCE(pa.value, 0) / 
+                                        (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + 
+                                        COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + 
+                                        COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + COALESCE(pt.baseline, 0)) * 100
+                                    WHEN pa.quarter = 'Q4' THEN COALESCE(pa.value, 0) / 
+                                        (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + 
+                                        COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + 
+                                        COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + 
+                                        COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(pt.dec, 0) + COALESCE(pt.baseline, 0)) * 100
+                                END
+                            WHEN pt.type = 'Percentage' THEN COALESCE(pa.value, 0)
+                            ELSE 0
+                        END AS actual
+                FROM 
+                    physical_accomplishment pa
+                LEFT JOIN 
+                    project_target pt 
+                    ON pa.project_id = pt.project_id AND pa.year = pt.year
+                WHERE 
+                    pt.target_type = 'Physical'
+                    )"], 'actual_owpa.project_id = acc.project_id and actual_owpa.year = acc.year and actual_owpa.quarter = acc.quarter');
+            // total cost per agency
+            $projects = $projects->leftJoin(['tcpa' => "(
+                SELECT 
+                plan.year,
+                agency_id,
+                SUM(COALESCE(cost, 0)) as total
+                from plan
+                left join project on project.id = plan.project_id
+                group by agency_id
+            )"], 'tcpa.agency_id = a.id and tcpa.year = acc.year');
+            // persons employed
+            $projects = $projects->leftJoin(['persons_employed' => "(
+                SELECT * from person_employed_accomplishment
+            )"], 'persons_employed.year = acc.year and persons_employed.quarter = acc.quarter and persons_employed.project_id = acc.project_id');
+            // individual beneficiaries
+            $projects = $projects->leftJoin(['ib' => "(
+                SELECT 
+                eoa.project_id,
+                eoa.year,
+                eoa.quarter,
+                eoa.male,
+                eoa.female
+                from project_expected_output peo
+                left join expected_output_accomplishment eoa on eoa.expected_output_id = peo.id
+                where LOWER(indicator) = 'number of individual beneficiaries served'
+            )"], 'ib.year = acc.year and ib.quarter = acc.quarter and ib.project_id = acc.project_id');
+            // group beneficiaries
+            $projects = $projects->leftJoin(['gb' => "(
+                SELECT 
+                eoa.project_id,
+                eoa.year,
+                eoa.quarter,
+                eoa.value
+                from project_expected_output peo
+                left join expected_output_accomplishment eoa on eoa.expected_output_id = peo.id
+                where LOWER(indicator) = 'number of group beneficiaries served'
+            )"], 'gb.year = acc.year and gb.quarter = acc.quarter and gb.project_id = acc.project_id');
+            // physical accomplishment
+            $projects = $projects->leftJoin(['p_acc' => "(
+                SELECT * from physical_accomplishment
+            )"], 'p_acc.year = acc.year and p_acc.quarter = acc.quarter and p_acc.project_id = acc.project_id');
+            // physical_target
+            $projects = $projects->leftJoin(['p_tar' => "(
+                SELECT 
+                    pt.project_id, 
+                    pt.year, 
+                    COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + 
+                    COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + 
+                    COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + 
+                    COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(pt.dec, 0) + COALESCE(pt.baseline, 0) as total
+                FROM 
+                    project_target pt 
+                WHERE 
+                    pt.target_type = 'Physical'
+            )"], 'p_tar.year = acc.year and p_tar.project_id = acc.project_id');
 
-            $fundingSourceTitles = ProjectHasFundSources::find()
-                    ->select([
-                        'phfs.project_id',
-                        'GROUP_CONCAT(DISTINCT fund_source.title ORDER BY phfs.id ASC SEPARATOR ", ") as title'
-                    ])
-                    ->from(['phfs' => ProjectHasFundSources::tableName()])
-                    ->leftJoin('fund_source', 'fund_source.id = phfs.fund_source_id')
-                    ->leftJoin('project', 'project.id = phfs.project_id')
-                    ->leftJoin(
-                        ['subquery' => ProjectHasFundSources::find()
-                            ->select(['project_id', 'fund_source_id', 'ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY fund_source_id) AS row_number'])
-                        ],
-                        'subquery.project_id = phfs.project_id AND subquery.fund_source_id = phfs.fund_source_id'
-                    )
-                    ->where(['project.draft' => 'No'])
-                    ->groupBy(['phfs.project_id'])
-                    ->createCommand()->getRawSql();
-
-            $fundingAgencyTitles = ProjectHasFundSources::find()
-                    ->select([
-                        'phfs.project_id', 
-                        'GROUP_CONCAT(DISTINCT CONCAT(phfs.agency) ORDER BY phfs.id ASC SEPARATOR ", ") as title'
-                        ])
-                    ->from(['phfs' => ProjectHasFundSources::tableName()])
-                    ->leftJoin('project', 'project.id = phfs.project_id')
-                    ->leftJoin(
-                        ['subquery' => ProjectHasFundSources::find()
-                            ->select(['project_id', 'fund_source_id', 'ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY fund_source_id) AS row_number'])
-                        ],
-                        'subquery.project_id = phfs.project_id AND subquery.fund_source_id = phfs.fund_source_id'
-                    )
-                    ->where(['project.draft' => 'No'])
-                    ->groupBy(['phfs.project_id'])
-                    ->createCommand()->getRawSql();
-
-            $regionTitles = ProjectRegion::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblregion.abbreviation ORDER BY tblregion.abbreviation ASC SEPARATOR ", ") as title'])
-                ->leftJoin('tblregion', 'tblregion.region_c = project_region.region_id')
-                ->leftJoin('project', 'project.id = project_region.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_region.project_id'])
-                ->createCommand()->getRawSql();
-
-            $provinceTitles = ProjectProvince::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT tblprovince.province_m ORDER BY tblprovince.province_m ASC SEPARATOR ", ") as title'])
-                ->leftJoin('tblprovince', 'tblprovince.province_c = project_province.province_id')
-                ->leftJoin('project', 'project.id = project_province.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_province.project_id'])
-                ->createCommand()->getRawSql();
-
-            $citymunTitles = ProjectCitymun::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblcitymun.citymun_m,", ",tblprovince.province_m) ORDER BY tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR "; ") as title'])
-                ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_citymun.province_id and tblcitymun.citymun_c = project_citymun.citymun_id')
-                ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
-                ->leftJoin('project', 'project.id = project_citymun.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_citymun.project_id'])
-                ->createCommand()->getRawSql();
-
-            $barangayTitles = ProjectBarangay::find()
-                ->select(['project_id', 'GROUP_CONCAT(DISTINCT concat(tblbarangay.barangay_m,", ",tblcitymun.citymun_m,", ",tblprovince.province_m) ORDER BY tblbarangay.barangay_m ASC, tblcitymun.citymun_m ASC, tblprovince.province_m ASC SEPARATOR "; ") as title'])
-                ->leftJoin('tblbarangay', 'tblbarangay.province_c = project_barangay.province_id and tblbarangay.citymun_c = project_barangay.citymun_id and tblbarangay.barangay_c = project_barangay.barangay_id')
-                ->leftJoin('tblcitymun', 'tblcitymun.province_c = project_barangay.province_id and tblcitymun.citymun_c = project_barangay.citymun_id')
-                ->leftJoin('tblprovince', 'tblprovince.province_c = tblcitymun.province_c')
-                ->leftJoin('project', 'project.id = project_barangay.project_id')
-                ->where(['project.draft' => 'No'])
-                ->groupBy(['project_barangay.project_id'])
-                ->createCommand()->getRawSql();
-
-            $months = [
-                'jan' => 'January',
-                'feb' => 'February',
-                'mar' => 'March',
-                'apr' => 'April',
-                'may' => 'May',
-                'jun' => 'June',
-                'jul' => 'July',
-                'aug' => 'August',
-                'sep' => 'September',
-                'oct' => 'October',
-                'nov' => 'November',
-                'dec' => 'December',
-            ];
-
-            $monthsWithoutJanuary = [
-                'feb' => 'Feb',
-                'mar' => 'Mar',
-                'apr' => 'Apr',
-                'may' => 'May',
-                'jun' => 'Jun',
-                'jul' => 'Jul',
-                'aug' => 'Aug',
-                'sep' => 'Sep',
-                'oct' => 'Oct',
-                'nov' => 'Nov',
-                'dec' => 'Dec',
-            ];
-
-            $monthsWithoutDecember = [
-                'jan' => 'Jan',
-                'feb' => 'Feb',
-                'mar' => 'Mar',
-                'apr' => 'Apr',
-                'may' => 'May',
-                'jun' => 'Jun',
-                'jul' => 'Jul',
-                'aug' => 'Aug',
-                'sep' => 'Sep',
-                'oct' => 'Oct',
-                'nov' => 'Nov',
-            ];
-
-            $quarters = [
-                'Q1' => [
-                    'jan' => 'Jan',
-                    'feb' => 'Feb',
-                    'mar' => 'Mar',
-                ],
-                'Q2' => [
-                    'jan' => 'Jan',
-                    'feb' => 'Feb',
-                    'mar' => 'Mar',
-                    'apr' => 'Apr',
-                    'may' => 'May',
-                    'jun' => 'Jun',
-                ],
-                'Q3' => [
-                    'jan' => 'Jan',
-                    'feb' => 'Feb',
-                    'mar' => 'Mar',
-                    'apr' => 'Apr',
-                    'may' => 'May',
-                    'jun' => 'Jun',
-                    'jul' => 'Jul',
-                    'aug' => 'Aug',
-                    'sep' => 'Sep',
-                ],
-                'Q4' => [
-                    'jan' => 'Jan',
-                    'feb' => 'Feb',
-                    'mar' => 'Mar',
-                    'apr' => 'Apr',
-                    'may' => 'May',
-                    'jun' => 'Jun',
-                    'jul' => 'Jul',
-                    'aug' => 'Aug',
-                    'sep' => 'Sep',
-                    'oct' => 'Oct',
-                    'nov' => 'Nov',
-                    'dec' => 'Dec',
-                ]
-            ];
-
-            $financialTargetTotal = 'IF(project.data_type = "Cumulative",';
-            $physicalTargetTotal = 'IF(project.data_type <> "Default",';
-            foreach(array_reverse($monthsWithoutJanuary) as $mo => $month){
-                $financialTargetTotal .= 'IF(COALESCE(financialTargets.'.$mo.', 0) <= 0,';
-                $physicalTargetTotal .= 'IF(COALESCE(physicalTargets.'.$mo.', 0) <= 0,';
+            if($model->year != ''){
+                $projects = $projects->andWhere(['acc.year' => $model->year]);
             }
-            $financialTargetTotal .= 'COALESCE(financialTargets.jan, 0)';
-            $physicalTargetTotal .= 'COALESCE(physicalTargets.jan, 0)';
-            foreach($monthsWithoutJanuary as $mo => $month){
-                $financialTargetTotal .= ', COALESCE(financialTargets.'.$mo.', 0))';
-                $physicalTargetTotal .= ', COALESCE(physicalTargets.'.$mo.', 0))';
+
+            if($model->quarter != ''){
+                $projects = $projects->andWhere(['acc.quarter' => $model->quarter]);
             }
-            $financialTargetTotal .= ',';
-            $physicalTargetTotal .= ',';
-            foreach($monthsWithoutDecember as $mo => $month){
-                $financialTargetTotal .= 'COALESCE(financialTargets.'.$mo.', 0) +';
-                $physicalTargetTotal .= 'COALESCE(physicalTargets.'.$mo.', 0) +';
-            }
-            $financialTargetTotal .= 'COALESCE(financialTargets.dec, 0))';
-            $physicalTargetTotal .= 'COALESCE(physicalTargets.dec, 0) + COALESCE(physicalTargets.baseline, 0))';
-
-            $targetOwpa = [];
-
-            foreach ($quarters as $q => $mos) {
-                $targetOwpa[$q] = 'IF(physicalTargets.type = "Numerical", 
-                                    IF('.$physicalTargetTotal.' > 0, ';
-
-                $con =  'COALESCE(physicalTargets.baseline, 0) + ';
-
-                foreach ($mos as $mo => $month) {
-                    $con .= $month === end($mos) ? 'COALESCE(physicalTargets.'.$mo.', 0)' : 'COALESCE(physicalTargets.'.$mo.', 0) + ';
-                }
-
-                $targetOwpa[$q] .= '(('.$con.')/('.$physicalTargetTotal.')*100)';
-                $targetOwpa[$q] .= ',('.$con.'/('.$physicalTargetTotal.'))*100), '.$con.')';
-            } 
-
-            $financialAccomplishment = FinancialAccomplishment::find()->where([
-                'year' => $model->year,
-                'quarter' => $model->quarter,
-                'project_id' => $projectIDs
-            ])
-            ->createCommand()->getRawSql();
-
-            $physicalAccomplishment = PhysicalAccomplishment::find()->where([
-                'year' => $model->year,
-                'quarter' => $model->quarter,
-                'project_id' => $projectIDs
-            ])
-            ->createCommand()->getRawSql();
-
-            $personEmployedAccomplishment = PersonEmployedAccomplishment::find()->where([
-                'year' => $model->year,
-                'quarter' => $model->quarter,
-                'project_id' => $projectIDs
-            ])
-            ->createCommand()->getRawSql();
-
-            $individualBeneAccomplishment = ExpectedOutputAccomplishment::find()
-            ->select(['expected_output_accomplishment.project_id', 'sum(COALESCE(male, 0) + COALESCE(female, 0)) as total'])
-            ->leftJoin('project_expected_output', 'project_expected_output.id = expected_output_accomplishment.expected_output_id')
-            ->where([
-                'indicator' => 'number of individual beneficiaries served',
-                'expected_output_accomplishment.year' => $model->year,
-                'expected_output_accomplishment.quarter' => $model->quarter,
-                'expected_output_accomplishment.project_id' => $projectIDs,
-            ])
-            ->groupBy(['expected_output_accomplishment.project_id'])
-            ->createCommand()->getRawSql();
-
-            $groupBeneAccomplishment = ExpectedOutputAccomplishment::find()
-            ->select(['expected_output_accomplishment.project_id', 'COALESCE(value, 0) as total'])
-            ->leftJoin('project_expected_output', 'project_expected_output.id = expected_output_accomplishment.expected_output_id')
-            ->where([
-                'indicator' => 'number of group beneficiaries served',
-                'expected_output_accomplishment.year' => $model->year,
-                'expected_output_accomplishment.quarter' => $model->quarter,
-                'expected_output_accomplishment.project_id' => $projectIDs,
-            ])
-            ->groupBy(['expected_output_accomplishment.project_id'])
-            ->createCommand()->getRawSql();
-
-            $includedQuarters = [
-                'Q1' => ['Q1'],
-                'Q2' => ['Q1', 'Q2'],
-                'Q3' => ['Q1', 'Q2', 'Q3'],
-                'Q4' => ['Q1', 'Q2', 'Q3', 'Q4']
-            ];
-
-            $accomplishments = Accomplishment::find()
-                                ->select(['project_id', 'IF(sum(COALESCE(action, 0)) > 0, 1, 0) as isCompleted'])
-                                ->where([
-                                    'year' => $model->year,
-                                    'quarter' => ['Q1', 'Q2']
-                                ])
-                                ->groupBy(['project_id'])
-                                ->createCommand()
-                                ->getRawSql();
-
-            $actualOwpa = 'IF(physicalTargets.type = "Numerical", 
-                            IF('.$physicalTargetTotal.' > 0,
-                                (COALESCE(physicalAccomplishment.value, 0)/'.$physicalTargetTotal.')*100, 
-                            0), 
-                        COALESCE(physicalAccomplishment.value,0))';
-
-            $slippage = 'COALESCE('.$actualOwpa.', 0) - COALESCE('.$targetOwpa[$model->quarter].', 0)';
-
-            $isCompleted = 'COALESCE(accomplishments.isCompleted, 0)';
-            $isBehindSchedule = 'IF('.$isCompleted.' = 0, IF(physicalAccomplishment.value > 0, IF('.$slippage.' < 0, 1 , 0), 0), 0)';
-            $isOnTime = 'IF('.$isCompleted.' = 0, IF(physicalAccomplishment.value > 0, IF('.$slippage.' = 0, 1 , 0), 0), 0)';
-            $isAheadOfSchedule = 'IF('.$isCompleted.' = 0, IF(physicalAccomplishment.value > 0, IF('.$slippage.' > 0, 1 , 0), 0), 0)';
-            $isNotYetStartedWithTarget = 'IF('.$isCompleted.' = 0, IF(physicalAccomplishment.value = 0, IF('.$physicalTargetTotal.' > 0, 1, 0), 0), 0)';
-            $isNotYetStartedWithNoTarget = 'IF('.$isCompleted.' = 0, IF(physicalAccomplishment.value = 0, IF('.$physicalTargetTotal.' <= 0, 1, 0), 0), 0)';
-
-            $totalProjectCostPerAgency = Project::find()
-                    ->select([
-                        'project.agency_id as agency_id',
-                        'SUM(COALESCE(project.cost, 0)) as cost',
-                    ]);
-
-            $totalProjectCostPerAgency = $totalProjectCostPerAgency->andWhere(['project.draft' => 'No']);
-            $totalProjectCostPerAgency = $totalProjectCostPerAgency->andWhere(['project.source_id' => null]);
-            $totalProjectCostPerAgency = $totalProjectCostPerAgency->andWhere(['project.id' => $projectIDs]);
-
-            $totalProjectCostPerAgency = $totalProjectCostPerAgency->groupBy(['project.agency_id'])
-                                    ->createCommand()
-                                    ->getRawSql();
-
-            $projects = Project::find()
-                    ->select([
-                        'project.id',
-                        'project.project_no as projectNo',
-                        'project.title as projectTitle',
-                        'DATE_FORMAT(project.start_date, "%m-%d-%y") as startDate',
-                        'DATE_FORMAT(project.completion_date, "%m-%d-%y") as endDate',
-                        'agency.code as agencyTitle',
-                        'sector.title as sectorTitle',
-                        'sub_sector.title as subSectorTitle',
-                        'IF(barangayTitles.title is null, IF(citymunTitles.title is null, IF(provinceTitles.title is null, IF(regionTitles.title is null, "No location", regionTitles.title), provinceTitles.title), citymunTitles.title), barangayTitles.title) as locationTitle',
-                        'rdpChapterTitles.title as rdpChapterTitle',
-                        'sdgGoalTitles.title as sdgGoalTitle',
-                        'fundingSourceTitles.title as fundingSourceTitle',
-                        'fundingAgencyTitles.title as fundingAgencyTitle',
-                        'COALESCE(maleEmployedTargets.annual, 0) as malesEmployedTarget',
-                        'COALESCE(femaleEmployedTargets.annual, 0) as femalesEmployedTarget',
-                        'COALESCE('.$financialTargetTotal.', 0) as financialTargetTotal',
-                        'COALESCE('.$physicalTargetTotal.', 0) as physicalTargetTotal',
-                        'COALESCE(project.cost, 0) as cost',
-                        'COALESCE(financialAccomplishment.allocation, 0) as appropriations',
-                        'COALESCE(financialAccomplishment.releases, 0) as allotment',
-                        'COALESCE(financialAccomplishment.obligation, 0) as obligations',
-                        'COALESCE(financialAccomplishment.expenditures, 0) as disbursements',
-                        'COALESCE(IF(financialAccomplishment.allocation > 0, (financialAccomplishment.releases/financialAccomplishment.allocation)*100, 0), 0) as fundingSupport',
-                        'COALESCE(IF(financialAccomplishment.releases > 0, (financialAccomplishment.expenditures/financialAccomplishment.releases)*100, 0), 0) as fundingUtilizationRate',
-                        'COALESCE('.$targetOwpa[$model->quarter].', 0) as targetOwpa',
-                        'COALESCE('.$actualOwpa.', 0) as actualOwpa',
-                        'COALESCE(IF(totalProjectCostPerAgency.cost > 0, project.cost/totalProjectCostPerAgency.cost, 0), 0) as physicalWeights',
-                        'COALESCE('.$targetOwpa[$model->quarter].' * IF(totalProjectCostPerAgency.cost > 0, project.cost/totalProjectCostPerAgency.cost, 0), 0) as physicalWeightedTarget',
-                        'COALESCE('.$actualOwpa.' * IF(totalProjectCostPerAgency.cost > 0, project.cost/totalProjectCostPerAgency.cost, 0), 0) as physicalWeightedAccomplishment',
-                        $slippage.' as slippage',
-                        'COALESCE(personEmployedAccomplishment.male, 0) as malesEmployedActual',
-                        'COALESCE(personEmployedAccomplishment.female, 0) as femalesEmployedActual',
-                        'COALESCE(individualBeneAccomplishment.total, 0) as individualBeneficiaries',
-                        'COALESCE(groupBeneAccomplishment.total, 0) as groupBeneficiaries',
-                        $isCompleted.' as isCompleted',
-                        $isBehindSchedule.' as isBehindSchedule',
-                        $isOnTime.' as isOnTime',
-                        $isAheadOfSchedule.' as isAheadOfSchedule',
-                        $isNotYetStartedWithTarget.' as isNotYetStarted',
-                    ]);
-
-            $projects = $projects->leftJoin(['financialTargets' => '('.$financialTargets.')'], 'financialTargets.project_id = project.id');
-            $projects = $projects->leftJoin(['physicalTargets' => '('.$physicalTargets.')'], 'physicalTargets.project_id = project.id');
-            $projects = $projects->leftJoin(['maleEmployedTargets' => '('.$maleEmployedTargets.')'], 'maleEmployedTargets.project_id = project.id');
-            $projects = $projects->leftJoin(['femaleEmployedTargets' => '('.$femaleEmployedTargets.')'], 'femaleEmployedTargets.project_id = project.id');
-            $projects = $projects->leftJoin(['fundingSourceTitles' => '('.$fundingSourceTitles.')'], 'fundingSourceTitles.project_id = project.id');
-            $projects = $projects->leftJoin(['fundingAgencyTitles' => '('.$fundingAgencyTitles.')'], 'fundingAgencyTitles.project_id = project.id');
-            $projects = $projects->leftJoin(['rdpChapterTitles' => '('.$rdpChapterTitles.')'], 'rdpChapterTitles.project_id = project.id');
-            $projects = $projects->leftJoin(['sdgGoalTitles' => '('.$sdgGoalTitles.')'], 'sdgGoalTitles.project_id = project.id');
-            $projects = $projects->leftJoin(['regionTitles' => '('.$regionTitles.')'], 'regionTitles.project_id = project.id');
-            $projects = $projects->leftJoin(['provinceTitles' => '('.$provinceTitles.')'], 'provinceTitles.project_id = project.id');
-            $projects = $projects->leftJoin(['citymunTitles' => '('.$citymunTitles.')'], 'citymunTitles.project_id = project.id');
-            $projects = $projects->leftJoin(['barangayTitles' => '('.$barangayTitles.')'], 'barangayTitles.project_id = project.id');
-            $projects = $projects->leftJoin(['financialAccomplishment' => '('.$financialAccomplishment.')'], 'financialAccomplishment.project_id = project.id');
-            $projects = $projects->leftJoin(['physicalAccomplishment' => '('.$physicalAccomplishment.')'], 'physicalAccomplishment.project_id = project.id');
-            $projects = $projects->leftJoin(['personEmployedAccomplishment' => '('.$personEmployedAccomplishment.')'], 'personEmployedAccomplishment.project_id = project.id');                                                           
-            $projects = $projects->leftJoin(['individualBeneAccomplishment' => '('.$individualBeneAccomplishment.')'], 'individualBeneAccomplishment.project_id = project.id');                                                           
-            $projects = $projects->leftJoin(['groupBeneAccomplishment' => '('.$groupBeneAccomplishment.')'], 'groupBeneAccomplishment.project_id = project.id');                                                           
-            $projects = $projects->leftJoin(['totalProjectCostPerAgency' => '('.$totalProjectCostPerAgency.')'], 'totalProjectCostPerAgency.agency_id = project.agency_id');                                                           
-            $projects = $projects->leftJoin(['accomplishments' => '('.$accomplishments.')'], 'accomplishments.project_id = project.id');                                                           
-            $projects = $projects->leftJoin('agency', 'agency.id = project.agency_id');
-            $projects = $projects->leftJoin('sector', 'sector.id = project.sector_id');
-            $projects = $projects->leftJoin('sub_sector', 'sub_sector.id = project.sub_sector_id');
-            $projects = $projects->andWhere(['project.draft' => 'No']);
-            $projects = $projects->andWhere(['project.source_id' => null]);
-            $projects = $projects->andWhere(['project.id' => $projectIDs]);
 
             if($model->agency_id != ''){
-                $projects = $projects->andWhere(['project.agency_id' => $model->agency_id]);
+                $projects = $projects->andWhere(['p.agency_id' => $model->agency_id]);
             }
 
             if($model->sector_id != ''){
-                $projects = $projects->andWhere(['project.sector_id' => $model->sector_id]);
+                $projects = $projects->andWhere(['p.sector_id' => $model->sector_id]);
             }
 
             if($model->mode_of_implementation_id != ''){
-                $projects = $projects->andWhere(['project.mode_of_implementation_id' => $model->mode_of_implementation_id]);
+                $projects = $projects->andWhere(['p.mode_of_implementation_id' => $model->mode_of_implementation_id]);
             }
 
             if($model->region_id != '')
@@ -558,68 +431,38 @@ class ProjectSummaryController extends \yii\web\Controller
                 $projects = $projects->andWhere(['project.id' => $fundSourceIDs]);
             }
 
-           /*  if($model->grouping == '_agency_by_sector'){ $projects = $projects->groupBy(['agencyTitle', 'sectorTitle', 'id']); }
-            if($model->grouping == '_agency_by_location'){ $projects = $projects->groupBy(['agencyTitle', 'locationTitle', 'id']); }
-            if($model->grouping == '_agency_by_sector_by_sub_sector'){ $projects = $projects->groupBy(['agencyTitle', 'sectorTitle', 'subSectorTitle', 'id']); }
-            if($model->grouping == '_agency_by_sdg'){ $projects = $projects->groupBy(['agencyTitle', 'sdgGoalTitle', 'id']); }
-            if($model->grouping == '_agency_by_rdp'){ $projects = $projects->groupBy(['agencyTitle', 'rdpChapterTitle', 'id']); }
-            if($model->grouping == '_agency_by_fund_source'){ $projects = $projects->groupBy(['agencyTitle', 'fundingSourceTitle', 'id']); }
-            if($model->grouping == '_sector_by_agency'){ $projects = $projects->groupBy(['sectorTitle', 'agencyTitle', 'id']); }
-            if($model->grouping == '_sector_by_location_by_agency'){ $projects = $projects->groupBy(['sectorTitle', 'locationTitle', 'agencyTitle', 'id']); }
-            if($model->grouping == '_sector_by_sub_sector'){ $projects = $projects->groupBy(['sectorTitle', 'subSectorTitle', 'id']); }
-            if($model->grouping == '_sector_by_sdg'){ $projects = $projects->groupBy(['sectorTitle', 'sdgGoalTitle', 'id']); }
-            if($model->grouping == '_sector_by_rdp'){ $projects = $projects->groupBy(['sectorTitle', 'rdpChapterTitle', 'id']); }
-            if($model->grouping == '_sector_by_fund_source'){ $projects = $projects->groupBy(['sectorTitle', 'fundingSourceTitle', 'id']); } */
-
             $projects = $projects 
-                        ->asArray()
-                        ->all();
+            ->asArray()
+            ->all();
 
             $initialValues = [
-                'malesEmployedTarget' => 0,
-                'femalesEmployedTarget' => 0,
-                'financialTargetTotal' => 0,
-                'physicalTargetTotal' => 0,
                 'cost' => 0,
                 'appropriations' => 0,
                 'allotment' => 0,
                 'obligations' => 0,
                 'disbursements' => 0,
-                'fundingSupport' => 0,
-                'fundingUtilizationRate' => 0,
-                'targetOwpa' => 0,
-                'actualOwpa' => 0,
-                'physicalWeights' => 0,
-                'physicalWeightedTarget' => 0,
-                'physicalWeightedAccomplishment' => 0,
-                'slippage' => 0,
-                'malesEmployedTarget' => 0,
-                'femalesEmployedTarget' => 0,
-                'malesEmployedActual' => 0,
-                'femalesEmployedActual' => 0,
+                'maleEmployed' => 0,
+                'femaleEmployed' => 0,
+                'totalEmployed' => 0,
+                'individualBeneficiaries' => 0,
+                'groupBeneficiaries' => 0,
                 'isCompleted' => 0,
                 'isBehindSchedule' => 0,
                 'isOnTime' => 0,
                 'isAheadOfSchedule' => 0,
                 'isNotYetStarted' => 0,
-                'individualBeneficiaries' => 0,
-                'groupBeneficiaries' => 0,
+                'isOngoing' => 0,
+                'targetOwpa' => 0,
+                'actualOwpa' => 0,
+                'slippage' => 0,
+                'fundingSupport' => 0,
+                'fundingUtilizationRate' => 0,
             ];
-
-            $totals = $initialValues;
-
-            if (!empty($projects)) {
-                $keys = array_keys($totals);
-                foreach ($projects as $project) {
-                    foreach ($keys as $key) {
-                        $totals[$key] += $project[$key];
-                    }
-                }
-            }
 
             $data = [];
 
             if ($model->grouping == '_agency_by_sector') {
+
                 if (!empty($projects)) {
                     // Initialize arrays
                     foreach ($projects as $project) {
@@ -637,358 +480,116 @@ class ProjectSummaryController extends \yii\web\Controller
                         if (!isset($data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content'])) {
                             $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content'] = $initialValues;
                         }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $sectorTitle = $project['sectorTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
+
+                        // Aggregate values
                         foreach ($initialValues as $key => $value) {
                             if (isset($project[$key])) {
                                 $data[$agencyTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
                                 $data[$agencyTitle]['firstLevels'][$sectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
                                 $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
                             }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-
-                        // should be computed
-                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    }
-                }
-            }else if ($model->grouping == '_agency_by_location') {
-                if (!empty($projects)) {
-                    // Initialize arrays
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $locationTitle = $project['locationTitle'];
-                        $projectId = $project['id'];
-            
-                        // Initialize data array if not set
-                        if (!isset($data[$agencyTitle]['content'])) {
-                            $data[$agencyTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$locationTitle]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$locationTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content'] = $initialValues;
-                        }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $locationTitle = $project['locationTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$locationTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-
-                        // should be computed
-                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$agencyTitle]['firstLevels'][$locationTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    }
-                }
-            }else if ($model->grouping == '_agency_by_sector_by_sub_sector') {
-                if (!empty($projects)) {
-                    // Initialize arrays
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $sectorTitle = $project['sectorTitle'];
-                        $subSectorTitle = $project['subSectorTitle'];
-                        $projectId = $project['id'];
-            
-                        // Initialize data array if not set
-                        if (!isset($data[$agencyTitle]['content'])) {
-                            $data[$agencyTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$sectorTitle]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$sectorTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content'] = $initialValues;
-                        }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $sectorTitle = $project['sectorTitle'];
-                        $subSectorTitle = $project['subSectorTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$sectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-
-
-                        // Aggregate third level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-
-                        // should be computed
-                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$agencyTitle]['firstLevels'][$sectorTitle]['secondLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    }
-                }
-            }else if ($model->grouping == '_agency_by_sdg') {
-                if (!empty($projects)) {
-                    // Initialize arrays
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $sdgGoalTitle = $project['sdgGoalTitle'];
-                        $projectId = $project['id'];
-            
-                        // Initialize data array if not set
-                        if (!isset($data[$agencyTitle]['content'])) {
-                            $data[$agencyTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content'] = $initialValues;
-                        }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $sdgGoalTitle = $project['sdgGoalTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-
-                        // should be computed
-                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$agencyTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    }
-                }
-            }else if ($model->grouping == '_agency_by_rdp') {
-                if (!empty($projects)) {
-                    // Initialize arrays
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $rdpChapterTitle = $project['rdpChapterTitle'];
-                        $projectId = $project['id'];
-            
-                        // Initialize data array if not set
-                        if (!isset($data[$agencyTitle]['content'])) {
-                            $data[$agencyTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content'])) {
-                            $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content'] = $initialValues;
-                        }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $rdpChapterTitle = $project['rdpChapterTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+                        }       
                         
-                        // should be computed
-                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$agencyTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    
+                        // Set project-specific details
+                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle'] as $field) {
+                            $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content'][$field] = $project[$field];
+                        }
                     }
+
+                    // first level
+                    foreach ($data as $agencyTitle => &$agency) {
+                        foreach ($agency['firstLevels'] as $sectorTitle => &$sector) {
+                            $weightedTarget = 0;
+                            $weightedAccomplishment = 0;
+                            $totalCost = $sector['content']['cost'] ?? 0;
+                
+                            if ($totalCost > 0 && isset($sector['projectLevels'])) {
+                                foreach ($sector['projectLevels'] as $project) {
+                                    if (isset($project['content']['cost'], $project['content']['targetOwpa'])) {
+                                        $projectCost = $project['content']['cost'];
+                                        $targetOwpa = $project['content']['targetOwpa'];
+                                        $weightedTarget += ($projectCost / $totalCost) * $targetOwpa;
+                                    }
+                
+                                    if (isset($project['content']['cost'], $project['content']['actualOwpa'])) {
+                                        $projectCost = $project['content']['cost'];
+                                        $actualOwpa = $project['content']['actualOwpa'];
+                                        $weightedAccomplishment += ($projectCost / $totalCost) * $actualOwpa;
+                                    }
+                                }
+                            }
+                
+                            $sector['content']['weightedTarget'] = $weightedTarget;
+                            $sector['content']['weightedAccomplishment'] = $weightedAccomplishment;
+                        }
+                    }
+
+                    // second level
+                    foreach ($data as $agencyTitle => &$agency) {
+                        $weightedTarget = 0;
+                        $weightedAccomplishment = 0;
+                        $totalCost = $agency['content']['cost'] ?? 0;
+                
+                        if ($totalCost > 0 && isset($agency['firstLevels'])) {
+                            foreach ($agency['firstLevels'] as $sector) {
+                                if (isset($sector['content']['cost'], $sector['content']['weightedTarget'])) {
+                                    $sectorCost = $sector['content']['cost'];
+                                    $sectorTarget = $sector['content']['weightedTarget'];
+                                    $weightedTarget += ($sectorCost / $totalCost) * $sectorTarget;
+                                }
+                
+                                if (isset($sector['content']['cost'], $sector['content']['weightedAccomplishment'])) {
+                                    $sectorCost = $sector['content']['cost'];
+                                    $sectorAccomplishment = $sector['content']['weightedAccomplishment'];
+                                    $weightedAccomplishment += ($sectorCost / $totalCost) * $sectorAccomplishment;
+                                }
+                            }
+                        }
+                
+                        $agency['content']['weightedTarget'] = $weightedTarget;
+                        $agency['content']['weightedAccomplishment'] = $weightedAccomplishment;
+                    }
+
+                    // grand total
+                    $grandTotal = $initialValues;
+                    $grandTotal['weightedTarget'] = 0;
+                    $grandTotal['weightedAccomplishment'] = 0;
+
+                    // Sum total values from each sector
+                    foreach ($data as $agency) {
+                        foreach ($initialValues as $key => $value) {
+                            if (isset($agency['content'][$key])) {
+                                $grandTotal[$key] += $agency['content'][$key];
+                            }
+                        }
+                    }
+
+                    $totalCost = $grandTotal['cost'] ?? 0;
+
+                    // Compute weighted target and accomplishment across all agencies
+                    if ($totalCost > 0) {
+                        foreach ($data as $agency) {
+                            if (isset($agency['content']['cost'], $agency['content']['weightedTarget'])) {
+                                $agencyCost = $agency['content']['cost'];
+                                $agencyTarget = $agency['content']['weightedTarget'];
+                                $grandTotal['weightedTarget'] += ($agencyCost / $totalCost) * $agencyTarget;
+                            }
+
+                            if (isset($agency['content']['cost'], $agency['content']['weightedAccomplishment'])) {
+                                $agencyCost = $agency['content']['cost'];
+                                $agencyAccomplishment = $agency['content']['weightedAccomplishment'];
+                                $grandTotal['weightedAccomplishment'] += ($agencyCost / $totalCost) * $agencyAccomplishment;
+                            }
+                        }
+                    }
+
+                    // Store it in $data or separately as needed
+                    $data['__grandTotal'] = $grandTotal;
                 }
-            }else if ($model->grouping == '_agency_by_fund_source') {
+            }
+
+            if ($model->grouping == '_agency_by_fund_source') {
+
                 if (!empty($projects)) {
                     // Initialize arrays
                     foreach ($projects as $project) {
@@ -1006,60 +607,116 @@ class ProjectSummaryController extends \yii\web\Controller
                         if (!isset($data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'])) {
                             $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'] = $initialValues;
                         }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $agencyTitle = $project['agencyTitle'];
-                        $fundingSourceTitle = $project['fundingSourceTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
+
+                        // Aggregate values
                         foreach ($initialValues as $key => $value) {
                             if (isset($project[$key])) {
                                 $data[$agencyTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
                                 $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
                                 $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
                             }
+                        }       
+                        
+                        // Set project-specific details
+                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle'] as $field) {
+                            $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'][$field] = $project[$field];
                         }
-            
-                        // Set project specific details
-
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-
-                        // should be computed
-                        $targetOwpa = $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
+
+                    // first level
+                    foreach ($data as $agencyTitle => &$agency) {
+                        foreach ($agency['firstLevels'] as $fundingSourceTitle => &$fundingSource) {
+                            $weightedTarget = 0;
+                            $weightedAccomplishment = 0;
+                            $totalCost = $fundingSource['content']['cost'] ?? 0;
+                
+                            if ($totalCost > 0 && isset($fundingSource['projectLevels'])) {
+                                foreach ($fundingSource['projectLevels'] as $project) {
+                                    if (isset($project['content']['cost'], $project['content']['targetOwpa'])) {
+                                        $projectCost = $project['content']['cost'];
+                                        $targetOwpa = $project['content']['targetOwpa'];
+                                        $weightedTarget += ($projectCost / $totalCost) * $targetOwpa;
+                                    }
+                
+                                    if (isset($project['content']['cost'], $project['content']['actualOwpa'])) {
+                                        $projectCost = $project['content']['cost'];
+                                        $actualOwpa = $project['content']['actualOwpa'];
+                                        $weightedAccomplishment += ($projectCost / $totalCost) * $actualOwpa;
+                                    }
+                                }
+                            }
+                
+                            $fundingSource['content']['weightedTarget'] = $weightedTarget;
+                            $fundingSource['content']['weightedAccomplishment'] = $weightedAccomplishment;
+                        }
+                    }
+
+                    // second level
+                    foreach ($data as $agencyTitle => &$agency) {
+                        $weightedTarget = 0;
+                        $weightedAccomplishment = 0;
+                        $totalCost = $agency['content']['cost'] ?? 0;
+                
+                        if ($totalCost > 0 && isset($agency['firstLevels'])) {
+                            foreach ($agency['firstLevels'] as $fundingSource) {
+                                if (isset($fundingSource['content']['cost'], $fundingSource['content']['weightedTarget'])) {
+                                    $fundingSourceCost = $fundingSource['content']['cost'];
+                                    $fundingSourceTarget = $fundingSource['content']['weightedTarget'];
+                                    $weightedTarget += ($fundingSourceCost / $totalCost) * $fundingSourceTarget;
+                                }
+                
+                                if (isset($fundingSource['content']['cost'], $fundingSource['content']['weightedAccomplishment'])) {
+                                    $fundingSourceCost = $fundingSource['content']['cost'];
+                                    $fundingSourceAccomplishment = $fundingSource['content']['weightedAccomplishment'];
+                                    $weightedAccomplishment += ($fundingSourceCost / $totalCost) * $fundingSourceAccomplishment;
+                                }
+                            }
+                        }
+                
+                        $agency['content']['weightedTarget'] = $weightedTarget;
+                        $agency['content']['weightedAccomplishment'] = $weightedAccomplishment;
+                    }
+
+                    // grand total
+                    $grandTotal = $initialValues;
+                    $grandTotal['weightedTarget'] = 0;
+                    $grandTotal['weightedAccomplishment'] = 0;
+
+                    // Sum total values from each agency
+                    foreach ($data as $agency) {
+                        foreach ($initialValues as $key => $value) {
+                            if (isset($agency['content'][$key])) {
+                                $grandTotal[$key] += $agency['content'][$key];
+                            }
+                        }
+                    }
+
+                    $totalCost = $grandTotal['cost'] ?? 0;
+
+                    // Compute weighted target and accomplishment across all agencies
+                    if ($totalCost > 0) {
+                        foreach ($data as $agency) {
+                            if (isset($agency['content']['cost'], $agency['content']['weightedTarget'])) {
+                                $agencyCost = $agency['content']['cost'];
+                                $agencyTarget = $agency['content']['weightedTarget'];
+                                $grandTotal['weightedTarget'] += ($agencyCost / $totalCost) * $agencyTarget;
+                            }
+
+                            if (isset($agency['content']['cost'], $agency['content']['weightedAccomplishment'])) {
+                                $agencyCost = $agency['content']['cost'];
+                                $agencyAccomplishment = $agency['content']['weightedAccomplishment'];
+                                $grandTotal['weightedAccomplishment'] += ($agencyCost / $totalCost) * $agencyAccomplishment;
+                            }
+                        }
+                    }
+
+                    // Store it in $data or separately as needed
+                    $data['__grandTotal'] = $grandTotal;
                 }
-            }else if ($model->grouping == '_sector_by_agency') {
+            }
+
+            if ($model->grouping == '_sector_by_agency') {
+
                 if (!empty($projects)) {
                     // Initialize arrays
                     foreach ($projects as $project) {
@@ -1077,357 +734,116 @@ class ProjectSummaryController extends \yii\web\Controller
                         if (!isset($data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content'])) {
                             $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content'] = $initialValues;
                         }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $agencyTitle = $project['agencyTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
+
+                        // Aggregate values
                         foreach ($initialValues as $key => $value) {
                             if (isset($project[$key])) {
                                 $data[$sectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
                                 $data[$sectorTitle]['firstLevels'][$agencyTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
                                 $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
                             }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-
-                        // should be computed
-                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    }
-                }
-            }else if ($model->grouping == '_sector_by_location_by_agency') {
-                if (!empty($projects)) {
-                    // Initialize arrays
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $locationTitle = $project['locationTitle'];
-                        $agencyTitle = $project['agencyTitle'];
-                        $projectId = $project['id'];
-            
-                        // Initialize data array if not set
-                        if (!isset($data[$sectorTitle]['content'])) {
-                            $data[$sectorTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$locationTitle]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$locationTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content'] = $initialValues;
-                        }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $locationTitle = $project['locationTitle'];
-                        $agencyTitle = $project['agencyTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$locationTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-
-
-                        // Aggregate third level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+                        }       
                         
-                        // should be computed
-                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$sectorTitle]['firstLevels'][$locationTitle]['secondLevels'][$agencyTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
+                        // Set project-specific details
+                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle'] as $field) {
+                            $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content'][$field] = $project[$field];
+                        }
                     }
+
+                    // first level
+                    foreach ($data as $sectorTitle => &$sector) {
+                        foreach ($sector['firstLevels'] as $agencyTitle => &$agency) {
+                            $weightedTarget = 0;
+                            $weightedAccomplishment = 0;
+                            $totalCost = $agency['content']['cost'] ?? 0;
+                
+                            if ($totalCost > 0 && isset($agency['projectLevels'])) {
+                                foreach ($agency['projectLevels'] as $project) {
+                                    if (isset($project['content']['cost'], $project['content']['targetOwpa'])) {
+                                        $projectCost = $project['content']['cost'];
+                                        $targetOwpa = $project['content']['targetOwpa'];
+                                        $weightedTarget += ($projectCost / $totalCost) * $targetOwpa;
+                                    }
+                
+                                    if (isset($project['content']['cost'], $project['content']['actualOwpa'])) {
+                                        $projectCost = $project['content']['cost'];
+                                        $actualOwpa = $project['content']['actualOwpa'];
+                                        $weightedAccomplishment += ($projectCost / $totalCost) * $actualOwpa;
+                                    }
+                                }
+                            }
+                
+                            $agency['content']['weightedTarget'] = $weightedTarget;
+                            $agency['content']['weightedAccomplishment'] = $weightedAccomplishment;
+                        }
+                    }
+
+                    // second level
+                    foreach ($data as $sectorTitle => &$sector) {
+                        $weightedTarget = 0;
+                        $weightedAccomplishment = 0;
+                        $totalCost = $sector['content']['cost'] ?? 0;
+                
+                        if ($totalCost > 0 && isset($sector['firstLevels'])) {
+                            foreach ($sector['firstLevels'] as $agency) {
+                                if (isset($agency['content']['cost'], $agency['content']['weightedTarget'])) {
+                                    $agencyCost = $agency['content']['cost'];
+                                    $agencyTarget = $agency['content']['weightedTarget'];
+                                    $weightedTarget += ($agencyCost / $totalCost) * $agencyTarget;
+                                }
+                
+                                if (isset($agency['content']['cost'], $agency['content']['weightedAccomplishment'])) {
+                                    $agencyCost = $agency['content']['cost'];
+                                    $agencyAccomplishment = $agency['content']['weightedAccomplishment'];
+                                    $weightedAccomplishment += ($agencyCost / $totalCost) * $agencyAccomplishment;
+                                }
+                            }
+                        }
+                
+                        $sector['content']['weightedTarget'] = $weightedTarget;
+                        $sector['content']['weightedAccomplishment'] = $weightedAccomplishment;
+                    }
+
+                    // grand total
+                    $grandTotal = $initialValues;
+                    $grandTotal['weightedTarget'] = 0;
+                    $grandTotal['weightedAccomplishment'] = 0;
+
+                    // Sum total values from each sector
+                    foreach ($data as $sector) {
+                        foreach ($initialValues as $key => $value) {
+                            if (isset($sector['content'][$key])) {
+                                $grandTotal[$key] += $sector['content'][$key];
+                            }
+                        }
+                    }
+
+                    $totalCost = $grandTotal['cost'] ?? 0;
+
+                    // Compute weighted target and accomplishment across all sectors
+                    if ($totalCost > 0) {
+                        foreach ($data as $sector) {
+                            if (isset($sector['content']['cost'], $sector['content']['weightedTarget'])) {
+                                $sectorCost = $sector['content']['cost'];
+                                $sectorTarget = $sector['content']['weightedTarget'];
+                                $grandTotal['weightedTarget'] += ($sectorCost / $totalCost) * $sectorTarget;
+                            }
+
+                            if (isset($sector['content']['cost'], $sector['content']['weightedAccomplishment'])) {
+                                $sectorCost = $sector['content']['cost'];
+                                $sectorAccomplishment = $sector['content']['weightedAccomplishment'];
+                                $grandTotal['weightedAccomplishment'] += ($sectorCost / $totalCost) * $sectorAccomplishment;
+                            }
+                        }
+                    }
+
+                    // Store it in $data or separately as needed
+                    $data['__grandTotal'] = $grandTotal;
                 }
-            }else if ($model->grouping == '_sector_by_sub_sector') {
-                if (!empty($projects)) {
-                    // Initialize arrays
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $subSectorTitle = $project['subSectorTitle'];
-                        $projectId = $project['id'];
-            
-                        // Initialize data array if not set
-                        if (!isset($data[$sectorTitle]['content'])) {
-                            $data[$sectorTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$subSectorTitle]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$subSectorTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content'] = $initialValues;
-                        }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $subSectorTitle = $project['subSectorTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$subSectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Set project specific details
+            }
 
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
+            if ($model->grouping == '_sector_by_fund_source') {
 
-                        // should be computed
-                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$sectorTitle]['firstLevels'][$subSectorTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    }
-                }
-            }else if ($model->grouping == '_sector_by_sdg') {
-                if (!empty($projects)) {
-                    // Initialize arrays
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $sdgGoalTitle = $project['sdgGoalTitle'];
-                        $projectId = $project['id'];
-            
-                        // Initialize data array if not set
-                        if (!isset($data[$sectorTitle]['content'])) {
-                            $data[$sectorTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content'] = $initialValues;
-                        }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $sdgGoalTitle = $project['sdgGoalTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-
-                        // should be computed
-                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$sectorTitle]['firstLevels'][$sdgGoalTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    }
-                }
-            }else if ($model->grouping == '_sector_by_rdp') {
-                if (!empty($projects)) {
-                    // Initialize arrays
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $rdpChapterTitle = $project['rdpChapterTitle'];
-                        $projectId = $project['id'];
-            
-                        // Initialize data array if not set
-                        if (!isset($data[$sectorTitle]['content'])) {
-                            $data[$sectorTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['content'] = $initialValues;
-                        }
-                        if (!isset($data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content'])) {
-                            $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content'] = $initialValues;
-                        }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $rdpChapterTitle = $project['rdpChapterTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
-                                $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Set project specific details
-
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-
-                        // should be computed
-                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$sectorTitle]['firstLevels'][$rdpChapterTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
-                    }
-                }
-            }else if ($model->grouping == '_sector_by_fund_source') {
                 if (!empty($projects)) {
                     // Initialize arrays
                     foreach ($projects as $project) {
@@ -1445,57 +861,111 @@ class ProjectSummaryController extends \yii\web\Controller
                         if (!isset($data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'])) {
                             $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'] = $initialValues;
                         }
-                    }
-            
-                    // Aggregate data
-                    foreach ($projects as $project) {
-                        $sectorTitle = $project['sectorTitle'];
-                        $fundingSourceTitle = $project['fundingSourceTitle'];
-                        $projectId = $project['id'];
-            
-                        // Aggregate top level
+
+                        // Aggregate values
                         foreach ($initialValues as $key => $value) {
                             if (isset($project[$key])) {
                                 $data[$sectorTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate first level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
                                 $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['content'][$key] += $project[$key];
-                            }
-                        }
-            
-                        // Aggregate second level
-                        foreach ($initialValues as $key => $value) {
-                            if (isset($project[$key])) {
                                 $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'][$key] += $project[$key];
                             }
+                        }       
+                        
+                        // Set project-specific details
+                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle'] as $field) {
+                            $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'][$field] = $project[$field];
                         }
-            
-                        // Set project specific details
-
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['projectNo'] = $project['projectNo'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['projectTitle'] = $project['projectTitle'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['startDate'] = $project['startDate'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['endDate'] = $project['endDate'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['agencyTitle'] = $project['agencyTitle'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['sectorTitle'] = $project['sectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['subSectorTitle'] = $project['subSectorTitle'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['locationTitle'] = $project['locationTitle'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['rdpChapterTitle'] = $project['rdpChapterTitle'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['sdgGoalTitle'] = $project['sdgGoalTitle'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['fundingSourceTitle'] = $project['fundingSourceTitle'];
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['fundingAgencyTitle'] = $project['fundingAgencyTitle'];
-                        // should be computed
-                        $targetOwpa = $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['targetOwpa'];
-                        $actualOwpa = $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['actualOwpa'];
-                        $physicalWeights = $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeights'];
-
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeightedTarget'] = $targetOwpa * $physicalWeights;
-                        $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content']['physicalWeightedAccomplishment'] = $actualOwpa * $physicalWeights;
                     }
+
+                    // first level
+                    foreach ($data as $sectorTitle => &$sector) {
+                        foreach ($sector['firstLevels'] as $fundingSourceTitle => &$fundingSource) {
+                            $weightedTarget = 0;
+                            $weightedAccomplishment = 0;
+                            $totalCost = $fundingSource['content']['cost'] ?? 0;
+                
+                            if ($totalCost > 0 && isset($fundingSource['projectLevels'])) {
+                                foreach ($fundingSource['projectLevels'] as $project) {
+                                    if (isset($project['content']['cost'], $project['content']['targetOwpa'])) {
+                                        $projectCost = $project['content']['cost'];
+                                        $targetOwpa = $project['content']['targetOwpa'];
+                                        $weightedTarget += ($projectCost / $totalCost) * $targetOwpa;
+                                    }
+                
+                                    if (isset($project['content']['cost'], $project['content']['actualOwpa'])) {
+                                        $projectCost = $project['content']['cost'];
+                                        $actualOwpa = $project['content']['actualOwpa'];
+                                        $weightedAccomplishment += ($projectCost / $totalCost) * $actualOwpa;
+                                    }
+                                }
+                            }
+                
+                            $fundingSource['content']['weightedTarget'] = $weightedTarget;
+                            $fundingSource['content']['weightedAccomplishment'] = $weightedAccomplishment;
+                        }
+                    }
+
+                    // second level
+                    foreach ($data as $sectorTitle => &$sector) {
+                        $weightedTarget = 0;
+                        $weightedAccomplishment = 0;
+                        $totalCost = $sector['content']['cost'] ?? 0;
+                
+                        if ($totalCost > 0 && isset($sector['firstLevels'])) {
+                            foreach ($sector['firstLevels'] as $fundingSource) {
+                                if (isset($fundingSource['content']['cost'], $fundingSource['content']['weightedTarget'])) {
+                                    $fundingSourceCost = $fundingSource['content']['cost'];
+                                    $fundingSourceTarget = $fundingSource['content']['weightedTarget'];
+                                    $weightedTarget += ($fundingSourceCost / $totalCost) * $fundingSourceTarget;
+                                }
+                
+                                if (isset($fundingSource['content']['cost'], $fundingSource['content']['weightedAccomplishment'])) {
+                                    $fundingSourceCost = $fundingSource['content']['cost'];
+                                    $fundingSourceAccomplishment = $fundingSource['content']['weightedAccomplishment'];
+                                    $weightedAccomplishment += ($fundingSourceCost / $totalCost) * $fundingSourceAccomplishment;
+                                }
+                            }
+                        }
+                
+                        $sector['content']['weightedTarget'] = $weightedTarget;
+                        $sector['content']['weightedAccomplishment'] = $weightedAccomplishment;
+                    }
+
+                    // grand total
+                    $grandTotal = $initialValues;
+                    $grandTotal['weightedTarget'] = 0;
+                    $grandTotal['weightedAccomplishment'] = 0;
+
+                    // Sum total values from each sector
+                    foreach ($data as $sector) {
+                        foreach ($initialValues as $key => $value) {
+                            if (isset($sector['content'][$key])) {
+                                $grandTotal[$key] += $sector['content'][$key];
+                            }
+                        }
+                    }
+
+                    $totalCost = $grandTotal['cost'] ?? 0;
+
+                    // Compute weighted target and accomplishment across all sectors
+                    if ($totalCost > 0) {
+                        foreach ($data as $sector) {
+                            if (isset($sector['content']['cost'], $sector['content']['weightedTarget'])) {
+                                $sectorCost = $sector['content']['cost'];
+                                $sectorTarget = $sector['content']['weightedTarget'];
+                                $grandTotal['weightedTarget'] += ($sectorCost / $totalCost) * $sectorTarget;
+                            }
+
+                            if (isset($sector['content']['cost'], $sector['content']['weightedAccomplishment'])) {
+                                $sectorCost = $sector['content']['cost'];
+                                $sectorAccomplishment = $sector['content']['weightedAccomplishment'];
+                                $grandTotal['weightedAccomplishment'] += ($sectorCost / $totalCost) * $sectorAccomplishment;
+                            }
+                        }
+                    }
+
+                    // Store it in $data or separately as needed
+                    $data['__grandTotal'] = $grandTotal;
                 }
             }
 
@@ -1509,7 +979,6 @@ class ProjectSummaryController extends \yii\web\Controller
             return $this->renderAjax('_data', [
                 'model' => $model,
                 'data' => $data,
-                'totals' => $totals,
                 'bigCaps' => $bigCaps,
                 'smallCaps' => $smallCaps,
                 'numbers' => $numbers,
