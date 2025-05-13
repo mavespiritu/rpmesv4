@@ -12,13 +12,23 @@ DisableButtonAsset::register($this);
 /* @var $model common\modules\rpmes\models\DueDateSearch */
 /* @var $form yii\widgets\ActiveForm */
 
-$newTotals = [
-    'targetOwpa' => 0,
-    'actualOwpa' => 0,
-];
-
 ?>
-
+<div class="pull-left">
+    <?= ButtonDropdown::widget([
+        'label' => '<i class="fa fa-download"></i> Export',
+        'encodeLabel' => false,
+        'options' => ['class' => 'btn btn-success btn-sm'],
+        'dropdown' => [
+            'items' => [
+                ['label' => 'Excel', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-plan', 'type' => 'excel', 'year' => $model->year, 'quarter' => $model->quarter, 'agency_id' => $model->agency_id, 'sector_id' => $model->sector_id, 'mode_of_implementation_id' => $model->mode_of_implementation_id, 'region_id' => $model->region_id, 'province_id' => $model->province_id, 'fund_source_id' => $model->fund_source_id, 'grouping' => $model->grouping])],
+                ['label' => 'PDF', 'encodeLabel' => false, 'url' => Url::to(['/rpmes/summary/download-monitoring-plan', 'type' => 'pdf', 'year' => $model->year, 'quarter' => $model->quarter, 'agency_id' => $model->agency_id, 'sector_id' => $model->sector_id, 'mode_of_implementation_id' => $model->mode_of_implementation_id, 'region_id' => $model->region_id, 'province_id' => $model->province_id, 'fund_source_id' => $model->fund_source_id, 'grouping' => $model->grouping])],
+            ],
+        ],
+    ]); ?>
+    <?= Html::button('<i class="fa fa-print"></i> Print', ['onClick' => 'printSummary("'.$model->year.'","'.$model->quarter.'","'.$model->agency_id.'","'.$model->sector_id.'","'.$model->mode_of_implementation_id.'","'.$model->region_id.'","'.$model->province_id.'","'.$model->fund_source_id.'","'.$model->grouping.'")', 'class' => 'btn btn-danger btn-sm']) ?>
+</div>
+<div class="clearfix"></div>
+<br>
 <div class="summary-monitoring-report-table" style="height: 600px;">
     <table class="table table-condensed table-bordered table-striped table-hover table-condensed table-responsive" cellspacing="0" style="min-width: 3000px;">
         <thead>

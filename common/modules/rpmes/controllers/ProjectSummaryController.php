@@ -132,6 +132,7 @@ class ProjectSummaryController extends \yii\web\Controller
             $regionIDs = ProjectRegion::find();
             $provinceIDs = ProjectProvince::find();
             $fundSourceIDs = ProjectHasFundSources::find();
+            $projectIDs = Plan::find();
 
             if($model->region_id != '')
             {
@@ -148,6 +149,11 @@ class ProjectSummaryController extends \yii\web\Controller
                 $fundSourceIDs = $fundSourceIDs->andWhere(['fund_source_id' => $model->fund_source_id]);
             }
 
+            if($model->year != '')
+            {
+                $projectIDs = $projectIDs->andWhere(['year' => $model->year]);
+            }
+
             $regionIDs = $regionIDs->all();
             $regionIDs = ArrayHelper::map($regionIDs, 'project_id', 'project_id');
 
@@ -156,6 +162,9 @@ class ProjectSummaryController extends \yii\web\Controller
 
             $fundSourceIDs = $fundSourceIDs->all();
             $fundSourceIDs = ArrayHelper::map($fundSourceIDs, 'project_id', 'project_id');
+
+            $projectIDs = $projectIDs->all();
+            $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
 
             $projects = Accomplishment::find()
             ->alias('acc')
@@ -398,6 +407,7 @@ class ProjectSummaryController extends \yii\web\Controller
 
             if($model->year != ''){
                 $projects = $projects->andWhere(['acc.year' => $model->year]);
+                $projects = $projects->andWhere(['p.id' => $projectIDs]);
             }
 
             if($model->quarter != ''){
@@ -434,6 +444,8 @@ class ProjectSummaryController extends \yii\web\Controller
             $projects = $projects 
             ->asArray()
             ->all();
+
+            //echo "<pre>"; print_r($projects); exit;
 
             $initialValues = [
                 'cost' => 0,
