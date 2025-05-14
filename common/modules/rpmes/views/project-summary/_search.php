@@ -129,6 +129,17 @@ use kartik\select2\Select2;
             ])->label('Grouping');
         ?>
     </div>
+
+    <div class="col-md-3 col-xs-12">
+        <?= $form->field($model, 'period')->widget(Select2::classname(), [
+            'data' => ['Current Year' => 'Current Year', 'Multi-Year' => 'Multi-Year'],
+            'options' => ['multiple' => false, 'placeholder' => 'Select One', 'class'=>'period-select'],
+            'pluginOptions' => [
+                'allowClear' =>  true,
+            ],
+            ])->label('Implementation Period');
+        ?>
+    </div>
 </div>
 
 <div class="form-group pull-right">

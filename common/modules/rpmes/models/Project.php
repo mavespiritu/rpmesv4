@@ -51,6 +51,7 @@ class Project extends \yii\db\ActiveRecord
     public $province_id;
     public $citymun_id;
     public $grouping;
+    public $period;
     /**
      * {@inheritdoc}
      */

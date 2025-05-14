@@ -176,6 +176,7 @@ class ProjectSummaryController extends \yii\web\Controller
                 'p.title as projectTitle',
                 'DATE_FORMAT(p.start_date, "%m-%d-%y") as startDate',
                 'DATE_FORMAT(p.completion_date, "%m-%d-%y") as endDate',
+                'DATEDIFF(p.completion_date, p.start_date) AS durationDays',
                 'a.code AS agencyTitle',
                 's.title AS sectorTitle',
                 //'ss.title AS subSectorTitle',
@@ -430,6 +431,16 @@ class ProjectSummaryController extends \yii\web\Controller
             if($model->fund_source_id != '')
             {
                 $projects = $projects->andWhere(['project.id' => $fundSourceIDs]);
+            }
+
+            if($model->period != '')
+            {
+                if($model->period == 'Current Year'){
+                    $projects = $projects->andWhere(['<=', 'DATEDIFF(p.completion_date, p.start_date)', 365]);
+                }else{
+                    $projects = $projects->andWhere(['>', 'DATEDIFF(p.completion_date, p.start_date)', 365]);
+                }
+                
             }
 
             $projects = $projects 
