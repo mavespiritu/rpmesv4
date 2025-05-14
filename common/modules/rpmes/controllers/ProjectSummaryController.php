@@ -166,10 +166,9 @@ class ProjectSummaryController extends \yii\web\Controller
             $projectIDs = $projectIDs->all();
             $projectIDs = ArrayHelper::map($projectIDs, 'project_id', 'project_id');
 
-            $projects = Accomplishment::find()
-            ->alias('acc')
+            $projects = Plan::find()
             ->select([
-                'acc.project_id as id',
+                'plan.id as id',
                 'acc.year',
                 'acc.quarter',
                 'p.project_no as projectNo',
@@ -207,12 +206,23 @@ class ProjectSummaryController extends \yii\web\Controller
                 'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE(actual_owpa.actual - target_owpa.target) < 0, 1 , 0), 0), 0) as isBehindSchedule',
                 'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE(actual_owpa.actual - target_owpa.target) = 0, 1 , 0), 0), 0) as isOnTime',
                 'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE(actual_owpa.actual - target_owpa.target) > 0, 1 , 0), 0), 0) as isAheadOfSchedule',
-                'IF(acc.action = 0, IF(p_acc.value = 0, IF(p_tar.total > 0, 1, 0), 0), 0) as isNotYetStarted',
+                'IF(acc.action IS NULL, 
+                1, 
+                IF(acc.action = 0, 
+                    IF(p_acc.value = 0, 
+                        IF(p_tar.total > 0, 1, 0), 
+                        0), 
+                    0)
+                ) AS isNotYetStarted',
                 'IF(acc.action = 0, 1, 0) as isOngoing',
                 'p_tar.type as projectType'
             ]);
 
-            $projects = $projects->leftJoin('project p', 'p.id = acc.project_id');
+            $projects = $projects->leftJoin('project p', 'p.id = plan.project_id');
+            $projects = $projects->leftJoin('accomplishment acc', 'p.id = acc.project_id AND acc.year = :year AND acc.quarter = :quarter', [
+                ':year' => $model->year,
+                ':quarter' => $model->quarter
+            ]);
             $projects = $projects->leftJoin('agency a', 'p.agency_id = a.id');
             $projects = $projects->leftJoin('sector s', 'p.sector_id = s.id');
             $projects = $projects->leftJoin('sub_sector ss', 'p.sub_sector_id = ss.id');
@@ -230,20 +240,6 @@ class ProjectSummaryController extends \yii\web\Controller
                 LEFT JOIN tblprovince ON tblprovince.province_c = project_province.province_id
                 GROUP BY project_id
             )"], 'pr.project_id = p.id'); 
-            // rdp chapter name
-            /* $projects = $projects->leftJoin(['rdp' => "(
-                SELECT project_id, GROUP_CONCAT(DISTINCT CONCAT('Chapter ', rdp_chapter.chapter_no, ': ', rdp_chapter.title) ORDER BY rdp_chapter.chapter_no ASC, rdp_chapter.title ASC SEPARATOR ', ') AS title
-                FROM project_rdp_chapter
-                LEFT JOIN rdp_chapter ON rdp_chapter.id = project_rdp_chapter.rdp_chapter_id
-                GROUP BY project_id
-            )"], 'rdp.project_id = p.id'); */
-            // sdg name
-            /* $projects = $projects->leftJoin(['sdg' => "(
-                SELECT project_id, GROUP_CONCAT(DISTINCT CONCAT('SDG #', sdg_goal.sdg_no, ': ', sdg_goal.title) ORDER BY sdg_goal.sdg_no ASC SEPARATOR ', ') AS title
-                FROM project_sdg_goal
-                LEFT JOIN sdg_goal ON sdg_goal.id = project_sdg_goal.sdg_goal_id
-                GROUP BY project_id
-            )"], 'sdg.project_id = p.id'); */
             // fund source name
             $projects = $projects->leftJoin(['fs' => "(
                 SELECT phfs.project_id, GROUP_CONCAT(DISTINCT fund_source.title ORDER BY phfs.id ASC SEPARATOR ', ') AS title
@@ -398,12 +394,7 @@ class ProjectSummaryController extends \yii\web\Controller
             )"], 'p_tar.year = acc.year and p_tar.project_id = acc.project_id');
 
             if($model->year != ''){
-                $projects = $projects->andWhere(['acc.year' => $model->year]);
-                $projects = $projects->andWhere(['p.id' => $projectIDs]);
-            }
-
-            if($model->quarter != ''){
-                $projects = $projects->andWhere(['acc.quarter' => $model->quarter]);
+                $projects = $projects->andWhere(['plan.year' => $model->year]);
             }
 
             if($model->agency_id != ''){
