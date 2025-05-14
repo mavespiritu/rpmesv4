@@ -526,7 +526,11 @@ class ProjectSummaryController extends \yii\web\Controller
                 
                             $sector['content']['weightedTarget'] = $weightedTarget;
                             $sector['content']['weightedAccomplishment'] = $weightedAccomplishment;
+
+                            unset($sector);
                         }
+
+                        unset($agency);
                     }
 
                     // second level
@@ -553,6 +557,8 @@ class ProjectSummaryController extends \yii\web\Controller
                 
                         $agency['content']['weightedTarget'] = $weightedTarget;
                         $agency['content']['weightedAccomplishment'] = $weightedAccomplishment;
+
+                        unset($agency);
                     }
 
                     // grand total
@@ -653,7 +659,11 @@ class ProjectSummaryController extends \yii\web\Controller
                 
                             $fundingSource['content']['weightedTarget'] = $weightedTarget;
                             $fundingSource['content']['weightedAccomplishment'] = $weightedAccomplishment;
+
+                            unset($fundingSource);
                         }
+
+                        unset($agency);
                     }
 
                     // second level
@@ -680,6 +690,8 @@ class ProjectSummaryController extends \yii\web\Controller
                 
                         $agency['content']['weightedTarget'] = $weightedTarget;
                         $agency['content']['weightedAccomplishment'] = $weightedAccomplishment;
+
+                        unset($agency);
                     }
 
                     // grand total
@@ -780,7 +792,11 @@ class ProjectSummaryController extends \yii\web\Controller
                 
                             $agency['content']['weightedTarget'] = $weightedTarget;
                             $agency['content']['weightedAccomplishment'] = $weightedAccomplishment;
+
+                            unset($agency);
                         }
+
+                        unset($sector);
                     }
 
                     // second level
@@ -807,6 +823,8 @@ class ProjectSummaryController extends \yii\web\Controller
                 
                         $sector['content']['weightedTarget'] = $weightedTarget;
                         $sector['content']['weightedAccomplishment'] = $weightedAccomplishment;
+
+                        unset($sector);
                     }
 
                     // grand total
@@ -841,6 +859,8 @@ class ProjectSummaryController extends \yii\web\Controller
                             }
                         }
                     }
+
+                    
 
                     // Store it in $data or separately as needed
                     $data['__grandTotal'] = $grandTotal;
@@ -907,7 +927,11 @@ class ProjectSummaryController extends \yii\web\Controller
                 
                             $fundingSource['content']['weightedTarget'] = $weightedTarget;
                             $fundingSource['content']['weightedAccomplishment'] = $weightedAccomplishment;
+
+                            unset($fundingSource);
                         }
+
+                        unset($sector);
                     }
 
                     // second level
@@ -934,6 +958,8 @@ class ProjectSummaryController extends \yii\web\Controller
                 
                         $sector['content']['weightedTarget'] = $weightedTarget;
                         $sector['content']['weightedAccomplishment'] = $weightedAccomplishment;
+
+                        unset($sector);
                     }
 
                     // grand total
@@ -978,8 +1004,6 @@ class ProjectSummaryController extends \yii\web\Controller
             $smallCaps = range('a', 'z');
             $numbers = range('1', '100');
             $genders = ['M' => 'Male', 'F' => 'Female'];
-
-            //echo "<pre>"; print_r($data); exit;
 
             return $this->renderAjax('_data', [
                 'model' => $model,
