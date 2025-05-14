@@ -240,7 +240,7 @@ DisableButtonAsset::register($this);
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
                                     <td align=right>&nbsp;</td>
-                                    <td><?php //$i.'.'.$j.'.'.$k ?><?= $projectLevels['content']['projectTitle'] ?></td>
+                                    <td><?php //$i.'.'.$j.'.'.$k ?><?= $projectLevels['content']['projectNo'] ?></td>
                                     <td align=center><?= $projectLevels['content']['agencyTitle'] ?></td>
                                     <td align=center><?= $projectLevels['content']['startDate'] ?></td>
                                     <td align=center><?= $projectLevels['content']['endDate'] ?></td>

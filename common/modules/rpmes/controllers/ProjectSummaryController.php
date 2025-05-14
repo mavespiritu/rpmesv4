@@ -203,11 +203,12 @@ class ProjectSummaryController extends \yii\web\Controller
                 'COALESCE(ib.male+ib.female, 0) as individualBeneficiaries',
                 'COALESCE(gb.value, 0) as groupBeneficiaries',
                 'acc.action as isCompleted',
-                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE((actual_owpa.actual*(p.cost/tcpa.total))-(target_owpa.target*(p.cost/tcpa.total))) < 0, 1 , 0), 0), 0) as isBehindSchedule',
-                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE((actual_owpa.actual*(p.cost/tcpa.total))-(target_owpa.target*(p.cost/tcpa.total))) = 0, 1 , 0), 0), 0) as isOnTime',
-                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE((actual_owpa.actual*(p.cost/tcpa.total))-(target_owpa.target*(p.cost/tcpa.total))) > 0, 1 , 0), 0), 0) as isAheadOfSchedule',
+                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE(actual_owpa.actual - target_owpa.target) < 0, 1 , 0), 0), 0) as isBehindSchedule',
+                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE(actual_owpa.actual - target_owpa.target) = 0, 1 , 0), 0), 0) as isOnTime',
+                'IF(acc.action = 0, IF(p_acc.value > 0, IF(COALESCE(actual_owpa.actual - target_owpa.target) > 0, 1 , 0), 0), 0) as isAheadOfSchedule',
                 'IF(acc.action = 0, IF(p_acc.value = 0, IF(p_tar.total > 0, 1, 0), 0), 0) as isNotYetStarted',
-                'IF(acc.action = 0, 1, 0) as isOngoing'
+                'IF(acc.action = 0, 1, 0) as isOngoing',
+                'p_tar.type as projectType'
             ]);
 
             $projects = $projects->leftJoin('project p', 'p.id = acc.project_id');
@@ -322,22 +323,11 @@ class ProjectSummaryController extends \yii\web\Controller
                     pa.quarter, 
                     CASE 
                             WHEN pt.type = 'Numerical' THEN 
-                                CASE 
-                                    WHEN pa.quarter = 'Q1' THEN COALESCE(pa.value, 0) / 
-                                        (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + COALESCE(pt.baseline, 0)) * 100
-                                    WHEN pa.quarter = 'Q2' THEN COALESCE(pa.value, 0) / 
-                                        (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + 
-                                        COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + COALESCE(pt.baseline, 0)) * 100
-                                    WHEN pa.quarter = 'Q3' THEN COALESCE(pa.value, 0) / 
-                                        (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + 
-                                        COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + 
-                                        COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + COALESCE(pt.baseline, 0)) * 100
-                                    WHEN pa.quarter = 'Q4' THEN COALESCE(pa.value, 0) / 
+                                COALESCE(pa.value, 0) / 
                                         (COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + 
                                         COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + 
                                         COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + 
                                         COALESCE(pt.oct, 0) + COALESCE(pt.nov, 0) + COALESCE(pt.dec, 0) + COALESCE(pt.baseline, 0)) * 100
-                                END
                             WHEN pt.type = 'Percentage' THEN COALESCE(pa.value, 0)
                             ELSE 0
                         END AS actual
@@ -395,6 +385,7 @@ class ProjectSummaryController extends \yii\web\Controller
                 SELECT 
                     pt.project_id, 
                     pt.year, 
+                    pt.type,
                     COALESCE(pt.jan, 0) + COALESCE(pt.feb, 0) + COALESCE(pt.mar, 0) + 
                     COALESCE(pt.apr, 0) + COALESCE(pt.may, 0) + COALESCE(pt.jun, 0) + 
                     COALESCE(pt.jul, 0) + COALESCE(pt.aug, 0) + COALESCE(pt.sep, 0) + 
@@ -503,7 +494,7 @@ class ProjectSummaryController extends \yii\web\Controller
                         }       
                         
                         // Set project-specific details
-                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle'] as $field) {
+                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle', 'projectType'] as $field) {
                             $data[$agencyTitle]['firstLevels'][$sectorTitle]['projectLevels'][$projectId]['content'][$field] = $project[$field];
                         }
                     }
@@ -630,7 +621,7 @@ class ProjectSummaryController extends \yii\web\Controller
                         }       
                         
                         // Set project-specific details
-                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle'] as $field) {
+                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle', 'projectType'] as $field) {
                             $data[$agencyTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'][$field] = $project[$field];
                         }
                     }
@@ -757,7 +748,7 @@ class ProjectSummaryController extends \yii\web\Controller
                         }       
                         
                         // Set project-specific details
-                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle'] as $field) {
+                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle', 'projectType'] as $field) {
                             $data[$sectorTitle]['firstLevels'][$agencyTitle]['projectLevels'][$projectId]['content'][$field] = $project[$field];
                         }
                     }
@@ -884,7 +875,7 @@ class ProjectSummaryController extends \yii\web\Controller
                         }       
                         
                         // Set project-specific details
-                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle'] as $field) {
+                        foreach (['projectNo', 'projectTitle', 'agencyTitle', 'startDate', 'endDate', 'sectorTitle', 'fundingSourceTitle', 'fundingAgencyTitle', 'projectType'] as $field) {
                             $data[$sectorTitle]['firstLevels'][$fundingSourceTitle]['projectLevels'][$projectId]['content'][$field] = $project[$field];
                         }
                     }
